@@ -1,0 +1,13 @@
+console font size
+
+autoCompletion
+
+stats
+
+memory
+
+fps unlocked
+
+when in full mode show stats only after console closed
+
+stats config

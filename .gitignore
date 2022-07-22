@@ -1,0 +1,11 @@
+dist
+build
+bin
+node_modules
+npm-debug.log
+.env
+.DS_Store
+.vscode
+*.wasm
+*.map
+build_flags

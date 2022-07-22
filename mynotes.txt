@@ -1,0 +1,197 @@
+Note on the project: only Chrome supported ?
+
+2 see:
+
+pre element:
+https://developer.mozilla.org/en-US/docs/Web/HTML/Element/pre
+
+see:
+Sending a compiled module to a worker here:
+https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_objects/WebAssembly/Module
+
+TODO: !
+Since we are directly writing to memory in this example, and there exists a
+runtime in AssemblyScript, be sure to take a look at the --memoryBase flag in
+the AssemblyScript compiler. See here:
+https://wasmbyexample.dev/examples/webassembly-linear-memory/webassembly-linear-memory.assemblyscript.en-us.html
+
+as: 
+
+module imports:
+
+// assembly/env.ts
+export declare function logInteger(i: i32): void
+https://www.assemblyscript.org/concepts.html
+
+Note on init:
+A solution is to utilize the --exportStart command line option to force
+exporting the start function instead of making it implicit. Then, instantiation
+first returns before any code is executed. Note, however, that the exported
+start function must always be called first, before any other exports, or
+undefined behavior will occur.  #
+
+vedi le constanti pre-defined es. ASC_TARGET o ASC_MEMORY_BASE
+
+-note with generic variants available as well:
+see https://www.assemblyscript.org/introduction.html#from-a-webassembly-perspective
+
+i32.ctz(...)             // ctz<i32>(...)
+f64.reinterpret_i64(...) // reinterpret<f64>(...)
+i64.load32_u(...)        // <i64>load<u32>(...)
+
+as standard lib:
+https://www.assemblyscript.org/stdlib/globals.html
+Math vs Mathf ...
+console.time 
+process > hrtime: monotic high res timer
+
+sempre in https://www.assemblyscript.org/concepts.html:
+
+vedi code annotations:
+@unmanaged
+
+see note on bit shifts and the least significant bits of the shift...
+
+Calling memory.grow where a memory manager is present might break it.
+
+see also:
+wat2wasm, wasm-objdump
+
+
+this.EL_NAME_HERE.tabIndex = -1; // to make it focusable
+
+https://dev.to/jtenner/assemblyscript-is-not-a-subset-of-typescript-4ka3
+
+https://github.com/AssemblyScript/assemblyscript/wiki/Configuring-a-project
+
+https://stackoverflow.com/questions/313893/how-to-measure-time-taken-by-a-function-to-execute
+
+console browser:
+DevTools failed to load source map: Could not load content for
+wasm://wasm/wasm-adder.wasm.map: HTTP error: status code 404,
+net::ERR_UNKNOWN_URL_SCHEME
+
+* npm (update package.json etc)
+
+update global packages:
+https://stackoverflow.com/questions/53238230/how-to-update-globally-installed-npm-packages
+$ npm list -g
+$ npm update -g
+
+local dependencies:
+https://stackoverflow.com/questions/16073603/how-to-update-each-dependency-in-package-json-to-the-latest-version
+
+att. alle versioni usate a lvl globale: pare ci siano ~/node_modules/ ma anche
+~/.nvm/versions/node/v16.13.0/bin/ ( <- usiamo questo... )
+
+* preact
+https://preactjs.com/guide/v10/getting-started/#aliasing-react-to-preact
+https://github.com/preactjs/preact/tree/master/compat
+Note: preact-compat is deprecated
+https://www.npmjs.com/package/preact-compat
+https://preactjs.com/guide/v10/typescript/
+
+* misc
+// https://github.com/tc39/proposal-ecmascript-sharedmem/blob/main/TUTORIAL.md
+// divide array among fixed numbers of threads
+https://stackoverflow.com/questions/21635702/dividing-array-among-fixed-number-of-threads
+
+* perf
+https://michaelscodingspot.com/measure-execution-time-in-javascript/
+
+" get font height
+https://stackoverflow.com/questions/1134586/how-can-you-find-the-height-of-text-on-an-html-canvas
+https://stackoverflow.com/questions/5026961/html5-canvas-ctx-filltext-wont-do-line-breaks
+https://www.photoartomation.com/Print_Finishing/HTML_color_codes.html // some color codes here
+
+* game loop
+https://medium.com/@tglaiel/how-to-make-your-game-run-at-60fps-24c61210fe75
+ ttps://www.geeksforgeeks.org/how-to-control-fps-with-requestanimationframe/
+
+* eslint
+https://github.com/import-js/eslint-plugin-import
+
+* typescript eslint non standard props (es. performance.memory)
+https://stackoverflow.com/questions/12709074/how-do-you-explicitly-set-a-new-property-on-window-in-typescript
+https://stackoverflow.com/questions/53925857/typescript-typedarray-interface-for-typed-arrays
+https://www.typescriptlang.org/docs/handbook/2/mapped-types.html
+https://stackoverflow.com/questions/53296047/typescript-array-interace-with-numbered-index-and-custom-properties-accessbile-b
+
+* perf memory monitor (js,dom and workers!)
+https://web.dev/monitor-total-page-memory-usage/
+https://wicg.github.io/performance-measure-memory/
+
+* data gui
+https://stackoverflow.com/questions/14710559/dat-gui-how-to-hide-menu-with-code
+https://stackoverflow.com/questions/18366229/is-it-possible-to-create-a-button-using-dat-gui
+https://stackoverflow.com/questions/30372761/map-dat-gui-dropdown-menu-strings-to-values
+https://stackoverflow.com/questions/16321031/how-to-delete-dat-gui-element
+https://stackoverflow.com/questions/16166440/refresh-dat-gui-with-new-values
+https://stackoverflow.com/questions/24461964/method-for-disabling-a-button-in-dat-gui
+https://stackoverflow.com/questions/62065801/best-way-to-show-and-hide-gui-when-click-occurs
+
+* css, js, html
+https://developer.mozilla.org/en-US/docs/Web/CSS/object-fit
+https://stackoverflow.com/questions/7421775/css-i-want-a-div-to-be-on-top-of-everything
+https://stackoverflow.com/questions/16670931/hide-scroll-bar-but-while-still-being-able-to-scroll
+https://stackoverflow.com/questions/9664325/style-the-scrollbar-with-css-in-google-chrome-webkit
+https://stackoverflow.com/questions/16670931/hide-scroll-bar-but-while-still-being-able-to-scroll
+https://stackoverflow.com/questions/17468733/difference-between-width-auto-and-width-100-percent#:~:text=width%3A%20auto%3B%20will%20try%20as,without%20regards%20to%20the%20parent.
+
+Width 100% : It will make content width 100%. margin, border, padding will be added to this width and element will overflow if any of these added.
+Width auto : It will fit the element in available space including margin, border and padding. space remaining after adjusting margin + padding + border will be available width/ height.
+Width 100% + box-sizing: border box : It will also fits the element in available space including border, padding (margin will make it overflow the container).
+
+* js
+https://stackoverflow.com/questions/10612024/event-trigger-on-a-class-change/53914092
+https://stackoverflow.com/questions/596481/is-it-possible-to-simulate-key-press-events-programmatically
+https://stackoverflow.com/questions/1424981/how-can-i-remove-all-css-classes-using-jquery-javascript
+
+* html
+https://stackoverflow.com/questions/7130397/how-do-i-make-a-div-full-screen
+
+* webpack
+https://webpack.js.org/configuration/resolve/#resolvealias
+[...]
+
+* resources (images etc)
+https://stackoverflow.com/questions/45365571/convert-an-image-to-imagedata-uint8clampedarray
+
+* wasm, assemblyscript
+https://erikonarheim.com/posts/webpack-assemblyscript-and-wasm-loader/
+
+* assert
+https://stackoverflow.com/questions/68542553/webpack-5process-is-not-defined-triggered-by-stream-browserify
+https://www.npmjs.com/package/assert
+
+da vedere:
+window.devicePixelRatio
+
+* make:
+https://stackoverflow.com/questions/26145267/how-do-i-force-a-target-to-be-rebuilt-if-a-variable-is-set
+https://stackoverflow.com/questions/3236145/force-gnu-make-to-rebuild-objects-affected-by-compiler-definition
+
+* bash
+https://stackoverflow.com/questions/16315089/how-to-get-exit-status-of-a-shell-command-used-in-gnu-makefile
+
+focus iniziale su un panel ?
+dal main...
+// this.viewPanel.focus(); // focus on view panel ? but consider the comment
+// on panel class about the assignment to tabIndex
+
+https://stackoverflow.com/questions/58564090/create-input-text-that-starts-with-certain-prefix-and-is-not-errasable
+
+-how to link another remote:
+
+for ex. from a specific project that wants to link this as another remote:
+
+git remote add base-origin https://github.com/dbusrepo/web-graphics-base.git
+gco base-origin/main -> switch to main branch of base proj
+gcob base-origin-main -> create a local branch on it
+git branch -u base-origin/main  <- set tracking with remote branch
+git pull base-origin main  <- we pull from the main branch of base proj
+
+similarly if we want to add to this proj another remote from a specifi proj:
+
+git remote add ray-casting-origin https://github.com/dbusrepo/web-ray-casting.git
+...

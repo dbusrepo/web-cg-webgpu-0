@@ -1,0 +1,44 @@
+{
+  "options": {
+    "verbose": true,
+    "pedantic": true,
+    "measure": true,
+    "traceResolution": true,
+
+    "sourceMap": true,
+    "noAssert": false,
+
+    "initialMemory": 512,
+    "maximumMemory": 512,
+    "importMemory": true,
+    "sharedMemory": true,
+    "noExportMemory": true,
+    "zeroFilledMemory": true,
+
+    "importTable": false,
+    "exportTable": false,
+
+    "stats": true,
+
+    "enable": ["sign-extension", "nontrapping-f2i", "threads", "simd", "bulk-memory", "reference-types"],
+    "disable": ["mutable-globals", "gc"],
+
+    "runtime": "stub",
+    "exportRuntime": false
+  },
+  "targets": {
+    "release-speed": {
+      "optimizeLevel": 3,
+      "shrinkLevel": 1,
+      "converge": true
+    },
+    "release-size": {
+      "optimizeLevel": 1,
+      "shrinkLevel": 2,
+      "converge": true
+    },
+    "debug": {
+      "debug": true
+    }
+  }
+}
