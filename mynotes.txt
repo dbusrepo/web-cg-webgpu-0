@@ -189,7 +189,7 @@ git remote add base-origin https://github.com/dbusrepo/web-graphics-base.git
 gco base-origin/main -> switch to main branch of base proj
 gcob base-origin-main -> create a local branch on it
 git branch -u base-origin/main  <- set tracking with remote branch
-git pull base-origin main  <- we pull from the main branch of base proj
+git pull base-origin main (or simply git pull after the prev cmd) <- we pull from the main branch of base proj
 
 similarly if we want to add to this proj another remote from a specifi proj:
 
