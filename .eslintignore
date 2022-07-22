@@ -3,4 +3,4 @@ node_modules
 # don't lint build output
 dist
 # don't lint asc files
-src/wasm/assemblyscript
+src/engine/wasm/src/asc
