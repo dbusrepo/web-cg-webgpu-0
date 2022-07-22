@@ -4,6 +4,7 @@
   "description": "",
   "private": true,
   "scripts": {
+    "v": "node -v",
     "eslint": "eslint 'src/**/*.ts'",
     "eslint:fix": "eslint --fix 'src/**/*.ts'",
     "prettier": "prettier 'src/**/*.ts'",
