@@ -1,3 +1,5 @@
+type Range = [start: number, end: number];
+
 enum StatsNames {
   FPS = 'FPS',
   UPS = 'UPS',
@@ -20,4 +22,4 @@ type TypedArray = // TODO move?
   | Float32Array
   | Float64Array;
 
-export { TypedArray, StatsNames, StatsValues };
+export { Range, TypedArray, StatsNames, StatsValues };

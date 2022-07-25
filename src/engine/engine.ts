@@ -5,21 +5,20 @@ import { TypedArray, StatsNames, StatsValues } from './common';
 import {
   atomicSleep,
   getRange,
-  Range,
-  NUM_BYTES_DWORD,
-  clearBackgroundWasm,
-} from './workerUtils';
-import * as loadUtils from '../utils/loadFiles'; // TODO
+} from './utils';
+import { Range } from './common';
 import * as myWasm from './initWasm';
+
+import * as loadUtils from '../utils/loadFiles'; // TODO
 import { WorkerConfig } from './worker';
+import { clearBg } from './draw';
 
 // test img loading... TODO
 // import myImgUrl from 'images/samplePNGImage.png';
 
 
-// TODO ?
-const FRAME_BUF_IDX = myWasm.MemoryRegionNames
-  .FRAMEBUFFER as myWasm.MemRegionNameType;
+// TODO ? export ?
+const FRAME_BUF_IDX = myWasm.MemoryRegion.FRAMEBUFFER;
 
 type EngineConfig = {
   canvas: OffscreenCanvas;
@@ -27,7 +26,7 @@ type EngineConfig = {
 };
 
 class Engine {
-  private static readonly NUM_HELP_WORKERS = 0;
+  private static readonly NUM_HELP_WORKERS = 1;
   // #workers = main engine worker + help workers
   private static readonly TOTAL_WORKERS = 1 + Engine.NUM_HELP_WORKERS;
   private static readonly MILLI_IN_SEC = 1000;
@@ -53,9 +52,9 @@ class Engine {
   private _pixelCount: number;
   private _imageData: ImageData;
 
-  private _wasmInData: myWasm.WasmInDataType;
+  private _wasmInput: myWasm.WasmInput;
   private _wasmMemory: WebAssembly.Memory;
-  private _wasmData: myWasm.WasmOutDataType;
+  private _wasmData: myWasm.WasmData;
   private _frameBuffer: Uint8ClampedArray;
 
   private _syncArr: Int32Array;
@@ -78,7 +77,7 @@ class Engine {
       new SharedArrayBuffer((Engine.TOTAL_WORKERS + 1) * 4),
     );
 
-    engine._sleepArr = new Int32Array(new SharedArrayBuffer(NUM_BYTES_DWORD)); // for atomic sleep
+    engine._sleepArr = new Int32Array(new SharedArrayBuffer(4)); // with atomic sleep
 
     engine._ctx = <OffscreenCanvasRenderingContext2D>(
       canvas.getContext('2d', { alpha: false })
@@ -95,7 +94,7 @@ class Engine {
     engine._workerIdx = 0;
     engine._rowRange = getRange(
       engine._workerIdx,
-      engine._wasmInData.frameHeight,
+      engine._wasmInput.frameHeight,
       Engine.TOTAL_WORKERS,
     );
 
@@ -111,13 +110,13 @@ class Engine {
       shared: true,
     });
 
-    const wasmInData: myWasm.WasmInDataType = {
-      wasmMemory: this._wasmMemory,
+    const wasmInData: myWasm.WasmInput = {
+      memory: this._wasmMemory,
       frameWidth: this._canvas.width,
       frameHeight: this._canvas.height,
     };
 
-    this._wasmInData = wasmInData;
+    this._wasmInput = wasmInData;
 
     this._wasmData = await myWasm.initWasm(wasmInData);
     this._frameBuffer = this._wasmData.ui8cFramebuffer;
@@ -161,7 +160,7 @@ class Engine {
           numWorkers: Engine.TOTAL_WORKERS,
           syncArrBuffer: this._syncArr.buffer as SharedArrayBuffer,
           wasmMemory: this._wasmMemory,
-          wasmInData: this._wasmInData,
+          wasmInData: this._wasmInput,
         };
         worker.postMessage({
           command: 'run',
@@ -325,7 +324,7 @@ class Engine {
       Atomics.notify(this._syncArr, i);
     }
 
-    clearBackgroundWasm(this._wasmData, this._rowRange);
+    clearBg(this._wasmData, this._rowRange);
 
     for (let i = 1; i <= Engine.NUM_HELP_WORKERS; ++i) {
       Atomics.wait(this._syncArr, i, 1);

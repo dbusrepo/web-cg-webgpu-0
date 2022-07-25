@@ -2,29 +2,27 @@ import * as wasm from './initWasm';
 import {
   atomicSleep,
   getRange,
-  Range,
-  NUM_BYTES_DWORD,
-  clearBackgroundWasm,
-} from './workerUtils';
+} from './utils';
+import { Range } from './common';
 
 type WorkerConfig = {
   idx: number;
   numWorkers: number;
   wasmMemory: WebAssembly.Memory;
   syncArrBuffer: SharedArrayBuffer;
-  wasmInData: wasm.WasmInDataType;
+  wasmInData: wasm.WasmInput;
 };
 
 class Worker {
   private _numWorkers: number;
   private _workerIdx: number;
-  private _wasmInData: wasm.WasmInDataType;
+  private _wasmInData: wasm.WasmInput;
   private _wasmMemory: WebAssembly.Memory;
   private _syncArr: Int32Array;
   private _sleepArr: Int32Array;
   private _rowRange: Range;
 
-  private _wasmData: wasm.WasmOutDataType;
+  private _wasmData: wasm.WasmData;
 
   static async create(config: WorkerConfig): Promise<Worker> {
     const { numWorkers, idx, syncArrBuffer, wasmMemory, wasmInData } = config;
@@ -36,7 +34,7 @@ class Worker {
     worker._wasmInData = wasmInData;
     worker._wasmMemory = wasmMemory;
     worker._syncArr = new Int32Array(syncArrBuffer);
-    worker._sleepArr = new Int32Array(new SharedArrayBuffer(NUM_BYTES_DWORD));
+    worker._sleepArr = new Int32Array(new SharedArrayBuffer(4));
     worker._rowRange = getRange(
       worker._workerIdx,
       worker._wasmInData.frameHeight,
@@ -64,7 +62,7 @@ class Worker {
     while (true) {
       Atomics.wait(this._syncArr, idx, 0);
       // sleep(this._sleepArr, 10); // TODO
-      clearBackgroundWasm(this._wasmData, this._rowRange);
+      // clearBackgroundWasm(this._wasmData, this._rowRange);
       // ...
       Atomics.store(this._syncArr, idx, 0);
       Atomics.notify(this._syncArr, idx);
