@@ -45,16 +45,15 @@ const config: webpack.Configuration = {
     // Add `.ts` and `.tsx` as a resolvable extension.
     extensions: ['.ts', '.tsx', '.js'],
     alias: {
-      'images': path.resolve(__dirname, 'src/asset/images/'),
-      'react': 'preact/compat',
+      images: path.resolve(__dirname, 'src/asset/images/'),
+      react: 'preact/compat',
       'react-dom/test-utils': 'preact/test-utils',
-      'react-dom': 'preact/compat',     // Must be below test-utils
-      'react/jsx-runtime': 'preact/jsx-runtime'
+      'react-dom': 'preact/compat', // Must be below test-utils
+      'react/jsx-runtime': 'preact/jsx-runtime',
     },
   },
   module: {
     rules: [
-      // all files with a `.ts` or `.tsx` extension will be handled by `ts-loader`
       {
         test: /\.tsx?$/,
         exclude: /node_modules/,
@@ -64,11 +63,11 @@ const config: webpack.Configuration = {
         test: /\.?js$/,
         exclude: /node_modules/,
         use: {
-          loader: "babel-loader",
+          loader: 'babel-loader',
           options: {
-            presets: ['@babel/preset-env', '@babel/preset-react']
-          }
-        }
+            presets: ['@babel/preset-env', '@babel/preset-react'],
+          },
+        },
       },
       {
         test: /\.css$/,
@@ -84,7 +83,7 @@ const config: webpack.Configuration = {
         test: /\.(png|svg|jpg|jpeg|gif)$/i,
         type: 'asset/resource',
         generator: {
-          filename: 'images/[hash][ext][query]'
+          filename: 'images/[hash][ext][query]',
         },
       },
       // {

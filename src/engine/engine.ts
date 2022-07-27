@@ -1,12 +1,8 @@
 // import loader from '@assemblyscript/loader';
 import assert from 'assert';
 import { defaultConfig } from '../config/config';
-import { TypedArray, StatsNames, StatsValues } from './common';
-import {
-  atomicSleep,
-  getRange,
-} from './utils';
-import { Range } from './common';
+import { TypedArray, StatsNames, StatsValues, Range } from './common';
+import { atomicSleep, getRange } from './utils';
 import * as myWasm from './initWasm';
 
 import * as loadUtils from '../utils/loadFiles'; // TODO
@@ -15,7 +11,6 @@ import { clearBg } from './draw';
 
 // test img loading... TODO
 // import myImgUrl from 'images/samplePNGImage.png';
-
 
 // TODO ? export ?
 const FRAME_BUF_IDX = myWasm.MemoryRegion.FRAMEBUFFER;

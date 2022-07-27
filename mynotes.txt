@@ -1,4 +1,4 @@
-Note on the project: only Chrome supported ?
+Note on the project: only Chrome supported
 
 2 see:
 
@@ -80,9 +80,6 @@ $ npm update -g
 
 local dependencies:
 https://stackoverflow.com/questions/16073603/how-to-update-each-dependency-in-package-json-to-the-latest-version
-
-att. alle versioni usate a lvl globale: pare ci siano ~/node_modules/ ma anche
-~/.nvm/versions/node/v16.13.0/bin/ ( <- usiamo questo... )
 
 * preact
 https://preactjs.com/guide/v10/getting-started/#aliasing-react-to-preact
@@ -195,3 +192,5 @@ similarly if we want to add to this proj another remote from a specifi proj:
 
 git remote add ray-casting-origin https://github.com/dbusrepo/web-ray-casting.git
 ...
+
+https://stackoverflow.com/questions/44939304/eslint-should-be-listed-in-the-projects-dependencies-not-devdependencies

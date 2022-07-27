@@ -115,8 +115,8 @@
     "./src/**/*.js"
   ],
   "exclude": [
-    "./src/engine/wasm/**/*.ts",
-    "./node_modules"
+    "src/engine/wasm",
+    "node_modules"
     // "./src/types"
   ]
   //  "files": [
