@@ -13,7 +13,7 @@ type ConsoleHistoryProps = {
   scrollTopTo: number | null;
 };
 
-const ConsoleHistoryPanel = (props: ConsoleHistoryProps): JSX.Element => {
+function ConsoleHistoryPanel(props: ConsoleHistoryProps): JSX.Element {
   const { stmts, getPanelRef, autoScrollNewItems, scrollTopTo } = props;
   const els: JSX.Element[] = [];
 
@@ -21,13 +21,10 @@ const ConsoleHistoryPanel = (props: ConsoleHistoryProps): JSX.Element => {
   let listRef: HTMLElement;
 
   stmts.forEach((entry, idx) => {
-    entry.stmt && els.push(<dt className={'console-stmt'}>{entry.stmt}</dt>);
+    entry.stmt && els.push(<dt className="console-stmt">{entry.stmt}</dt>);
     entry.msg &&
       els.push(
-        <dd
-          ref={(e) => (lastStmtRef = e!)}
-          className={'console-msg'}
-        >
+        <dd ref={(e) => (lastStmtRef = e!)} className="console-msg">
           {entry.msg}
         </dd>,
       );
@@ -39,7 +36,6 @@ const ConsoleHistoryPanel = (props: ConsoleHistoryProps): JSX.Element => {
       if (scrollTopTo !== null) {
         // console.log('FORCE SCROLL TO ' + scrollTopTo);
         parent.scrollTop = scrollTopTo;
-        return;
       } else if (autoScrollNewItems) {
         if (lastStmtRef) {
           lastStmtRef!.scrollIntoView({ behavior: 'auto', block: 'end' });
@@ -49,12 +45,12 @@ const ConsoleHistoryPanel = (props: ConsoleHistoryProps): JSX.Element => {
   });
 
   return (
-    <dl ref={(el) => (listRef = el!)} className={'console-history-panel'}>
+    <dl ref={(el) => (listRef = el!)} className="console-history-panel">
       {els}
     </dl>
   );
 
   // return <>{els}</>;
-};
+}
 
 export { ConsoleHistoryPanel, ConsoleEntry };

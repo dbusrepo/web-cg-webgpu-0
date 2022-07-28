@@ -18,7 +18,7 @@
 
     /* Language and Environment */
     "target": "ES2021",                                  /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
-    "lib": ["DOM"],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+    "lib": ["DOM", "ESNext"],                            /* Specify a set of bundled library declaration files that describe the target runtime environment. */
     "jsx": "react-jsx",                                /* Specify what JSX code is generated. */
     "jsxImportSource": "preact",
     // "experimentalDecorators": true,                   /* Enable experimental support for TC39 stage 2 draft decorators. */
@@ -116,7 +116,8 @@
   ],
   "exclude": [
     "src/engine/wasm",
-    "node_modules"
+    "node_modules",
+    "misc"
     // "./src/types"
   ]
   //  "files": [

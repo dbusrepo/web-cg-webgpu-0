@@ -2,18 +2,25 @@ import { h, render as preactRender, JSX } from 'preact';
 
 import { ConsoleConfig } from '../../config/config';
 import { ConsoleEntry } from './consoleHistoryPanel';
-import { ConsolePanel, ConsolePanelProps, OnConsoleEventHandler } from './consolePanel';
+import {
+  ConsolePanel,
+  ConsolePanelProps,
+  OnConsoleEventHandler,
+} from './consolePanel';
 
 type ConsoleStmtKey = string; // TODO the first token of each entry is the key ?
 
 type ConsoleHandlerInput = any[]; // TODO
 type ConsoleHandlerOutput = string | undefined | void; // TODO check
-type ConsoleHandlerFunction = (...args: ConsoleHandlerInput) => ConsoleHandlerOutput;
+type ConsoleHandlerFunction = (
+  ...args: ConsoleHandlerInput
+) => ConsoleHandlerOutput;
 type ConsoleHandlerConfig = object; // TODO
 
 // used only as input for the console constructor
 // Note: this is a function type with properties
-type ConsoleHandlerFunObj = { // callables with a config property
+type ConsoleHandlerFunObj = {
+  // callables with a config property
   (...args: ConsoleHandlerInput): ConsoleHandlerOutput;
   config?: ConsoleHandlerConfig;
   isDefault?: boolean;
@@ -25,7 +32,7 @@ interface ConsoleHandler {
   config?: ConsoleHandlerConfig;
 }
 
-type ConsoleHandlersObjInit = { [k: string]: ConsoleHandlerFunObj};
+type ConsoleHandlersObjInit = { [k: string]: ConsoleHandlerFunObj };
 
 // TODO not used ?
 // const defaultHandler: ConsoleHandlerFunObj = (...args: any[]) => '';
@@ -35,11 +42,15 @@ class Console {
   private _history: ConsoleEntry[];
   private _container: HTMLDivElement;
   private _defaultHandler: ConsoleHandlerFunObj | null;
-  private _handlers: { [k: ConsoleStmtKey]: ConsoleHandler }
+  private _handlers: { [k: ConsoleStmtKey]: ConsoleHandler };
   private _panel: ConsolePanel;
   private _percHeight: string;
 
-  constructor(container: HTMLDivElement, config: ConsoleConfig, handlers: ConsoleHandlersObjInit) {
+  constructor(
+    container: HTMLDivElement,
+    config: ConsoleConfig,
+    handlers: ConsoleHandlersObjInit,
+  ) {
     this._config = config;
     this._history = [];
     this._handlers = {};
@@ -66,7 +77,6 @@ class Console {
   }
 
   private render() {
-
     // console.log('ciao');
     // if (this._starting) { // TODO remove?
     //   this._starting = false;
@@ -83,7 +93,9 @@ class Console {
       autoCompleteFn: this.autoComplete.bind(this),
     };
 
-    const panel = <ConsolePanel ref={p => (this._panel = p)} {...panelProps} />
+    const panel = (
+      <ConsolePanel ref={(p) => (this._panel = p)} {...panelProps} />
+    );
     preactRender(panel, this._container);
     return this;
   }
@@ -94,7 +106,8 @@ class Console {
   }
 
   clear() {
-    while (this._history.length) { // TODO
+    while (this._history.length) {
+      // TODO
       this._history.shift();
     }
     this.render();
@@ -117,16 +130,17 @@ class Console {
   // autocomplete only on the first token (here called stmtKey)
   autoComplete(prefix: string): ConsoleStmtKey {
     if (this._config.autoComplete) {
-      const stmtKeys = Object.keys(this._handlers)
-      const matched = stmtKeys.filter(stmtKey => stmtKey.indexOf(prefix) === 0);
+      const stmtKeys = Object.keys(this._handlers);
+      const matched = stmtKeys.filter(
+        (stmtKey) => stmtKey.indexOf(prefix) === 0,
+      );
       if (matched.length === 1) {
         return matched[0];
-      } else {
-        // TODO
-        // this.log(prefix);
-        // this.log(matched.map(n => '  ' + n).join('\n')); // list them all
-        // return prefix;
       }
+      // TODO
+      // this.log(prefix);
+      // this.log(matched.map(n => '  ' + n).join('\n')); // list them all
+      // return prefix;
     }
     return prefix; // TODO
   }
@@ -179,7 +193,11 @@ class Console {
   //   this._container = cont;
   //   this._render();
   // }
-
 }
 
-export { Console, OnConsoleEventHandler, ConsoleHandlersObjInit, ConsoleHandlerFunObj };
+export {
+  Console,
+  OnConsoleEventHandler,
+  ConsoleHandlersObjInit,
+  ConsoleHandlerFunObj,
+};

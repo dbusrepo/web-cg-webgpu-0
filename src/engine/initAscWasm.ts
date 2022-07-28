@@ -17,39 +17,35 @@ type AscExports = {
 async function loadDrawWasm(
   ascWasmInput: AscWasmInput,
 ): Promise<typeof drawWasmExport> {
-
   const { memory, frameWidth, frameHeight, frameBufferOffset } = ascWasmInput;
 
-  const instance = await drawWasm<typeof drawWasmExport>(
-    {
-      draw: {
-        frameBufferOffset,
-        frameWidth,
-        pixelCount: frameWidth * frameHeight,
-        // log,
-      },
-      env: {
-        memory,
-      },
+  const instance = await drawWasm<typeof drawWasmExport>({
+    draw: {
+      frameBufferOffset,
+      frameWidth,
+      pixelCount: frameWidth * frameHeight,
+      // log,
     },
-  );
+    env: {
+      memory,
+    },
+  });
 
   return instance.instance.exports;
 }
 
 async function loadAscModules(ascWasmInput: AscWasmInput): Promise<AscExports> {
-
   // const log = (msgNum: number, strIdx: number) => {
-    // console.log('str idx is ' + strIdx);
-    // const lenIdx = strIdx - 4;
-    // const len = new Uint32Array(this._memory.buffer, lenIdx, 4)[0];
-    // console.log('Lenght is ' + len);
-    // const strBytesSrc = new Uint16Array(this._memory.buffer, strIdx, len);
-    // const strBytes = strBytesSrc.slice();
-    // const str = new TextDecoder('utf-16').decode(strBytes);
-    // console.log('The string is ' + str);
-    // const msg = clearCanvasModule.instance.exports.__getString(msgIdx);
-    // console.log(`Message: ${msgNum} ${msg}`);
+  // console.log('str idx is ' + strIdx);
+  // const lenIdx = strIdx - 4;
+  // const len = new Uint32Array(this._memory.buffer, lenIdx, 4)[0];
+  // console.log('Lenght is ' + len);
+  // const strBytesSrc = new Uint16Array(this._memory.buffer, strIdx, len);
+  // const strBytes = strBytesSrc.slice();
+  // const str = new TextDecoder('utf-16').decode(strBytes);
+  // console.log('The string is ' + str);
+  // const msg = clearCanvasModule.instance.exports.__getString(msgIdx);
+  // console.log(`Message: ${msgNum} ${msg}`);
   // };
 
   // const importObject = {

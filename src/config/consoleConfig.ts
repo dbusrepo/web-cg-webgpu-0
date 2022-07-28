@@ -18,15 +18,12 @@ const consoleConfig = {
 };
 
 type ConsoleConfig = typeof consoleConfig & {
-  onOpening: OnConsoleEventHandler, // when it's opening
-  onOpened: OnConsoleEventHandler, // when it's opened with focus on text input
-  onClosing: OnConsoleEventHandler, // when it's closing
-  onClosed: OnConsoleEventHandler, // when it's closed
-  fontSize: number,
-  lineHeight: number,
+  onOpening: OnConsoleEventHandler; // when it's opening
+  onOpened: OnConsoleEventHandler; // when it's opened with focus on text input
+  onClosing: OnConsoleEventHandler; // when it's closing
+  onClosed: OnConsoleEventHandler; // when it's closed
+  fontSize: number;
+  lineHeight: number;
 };
 
-export {
-  ConsoleConfig,
-  consoleConfig,
-}
+export { ConsoleConfig, consoleConfig };

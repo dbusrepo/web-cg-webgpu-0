@@ -4,7 +4,6 @@ import { MenuGui } from './menuGui';
 import { EnginePanel } from './enginePanel';
 
 class EnginePanelMenuGui extends MenuGui {
-
   init(panel: EnginePanel, menuConfig: EnginePanelMenuConfig) {
     super.init(panel, menuConfig);
   }
@@ -34,7 +33,6 @@ class EnginePanelMenuGui extends MenuGui {
   get config(): EnginePanelMenuConfig {
     return super.config as EnginePanelMenuConfig;
   }
-
 }
 
 export { EnginePanelMenuGui, EnginePanelMenuConfig };

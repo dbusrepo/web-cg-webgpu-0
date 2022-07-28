@@ -5,16 +5,16 @@ import { ConsoleHistoryPanel, ConsoleEntry } from './consoleHistoryPanel';
 type OnConsoleEventHandler = () => void;
 
 type ConsolePanelProps = {
-  isOpen: boolean,
+  isOpen: boolean;
   hotkey: string;
-  onOpening: OnConsoleEventHandler,
-  onClosing: OnConsoleEventHandler,
-  onOpened: OnConsoleEventHandler,
-  onClosed: OnConsoleEventHandler,
-  percHeight: string, // console label panel height perc wrt to parent cont
+  onOpening: OnConsoleEventHandler;
+  onClosing: OnConsoleEventHandler;
+  onOpened: OnConsoleEventHandler;
+  onClosed: OnConsoleEventHandler;
+  percHeight: string; // console label panel height perc wrt to parent cont
   // winHeight: string,
   // fullwinHeight: string,
-  prompt: string,
+  prompt: string;
   container: HTMLDivElement;
   history: ConsoleEntry[];
   dispatch: (stmt: string) => void;
@@ -34,13 +34,12 @@ interface ConsolePanelState {
   forceScrollTo: number | null;
   isGrabbing: boolean;
   grabPos: { top: number; y: number };
-};
+}
 
 class ConsolePanel extends React.Component<
   ConsolePanelProps,
   ConsolePanelState
 > {
-
   private static readonly INPUT_PADDING_TOP = 2;
   private static readonly INPUT_PADDING_BOTTOM = 2;
 
@@ -76,7 +75,6 @@ class ConsolePanel extends React.Component<
   }
 
   componentDidMount() {
-
     this.inputRef?.focus();
 
     this.onKeyDown = (event: KeyboardEvent) => {
@@ -202,7 +200,6 @@ class ConsolePanel extends React.Component<
   }
 
   public setOpen(open: boolean): void {
-
     if (open) {
       this._isClosed = false;
     }
@@ -222,9 +219,10 @@ class ConsolePanel extends React.Component<
   //   this.setState({ consoleStyle: style });
   // }
 
-  private isCursorOnPrompt(pos: number | null) { // TODO common?
+  private isCursorOnPrompt(pos: number | null) {
+    // TODO common?
     return pos === 0 || (pos && pos <= this.props.prompt.length);
-  };
+  }
 
   private onInputKeyDown(event: KeyboardEvent) {
     assert(this.inputRef);
@@ -339,7 +337,7 @@ class ConsolePanel extends React.Component<
     // console.log('historySearch', direction);
   }
 
-  // called when the label is opening/closing. 
+  // called when the label is opening/closing.
   // This executes after the transition, to start see setOpen
   private onTransitionEnd() {
     if (this.state.open) {
@@ -350,15 +348,16 @@ class ConsolePanel extends React.Component<
       this.props.onClosed();
       // this.mainEl!.style.visibility = 'hidden'; // TODO: necessary?
     }
-  };
+  }
 
   // render(props: ConsolePanelProps, state: ConsolePanelState) {
   render() {
-
     const lineHeightStyle = `${this.props.lineHeight}px`;
     const fontSizeStyle = `${this.props.fontSize}px`;
 
-    const labelHeight = parseInt(this.props.percHeight) / 100 * this.props.container.clientHeight;
+    const labelHeight =
+      (parseInt(this.props.percHeight) / 100) *
+      this.props.container.clientHeight;
 
     const labelStyle = ConsolePanel.buildLabelContStyle(
       this._isClosed,
@@ -428,9 +427,8 @@ class ConsolePanel extends React.Component<
     lineHeight: string,
     fontSize: string,
   ) {
-
     // update the transition property
-    const marginTop = state.open ? '0' : ('-' + height);
+    const marginTop = state.open ? '0' : '-' + height;
     const visibility = isClosed ? 'hidden' : 'visible';
 
     let labelStyle = {
@@ -451,8 +449,8 @@ class ConsolePanel extends React.Component<
   }
 
   private static buildHistoryStyle(labelHeight: number, lineHeight: number) {
-
-    const inputVertPadding = ConsolePanel.INPUT_PADDING_TOP + ConsolePanel.INPUT_PADDING_BOTTOM;
+    const inputVertPadding =
+      ConsolePanel.INPUT_PADDING_TOP + ConsolePanel.INPUT_PADDING_BOTTOM;
     const inputHeightDec = (lineHeight + inputVertPadding) / labelHeight;
     const histHeightPerc = 100 * (1 - inputHeightDec);
 
@@ -461,10 +459,9 @@ class ConsolePanel extends React.Component<
     };
 
     return historyStyle;
-  };
+  }
 
   private static buildInputStyle(lineHeight: string, fontSize: string) {
-
     const inputStyle = {
       fontSize,
       lineHeight,

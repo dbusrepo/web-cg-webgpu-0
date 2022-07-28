@@ -1,25 +1,27 @@
 import assert from 'assert';
 import screenfull from 'screenfull';
-import { StartViewMode, PanelConfig, EventLogConfig, ConsoleConfig } from '../config/config';
+import {
+  StartViewMode,
+  PanelConfig,
+  EventLogConfig,
+  ConsoleConfig,
+} from '../config/config';
 import { Console, ConsoleHandlersObjInit } from '../ui/console/console';
 import { MenuGui } from './menuGui';
-import {
-  EventLog,
-} from '../ui/eventLog/eventLog';
+import { EventLog } from '../ui/eventLog/eventLog';
 
 // TODO move?
 const resetClassName = (node: HTMLElement) => {
   node.className = ''; // empty the list
 };
 
-
-// fullscreen api can only be initiated only initiated by a user gesture, so we 
+// fullscreen api can only be initiated only initiated by a user gesture, so we
 // have StartViewMode vs ViewMode
 const enum ViewMode {
   WIN = 'win',
   FULL_WIN = 'fullwin',
   FULL_SCREEN = 'fullscreen',
-};
+}
 
 abstract class Panel {
   private static _panels: Panel[] = [];
@@ -42,13 +44,16 @@ abstract class Panel {
   // event log below
   private _canvasDisplayHeightPercFull: number; // TODO check use
 
-  // note: the event log can be rendered on the main panel or on a separate own panel
-  // when in full (win) mode the event log uses _eventLogMainContainer inside the
+  // note: the event log can be rendered on the main panel or on a separate own
+  // panel when in full (win) mode the event log uses _eventLogMainContainer
+  // inside the
+
   // canvas container and the log is displayed inside the main panel: it can be
   // displayed in the main panel (in place of canvas) or in a bottom part under
   // the canvas
   // when in win mode it uses its own panel _eventLogContainer which is
   // displayed always under the main panel container
+
   private _eventLog?: EventLog;
   private _eventLogBottomPanel?: HTMLDivElement;
   private _eventLogMainPanel?: HTMLDivElement;
@@ -58,7 +63,7 @@ abstract class Panel {
   protected _menuGui?: MenuGui;
   // used with console cmd handler. not used for now.
 
-  protected  _viewMode: ViewMode;
+  protected _viewMode: ViewMode;
   protected _preViewMode: ViewMode;
 
   constructor(board: HTMLDivElement, parentNode: HTMLDivElement) {
@@ -183,14 +188,14 @@ abstract class Panel {
     this.setViewMode(ViewMode.FULL_SCREEN);
     if (this._preViewMode === ViewMode.WIN) {
       this.setFullStyle();
-    } 
+    }
   }
 
   private resetModeAfterFullScreen() {
     assert(
       this._viewMode === ViewMode.FULL_SCREEN &&
         (this._preViewMode === ViewMode.WIN ||
-          this._preViewMode  === ViewMode.FULL_WIN),
+          this._preViewMode === ViewMode.FULL_WIN),
     );
     this.setViewMode(this._preViewMode);
     if (this.isWinMode) {
@@ -249,7 +254,8 @@ abstract class Panel {
     this._canvas = document.createElement('canvas');
     this._canvas.width = Number(this.config.canvasWidth);
     this._canvas.height = Number(this.config.canvasHeight);
-    // other init elements could change canvas props (event log?) so we start hidden
+    // other init elements could change canvas props (event log?) so we start
+    // hidden
     // this._panelContainer.appendChild(this._canvas);
     this._canvasContainer.appendChild(this._canvas);
     this._canvasContainer.tabIndex = -1; // make it focusable
@@ -308,7 +314,11 @@ abstract class Panel {
       lineHeight: this._config.menuConfig.DEFAULT_LINE_HEIGHT,
     };
     const eventHandlers = {};
-    this._eventLog = new EventLog(eventContainer, eventLogConfig, eventHandlers);
+    this._eventLog = new EventLog(
+      eventContainer,
+      eventLogConfig,
+      eventHandlers,
+    );
   }
 
   protected initConsole(): void {
@@ -337,7 +347,11 @@ abstract class Panel {
       lineHeight: this._config.menuConfig.DEFAULT_LINE_HEIGHT,
     };
     const consoleHandlers = this.buildConsoleHandlers();
-    this._console = new Console(this._canvasContainer, consoleConfig, consoleHandlers);
+    this._console = new Console(
+      this._canvasContainer,
+      consoleConfig,
+      consoleHandlers,
+    );
     // this.container.addEventListener('focus', () => {
     //   assert(this.consoleContainer);
     //   this.consoleContainer.focus();
@@ -349,9 +363,7 @@ abstract class Panel {
     const clear = () => {
       this._console!.clear();
     };
-    const defaultHandler = () => {
-      return 'Unrecognized command';
-    };
+    const defaultHandler = () => 'Unrecognized command';
     defaultHandler.isDefault = true;
     return {
       // showMenu,
@@ -407,16 +419,17 @@ abstract class Panel {
   }
 
   // used to check some event log invariants
-  private eventLogCheckInv(): void { // TODO remove/debug mode only?
+  private eventLogCheckInv(): void {
+    // TODO remove/debug mode only?
     // console.log('inv');
     if (this.isEventLogVisible) {
       if (this.isEventLogBelowCanvas) {
-        assert(this._panel.lastChild == this._eventLogBottomPanel);
+        assert(this._panel.lastChild === this._eventLogBottomPanel);
       } else {
-        assert(this._panelContainer.lastChild == this._eventLogBottomPanel);
+        assert(this._panelContainer.lastChild === this._eventLogBottomPanel);
       }
     } else {
-      assert(this._panelContainer.lastChild == this._eventLogBottomPanel);
+      assert(this._panelContainer.lastChild === this._eventLogBottomPanel);
     }
   }
 
@@ -518,8 +531,8 @@ abstract class Panel {
     this.updateEventLogBottomPanelHeightPercFullMode(); // TODO not nec
   }
 
-  // Note: the events log can be showed on his own panel (below the canvas) or the
-  // same area of canvas (the canvas is hidden in that case). The two are
+  // Note: the events log can be showed on his own panel (below the canvas)
+  // or the same area of canvas (the canvas is hidden in that case). The two are
   // complementary states
 
   private moveEventLogBottomPanelInsidePanel(): void {
@@ -534,8 +547,9 @@ abstract class Panel {
   private moveEventLogBottomPanelOutOfPanel(): void {
     const eventLogBottomPanel = this._eventLogBottomPanel!;
     eventLogBottomPanel.parentNode?.removeChild(eventLogBottomPanel);
-    // we move the log below the panel to keep the same height with main container and the canvas
-    // otherwise without the event panel below the canvas would be recentered...
+    // we move the log below the panel to keep the same height with main
+    // container and the canvas otherwise without the event panel below the
+    // canvas would be recentered...
     this._panelContainer.appendChild(eventLogBottomPanel);
   }
 
@@ -629,12 +643,10 @@ abstract class Panel {
       } else {
         this.moveOutEventLogBottomPanel();
       }
+    } else if (visible) {
+      this.moveInEventLogMainPanel();
     } else {
-      if (visible) {
-        this.moveInEventLogMainPanel();
-      } else {
-        this.moveOutEventLogMainPanel();
-      }
+      this.moveOutEventLogMainPanel();
     }
     this.eventLogCheckInv();
   }
@@ -669,7 +681,7 @@ abstract class Panel {
 
   private initFocus(): void {
     // if a previous panel has starting focus, ignore start focus for this
-    let panel = undefined;
+    let panel;
     for (panel of Panel.getPanelList()) {
       if (panel === this || panel._config.focusOnStart) {
         break;
@@ -715,7 +727,7 @@ abstract class Panel {
   }
 
   get isFullScreen(): boolean {
-    return this._viewMode === ViewMode.FULL_SCREEN;;
+    return this._viewMode === ViewMode.FULL_SCREEN;
   }
 
   get name(): string {

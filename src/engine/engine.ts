@@ -1,11 +1,11 @@
 // import loader from '@assemblyscript/loader';
-import assert from 'assert';
+// import assert from 'assert';
 import { defaultConfig } from '../config/config';
 import { TypedArray, StatsNames, StatsValues, Range } from './common';
-import { atomicSleep, getRange } from './utils';
+import { getRange } from './utils';
 import * as myWasm from './initWasm';
 
-import * as loadUtils from '../utils/loadFiles'; // TODO
+// import * as loadUtils from '../utils/loadFiles'; // TODO
 import { WorkerConfig } from './worker';
 import { clearBg } from './draw';
 
@@ -13,7 +13,7 @@ import { clearBg } from './draw';
 // import myImgUrl from 'images/samplePNGImage.png';
 
 // TODO ? export ?
-const FRAME_BUF_IDX = myWasm.MemoryRegion.FRAMEBUFFER;
+// const FRAME_BUF_IDX = myWasm.MemoryRegion.FRAMEBUFFER;
 
 type EngineConfig = {
   canvas: OffscreenCanvas;
@@ -72,7 +72,7 @@ class Engine {
       new SharedArrayBuffer((Engine.TOTAL_WORKERS + 1) * 4),
     );
 
-    engine._sleepArr = new Int32Array(new SharedArrayBuffer(4)); // with atomic sleep
+    engine._sleepArr = new Int32Array(new SharedArrayBuffer(4));
 
     engine._ctx = <OffscreenCanvasRenderingContext2D>(
       canvas.getContext('2d', { alpha: false })
@@ -293,9 +293,9 @@ class Engine {
             1000 / calcAvgArrValue(renderTimeArr, frameCount),
           );
           const stats: Partial<StatsValues> = {
-              [StatsNames.FPS]: avgFps,
-              [StatsNames.UPS]: avgUps,
-              [StatsNames.UFPS]: avgMaxFps,
+            [StatsNames.FPS]: avgFps,
+            [StatsNames.UPS]: avgUps,
+            [StatsNames.UFPS]: avgMaxFps,
           };
           postMessage({
             command: 'updateStats',
@@ -372,7 +372,6 @@ class Engine {
   // private sleep(tMs: number) { // TODO check
   //   atomicSleep(this._sleepArr, tMs);
   // }
-
 }
 
 let engine: Engine;

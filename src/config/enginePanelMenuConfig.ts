@@ -10,7 +10,4 @@ const enginePanelMenuConfig = {
 
 type EnginePanelMenuConfig = typeof enginePanelMenuConfig;
 
-export {
-  EnginePanelMenuConfig,
-  enginePanelMenuConfig,
-}
+export { EnginePanelMenuConfig, enginePanelMenuConfig };

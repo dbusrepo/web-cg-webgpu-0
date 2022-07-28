@@ -14,7 +14,6 @@
 // import subtractWasm from './wasm/bin/wasm-subtract.wasm';
 // import type SubtractModule from './wasm/assemblyscript/types-wasm-subtract'
 
-
 // this.image_data.data.set(this.canvas_mem_i8c); // not useful here!?
 
 // trying another way to optimize the copy in render method...but it's not
@@ -71,4 +70,3 @@
 //     const results = Adder.add(1, 2);
 //     console.log('Huzzah! 1 + 2 = ' + results)
 // });
-

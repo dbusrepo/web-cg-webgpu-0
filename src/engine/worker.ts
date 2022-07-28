@@ -1,8 +1,5 @@
 import * as wasm from './initWasm';
-import {
-  atomicSleep,
-  getRange,
-} from './utils';
+import { atomicSleep, getRange } from './utils';
 import { Range } from './common';
 
 type WorkerConfig = {
@@ -59,7 +56,7 @@ class Worker {
 
     this.waitThreadsInit();
 
-    while (true) {
+    for (;;) {
       Atomics.wait(this._syncArr, idx, 0);
       // sleep(this._sleepArr, 10); // TODO
       // clearBackgroundWasm(this._wasmData, this._rowRange);
@@ -68,7 +65,6 @@ class Worker {
       Atomics.notify(this._syncArr, idx);
     }
   }
-
 }
 
 let worker: Worker;

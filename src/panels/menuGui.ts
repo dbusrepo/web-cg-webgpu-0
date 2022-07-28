@@ -1,4 +1,4 @@
-import assert from 'assert';
+// import assert from 'assert';
 import { GUI, GUIParams, GUIController } from 'dat.gui';
 import { Panel } from './panel';
 import { PanelConfig } from '../config/config';
@@ -62,16 +62,19 @@ class MenuGui {
   protected addPanelOptions(): void {} // overidden...
 
   private addConsoleFolderOptions(): void {
-
     if (!this._panel.console) {
       return;
     }
 
-    const consoleFolder = this._gui.addFolder(this._config.MENU_OPTIONS.CONSOLE);
+    const consoleFolder = this._gui.addFolder(
+      this._config.MENU_OPTIONS.CONSOLE,
+    );
 
-    const consoleOptionValues = { // event controllers default values here
+    const consoleOptionValues = {
+      // event controllers default values here
       [this._config.CONSOLE_OPTIONS.FONT_SIZE]: this._config.DEFAULT_FONT_SIZE,
-      [this._config.CONSOLE_OPTIONS.LINE_HEIGHT]: this._config.DEFAULT_LINE_HEIGHT,
+      [this._config.CONSOLE_OPTIONS.LINE_HEIGHT]:
+        this._config.DEFAULT_LINE_HEIGHT,
     };
 
     const fontSizeController = consoleFolder.add(
@@ -98,14 +101,10 @@ class MenuGui {
       this._panel.setConsoleLineHeight(lineHeight);
     });
 
-    // TODO needed ?
-    // this._menuOptions[this._config.MENU_OPTIONS.CONSOLE] = consoleOptionValues;
-
     consoleFolder.close();
   }
 
   private addEventLogFolderOptions(): void {
-
     if (!this._panel.eventLog) {
       return;
     }
@@ -118,10 +117,13 @@ class MenuGui {
 
     const _isEventLogVisible = this._panel.isEventLogVisible;
 
-    const eventOptionValues = { // event controllers default values here
+    const eventOptionValues = {
+      // event controllers default values here
       [this._config.EVENT_LOG_OPTIONS.POSITION]: eventLogStartModeValue,
-      [this._config.EVENT_LOG_OPTIONS.FONT_SIZE]: this._config.DEFAULT_FONT_SIZE,
-      [this._config.EVENT_LOG_OPTIONS.LINE_HEIGHT]: this._config.DEFAULT_LINE_HEIGHT,
+      [this._config.EVENT_LOG_OPTIONS.FONT_SIZE]:
+        this._config.DEFAULT_FONT_SIZE,
+      [this._config.EVENT_LOG_OPTIONS.LINE_HEIGHT]:
+        this._config.DEFAULT_LINE_HEIGHT,
       [this._config.EVENT_LOG_OPTIONS.VISIBLE]: _isEventLogVisible,
     };
 
@@ -140,7 +142,11 @@ class MenuGui {
     });
 
     eventsFolder
-      .add(eventOptionValues, this._config.EVENT_LOG_OPTIONS.POSITION, logPositions)
+      .add(
+        eventOptionValues,
+        this._config.EVENT_LOG_OPTIONS.POSITION,
+        logPositions,
+      )
       .onChange((position) => {
         switch (position) {
           case this._config.EVENT_LOG_POSITION_VALUES.BOTTOM:
@@ -152,6 +158,8 @@ class MenuGui {
             if (this._panel.isEventLogBelowCanvas) {
               this._panel.setEventLogOnCanvas();
             }
+            break;
+          default:
             break;
         }
       });
@@ -222,7 +230,8 @@ class MenuGui {
     this._gui.destroy();
   }
 
-  reset(): void { // we use this to update options when switching to/from fullscreen
+  reset(): void {
+    // we use this to update options when switching to/from fullscreen
     this.destroy();
     this.init(this._panel, this._config);
   }

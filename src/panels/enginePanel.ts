@@ -4,11 +4,12 @@ import { Stats } from '../ui/stats/stats';
 import { StatsPanel } from '../ui/stats/statsPanel';
 import { MemoryStats } from '../ui/stats/memoryStats';
 import { Panel } from './panel';
-import { EnginePanelMenuGui, EnginePanelMenuConfig } from './EnginePanelMenuGui';
-import { StatsNames, StatsValues } from '../engine/common';
 import {
-  EngineConfig,
-} from '../engine/engine';
+  EnginePanelMenuGui,
+  EnginePanelMenuConfig,
+} from './EnginePanelMenuGui';
+import { StatsNames, StatsValues } from '../engine/common';
+import { EngineConfig } from '../engine/engine';
 
 const buildEngineWorker = () =>
   new Worker(new URL('../engine/engine.ts', import.meta.url));
@@ -17,9 +18,9 @@ class EnginePanel extends Panel {
   private _engineWorker: Worker;
   private _stats?: Stats;
 
-  constructor(mainBoard: HTMLDivElement, parentNode: HTMLDivElement) {
-    super(mainBoard, parentNode);
-  }
+  // constructor(mainBoard: HTMLDivElement, parentNode: HTMLDivElement) {
+  //   super(mainBoard, parentNode);
+  // }
 
   init(config: EnginePanelConfig): EnginePanel {
     super.init({
@@ -48,7 +49,6 @@ class EnginePanel extends Panel {
     // );
     // this.mem_panel = new StatsPanel('MEM', '#ff0', '#330');
 
-
     this._stats.addPanel(fpsPanel);
     this._stats.addPanel(upsPanel);
     const memPanel = new MemoryStats(this._stats);
@@ -61,7 +61,8 @@ class EnginePanel extends Panel {
 
     let panel = this;
 
-    const commands = { // TODO field ?
+    const commands = {
+      // TODO field ?
       ...(panel._stats && {
         updateStats(values: StatsValues): void {
           // console.log(values);

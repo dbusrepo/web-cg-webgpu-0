@@ -42,7 +42,4 @@ const menuConfig = {
   },
 };
 
-export {
-  menuConfig,
-}
-
+export { menuConfig };

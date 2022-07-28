@@ -11,7 +11,8 @@ type EventHandlerOutput = string;
 type EventHandlerFun = (...args: EventHandlerInput) => EventHandlerOutput;
 type EventHandlerConfig = object; // TODO
 
-type EventHandlerFunObj = { // callables with a config property
+type EventHandlerFunObj = {
+  // callables with a config property
   (...args: EventHandlerInput): EventHandlerOutput;
   config?: EventHandlerConfig;
   default?: boolean;
@@ -35,7 +36,11 @@ class EventLog {
   private _panel: JSX.Element;
   // private element: Element | null; // TODO
 
-  constructor(container: HTMLDivElement, config: EventLogConfig, handlers: { [k: string]: EventHandlerFunObj }) {
+  constructor(
+    container: HTMLDivElement,
+    config: EventLogConfig,
+    handlers: { [k: string]: EventHandlerFunObj },
+  ) {
     this._config = config;
     this._container = container;
     this._history = [];
@@ -58,19 +63,18 @@ class EventLog {
     // }, 500);
 
     // setTimeout(() => {
-      // this.clear();
-      // let counter = 0;
-      // setInterval(() => {
-      //   const val = counter++; //Math.round(Math.random()*1000);
-      //   this.log(this.config.welcome + val, 'event ' + val);
-      // }, 1000);
+    // this.clear();
+    // let counter = 0;
+    // setInterval(() => {
+    //   const val = counter++; //Math.round(Math.random()*1000);
+    //   this.log(this.config.welcome + val, 'event ' + val);
+    // }, 1000);
     // }, 1000);
 
     for (let i = 0; i < 2; ++i) {
-      const val = i; //Math.round(Math.random() * 1000);
+      const val = i; // Math.round(Math.random() * 1000);
       this.log('event ' + val, 'Hello ' + val);
     }
-
   }
 
   log(event: Event, message: string) {
@@ -83,7 +87,8 @@ class EventLog {
   }
 
   clear(): void {
-    while (this._history.length) { // TODO
+    while (this._history.length) {
+      // TODO
       this._history.shift();
     }
     this.render();
@@ -103,8 +108,7 @@ class EventLog {
     return this;
   }
 
-
-  public render(scrollToBottom: boolean = false) {
+  public render(scrollToBottom = false) {
     const panelProps: EventLogPanelProps = {
       // config: this.config, // not used for now
       // dispatch: this.dispatch.bind(this), // not used for now

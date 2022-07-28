@@ -3,7 +3,6 @@ const statsConfig = {
   show: true,
 };
 
-type StatsConfig = typeof statsConfig & {
-};
+type StatsConfig = typeof statsConfig;
 
 export { StatsConfig, statsConfig };

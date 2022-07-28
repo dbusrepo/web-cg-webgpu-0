@@ -1,4 +1,4 @@
-import { AscWasmInput, AscExports, loadAscModules } from "./initAscWasm";
+import { AscWasmInput, AscExports, loadAscModules } from './initAscWasm';
 
 // ****** WASM IMPORT (wasm built from wat)
 // import clear_canvas_wasm from './wasm/build/wat/clear_canvas.wasm';
@@ -23,7 +23,7 @@ interface WasmInput {
 const enum MemoryRegion {
   RESERVED = 'RESERVED',
   FRAMEBUFFER = 'FRAMEBUFFER',
-};
+}
 
 type MemRegionNames = keyof typeof MemoryRegion;
 
@@ -35,7 +35,7 @@ type MemoryRegionsData = number[] & {
 interface MemoryRegionsInfo {
   memOffsets: MemoryRegionsData;
   memSizes: MemoryRegionsData;
-};
+}
 
 interface WasmData {
   memory: WebAssembly.Memory;
@@ -47,10 +47,7 @@ interface WasmData {
   ui8cFramebuffer: Uint8ClampedArray;
 }
 
-
-const buildMemRegionsOffset = (
-  wasmInput: WasmInput,
-): MemoryRegionsInfo => {
+const buildMemRegionsOffset = (wasmInput: WasmInput): MemoryRegionsInfo => {
   const { frameWidth, frameHeight } = wasmInput;
 
   const memOffsets: MemoryRegionsData = [] as unknown as MemoryRegionsData;
@@ -74,18 +71,17 @@ const buildMemRegionsOffset = (
   offset = addMemoryRegion(offset, reservedSize, MemoryRegion.RESERVED);
 
   const frameBufferSize = frameWidth * frameHeight * BPP;
-  offset = addMemoryRegion(
-    offset,
-    frameBufferSize,
-    MemoryRegion.FRAMEBUFFER,
-  );
+  offset = addMemoryRegion(offset, frameBufferSize, MemoryRegion.FRAMEBUFFER);
 
   // ... TODO
 
   return { memOffsets, memSizes };
 };
 
-async function initAscWasm(wasmInit: WasmInput, memRegionsInfo: MemoryRegionsInfo): Promise<AscExports> {
+async function initAscWasm(
+  wasmInit: WasmInput,
+  memRegionsInfo: MemoryRegionsInfo,
+): Promise<AscExports> {
   const ascWasmInit: AscWasmInput = {
     ...wasmInit,
     frameBufferOffset: memRegionsInfo.memOffsets[MemoryRegion.FRAMEBUFFER],
@@ -95,12 +91,11 @@ async function initAscWasm(wasmInit: WasmInput, memRegionsInfo: MemoryRegionsInf
 }
 
 async function initWasm(wasmInit: WasmInput): Promise<WasmData> {
-
   const memRegions = buildMemRegionsOffset(wasmInit);
   const ascExports = await initAscWasm(wasmInit, memRegions);
 
   const { memOffsets, memSizes } = memRegions;
-  const memory = wasmInit.memory;
+  const { memory } = wasmInit;
   const ui8mem = new Uint8Array(memory.buffer);
   const ui32mem = new Uint32Array(memory.buffer);
   const ui8cFramebuffer = new Uint8ClampedArray(

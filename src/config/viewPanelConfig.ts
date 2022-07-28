@@ -8,9 +8,4 @@ const viewPanelConfig = {
 
 type ViewPanelConfig = typeof viewPanelConfig & PanelConfig;
 
-export {
-  ViewPanelConfig,
-  viewPanelConfig,
-};
-
-
+export { ViewPanelConfig, viewPanelConfig };

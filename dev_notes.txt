@@ -161,7 +161,6 @@ https://erikonarheim.com/posts/webpack-assemblyscript-and-wasm-loader/
 https://stackoverflow.com/questions/68542553/webpack-5process-is-not-defined-triggered-by-stream-browserify
 https://www.npmjs.com/package/assert
 
-da vedere:
 window.devicePixelRatio
 
 * make:
@@ -194,3 +193,5 @@ git remote add ray-casting-origin https://github.com/dbusrepo/web-ray-casting.gi
 ...
 
 https://stackoverflow.com/questions/44939304/eslint-should-be-listed-in-the-projects-dependencies-not-devdependencies
+
+https://stackoverflow.com/questions/59435971/eslint-partial-is-not-defined-in-typescript

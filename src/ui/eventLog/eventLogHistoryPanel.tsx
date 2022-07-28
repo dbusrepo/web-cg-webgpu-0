@@ -15,7 +15,7 @@ type EventHistoryProps = {
   scrollTopTo: number | null;
 };
 
-const EventLogHistoryPanel = (props: EventHistoryProps): JSX.Element => {
+function EventLogHistoryPanel(props: EventHistoryProps): JSX.Element {
   const { logs, getPanelRef, autoScrollNewItems, scrollTopTo } = props;
   const els: JSX.Element[] = [];
 
@@ -23,12 +23,12 @@ const EventLogHistoryPanel = (props: EventHistoryProps): JSX.Element => {
   let listRef: HTMLElement;
 
   logs.forEach((log, idx) => {
-    log.event && els.push(<dt className={'event-log-type'}>{log.event}</dt>);
+    log.event && els.push(<dt className="event-log-type">{log.event}</dt>);
     log.message &&
       els.push(
         <dd
           ref={idx === logs.length - 1 ? (e) => (lastMsgRef = e!) : undefined}
-          className={'event-log-msg'}
+          className="event-log-msg"
         >
           {log.message}
         </dd>,
@@ -40,11 +40,10 @@ const EventLogHistoryPanel = (props: EventHistoryProps): JSX.Element => {
     if (parent) {
       if (scrollTopTo !== null) {
         parent.scrollTop = scrollTopTo;
-        return;
       } else if (autoScrollNewItems) {
         const scrollY =
           parent.scrollHeight - parent.clientHeight - parent.scrollTop;
-        /* an imm scroll to bottom when there is too much to scroll*/
+        /* an imm scroll to bottom when there is too much to scroll */
         if (scrollY > parent.clientHeight) {
           parent.scrollTop += scrollY;
         } else if (lastMsgRef) {
@@ -56,10 +55,10 @@ const EventLogHistoryPanel = (props: EventHistoryProps): JSX.Element => {
   });
 
   return (
-    <dl ref={(el) => (listRef = el!)} className={'event-log-history-panel'}>
+    <dl ref={(el) => (listRef = el!)} className="event-log-history-panel">
       {els}
     </dl>
   );
-};
+}
 
 export { EventLogHistoryPanel, Event, EventLogEntry };

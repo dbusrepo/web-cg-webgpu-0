@@ -1,5 +1,8 @@
 import { PanelConfig, panelConfig } from './panelConfig';
-import { EnginePanelMenuConfig, enginePanelMenuConfig } from './enginePanelMenuConfig';
+import {
+  EnginePanelMenuConfig,
+  enginePanelMenuConfig,
+} from './enginePanelMenuConfig';
 import { StatsConfig, statsConfig } from './statsConfig';
 
 const enginePanelConfig = {
@@ -9,13 +12,10 @@ const enginePanelConfig = {
   statsConfig,
 };
 
-type EnginePanelConfig = typeof enginePanelConfig & PanelConfig & {
-  statsConfig: StatsConfig;
-  menuConfig: EnginePanelMenuConfig;
-};
+type EnginePanelConfig = typeof enginePanelConfig &
+  PanelConfig & {
+    statsConfig: StatsConfig;
+    menuConfig: EnginePanelMenuConfig;
+  };
 
-export {
-  EnginePanelConfig,
-  EnginePanelMenuConfig,
-  enginePanelConfig,
-};
+export { EnginePanelConfig, EnginePanelMenuConfig, enginePanelConfig };

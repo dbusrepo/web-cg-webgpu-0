@@ -16,9 +16,6 @@ const eventLogConfig = {
 type EventLogConfig = typeof eventLogConfig & {
   fontSize: number;
   lineHeight: number;
-}
-
-export {
-  EventLogConfig,
-  eventLogConfig,
 };
+
+export { EventLogConfig, eventLogConfig };

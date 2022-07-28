@@ -1,9 +1,13 @@
 function loadFileAsArrayBuffer(file: File) {
-  return new Promise(function (resolve) {
+  return new Promise((resolve) => {
     let fileReader = new FileReader();
-    fileReader.addEventListener('load', (e) => {
-      resolve(e.target!.result);
-    }, false);
+    fileReader.addEventListener(
+      'load',
+      (e) => {
+        resolve(e.target!.result);
+      },
+      false,
+    );
     fileReader.readAsArrayBuffer(file);
   });
 }
@@ -14,22 +18,24 @@ async function loadResAsArrayBuffer(url: string): Promise<ArrayBuffer> {
 }
 
 function loadImage(url: string): Promise<HTMLImageElement> {
-  return new Promise(
-    function (resolve) {
-      const img = new Image();
-      img.addEventListener('load', () => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.addEventListener(
+      'load',
+      () => {
         resolve(img);
-      }, false);
-      img.src = url;
-    }
-  );
+      },
+      false,
+    );
+    img.src = url;
+  });
 }
 
 async function loadImageAsImageData(url: string): Promise<ImageData> {
   const img = await loadImage(url);
   const ctx = Object.assign(document.createElement('canvas'), {
     width: img.width,
-    height: img.height
+    height: img.height,
   }).getContext('2d')!;
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(img, 0, 0);
@@ -42,4 +48,3 @@ export {
   loadFileAsArrayBuffer,
   loadResAsArrayBuffer,
 };
-

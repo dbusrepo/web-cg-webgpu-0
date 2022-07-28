@@ -1,11 +1,11 @@
 import { menuConfig } from './menuConfig';
 import { eventLogConfig } from './eventLogConfig';
-import { consoleConfig} from './consoleConfig';
+import { consoleConfig } from './consoleConfig';
 
 const enum StartViewMode {
   WIN = 'win',
   FULL_WIN = 'fullwin',
-};
+}
 
 const panelConfig = {
   name: 'Panel',
@@ -33,7 +33,6 @@ const panelConfig = {
   focusOnStart: false,
 };
 
-type PanelConfig = typeof panelConfig & {
-};
+type PanelConfig = typeof panelConfig;
 
 export { StartViewMode, PanelConfig, panelConfig };

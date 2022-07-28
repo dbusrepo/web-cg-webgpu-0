@@ -10,11 +10,19 @@ type EventLogPanelProps = {
   lineHeight: number;
   fontSize: number;
   updateRender: (props: EventLogPanelProps) => void;
-  prompt: string,
+  prompt: string;
 };
 
-const EventLogPanel = (props: EventLogPanelProps): JSX.Element => {
-  const { history, parentContainer, scrollToBottom, fontSize, lineHeight, updateRender, prompt } = props;
+function EventLogPanel(props: EventLogPanelProps): JSX.Element {
+  const {
+    history,
+    parentContainer,
+    scrollToBottom,
+    fontSize,
+    lineHeight,
+    updateRender,
+    prompt,
+  } = props;
   const [autoScrollNewItems, setAutoScrollNewItems] = useState(true);
   const [forceScrollTo, setForceScrollTo] = useState(null as number | null);
   const [isGrabbing, setIsGrabbing] = useState(false);
@@ -30,12 +38,12 @@ const EventLogPanel = (props: EventLogPanelProps): JSX.Element => {
     }
   };
 
-  const isElBottomVisible = (el: HTMLElement) => {
-    return el.scrollTop >= el.scrollHeight - el.clientHeight;
-  };
+  const isElBottomVisible = (el: HTMLElement) =>
+    el.scrollTop >= el.scrollHeight - el.clientHeight;
 
   const onScroll = (e: React.ChangeEvent<HTMLDivElement>) => {
-    if (scrollToBottom) { // we are scrolling, reset scrollToBottom
+    if (scrollToBottom) {
+      // we are scrolling, reset scrollToBottom
       setForceScrollTo(null);
       updateRender({ ...props, scrollToBottom: false });
     }
@@ -57,7 +65,7 @@ const EventLogPanel = (props: EventLogPanelProps): JSX.Element => {
   useEffect(() => {
     const el = listContRef;
 
-    const mouseDownHandler = function(e: MouseEvent) {
+    const mouseDownHandler = function (e: MouseEvent) {
       // console.log('mouseDownHandler');
 
       // Change the cursor and prevent user from selecting the text
@@ -130,7 +138,7 @@ const EventLogPanel = (props: EventLogPanelProps): JSX.Element => {
       el.addEventListener('mousemove', mouseMoveHandler);
       el.addEventListener('mouseup', mouseUpHandler);
       setForceScrollTo(grabPos.top);
-      // return () => { 
+      // return () => {
       //   el.removeEventListener('mousemove', mouseMoveHandler);
       //   el.removeEventListener('mouseup', mouseUpHandler);
       // };
@@ -141,10 +149,8 @@ const EventLogPanel = (props: EventLogPanelProps): JSX.Element => {
     return releaseHandlers;
   });
 
-
-  const isCursorOnPrompt = (pos: number | null) => {
-    return pos === 0 || (pos && pos <= prompt.length);
-  };
+  const isCursorOnPrompt = (pos: number | null) =>
+    pos === 0 || (pos && pos <= prompt.length);
 
   let ctrlDown = false; // TODO ok?
 
@@ -210,7 +216,6 @@ const EventLogPanel = (props: EventLogPanelProps): JSX.Element => {
         }
         break;
     }
-
   };
 
   const onInputKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -229,7 +234,7 @@ const EventLogPanel = (props: EventLogPanelProps): JSX.Element => {
       const tpos = inputEl.value.length; // ...to the end of the input
       inputEl.setSelectionRange(tpos, tpos);
     }
-  }
+  };
 
   const onInputKeyUp = (event: KeyboardEvent) => {
     switch (event.key) {
@@ -242,20 +247,11 @@ const EventLogPanel = (props: EventLogPanelProps): JSX.Element => {
   const lineHeightStyle = `${lineHeight}px`;
   const fontSizeStyle = `${fontSize}px`;
 
-  const labelStyle = buildLabelStyle(
-    lineHeightStyle,
-    fontSizeStyle,
-  );
+  const labelStyle = buildLabelStyle(lineHeightStyle, fontSizeStyle);
 
-  const inputStyle = buildInputStyle(
-    lineHeightStyle,
-    fontSizeStyle,
-  );
+  const inputStyle = buildInputStyle(lineHeightStyle, fontSizeStyle);
 
-  const logListStyle = buildHistoryStyle(
-    parentContainer,
-    lineHeight,
-  );
+  const logListStyle = buildHistoryStyle(parentContainer, lineHeight);
 
   return (
     <label className="event-log-label" style={labelStyle}>
@@ -289,14 +285,13 @@ const EventLogPanel = (props: EventLogPanelProps): JSX.Element => {
       />
     </label>
   );
-};
+}
 
 const LABEL_HEIGHT_PERC = 100; // event log panel height is 100% of parent container height
 const INPUT_PADDING_TOP = 2;
 const INPUT_PADDING_BOTTOM = 2;
 
 const buildLabelStyle = (lineHeight: string, fontSize: string) => {
-
   const labelStyle = {
     height: `${LABEL_HEIGHT_PERC}%`,
     fontSize,
@@ -306,8 +301,10 @@ const buildLabelStyle = (lineHeight: string, fontSize: string) => {
   return labelStyle;
 };
 
-const buildHistoryStyle = (parentContainer: HTMLDivElement, lineHeight: number) => {
-
+const buildHistoryStyle = (
+  parentContainer: HTMLDivElement,
+  lineHeight: number,
+) => {
   const labelHeight = (LABEL_HEIGHT_PERC / 100) * parentContainer.clientHeight;
 
   // calc the height of the log list part inside the event panel (it is above the input el)
@@ -324,7 +321,6 @@ const buildHistoryStyle = (parentContainer: HTMLDivElement, lineHeight: number) 
 };
 
 const buildInputStyle = (lineHeight: string, fontSize: string) => {
-
   const inputStyle = {
     fontSize,
     lineHeight,

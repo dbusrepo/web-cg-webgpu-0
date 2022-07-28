@@ -1,11 +1,7 @@
 import { WasmData } from './initWasm';
 import { Range } from './common';
 
-function clearBg(
-  wasmData: WasmData,
-  range: Range,
-): void {
-
+function clearBg(wasmData: WasmData, range: Range): void {
   // const frameBufferOffset = wasmData.memOffsets[FRAME_BUF_IDX];
   // this._wasmData.ascExports.clearCanvasVec(frameBufferOffset, 0xFF_00_00_00);
 
