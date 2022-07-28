@@ -23,10 +23,6 @@ type ConsolePanelProps = {
   fontSize: number;
 };
 
-type ConsoleStyle = {
-  [k in string]: any;
-};
-
 interface ConsolePanelState {
   open: boolean;
   // consoleStyle: ConsoleStyle;
@@ -61,7 +57,8 @@ class ConsolePanel extends React.Component<
     super(props);
     // console.log('constructor');
     this.container = props.container;
-    // styleObj.panel.zIndex = Number(this.container.style.zIndex) + 1; // TODO move ?
+    // TODO move ?
+    // styleObj.panel.zIndex = Number(this.container.style.zIndex) + 1;
     this.state = {
       open: props.isOpen,
       // consoleStyle: {},
@@ -90,7 +87,8 @@ class ConsolePanel extends React.Component<
 
     this.onFocus = (event: FocusEvent) => {
       // when closing gui menu (see panels) focus goes back to the main
-      // container so we give focus to console container to handle the open/close
+      // container so we give focus to console container to handle the
+      // open/close
       if (this.state.open && this.mainEl) {
         this.mainEl.focus();
       }
@@ -142,10 +140,10 @@ class ConsolePanel extends React.Component<
             // Get the current mouse position
             y: e.clientY,
           };
-          this.setState({
+          this.setState((pState: ConsolePanelState) => ({
             grabPos,
             forceScrollTo: grabPos.top,
-          });
+          }));
           // setForceScrollTo(pos.top - dy);
           // setForceScrollTo(0);
         });
@@ -245,9 +243,11 @@ class ConsolePanel extends React.Component<
         this.clearInput();
         break;
       case 'Tab': // TODO
-        const prefix = this.inputRef.value;
-        this.inputRef.value = this.props.autoCompleteFn(prefix);
-        event.preventDefault(); // TODO
+        {
+          const prefix = this.inputRef.value;
+          this.inputRef.value = this.props.autoCompleteFn(prefix);
+          event.preventDefault(); // TODO
+        }
         break;
       case 'ArrowUp': // TODO
         event.preventDefault();
@@ -267,7 +267,8 @@ class ConsolePanel extends React.Component<
           }
         }
         break;
-      case 'Backspace': // avoid backspace when just after the prompt the user press bs
+      // avoid backspace when just after the prompt the user press bs
+      case 'Backspace':
         {
           const inputEl = event.target as HTMLInputElement;
           const { selectionStart } = inputEl;
@@ -294,13 +295,15 @@ class ConsolePanel extends React.Component<
           const { selectionStart } = inputEl;
           const { prompt } = this.props;
           inputEl.value =
-            this.props.prompt +
+            prompt +
             (selectionStart !== null
               ? inputEl.value.substring(selectionStart)
               : '');
           // force cursor position after the prompt
           inputEl.setSelectionRange(prompt.length, prompt.length);
         }
+        break;
+      default:
         break;
     }
   }
@@ -309,6 +312,8 @@ class ConsolePanel extends React.Component<
     switch (event.key) {
       case 'Control':
         this.ctrlDown = false;
+        break;
+      default:
         break;
     }
   }
@@ -355,9 +360,8 @@ class ConsolePanel extends React.Component<
     const lineHeightStyle = `${this.props.lineHeight}px`;
     const fontSizeStyle = `${this.props.fontSize}px`;
 
-    const labelHeight =
-      (parseInt(this.props.percHeight) / 100) *
-      this.props.container.clientHeight;
+    const labelHeight = parseInt(this.props.percHeight, 10) / 100;
+    this.props.container.clientHeight;
 
     const labelStyle = ConsolePanel.buildLabelContStyle(
       this._isClosed,
@@ -379,6 +383,7 @@ class ConsolePanel extends React.Component<
     );
 
     return (
+      /* eslint-disable-next-line jsx-a11y/label-has-associated-control */
       <label
         className="console-label"
         style={labelStyle}

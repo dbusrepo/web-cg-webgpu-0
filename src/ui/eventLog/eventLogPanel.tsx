@@ -1,4 +1,4 @@
-import assert from 'assert';
+// import assert from 'assert';
 import { h, JSX } from 'preact';
 import React, { useState, useEffect } from 'react';
 import { EventLogHistoryPanel, EventLogEntry } from './eventLogHistoryPanel';
@@ -6,7 +6,8 @@ import { EventLogHistoryPanel, EventLogEntry } from './eventLogHistoryPanel';
 type EventLogPanelProps = {
   parentContainer: HTMLDivElement;
   history: EventLogEntry[];
-  scrollToBottom: boolean; // force show the bottom of the panel, used when switching own vs main panel
+  // force show the bottom of the panel, used when switching own vs main panel
+  scrollToBottom: boolean;
   lineHeight: number;
   fontSize: number;
   updateRender: (props: EventLogPanelProps) => void;
@@ -32,7 +33,8 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
   let inputRef: HTMLInputElement;
 
   const onWheel = (e: WheelEvent) => {
-    // if the user is scrolling up with the mouse wheel disable auto scroll to the last item
+    // if the user is scrolling up with the mouse wheel disable auto scroll to
+    // the last item
     if (e.deltaY < 0) {
       setAutoScrollNewItems(false);
     }
@@ -50,7 +52,8 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
     if (e && e.target) {
       const el = e.target as HTMLDivElement;
       // const bottom = (el.scrollHeight - el.scrollTop) === el.clientHeight;
-      // if the bottom is visible re-enable the auto scroll to the last event item
+      // if the bottom is visible re-enable the auto scroll to the last event
+      // item
       if (isElBottomVisible(el)) {
         setAutoScrollNewItems(true);
       }
@@ -65,7 +68,7 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
   useEffect(() => {
     const el = listContRef;
 
-    const mouseDownHandler = function (e: MouseEvent) {
+    const mouseDownHandler = function mouseDownHandler(e: MouseEvent) {
       // console.log('mouseDownHandler');
 
       // Change the cursor and prevent user from selecting the text
@@ -86,7 +89,7 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
       // el.addEventListener('mouseup', mouseUpHandler);
     };
 
-    const mouseMoveHandler = function (e: MouseEvent) {
+    const mouseMoveHandler = function mouseMoveHandler(e: MouseEvent) {
       // console.log('mouseMoveHandler');
       // const dy = e.clientY - pos.y;
       setGrabPos((pos) => ({
@@ -99,7 +102,7 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
       // setForceScrollTo(0);
     };
 
-    const mouseUpHandler = function () {
+    const mouseUpHandler = function mouseUpHandler() {
       // console.log('mouseUpHandler');
       el.removeEventListener('mousemove', mouseMoveHandler);
       el.removeEventListener('mouseup', mouseUpHandler);
@@ -182,7 +185,8 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
           }
         }
         break;
-      case 'Backspace': // avoid backspace when just after the prompt the user press bs
+      // avoid backspace when just after the prompt the user press bs
+      case 'Backspace':
         {
           const inputEl = event.target as HTMLInputElement;
           const { selectionStart } = inputEl;
@@ -215,12 +219,14 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
           inputEl.setSelectionRange(prompt.length, prompt.length);
         }
         break;
+      default:
+        break;
     }
   };
 
   const onInputKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const input = (event.target as HTMLInputElement).value;
-    const line = prompt + input.substring(prompt.length);
+    const inValue = (event.target as HTMLInputElement).value;
+    const line = prompt + inValue.substring(prompt.length);
     inputRef.value = line;
     setInput(line);
   };
@@ -241,6 +247,8 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
       case 'Control':
         ctrlDown = false;
         break;
+      default:
+        break;
     }
   };
 
@@ -254,6 +262,7 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
   const logListStyle = buildHistoryStyle(parentContainer, lineHeight);
 
   return (
+    /* eslint-disable-next-line jsx-a11y/label-has-associated-control */
     <label className="event-log-label" style={labelStyle}>
       <div
         className="event-log-history"
@@ -287,7 +296,8 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
   );
 }
 
-const LABEL_HEIGHT_PERC = 100; // event log panel height is 100% of parent container height
+// event log panel height is 100% of parent container height
+const LABEL_HEIGHT_PERC = 100;
 const INPUT_PADDING_TOP = 2;
 const INPUT_PADDING_BOTTOM = 2;
 
@@ -307,7 +317,9 @@ const buildHistoryStyle = (
 ) => {
   const labelHeight = (LABEL_HEIGHT_PERC / 100) * parentContainer.clientHeight;
 
-  // calc the height of the log list part inside the event panel (it is above the input el)
+  // calc the height of the log list part inside the event panel (it is above
+  // the input el)
+
   const inputVertPadding = INPUT_PADDING_TOP + INPUT_PADDING_BOTTOM;
   const inputHeightToPanel = (lineHeight + inputVertPadding) / labelHeight;
   const histHeightPerc = 100 * (1 - inputHeightToPanel);

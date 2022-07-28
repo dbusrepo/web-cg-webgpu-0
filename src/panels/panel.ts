@@ -281,8 +281,8 @@ abstract class Panel {
     assert(!this.isWinMode);
     resetClassName(this._canvas);
     this._canvas.classList.add('canvas', 'canvas-full');
-    this._canvas.style.width = `100%`; // TODO remove? already set by css...
-    this._canvas.style.height = `100%`;
+    this._canvas.style.width = '100%'; // TODO remove? already set by css...
+    this._canvas.style.height = '100%';
     resetClassName(this._canvasContainer);
     this._canvasContainer.classList.add(
       'canvas-container',

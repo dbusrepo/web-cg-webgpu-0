@@ -1,5 +1,5 @@
+import React from 'react';
 import { h, render as preactRender, JSX } from 'preact';
-
 import { EventLogPanel, EventLogPanelProps } from './eventLogPanel';
 import { Event, EventLogEntry } from './eventLogHistoryPanel';
 import { EventLogConfig } from '../../config/config';
@@ -25,7 +25,8 @@ type EventHandler = {
 };
 
 // TODO not used?
-const defaultHandler: EventHandlerFunObj = (...args: EventHandlerInput) => '';
+// const defaultHandler: EventHandlerFunObj =
+// (...args: EventHandlerInput) => '';
 
 class EventLog {
   private _config: EventLogConfig;

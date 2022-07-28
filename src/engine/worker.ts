@@ -46,7 +46,7 @@ class Worker {
   // constructor() {}
 
   waitThreadsInit(): void {
-    postMessage(`ready`);
+    postMessage('ready');
     const result = Atomics.wait(this._syncArr, this._numWorkers, 0);
     console.log(`Worker ${self.name} awoken with ${result}`); // TODO
   }

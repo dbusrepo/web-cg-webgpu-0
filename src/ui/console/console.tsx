@@ -1,4 +1,5 @@
 import { h, render as preactRender, JSX } from 'preact';
+import React from 'react';
 
 import { ConsoleConfig } from '../../config/config';
 import { ConsoleEntry } from './consoleHistoryPanel';

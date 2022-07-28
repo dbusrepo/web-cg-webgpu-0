@@ -74,6 +74,7 @@
     "fast-glob": "^3.2.11",
     "preact": "^10.10.0",
     "preact-fullscreen": "^0.1.2",
+    "react": "^18.2.0",
     "screenfull": "^6.0.2"
   }
 }
