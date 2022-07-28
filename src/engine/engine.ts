@@ -134,6 +134,7 @@ class Engine {
           type: 'module',
         });
         worker.onmessage = ({ data: msg }) => {
+          // TODO
           console.log(
             `Help worker ready: id=${i}, count=${--count}, time=${
               Date.now() - now
@@ -142,7 +143,8 @@ class Engine {
           if (count === 0) {
             const notifyIdx = Engine.TOTAL_WORKERS; // see _syncArr def
             Atomics.notify(this._syncArr, notifyIdx);
-            console.log(`Main worker ready: id=0, time=${Date.now() - now}ms`);
+            // console.log(`Main worker ready: id=0,
+            // time=${Date.now() - now}ms`);
             resolve();
           }
         };

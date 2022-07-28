@@ -11,7 +11,7 @@ type ConsolePanelProps = {
   onClosing: OnConsoleEventHandler;
   onOpened: OnConsoleEventHandler;
   onClosed: OnConsoleEventHandler;
-  percHeight: string; // console label panel height perc wrt to parent cont
+  percHeight: number; // console label panel height perc wrt to parent cont
   // winHeight: string,
   // fullwinHeight: string,
   prompt: string;
@@ -360,10 +360,10 @@ class ConsolePanel extends React.Component<
     const lineHeightStyle = `${this.props.lineHeight}px`;
     const fontSizeStyle = `${this.props.fontSize}px`;
 
-    const labelHeight = parseInt(this.props.percHeight, 10) / 100;
-    this.props.container.clientHeight;
+    const labelHeight =
+      this.props.percHeight * this.props.container.clientHeight;
 
-    const labelStyle = ConsolePanel.buildLabelContStyle(
+    const labelStyle = ConsolePanel.buildLabelStyleObj(
       this._isClosed,
       this.props,
       this.state,
@@ -424,7 +424,7 @@ class ConsolePanel extends React.Component<
     );
   }
 
-  private static buildLabelContStyle(
+  private static buildLabelStyleObj(
     isClosed: boolean,
     props: ConsolePanelProps,
     state: ConsolePanelState,

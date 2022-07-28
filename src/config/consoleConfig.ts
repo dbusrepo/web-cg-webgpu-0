@@ -12,8 +12,8 @@ const consoleConfig = {
   // fullwinHeight: '15%', // TODO
 
   // console height in win and full mode resp
-  percHeightWin: '35%',
-  percHeightFull: '30%',
+  percHeightWin: 0.35, // 35%
+  percHeightFull: 0.3,
   prompt: '> ',
 };
 

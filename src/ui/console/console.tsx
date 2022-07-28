@@ -45,7 +45,7 @@ class Console {
   private _defaultHandler: ConsoleHandlerFunObj | null;
   private _handlers: { [k: ConsoleStmtKey]: ConsoleHandler };
   private _panel: ConsolePanel;
-  private _percHeight: string;
+  private _percHeight: number;
 
   constructor(
     container: HTMLDivElement,
