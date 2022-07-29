@@ -1,3 +1,3 @@
-# Graphics-with-web-techs-base-proj
+# Graphics web project
 
 Base project for graphics experiments with web techs
