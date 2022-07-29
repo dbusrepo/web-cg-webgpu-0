@@ -190,7 +190,10 @@ git pull base-origin main (or simply git pull after the prev cmd) <- we pull fro
 similarly if we want to add to this proj another remote from a specifi proj:
 
 git remote add ray-casting-origin https://github.com/dbusrepo/web-ray-casting.git
-...
+
+https://stackoverflow.com/questions/9683279/make-the-current-commit-the-only-initial-commit-in-a-git-repository/13102849#13102849
+
+misc stuff:
 
 https://stackoverflow.com/questions/44939304/eslint-should-be-listed-in-the-projects-dependencies-not-devdependencies
 
