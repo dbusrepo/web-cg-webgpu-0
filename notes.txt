@@ -191,6 +191,11 @@ similarly if we want to add to this proj another remote from a specifi proj:
 
 git remote add ray-casting-origin https://github.com/dbusrepo/web-ray-casting.git
 
+show local-remote tracking branches for origin and another remote
+(base-graphics for ex.):
+$ git remote show origin
+$ git remote show base-graphics
+
 https://stackoverflow.com/questions/9683279/make-the-current-commit-the-only-initial-commit-in-a-git-repository/13102849#13102849
 
 misc stuff:
