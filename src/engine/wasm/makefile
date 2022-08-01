@@ -1,3 +1,6 @@
+# https://stackoverflow.com/questions/3871444/making-all-rules-depend-on-the-makefile-itself
+.EXTRA_PREREQS:= $(abspath $(lastword $(MAKEFILE_LIST)))
+
 TARGET_DEBUG := debug
 TARGET_SPEED := release-speed
 TARGET_SIZE := release-size
@@ -8,6 +11,7 @@ ASC_SOURCE_DIR := src/asc
 ASC_BUILD_DIR := build/asc
 ASC_SOURCE_FILES := $(wildcard $(ASC_SOURCE_DIR)/*.ts)
 ASC_BUILD_FILES := $(ASC_SOURCE_FILES:$(ASC_SOURCE_DIR)/%.ts=$(ASC_BUILD_DIR)/%.wasm)
+ASC_BINDINGS = esm
 
 # SOURCE_WAT_FILES = $(wildcard $(SOURCE_DIR)/wat/*.wat)
 
@@ -38,14 +42,14 @@ build_asc: init_asc_build $(ASC_BUILD_FILES)
 	@echo 'Asc files compilation terminated.'
 
 init_asc_build:
-	@echo
+	@echo $(MAKEFILE_LIST)
 	@echo 'Compiling asc files...'
 	@mkdir -p $(ASC_BUILD_DIR)
 
 $(ASC_BUILD_DIR)/%.wasm: $(ASC_SOURCE_DIR)/%.ts build_flags $(ASC_CONFIG_FILE)
 	@echo
 	@echo Compiling $@ ...
-	asc --config asconfig.json $< -o $@ -t $(basename $@).wat -b esm --target $(TARGET)
+	asc --config $(ASC_CONFIG_FILE) $< -o $@ -t $(basename $@).wat -b $(ASC_BINDINGS) --target $(TARGET)
 
 # **************************************************
 # COMPILE WAT
