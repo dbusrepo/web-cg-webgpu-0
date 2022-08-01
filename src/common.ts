@@ -1,3 +1,7 @@
+const BPP = 4;
+const PAGE_SIZE = 64 * 1024; // 64kb
+const MILLI_IN_SEC = 1000; // TODO move to common ?
+
 type Range = [start: number, end: number];
 
 enum StatsNames {
@@ -23,4 +27,12 @@ type TypedArray = // TODO move?
     | Float32Array
     | Float64Array;
 
-export { Range, TypedArray, StatsNames, StatsValues };
+export {
+  MILLI_IN_SEC,
+  PAGE_SIZE,
+  BPP,
+  Range,
+  TypedArray,
+  StatsNames,
+  StatsValues,
+};

@@ -1,6 +1,9 @@
+// import { calcValue } from './drawUtils';
+
 declare const frameBufferOffset: i32;
+declare const frameBufferSize: i32;
 declare const frameWidth: i32;
-declare const pixelCount: i32;
+declare const frameHeight: i32;
 
 // declare function log(i: i32, msg: string): void
 declare function log(i: i32): void;
@@ -25,8 +28,36 @@ declare function log(i: i32): void;
   // store<u32>(frameBufferOffset + (pixelCount-1)*4, 0xFF_00_00_FF);
 // }
 
+type float = f64;
+
+export class Vec {
+    // position, also color (r,g,b)
+    constructor(public x: float = 0.0, public y: float = 0.0, public z: float = 0.0) {}
+}
+
+// Let's utilize the entire heap as our image buffer
+const offset = __heap_base;
+var TOP = offset + 8;
+
+store<usize>(offset, TOP);
+
+export function __allocator_get_offset(): usize {
+  return atomic.load<usize>(offset);
+}
+
+export function __memory_allocate(size: usize): usize {
+  log(__heap_base);
+  return 0;
+}
+
+const v = new Vec(1,2,3);
+
 export function printValues(): void {
-  log(42);
+  // log(ASC_MEMORY_BASE);
+  // log(memory.size()); //<<16);
+  // log(i32(__data_end));
+  // log(calcValue());
+  // log(heap.alloc(10));
 }
 
 export function clearBg(
@@ -42,6 +73,7 @@ export function clearBg(
     v128.store(i, value);
     v128.store(i + 16, value);
   }
+
   // TODO handle remainder elements here ?
 
   // test first and last pixel

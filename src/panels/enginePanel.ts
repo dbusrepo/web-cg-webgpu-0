@@ -8,7 +8,7 @@ import {
   EnginePanelMenuGui,
   EnginePanelMenuConfig,
 } from './EnginePanelMenuGui';
-import { StatsNames, StatsValues } from '../engine/common';
+import { StatsNames, StatsValues } from '../common';
 import { EngineConfig } from '../engine/engine';
 
 const buildEngineWorker = () =>

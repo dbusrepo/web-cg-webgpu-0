@@ -169,3 +169,23 @@ setInterval(() => {
     'FPS': cc < 100 ? 200 + (Math.random() * 300) | 0 : Math.random()*50,
   });
 }, 100);
+
+
+private get_font_height(): number {
+  return this._ctx.measureText('M').width + 1;
+}
+
+private draw_text(txt: string): void {
+  // TODO x,y?
+  this._ctx.font = 'bold 16pt monospace';
+  const lineHeight = 3 + this.get_font_height();
+  this._ctx.fillStyle = '#999'; // gray
+  const lines = txt.split('\n');
+  for (
+      let i = 0, x = 1, y = lineHeight;
+      i !== lines.length;
+      i += 1, y += lineHeight
+      ) {
+    this._ctx.fillText(lines[i], x, y);
+  }
+}

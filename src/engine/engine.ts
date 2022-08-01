@@ -1,169 +1,186 @@
+import {
+  MemoryRegionsData,
+  MemRegionConfig,
+  memRegionSizes,
+  memRegionOffsets,
+} from './memoryRegions';
 // import loader from '@assemblyscript/loader';
 // import assert from 'assert';
 import { defaultConfig } from '../config/config';
-import { TypedArray, StatsNames, StatsValues, Range } from './common';
-import { getRange } from './utils';
-import * as myWasm from './initWasm';
+import {
+  TypedArray,
+  StatsNames,
+  StatsValues,
+  PAGE_SIZE,
+  MILLI_IN_SEC,
+} from '../common';
 
 // import * as loadUtils from '../utils/loadFiles'; // TODO
-import { WorkerConfig } from './worker';
+import { EngineWorkerConfig, EngineWorker } from './engineWorker';
 import { clearBg } from './draw';
 
 // test img loading... TODO
 // import myImgUrl from 'images/samplePNGImage.png';
-
-// TODO ? export ?
-// const FRAME_BUF_IDX = myWasm.MemoryRegion.FRAMEBUFFER;
 
 type EngineConfig = {
   canvas: OffscreenCanvas;
   sendStats: boolean;
 };
 
-class Engine {
-  private static readonly NUM_HELP_WORKERS = 1;
-  // #workers = main engine worker + help workers
-  private static readonly TOTAL_WORKERS = 1 + Engine.NUM_HELP_WORKERS;
-  private static readonly MILLI_IN_SEC = 1000;
+class Engine extends EngineWorker {
+  private static readonly NUM_HELP_WORKERS = 4;
 
+  // TODO
   private static readonly RENDER_PERIOD =
-    Engine.MILLI_IN_SEC / defaultConfig.target_fps;
+    MILLI_IN_SEC / defaultConfig.target_fps;
   private static readonly UPDATE_PERIOD =
-    (defaultConfig.multiplier * Engine.MILLI_IN_SEC) / defaultConfig.target_ups;
+    (defaultConfig.multiplier * MILLI_IN_SEC) / defaultConfig.target_ups;
   private static readonly UPDATE_TIME_MAX = Engine.UPDATE_PERIOD * 8;
 
   private static readonly UPD_TIME_ARR_LENGTH = 4;
   private static readonly FRAME_TIME_ARR_LENGTH = 8;
 
   private static readonly FPS_ARR_LENGTH = 8;
-  private static readonly STATS_PERIOD = Engine.MILLI_IN_SEC;
+  private static readonly STATS_PERIOD = MILLI_IN_SEC;
 
-  // engine worker data
-  private _workerIdx: number;
-  private _rowRange: Range;
-
-  private _canvas: OffscreenCanvas;
+  private _engineConfig: EngineConfig;
   private _ctx: OffscreenCanvasRenderingContext2D;
-  private _pixelCount: number;
   private _imageData: ImageData;
-
-  private _wasmInput: myWasm.WasmInput;
-  private _wasmMemory: WebAssembly.Memory;
-  private _wasmData: myWasm.WasmData;
-  private _frameBuffer: Uint8ClampedArray;
-
-  private _syncArr: Int32Array;
-  private _sleepArr: Int32Array;
-
-  private _sendStats: boolean;
+  private _pixelCount: number;
 
   private _workers: Worker[];
 
-  static async create(config: EngineConfig): Promise<Engine> {
+  public async initEngine(config: EngineConfig): Promise<void> {
+    this._engineConfig = config;
+
     const { canvas, sendStats } = config;
 
-    const engine = new Engine();
-
-    engine._canvas = canvas;
-    engine._sendStats = sendStats;
-
-    // sync array locations: [main engine worker, help workers, init sync]
-    engine._syncArr = new Int32Array(
-      new SharedArrayBuffer((Engine.TOTAL_WORKERS + 1) * 4),
-    );
-
-    engine._sleepArr = new Int32Array(new SharedArrayBuffer(4));
-
-    engine._ctx = <OffscreenCanvasRenderingContext2D>(
+    const ctx = <OffscreenCanvasRenderingContext2D>(
       canvas.getContext('2d', { alpha: false })
     );
+    ctx.imageSmoothingEnabled = false;
+    this._ctx = ctx;
 
     const frameWidth = canvas.width;
     const frameHeight = canvas.height;
-    engine._pixelCount = frameWidth * frameHeight;
-    engine._imageData = engine._ctx.createImageData(frameWidth, frameHeight);
+    this._imageData = this._ctx.createImageData(frameWidth, frameHeight);
+    this._pixelCount = frameWidth * frameHeight;
 
-    await engine.initWasm();
-    await engine.initWorkers();
+    const memConfig: MemRegionConfig = {
+      frameWidth,
+      frameHeight,
+      numWorkers: Engine.NUM_HELP_WORKERS + 1,
+    };
 
-    engine._workerIdx = 0;
-    engine._rowRange = getRange(
-      engine._workerIdx,
-      engine._wasmInput.frameHeight,
-      Engine.TOTAL_WORKERS,
+    const memSizes = memRegionSizes(memConfig);
+    const memOffsets = memRegionOffsets(memConfig, memSizes);
+    const memInitialSize = Object.values(memSizes).reduce(
+      (acc, size) => acc + size,
+      0,
     );
 
-    return engine;
+    // TODO
+    console.log('mem initial size is: ' + memInitialSize);
+
+    const memory = this.initMemory(memInitialSize);
+
+    const engineWorkerConfig: EngineWorkerConfig = this.buildWorkerConfig(
+      0,
+      memInitialSize,
+      memSizes,
+      memOffsets,
+      memory,
+    );
+
+    this.init(engineWorkerConfig);
+
+    await engine.initHelpWorkers(memInitialSize, memSizes, memOffsets, memory);
   }
 
-  // constructor() {}
+  private buildWorkerConfig(
+    idx: number,
+    memInitialSize: number,
+    memSizes: MemoryRegionsData,
+    memOffsets: MemoryRegionsData,
+    memory: WebAssembly.Memory,
+  ): EngineWorkerConfig {
+    return {
+      workerIdx: idx,
+      numWorkers: Engine.NUM_HELP_WORKERS + 1,
+      frameWidth: this._engineConfig.canvas.width,
+      frameHeight: this._engineConfig.canvas.height,
+      memInitialSize,
+      memSizes,
+      memOffsets,
+      memory,
+    };
+  }
 
-  private async initWasm(): Promise<void> {
-    this._wasmMemory = new WebAssembly.Memory({
-      initial: 512,
-      maximum: 512,
+  private initMemory(memStartSize: number): WebAssembly.Memory {
+    const memory = new WebAssembly.Memory({
+      initial: Math.ceil(memStartSize / PAGE_SIZE),
+      maximum: 1000,
       shared: true,
     });
 
-    const wasmInData: myWasm.WasmInput = {
-      memory: this._wasmMemory,
-      frameWidth: this._canvas.width,
-      frameHeight: this._canvas.height,
-    };
-
-    this._wasmInput = wasmInData;
-
-    this._wasmData = await myWasm.initWasm(wasmInData);
-    this._frameBuffer = this._wasmData.ui8cFramebuffer;
+    return memory;
   }
 
-  private async initWorkers(): Promise<void> {
-    this._workers = [];
-    this._syncArr.fill(0);
+  private async initHelpWorkers(
+    memInitialSize: number,
+    memSizes: MemoryRegionsData,
+    memOffsets: MemoryRegionsData,
+    memory: WebAssembly.Memory,
+  ): Promise<void> {
 
-    let count = Engine.NUM_HELP_WORKERS;
+    this._workers = [];
+
+    const numHelpWorkers = Engine.NUM_HELP_WORKERS;
+
+    if (numHelpWorkers <= 0) {
+      return Promise.resolve();
+    }
+
+    let count = numHelpWorkers;
     const now = Date.now();
 
     return new Promise((resolve, reject) => {
-      if (Engine.NUM_HELP_WORKERS < 1) {
-        resolve();
-      }
-      for (let i = 1; i <= Engine.NUM_HELP_WORKERS; ++i) {
-        const worker = new Worker(new URL('./worker.ts', import.meta.url), {
-          name: `worker-${i}`,
-          type: 'module',
-        });
+      for (let i = 1; i <= numHelpWorkers; ++i) {
+        const worker = new Worker(
+          new URL('./engineWorker.ts', import.meta.url),
+          {
+            name: `worker-${i}`,
+            type: 'module',
+          },
+        );
+        this._workers.push(worker);
         worker.onmessage = ({ data: msg }) => {
           // TODO
           console.log(
-            `Help worker ready: id=${i}, count=${--count}, time=${
+            `Worker ready: id=${i}, count=${--count}, time=${
               Date.now() - now
             }ms`,
           );
           if (count === 0) {
-            const notifyIdx = Engine.TOTAL_WORKERS; // see _syncArr def
-            Atomics.notify(this._syncArr, notifyIdx);
-            // console.log(`Main worker ready: id=0,
-            // time=${Date.now() - now}ms`);
+            console.log(`All workers ready. After ${Date.now() - now}ms`);
             resolve();
           }
         };
         worker.onerror = (error) => {
-          console.log('Worker error: ' + error.message + '\n');
+          console.log(`Worker id=${i} error: ${error.message}\n`);
           reject(error);
         };
-        const workerConfig: WorkerConfig = {
-          idx: i,
-          numWorkers: Engine.TOTAL_WORKERS,
-          syncArrBuffer: this._syncArr.buffer as SharedArrayBuffer,
-          wasmMemory: this._wasmMemory,
-          wasmInData: this._wasmInput,
-        };
+        const engineWorkerConfig: EngineWorkerConfig = this.buildWorkerConfig(
+          i,
+          memInitialSize,
+          memSizes,
+          memOffsets,
+          memory,
+        );
         worker.postMessage({
-          command: 'run',
-          params: workerConfig,
+          command: 'init',
+          params: engineWorkerConfig,
         });
-        this._workers.push(worker);
       }
     });
   }
@@ -186,9 +203,16 @@ class Engine {
     let upsArr: Float32Array;
     let fpsCount: number;
     let resync: boolean;
-
     let isRunning: boolean;
     let isPaused: boolean;
+
+    const runWorkers = (): void => {
+      this._workers.forEach((worker) => {
+        worker.postMessage({
+          command: 'run',
+        });
+      });
+    };
 
     const init = (curTimeMs: number) => {
       initTime = curTimeMs;
@@ -210,7 +234,6 @@ class Engine {
       requestAnimationFrame(renderLoop);
     };
 
-    requestAnimationFrame(init);
 
     const calcAvgArrValue = (values: TypedArray, count: number) => {
       let acc = 0;
@@ -282,13 +305,13 @@ class Engine {
         const elapsed = loopStartTime - lastStatsTime;
         lastStatsTime = loopStartTime;
         elapsedTime += elapsed;
-        const fps = (frameCount * Engine.MILLI_IN_SEC) / elapsedTime;
-        const ups = (updateCount * Engine.MILLI_IN_SEC) / elapsedTime;
+        const fps = (frameCount * MILLI_IN_SEC) / elapsedTime;
+        const ups = (updateCount * MILLI_IN_SEC) / elapsedTime;
         // console.log(`${fps} - ${ups}`);
         const fpsIdx = fpsCount++ % Engine.FPS_ARR_LENGTH;
         fpsArr[fpsIdx] = fps;
         upsArr[fpsIdx] = ups;
-        if (this._sendStats) {
+        if (this._engineConfig.sendStats) {
           const avgFps = Math.round(calcAvgArrValue(fpsArr, fpsCount));
           const avgUps = Math.round(calcAvgArrValue(upsArr, fpsCount));
           const avgMaxFps = Math.round(
@@ -306,31 +329,24 @@ class Engine {
         }
       }
     };
+
+    runWorkers();
+    requestAnimationFrame(init);
   }
 
   private drawFrame(): void {
-    // this.clearBckgr();
-
-    // postMessage({
-    //   command: 'log',
-    //   params: { key: 'start' },
-    // });
 
     for (let i = 1; i <= Engine.NUM_HELP_WORKERS; ++i) {
-      Atomics.store(this._syncArr, i, 1);
-      Atomics.notify(this._syncArr, i);
+      this.syncStore(i, 1);
+      this.syncNotify(i);
     }
 
-    clearBg(this._wasmData, this._rowRange);
+    const color = 0xff_00_00_ff; // ABGR
+    clearBg(this._wasmModules, color, this._frameHeightRange);
 
     for (let i = 1; i <= Engine.NUM_HELP_WORKERS; ++i) {
-      Atomics.wait(this._syncArr, i, 1);
+      this.syncWait(i, 1);
     }
-
-    // postMessage({
-    //   command: 'msg',
-    //   params: { key: 'end' },
-    // });
 
     this.updateImage();
   }
@@ -349,38 +365,14 @@ class Engine {
   // async loadImages() { // TODO
   //   await loadImageAsImageData(myImgUrl);
   // }
-
-  // UTILS SECTION
-
-  private get_font_height(): number {
-    return this._ctx.measureText('M').width + 1;
-  }
-
-  private draw_text(txt: string): void {
-    // TODO x,y?
-    this._ctx.font = 'bold 16pt monospace';
-    const lineHeight = 3 + this.get_font_height();
-    this._ctx.fillStyle = '#999'; // gray
-    const lines = txt.split('\n');
-    for (
-      let i = 0, x = 1, y = lineHeight;
-      i !== lines.length;
-      i += 1, y += lineHeight
-    ) {
-      this._ctx.fillText(lines[i], x, y);
-    }
-  }
-
-  // private sleep(tMs: number) { // TODO check
-  //   atomicSleep(this._sleepArr, tMs);
-  // }
 }
 
 let engine: Engine;
 
 const commands = {
   async run(config: EngineConfig): Promise<void> {
-    engine = await Engine.create(config);
+    engine = new Engine();
+    await engine.initEngine(config);
     engine.run();
   },
 };

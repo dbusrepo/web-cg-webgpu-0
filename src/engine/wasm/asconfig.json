@@ -8,8 +8,10 @@
     "sourceMap": true,
     "noAssert": false,
 
-    "initialMemory": 512,
-    "maximumMemory": 512,
+    "memoryBase": 256000,
+
+    "initialMemory": 4,
+    "maximumMemory": 1000,
     "importMemory": true,
     "sharedMemory": true,
     "noExportMemory": true,

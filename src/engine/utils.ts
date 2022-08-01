@@ -1,12 +1,12 @@
-import { Range } from './common';
+import { Range, BPP } from '../common';
 // import * as wasm from './initWasm';
 
 // const FRAME_BUF_IDX = wasm.MemoryRegion.FRAMEBUFFER;
 
-function getRange(
+function range(
   workerIdx: number,
-  numElements: number,
   numThreads: number,
+  numElements: number,
 ): Range {
   const numTasks = (numElements / numThreads) | 0;
   const numTougherThreads = numElements % numThreads;
@@ -25,4 +25,4 @@ function atomicSleep(sleepArr: Int32Array, timeoutMs: number): void {
   Atomics.wait(sleepArr, 0, 0, Math.max(1, timeoutMs | 0));
 }
 
-export { atomicSleep, getRange, Range };
+export { atomicSleep, range, Range };

@@ -1,5 +1,5 @@
 import { StatsPanel } from './statsPanel';
-import { StatsNames, StatsValues } from '../../engine/common';
+import { StatsNames, StatsValues } from '../../common';
 
 // TODO not used
 // const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
