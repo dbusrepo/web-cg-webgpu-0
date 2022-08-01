@@ -14,24 +14,26 @@ type AscExports = {
   draw: typeof drawWasmExport;
 };
 
-async function loadDrawWasm(
+async function loadDrawInstance(
   ascWasmInput: AscWasmInput,
 ): Promise<typeof drawWasmExport> {
   const { memory, frameWidth, frameHeight, frameBufferOffset } = ascWasmInput;
 
-  const instance = await drawWasm<typeof drawWasmExport>({
+  const drawInst = await drawWasm<typeof drawWasmExport>({
     draw: {
       frameBufferOffset,
       frameWidth,
       pixelCount: frameWidth * frameHeight,
-      // log,
+      log: (i: number) => console.log(`Value: ${i}`),
     },
     env: {
       memory,
     },
   });
 
-  return instance.instance.exports;
+  drawInst.instance.exports.printValues();
+
+  return drawInst.instance.exports;
 }
 
 async function loadAscModules(ascWasmInput: AscWasmInput): Promise<AscExports> {
@@ -60,7 +62,7 @@ async function loadAscModules(ascWasmInput: AscWasmInput): Promise<AscExports> {
   //   },
   // };
 
-  const draw = await loadDrawWasm(ascWasmInput);
+  const draw = await loadDrawInstance(ascWasmInput);
 
   return {
     draw,

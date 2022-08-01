@@ -3,6 +3,7 @@ declare const frameWidth: i32;
 declare const pixelCount: i32;
 
 // declare function log(i: i32, msg: string): void
+declare function log(i: i32): void;
 
 // export function clearBg(frameBufferOffset: i32, color: i32): void {
   // log(0, 'ciao from asc!'); // TODO la mem della stringa allocata da as
@@ -23,6 +24,10 @@ declare const pixelCount: i32;
   // store<u32>(frameBufferOffset, 0xFF_00_00_FF);
   // store<u32>(frameBufferOffset + (pixelCount-1)*4, 0xFF_00_00_FF);
 // }
+
+export function printValues(): void {
+  log(42);
+}
 
 export function clearBg(
   color: i32,
