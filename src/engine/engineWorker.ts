@@ -1,12 +1,10 @@
 import { MemoryRegion, MemoryRegionsData } from './memoryRegions';
 import { WasmModules, WasmInput, loadWasmModules } from './initWasm';
-import { range } from './utils';
-import { clearBg } from './draw';
-import { Range } from '../common';
+import { syncStore, syncWait, syncNotify, sleep } from './utils';
 
 type EngineWorkerConfig = {
-  workerIdx: number;
-  numWorkers: number;
+  workerIdx: number; // >= 1
+  numEngineWorkers: number;
   frameWidth: number;
   frameHeight: number;
   memInitialSize: number;
@@ -24,12 +22,11 @@ class EngineWorker {
   protected _frameBuffer: Uint8ClampedArray;
   protected _syncArr: Int32Array;
   protected _sleepArr: Int32Array;
-  protected _frameHeightRange: Range;
 
   public async init(config: EngineWorkerConfig): Promise<void> {
     this._config = config;
 
-    const { memory } = config;
+    const { memory, workerIdx } = config;
 
     this._memi8 = new Uint8Array(memory.buffer, 0, config.memInitialSize);
     this._memi32 = new Uint32Array(memory.buffer, 0, config.memInitialSize / 4);
@@ -40,26 +37,24 @@ class EngineWorker {
       config.memSizes[MemoryRegion.FRAMEBUFFER],
     );
 
-    this._syncArr = new Int32Array(memory.buffer, 
+    this._syncArr = new Int32Array(
+      memory.buffer,
       config.memOffsets[MemoryRegion.SYNC_ARRAY],
       config.memSizes[MemoryRegion.SYNC_ARRAY],
     );
 
-    this.syncStore(this._config.workerIdx, 0);
+    syncStore(this._syncArr, workerIdx, 0);
 
-    this._sleepArr = new Int32Array(memory.buffer, 
+    this._sleepArr = new Int32Array(
+      memory.buffer,
       config.memOffsets[MemoryRegion.SLEEP_ARRAY],
       config.memSizes[MemoryRegion.SLEEP_ARRAY],
     );
 
+    syncStore(this._sleepArr, workerIdx, 0);
+
     await this.initWasmModules();
     // this._frameBuffer = this._wasmData.ui8cFramebuffer;
-
-    this._frameHeightRange = range(
-      config.workerIdx,
-      config.numWorkers,
-      config.frameHeight,
-    );
   }
 
   private async initWasmModules(): Promise<void> {
@@ -68,41 +63,33 @@ class EngineWorker {
       frameWidth: this._config.frameWidth,
       frameHeight: this._config.frameHeight,
       frameBufferOffset: this._config.memOffsets[MemoryRegion.FRAMEBUFFER],
-      frameBufferSize: this._config.memSizes[MemoryRegion.FRAMEBUFFER],
+      syncArrayOffset: this._config.memOffsets[MemoryRegion.SYNC_ARRAY],
+      sleepArrayOffset: this._config.memOffsets[MemoryRegion.SLEEP_ARRAY],
+      workerIdx: this._config.workerIdx,
+      log_i32: (v: number) =>
+        console.log(`Worker: ${this._config.workerIdx} Value: ${v}`),
     };
 
     this._wasmInitInput = initData;
     this._wasmModules = await loadWasmModules(initData);
   }
 
-  protected syncStore(idx: number, value: number): void {
-    Atomics.store(this._syncArr, idx, value);
-  }
-
-  protected syncWait(idx: number, value: number): void {
-    Atomics.wait(this._syncArr, idx, value);
-  }
-
-  protected syncNotify(idx: number): void {
-    Atomics.notify(this._syncArr, idx);
-  }
-
   run(): void {
     console.log(`Worker ${this._config.workerIdx} running!`);
-    const idx = this._config.workerIdx;
-    const r = ( Math.random() * 255 ) | 0;
-    const g = ( Math.random() * 255 ) | 0;
-    const b = (Math.random() * 255 ) | 0;
-    // console.log(b);
-    // ABGR
-    const color = 0xff_00_00_00 | r | (g << 8) | (b << 16);
-    for (;;) {
-      this.syncWait(idx, 0);
-      // sleep(this._sleepArr, 10); // TODO
-      clearBg(this._wasmModules, color, this._frameHeightRange);
-      this.syncStore(idx, 0);
-      this.syncNotify(idx);
-    }
+    this._wasmModules.engineWorker.run();
+    // const idx = this._config.workerIdx;
+    // const r = ( Math.random() * 255 ) | 0;
+    // const g = ( Math.random() * 255 ) | 0;
+    // const b = (Math.random() * 255 ) | 0;
+    // const color = 0xff_00_00_00 | r | (g << 8) | (b << 16);
+    // // ABGR
+    // for (;;) {
+    //   syncWait(this._syncArr, idx, 0);
+    //   // sleep(this._syncArr, idx, 1000);
+    //   clearBg(this._wasmModules, color, this._frameHeightRange);
+    //   syncStore(this._syncArr, idx, 0);
+    //   syncNotify(this._syncArr, idx);
+    // }
   }
 }
 

@@ -1,4 +1,5 @@
 import {
+  MemoryRegion,
   MemoryRegionsData,
   MemRegionConfig,
   memRegionSizes,
@@ -14,10 +15,10 @@ import {
   PAGE_SIZE,
   MILLI_IN_SEC,
 } from '../common';
+import { syncStore, syncWait, syncNotify, sleep } from './utils';
 
 // import * as loadUtils from '../utils/loadFiles'; // TODO
 import { EngineWorkerConfig, EngineWorker } from './engineWorker';
-import { clearBg } from './draw';
 
 // test img loading... TODO
 // import myImgUrl from 'images/samplePNGImage.png';
@@ -27,8 +28,9 @@ type EngineConfig = {
   sendStats: boolean;
 };
 
-class Engine extends EngineWorker {
-  private static readonly NUM_HELP_WORKERS = 4;
+class Engine {
+  private static readonly WORKER_IDX = 0;
+  private static readonly NUM_ENGINE_WORKERS = 2; // TODO >= 1
 
   // TODO
   private static readonly RENDER_PERIOD =
@@ -46,11 +48,14 @@ class Engine extends EngineWorker {
   private _engineConfig: EngineConfig;
   private _ctx: OffscreenCanvasRenderingContext2D;
   private _imageData: ImageData;
-  private _pixelCount: number;
+
+  protected _frameBuffer: Uint8ClampedArray;
+  protected _syncArr: Int32Array;
+  protected _sleepArr: Int32Array;
 
   private _workers: Worker[];
 
-  public async initEngine(config: EngineConfig): Promise<void> {
+  public async init(config: EngineConfig): Promise<void> {
     this._engineConfig = config;
 
     const { canvas, sendStats } = config;
@@ -64,12 +69,11 @@ class Engine extends EngineWorker {
     const frameWidth = canvas.width;
     const frameHeight = canvas.height;
     this._imageData = this._ctx.createImageData(frameWidth, frameHeight);
-    this._pixelCount = frameWidth * frameHeight;
 
     const memConfig: MemRegionConfig = {
       frameWidth,
       frameHeight,
-      numWorkers: Engine.NUM_HELP_WORKERS + 1,
+      numWorkers: Engine.NUM_ENGINE_WORKERS + 1,
     };
 
     const memSizes = memRegionSizes(memConfig);
@@ -84,17 +88,34 @@ class Engine extends EngineWorker {
 
     const memory = this.initMemory(memInitialSize);
 
-    const engineWorkerConfig: EngineWorkerConfig = this.buildWorkerConfig(
-      0,
+    this._frameBuffer = new Uint8ClampedArray(
+      memory.buffer,
+      memOffsets[MemoryRegion.FRAMEBUFFER],
+      memSizes[MemoryRegion.FRAMEBUFFER],
+    );
+
+    this._syncArr = new Int32Array(
+      memory.buffer,
+      memOffsets[MemoryRegion.SYNC_ARRAY],
+      memSizes[MemoryRegion.SYNC_ARRAY],
+    );
+
+    syncStore(this._syncArr, Engine.WORKER_IDX, 0);
+
+    this._sleepArr = new Int32Array(
+      memory.buffer,
+      memOffsets[MemoryRegion.SLEEP_ARRAY],
+      memSizes[MemoryRegion.SLEEP_ARRAY],
+    );
+
+    syncStore(this._sleepArr, Engine.WORKER_IDX, 0);
+
+    await engine.initEngineWorkers(
       memInitialSize,
       memSizes,
       memOffsets,
       memory,
     );
-
-    this.init(engineWorkerConfig);
-
-    await engine.initHelpWorkers(memInitialSize, memSizes, memOffsets, memory);
   }
 
   private buildWorkerConfig(
@@ -106,7 +127,7 @@ class Engine extends EngineWorker {
   ): EngineWorkerConfig {
     return {
       workerIdx: idx,
-      numWorkers: Engine.NUM_HELP_WORKERS + 1,
+      numEngineWorkers: Engine.NUM_ENGINE_WORKERS,
       frameWidth: this._engineConfig.canvas.width,
       frameHeight: this._engineConfig.canvas.height,
       memInitialSize,
@@ -122,34 +143,34 @@ class Engine extends EngineWorker {
       maximum: 1000,
       shared: true,
     });
-
     return memory;
   }
 
-  private async initHelpWorkers(
+  private async initEngineWorkers(
     memInitialSize: number,
     memSizes: MemoryRegionsData,
     memOffsets: MemoryRegionsData,
     memory: WebAssembly.Memory,
   ): Promise<void> {
-
     this._workers = [];
 
-    const numHelpWorkers = Engine.NUM_HELP_WORKERS;
-
-    if (numHelpWorkers <= 0) {
+    if (Engine.NUM_ENGINE_WORKERS <= 0) {
       return Promise.resolve();
     }
 
-    let count = numHelpWorkers;
+    let count = Engine.NUM_ENGINE_WORKERS;
     const now = Date.now();
 
     return new Promise((resolve, reject) => {
-      for (let i = 1; i <= numHelpWorkers; ++i) {
+      for (
+        let workerIdx = 1;
+        workerIdx <= Engine.NUM_ENGINE_WORKERS;
+        ++workerIdx
+      ) {
         const worker = new Worker(
           new URL('./engineWorker.ts', import.meta.url),
           {
-            name: `worker-${i}`,
+            name: `worker-${workerIdx}`,
             type: 'module',
           },
         );
@@ -157,7 +178,7 @@ class Engine extends EngineWorker {
         worker.onmessage = ({ data: msg }) => {
           // TODO
           console.log(
-            `Worker ready: id=${i}, count=${--count}, time=${
+            `Worker ready: id=${workerIdx}, count=${--count}, time=${
               Date.now() - now
             }ms`,
           );
@@ -167,11 +188,11 @@ class Engine extends EngineWorker {
           }
         };
         worker.onerror = (error) => {
-          console.log(`Worker id=${i} error: ${error.message}\n`);
+          console.log(`Worker id=${workerIdx} error: ${error.message}\n`);
           reject(error);
         };
         const engineWorkerConfig: EngineWorkerConfig = this.buildWorkerConfig(
-          i,
+          workerIdx,
           memInitialSize,
           memSizes,
           memOffsets,
@@ -231,9 +252,9 @@ class Engine extends EngineWorker {
       frameThen = performance.now();
       isRunning = true;
       isPaused = false;
+      runWorkers();
       requestAnimationFrame(renderLoop);
     };
-
 
     const calcAvgArrValue = (values: TypedArray, count: number) => {
       let acc = 0;
@@ -287,7 +308,7 @@ class Engine extends EngineWorker {
       const elapsed = frameNow - frameThen;
       if (elapsed >= Engine.RENDER_PERIOD) {
         frameThen = frameNow - (elapsed % Engine.RENDER_PERIOD);
-        this.drawFrame();
+        this.renderFrame();
         const renderTime = performance.now() - startRenderTime;
         renderTimeArr[frameCount % renderTimeArr.length] = renderTime;
         frameCount++;
@@ -318,6 +339,7 @@ class Engine extends EngineWorker {
             1000 / calcAvgArrValue(renderTimeArr, frameCount),
           );
           const stats: Partial<StatsValues> = {
+            // TODO
             [StatsNames.FPS]: avgFps,
             [StatsNames.UPS]: avgUps,
             [StatsNames.UFPS]: avgMaxFps,
@@ -330,24 +352,17 @@ class Engine extends EngineWorker {
       }
     };
 
-    runWorkers();
     requestAnimationFrame(init);
   }
 
-  private drawFrame(): void {
-
-    for (let i = 1; i <= Engine.NUM_HELP_WORKERS; ++i) {
-      this.syncStore(i, 1);
-      this.syncNotify(i);
+  private renderFrame(): void {
+    for (let i = 1; i <= Engine.NUM_ENGINE_WORKERS; ++i) {
+      syncStore(this._syncArr, i, 1);
+      syncNotify(this._syncArr, i);
     }
-
-    const color = 0xff_00_00_ff; // ABGR
-    clearBg(this._wasmModules, color, this._frameHeightRange);
-
-    for (let i = 1; i <= Engine.NUM_HELP_WORKERS; ++i) {
-      this.syncWait(i, 1);
+    for (let i = 1; i <= Engine.NUM_ENGINE_WORKERS; ++i) {
+      syncWait(this._syncArr, i, 1);
     }
-
     this.updateImage();
   }
 
@@ -372,7 +387,7 @@ let engine: Engine;
 const commands = {
   async run(config: EngineConfig): Promise<void> {
     engine = new Engine();
-    await engine.initEngine(config);
+    await engine.init(config);
     engine.run();
   },
 };
