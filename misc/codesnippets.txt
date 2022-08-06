@@ -189,3 +189,7 @@ private draw_text(txt: string): void {
     this._ctx.fillText(lines[i], x, y);
   }
 }
+
+private _sleepArr: Int32Array;
+engine._sleepArr = new Int32Array(new SharedArrayBuffer(NUM_BYTES_DWORD)); // for atomic sleep
+

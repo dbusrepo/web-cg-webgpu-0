@@ -1,4 +1,7 @@
-import { BPP } from '../common';
+import { BPP, PAGE_SIZE } from '../common';
+import { defaultConfig } from '../config/config';
+
+const WORKER_HEAP_SIZE = PAGE_SIZE * defaultConfig.worker_heap_pages;
 
 type MemRegionConfig = {
   frameWidth: number;
@@ -10,6 +13,8 @@ const enum MemoryRegion { // TODO change name?
   FRAMEBUFFER = 'FRAMEBUFFER',
   SYNC_ARRAY = 'SYNC_ARRAY',
   SLEEP_ARRAY = 'SLEEP_ARRAY',
+  WORKERS_HEAP = 'WORKERS_HEAP',
+  HEAP = 'HEAP',
 }
 
 type MemoryRegionsData = {
@@ -28,6 +33,10 @@ function memRegionSizes(config: MemRegionConfig): MemoryRegionsData {
   // sleep array
   const sleepArraySize = config.numWorkers * 4; // check alignment?
   sizes[MemoryRegion.SLEEP_ARRAY] = sleepArraySize;
+  // workers heaps
+  const workersHeapSize = config.numWorkers * WORKER_HEAP_SIZE;
+  sizes[MemoryRegion.WORKERS_HEAP] = workersHeapSize;
+
   return sizes;
 }
 
@@ -46,6 +55,14 @@ function memRegionOffsets(
   // sleep array
   offset += sizes[MemoryRegion.SYNC_ARRAY]; // check align?
   offsets[MemoryRegion.SLEEP_ARRAY] = offset;
+  // worker heap size
+  offset += sizes[MemoryRegion.SLEEP_ARRAY];
+  offsets[MemoryRegion.WORKERS_HEAP] = offset;
+
+  // shared heap
+  const lastReg = MemoryRegion.WORKERS_HEAP; // change this if you add another
+  offset += sizes[lastReg];
+  offsets[MemoryRegion.HEAP] = offset;
   return offsets;
 }
 
@@ -55,4 +72,5 @@ export {
   MemoryRegionsData,
   memRegionSizes,
   memRegionOffsets,
+  WORKER_HEAP_SIZE,
 };

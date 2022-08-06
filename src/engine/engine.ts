@@ -1,3 +1,4 @@
+import assert from 'assert';
 import {
   MemoryRegion,
   MemoryRegionsData,
@@ -29,8 +30,7 @@ type EngineConfig = {
 };
 
 class Engine {
-  private static readonly WORKER_IDX = 0;
-  private static readonly NUM_ENGINE_WORKERS = 2; // TODO >= 1
+  private static readonly NUM_ENGINE_WORKERS = 2; // required  >= 1
 
   // TODO
   private static readonly RENDER_PERIOD =
@@ -56,6 +56,8 @@ class Engine {
   private _workers: Worker[];
 
   public async init(config: EngineConfig): Promise<void> {
+    assert(Engine.NUM_ENGINE_WORKERS >= 1);
+
     this._engineConfig = config;
 
     const { canvas, sendStats } = config;
@@ -73,7 +75,7 @@ class Engine {
     const memConfig: MemRegionConfig = {
       frameWidth,
       frameHeight,
-      numWorkers: Engine.NUM_ENGINE_WORKERS + 1,
+      numWorkers: Engine.NUM_ENGINE_WORKERS,
     };
 
     const memSizes = memRegionSizes(memConfig);
@@ -100,15 +102,11 @@ class Engine {
       memSizes[MemoryRegion.SYNC_ARRAY],
     );
 
-    syncStore(this._syncArr, Engine.WORKER_IDX, 0);
-
     this._sleepArr = new Int32Array(
       memory.buffer,
       memOffsets[MemoryRegion.SLEEP_ARRAY],
       memSizes[MemoryRegion.SLEEP_ARRAY],
     );
-
-    syncStore(this._sleepArr, Engine.WORKER_IDX, 0);
 
     await engine.initEngineWorkers(
       memInitialSize,
@@ -127,7 +125,7 @@ class Engine {
   ): EngineWorkerConfig {
     return {
       workerIdx: idx,
-      numEngineWorkers: Engine.NUM_ENGINE_WORKERS,
+      numWorkers: Engine.NUM_ENGINE_WORKERS,
       frameWidth: this._engineConfig.canvas.width,
       frameHeight: this._engineConfig.canvas.height,
       memInitialSize,
@@ -138,9 +136,15 @@ class Engine {
   }
 
   private initMemory(memStartSize: number): WebAssembly.Memory {
+    const initialPages = defaultConfig.initial_mem_pages;
+    console.log(`Initial mem pages: ${initialPages}`);
+    console.log(
+      `Initial mem pages required: ${Math.ceil(memStartSize / PAGE_SIZE)}`,
+    );
+    assert(initialPages * PAGE_SIZE >= memStartSize);
     const memory = new WebAssembly.Memory({
-      initial: Math.ceil(memStartSize / PAGE_SIZE),
-      maximum: 1000,
+      initial: initialPages,
+      maximum: 1000, // TODO
       shared: true,
     });
     return memory;
@@ -152,19 +156,17 @@ class Engine {
     memOffsets: MemoryRegionsData,
     memory: WebAssembly.Memory,
   ): Promise<void> {
-    this._workers = [];
+    assert(Engine.NUM_ENGINE_WORKERS >= 1);
 
-    if (Engine.NUM_ENGINE_WORKERS <= 0) {
-      return Promise.resolve();
-    }
+    this._workers = [];
 
     let count = Engine.NUM_ENGINE_WORKERS;
     const now = Date.now();
 
     return new Promise((resolve, reject) => {
       for (
-        let workerIdx = 1;
-        workerIdx <= Engine.NUM_ENGINE_WORKERS;
+        let workerIdx = 0;
+        workerIdx < Engine.NUM_ENGINE_WORKERS;
         ++workerIdx
       ) {
         const worker = new Worker(
@@ -356,11 +358,11 @@ class Engine {
   }
 
   private renderFrame(): void {
-    for (let i = 1; i <= Engine.NUM_ENGINE_WORKERS; ++i) {
+    for (let i = 0; i < Engine.NUM_ENGINE_WORKERS; ++i) {
       syncStore(this._syncArr, i, 1);
       syncNotify(this._syncArr, i);
     }
-    for (let i = 1; i <= Engine.NUM_ENGINE_WORKERS; ++i) {
+    for (let i = 0; i < Engine.NUM_ENGINE_WORKERS; ++i) {
       syncWait(this._syncArr, i, 1);
     }
     this.updateImage();

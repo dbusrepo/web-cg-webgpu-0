@@ -1,11 +1,20 @@
 // import assert from 'assert';
 
 // ASC modules here
+import myAssertWasm from './wasm/build/asc/myassert.wasm';
+import myAssertExport from './wasm/build/asc/myassert';
+import heapAllocWasm from './wasm/build/asc/heapAlloc.wasm';
+import heapAllocExport from './wasm/build/asc/heapAlloc';
+import workerHeapAllocWasm from './wasm/build/asc/workerHeapAlloc.wasm';
+import workerHeapAllocExport from './wasm/build/asc/workerHeapAlloc';
+import utilsWasm from './wasm/build/asc/utils.wasm';
+import utilsExport from './wasm/build/asc/utils';
 import drawWasm from './wasm/build/asc/draw.wasm';
 import drawExport from './wasm/build/asc/draw';
 import engineWorkerWasm from './wasm/build/asc/engineWorker.wasm';
 import engineWorkerExport from './wasm/build/asc/engineWorker';
 
+// TODO
 type wasmBuilderFunc<T> = (
   importsObject?: WebAssembly.Imports,
 ) => Promise<{ instance: WebAssembly.Instance & { exports: T } }>;
@@ -21,8 +30,14 @@ interface WasmInput {
   frameBufferOffset: number;
   syncArrayOffset: number;
   sleepArrayOffset: number;
+  workersHeapOffset: number;
+  workerHeapSize: number;
+  heapOffset: number;
   workerIdx: number;
-  log_i32: (v: number) => void;
+  numWorkers: number;
+  logi: (v: number) => void;
+  logf: (v: number) => void;
+  bgColor: number;
 }
 
 interface WasmModules {
@@ -33,16 +48,23 @@ async function loadWasm<T>(
   name: string,
   wasm: wasmBuilderFunc<T>,
   wasmInit: WasmInput,
-  imports: object = {},
+  ...otherImports: object[]
 ): Promise<T> {
+  const otherImpObj = otherImports.reduce(
+    (acc, obj) => ({
+      ...acc,
+      ...obj,
+    }),
+    {},
+  );
   const instance = await wasm({
     [name]: {
       ...wasmInit,
-      ...imports,
+      ...otherImpObj,
     },
     env: {
       memory: wasmInit.memory,
-      abort: () => {
+      abort: (...args: any[]) => {
         console.log('abort!');
       },
     },
@@ -50,21 +72,50 @@ async function loadWasm<T>(
   return instance.instance.exports;
 }
 
-async function loadEngineWorkerExports(
+async function loadEngineWorkerExport(
   wasmInit: WasmInput,
 ): Promise<typeof engineWorkerExport> {
-  const drawExports = await loadWasm<typeof drawExport>('draw', drawWasm, wasmInit);
-  const instance = await loadWasm<typeof engineWorkerExport>(
+  const myAssert = await loadWasm<typeof myAssertExport>(
+    'myAssert',
+    myAssertWasm,
+    wasmInit,
+  );
+  const heapAlloc = await loadWasm<typeof heapAllocExport>(
+    'heapAlloc',
+    heapAllocWasm,
+    wasmInit,
+    myAssert,
+  );
+  const alloc = await loadWasm<typeof workerHeapAllocExport>(
+    'workerHeapAlloc',
+    workerHeapAllocWasm,
+    wasmInit,
+    myAssert,
+    heapAlloc,
+  );
+  const utils = await loadWasm<typeof utilsExport>(
+    'utils',
+    utilsWasm,
+    wasmInit,
+  );
+  const draw = await loadWasm<typeof drawExport>('draw', drawWasm, wasmInit);
+  const engineWorker = await loadWasm<typeof engineWorkerExport>(
     'engineWorker',
     engineWorkerWasm,
     wasmInit,
-    drawExports,
+    draw,
+    utils,
+    alloc,
+    myAssert,
   );
-  return instance;
+  return engineWorker;
 }
 
 async function loadWasmModules(wasmInit: WasmInput): Promise<WasmModules> {
-  const engineWorker = await loadEngineWorkerExports(wasmInit);
+  const engineWorker = await loadEngineWorkerExport(wasmInit);
+  if (wasmInit.workerIdx === 0) {
+    engineWorker.init();
+  }
   return {
     engineWorker,
   };

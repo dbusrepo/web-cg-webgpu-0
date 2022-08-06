@@ -1,3 +1,10 @@
+see asconfig.json:
+
+each worker instantiate the same modules, passing the global memory: wasm mem:
+reserved by app | module memory (data + heap):  the module part starts from the
+memoryBase value in asconfig: since we don't use the data+heap part we set it to
+the start value * page size....
+
 Note on the project: only Chrome supported
 
 2 see:

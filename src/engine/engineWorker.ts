@@ -1,10 +1,14 @@
-import { MemoryRegion, MemoryRegionsData } from './memoryRegions';
+import {
+  MemoryRegion,
+  MemoryRegionsData,
+  WORKER_HEAP_SIZE,
+} from './memoryRegions';
 import { WasmModules, WasmInput, loadWasmModules } from './initWasm';
 import { syncStore, syncWait, syncNotify, sleep } from './utils';
 
 type EngineWorkerConfig = {
   workerIdx: number; // >= 1
-  numEngineWorkers: number;
+  numWorkers: number;
   frameWidth: number;
   frameHeight: number;
   memInitialSize: number;
@@ -57,6 +61,14 @@ class EngineWorker {
     // this._frameBuffer = this._wasmData.ui8cFramebuffer;
   }
 
+  private randColor(): number {
+    const r = (Math.random() * 255) | 0;
+    const g = (Math.random() * 255) | 0;
+    const b = (Math.random() * 255) | 0;
+    const color = 0xff_00_00_00 | r | (g << 8) | (b << 16);
+    return color;
+  }
+
   private async initWasmModules(): Promise<void> {
     const initData: WasmInput = {
       memory: this._config.memory,
@@ -65,18 +77,31 @@ class EngineWorker {
       frameBufferOffset: this._config.memOffsets[MemoryRegion.FRAMEBUFFER],
       syncArrayOffset: this._config.memOffsets[MemoryRegion.SYNC_ARRAY],
       sleepArrayOffset: this._config.memOffsets[MemoryRegion.SLEEP_ARRAY],
+      workersHeapOffset: this._config.memOffsets[MemoryRegion.WORKERS_HEAP],
+      heapOffset: this._config.memOffsets[MemoryRegion.HEAP],
+      workerHeapSize: WORKER_HEAP_SIZE,
       workerIdx: this._config.workerIdx,
-      log_i32: (v: number) =>
-        console.log(`Worker: ${this._config.workerIdx} Value: ${v}`),
+      numWorkers: this._config.numWorkers,
+      bgColor: this.randColor(),
+      logf: (f: number) =>
+        console.log(`Worker [${this._config.workerIdx}]: ${f}`),
+      logi: (i: number) =>
+        console.log(`Worker [${this._config.workerIdx}]: ${i}`),
     };
 
     this._wasmInitInput = initData;
     this._wasmModules = await loadWasmModules(initData);
+    // console.log('HERE: ' + this._wasmModules.engineWorker.newVec(12));
+    // console.log('HERE: ' + this._wasmModules.engineWorker.newVec(16));
   }
 
   run(): void {
     console.log(`Worker ${this._config.workerIdx} running!`);
-    this._wasmModules.engineWorker.run();
+    try {
+      this._wasmModules.engineWorker.run();
+    } catch (e) {
+      console.log(e);
+    }
     // const idx = this._config.workerIdx;
     // const r = ( Math.random() * 255 ) | 0;
     // const g = ( Math.random() * 255 ) | 0;
@@ -103,7 +128,7 @@ const commands = {
   },
   run(): void {
     engineWorker.run();
-  }
+  },
 };
 
 // ENTRY POINT

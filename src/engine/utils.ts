@@ -1,19 +1,17 @@
 type Range = [start: number, end: number];
 
-function range(
-  workerIdx: number,
-  numThreads: number,
-  numElements: number,
-): Range {
-  const numTasks = (numElements / numThreads) | 0;
-  const numTougherThreads = numElements % numThreads;
+// split [0..numTasks-1] between [0..numWorkers-1] workers and get the index
+// range for worker workerIdx. Workers on head get one more task if needed.
+function range(workerIdx: number, numWorkers: number, numTasks: number): Range {
+  const numTaskPerWorker = (numTasks / numWorkers) | 0;
+  const numTougherThreads = numTasks % numWorkers;
+  const isTougher = workerIdx < numTougherThreads;
 
-  const start =
-    workerIdx < numTougherThreads
-      ? workerIdx * (numTasks + 1)
-      : numElements - (numThreads - workerIdx) * numTasks;
+  const start = isTougher
+    ? workerIdx * (numTaskPerWorker + 1)
+    : numTasks - (numWorkers - workerIdx) * numTaskPerWorker;
 
-  const end = start + numTasks + Number(workerIdx < numTougherThreads);
+  const end = start + numTaskPerWorker + Number(isTougher);
 
   return [start, end];
 }
