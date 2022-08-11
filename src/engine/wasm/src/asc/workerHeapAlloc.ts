@@ -10,12 +10,12 @@ declare function myAssert(c: boolean): void;
 
 // heapAlloc
 declare function heapAlloc(reqSize: usize): usize;
+declare function heapDealloc(dataPtr: usize): void;
 
 /**********************************************************************/
 
-const HEAP_SIZE: u32 = workerHeapSize;
-const HEAP_BASE: usize = workersHeapOffset + workerIdx * HEAP_SIZE;
-const HEAP_LIMIT: usize = HEAP_BASE + workerHeapSize;
+const WORKER_HEAP_BASE: usize = workersHeapOffset + workerIdx * workerHeapSize;
+const WORKER_HEAP_LIMIT: usize = WORKER_HEAP_BASE + workerHeapSize;
 
 const MAX_SIZE_32: u32 = 1 << 30; // 1GB
 
@@ -65,24 +65,24 @@ const H_SIZE: u32 = offsetof<HeaderBlock>();
 const F_SIZE: u32 = offsetof<FooterBlock>();
 const HF_SIZE = H_SIZE + F_SIZE;
 
-let freeBlockPtr = HEAP_BASE;
+let freeBlockPtr = WORKER_HEAP_BASE;
 
 function print(): void {
   logi(workerIdx);
   logi(workersHeapOffset);
-  logi(HEAP_BASE);
-  logi(HEAP_LIMIT);
+  logi(WORKER_HEAP_BASE);
+  logi(WORKER_HEAP_LIMIT);
 }
 
 function allocInit(): void {
   print();
-  const headerPtr = HEAP_BASE;
+  const headerPtr = WORKER_HEAP_BASE;
   setBlockUnused(headerPtr);
-  setBlockSize(headerPtr, HEAP_SIZE);
+  setBlockSize(headerPtr, workerHeapSize);
 
-  const footerPtr = HEAP_LIMIT - F_SIZE;
+  const footerPtr = WORKER_HEAP_LIMIT - F_SIZE;
   setBlockUnused(footerPtr);
-  setBlockSize(footerPtr, HEAP_SIZE);
+  setBlockSize(footerPtr, workerHeapSize);
 
   // free list of blocks as a doubly linked cyclic list
   const header = changetype<HeaderBlock>(headerPtr);
@@ -105,18 +105,34 @@ function searchFirstFit(reqSize: u32): usize {
   return found ? ptr : NULL;
 }
 
-function detachBlockFromFreeList(headerPtr: usize): void {
-  const header = changetype<HeaderBlock>(headerPtr);
-  if (header.next == headerPtr) {
-    myAssert(freeBlockPtr == headerPtr);
-    freeBlockPtr = NULL;
+// remove node from the free list or subst it with newNode if newNode != NULL
+function replaceNode(nodePtr: usize, newNodePtr: usize = NULL): void {
+  myAssert(nodePtr != NULL);
+  const node = changetype<HeaderBlock>(nodePtr);
+  const single = node.next == nodePtr;
+  if (single) {
+    myAssert(freeBlockPtr == nodePtr);
+    if (newNodePtr != NULL) {
+      const newNode = changetype<HeaderBlock>(newNodePtr);
+      freeBlockPtr = newNode.prev = newNode.next = newNodePtr;
+    } else {
+      freeBlockPtr = NULL;
+    }
   } else {
-    changetype<HeaderBlock>(header.prev).next = header.next;
-    changetype<HeaderBlock>(header.next).prev = header.prev;
-    if (headerPtr == freeBlockPtr) {
-      freeBlockPtr = header.next;
+    const prevNext = newNodePtr != NULL ? newNodePtr : node.next;
+    const nextPrev = newNodePtr != NULL ? newNodePtr : node.prev;
+    changetype<HeaderBlock>(node.prev).next = prevNext;
+    changetype<HeaderBlock>(node.next).prev = nextPrev;
+    if (nodePtr == freeBlockPtr) {
+      freeBlockPtr = prevNext;
+    }
+    if (newNodePtr != NULL) {
+      const newNode = changetype<HeaderBlock>(newNodePtr);
+      newNode.prev = node.prev;
+      newNode.next = node.next;
     }
   }
+  node.next = node.prev = NULL;
 }
 
 function alloc(reqSize: u32): usize {
@@ -126,7 +142,6 @@ function alloc(reqSize: u32): usize {
   const headerPtr = searchFirstFit(reqSize);
   if (headerPtr == NULL) {
     // compaction ? no...we alloc from the shared heap...
-    // logi(-1);
     return heapAlloc(reqSize);
   }
   myAssert(!isBlockUsed(headerPtr));
@@ -140,7 +155,7 @@ function alloc(reqSize: u32): usize {
   if (exactFit || !splitBlock) {
     setBlockUsed(headerPtr);
     setBlockUsed(footerPtr);
-    detachBlockFromFreeList(headerPtr);
+    replaceNode(headerPtr);
   } else {
     const usedHeaderPtr = headerPtr;
     const usedFooterPtr = headerPtr + H_SIZE + reqSize;
@@ -157,28 +172,18 @@ function alloc(reqSize: u32): usize {
     setBlockSize(usedFooterPtr, usedSize);
     setBlockSize(freeHeaderPtr, blockSize - usedSize);
     setBlockSize(freeFooterPtr, blockSize - usedSize);
-    const freeHeader = changetype<HeaderBlock>(freeHeaderPtr);
     // const freeFooter = changetype<HeaderBlock>(freeFooterPtr);
-    if (header.next == headerPtr) {
-      myAssert(freeBlockPtr == headerPtr);
-      freeHeader.prev = freeHeader.next = freeHeaderPtr;
-      freeBlockPtr = freeHeaderPtr;
-    } else {
-      freeHeader.prev = header.prev;
-      freeHeader.next = header.next;
-      changetype<HeaderBlock>(header.prev).next = freeHeaderPtr;
-      changetype<HeaderBlock>(header.next).prev = freeHeaderPtr;
-      if (headerPtr == freeBlockPtr) {
-        freeBlockPtr = freeHeaderPtr;
-      }
-    }
+    replaceNode(headerPtr, freeHeaderPtr);
   }
   return allocated;
 }
 
 function dealloc(dataPtr: usize): void {
-  myAssert(false); // TODO add check addr heap !
-  myAssert(dataPtr >= HEAP_SIZE + H_SIZE &&  dataPtr < HEAP_LIMIT - F_SIZE);
+  myAssert(dataPtr != NULL);
+  if (dataPtr >= WORKER_HEAP_LIMIT) {
+    return heapDealloc(dataPtr);
+  }
+  myAssert(dataPtr >= WORKER_HEAP_BASE + H_SIZE &&  dataPtr < WORKER_HEAP_LIMIT - F_SIZE);
   let headerPtr = dataPtr - H_SIZE;
   myAssert(isBlockUsed(headerPtr));
   let blockSize = getBlockSize(headerPtr);
@@ -197,70 +202,56 @@ function dealloc(dataPtr: usize): void {
 
   // const footer = changetype<FooterBlock>(footerPtr);
 
-  // check if the left memory adjacent neighbor is free, if so coalesce the two
-  // blocks
+  // coalesce with the left neightbor if unused
   const leftFooterPtr = headerPtr - F_SIZE;
-  if (leftFooterPtr >= HEAP_BASE && !isBlockUsed(leftFooterPtr)) {
-    // const leftFooter = changetype<FooterBlock>(leftFooterPtr);
+  if (leftFooterPtr >= WORKER_HEAP_BASE && !isBlockUsed(leftFooterPtr)) {
     const leftBlockSize = getBlockSize(leftFooterPtr);
     const leftHeaderPtr = headerPtr - leftBlockSize;
-    myAssert(leftHeaderPtr >= HEAP_BASE);
+    myAssert(leftHeaderPtr >= WORKER_HEAP_BASE);
     const leftHeader = changetype<HeaderBlock>(leftHeaderPtr);
 
-    const coalesceSize = leftBlockSize + blockSize;
-    setBlockSize(leftHeaderPtr, coalesceSize);
-    setBlockSize(footerPtr, coalesceSize);
+    blockSize += leftBlockSize;
+    setBlockSize(leftHeaderPtr, blockSize);
+    setBlockSize(footerPtr, blockSize);
 
-    if (leftHeader.next == leftHeaderPtr) {
-      // this block is the only free one remaining on the free list
-      myAssert(leftHeader.prev == leftHeaderPtr);
-      myAssert(leftHeaderPtr == freeBlockPtr);
-      return;
-    }
     // remove the coalesced block from the free list. This makes the current
     // block appear to be used, which sets up for coalescing with the right
     // block and/or for adding the coalesced block back to the free list
+    replaceNode(leftHeaderPtr);
     headerPtr = leftHeaderPtr;
     header = leftHeader;
-    changetype<HeaderBlock>(header.prev).next = header.next;
-    changetype<HeaderBlock>(header.next).prev = header.prev;
-    blockSize = coalesceSize;
   }
   
+  // coalesce with the right neightbor if unused
   const rightHeaderPtr = headerPtr + blockSize;
-  if (rightHeaderPtr < HEAP_LIMIT && !isBlockUsed(rightHeaderPtr)) {
+  if (rightHeaderPtr < WORKER_HEAP_LIMIT && !isBlockUsed(rightHeaderPtr)) {
     const rightHeader = changetype<HeaderBlock>(rightHeaderPtr);
     const rightSize = getBlockSize(rightHeaderPtr);
-    myAssert(rightHeaderPtr + rightSize <= HEAP_LIMIT);
+    myAssert(rightHeaderPtr + rightSize <= WORKER_HEAP_LIMIT);
     const rightFooterPtr = rightHeaderPtr + rightSize - F_SIZE;
     // const rightFooter = changetype<FooterBlock>(rightFooterPtr);
 
-    const coalesceSize = blockSize + rightSize;
-    setBlockSize(headerPtr, coalesceSize);
-    setBlockSize(rightFooterPtr, coalesceSize);
+    blockSize += rightSize;
+    setBlockSize(headerPtr, blockSize);
+    setBlockSize(rightFooterPtr, blockSize);
 
-    if (rightHeader.next == rightHeaderPtr) {
-      myAssert(rightHeader.prev == rightHeaderPtr);
-      myAssert(rightHeaderPtr == freeBlockPtr);
-      // the right block is the only one remaining on the free list, we remove
-      // it and add the coalesced block
-      header.next = header.prev = headerPtr;
-      freeBlockPtr = headerPtr;
-      return;
-    }
     // remove the right block from the free list
-    changetype<HeaderBlock>(rightHeader.prev).next = rightHeader.next;
-    changetype<HeaderBlock>(rightHeader.next).prev = rightHeader.prev;
+    replaceNode(rightHeaderPtr);
   }
 
-  // add header block to the free list
-  const freeBlock = changetype<HeaderBlock>(freeBlockPtr);
-  changetype<HeaderBlock>(freeBlock.prev).next = headerPtr;
-  header.prev = freeBlock.prev;
-  header.next = freeBlockPtr;
-  freeBlock.prev = headerPtr;
+  // add the free (coalesced) block to the free list
+  if (freeBlockPtr == NULL) {
+    header.next = header.prev = headerPtr;
+  } else {
+    const freeBlock = changetype<HeaderBlock>(freeBlockPtr);
+    header.prev = freeBlock.prev;
+    header.next = freeBlockPtr;
+    changetype<HeaderBlock>(freeBlock.prev).next = headerPtr;
+    freeBlock.prev = headerPtr;
+  }
   freeBlockPtr = headerPtr;
   // logi(freeBlockPtr);
+  // logi(getBlockSize(freeBlockPtr));
 }
 
 allocInit(); // for each worker/module

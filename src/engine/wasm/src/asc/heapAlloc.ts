@@ -6,7 +6,7 @@ declare function myAssert(c: boolean): void;
 /**********************************************************************/
 
 const ALIGN_BITS: u32 = 3;
-const ALIGN_SIZE: u32 = 1 << <usize>ALIGN_BITS;
+const ALIGN_SIZE: u32 = 1 << ALIGN_BITS;
 const ALIGN_MASK: u32 = ALIGN_SIZE - 1;
 const MAX_SIZE_32: usize = 1 << 30; // 1GB
 
@@ -32,8 +32,8 @@ function heapAlloc(reqSize: usize): usize {
     top = (curOffset + reqSize + ALIGN_MASK) & ~ALIGN_MASK;
     let curPages = memory.size();
     if (top > (<usize>curPages) << 16) {
-      let pagesNeeded = ((top - curOffset  + 0xffff) & ~0xffff) >>> 16;
-      let pagesWanted = max(curPages, pagesNeeded); // double memory
+      let pagesNeeded = <i32>(((top - curOffset  + 0xffff) & ~0xffff) >>> 16);
+      let pagesWanted = <i32>max(curPages, pagesNeeded); // double memory
       if (memory.grow(pagesWanted) < 0) {
         if (memory.grow(pagesNeeded) < 0) {
           logi(curPages);
@@ -47,8 +47,12 @@ function heapAlloc(reqSize: usize): usize {
   return curOffset;
 }
 
+function heapDealloc(dataPtr: usize): void {
+
+}
+
 function heapAllocInit(): void {
   store<usize>(OFFSET_PTR, START_OFFSET);
 }
 
-export { heapAllocInit, heapAllocGetOffset, heapAllocSetOffset, heapAlloc };
+export { heapAllocInit, heapAlloc, heapDealloc };

@@ -172,14 +172,21 @@ function run(): void {
   // logi(f);
   // logi(g);
   // logi(h);
+  // dealloc(f);
+  // logi(-1);
   // dealloc(h);
-  // const z: usize = alloc(3);
+  // logi(-1);
+  // dealloc(g);
+  // logi(-1);
+  // const z: usize = alloc(2);
   // logi(z);
   // logi(-1);
 
     // if (workerIdx > 0) {
     //   // const a = alloc(256);
     // }
+
+  // const a = alloc(65536);
 
   // TODO handle the release/free ! worker vs heap !
   while (true) {
@@ -189,7 +196,7 @@ function run(): void {
     clearBg(bgColor, s, e);
     atomic.store<i32>(syncLoc, 0);
     atomic.notify(syncLoc);
-    // break;
+    break;
   }
 }
 
