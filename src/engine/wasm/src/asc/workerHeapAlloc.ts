@@ -14,10 +14,8 @@ declare function heapAlloc(reqSize: usize): usize;
 /**********************************************************************/
 
 const HEAP_SIZE: u32 = workerHeapSize;
-const HEAP_BASE: usize = workersHeapOffset + usize(workerIdx) * HEAP_SIZE;
+const HEAP_BASE: usize = workersHeapOffset + workerIdx * HEAP_SIZE;
 const HEAP_LIMIT: usize = HEAP_BASE + workerHeapSize;
-// let HEAP_START: usize = (HEAP_BASE + ALIGN_MASK) & ~ALIGN_MASK;
-// let HEAP_PTR: usize = HEAP_START;
 
 const MAX_SIZE_32: u32 = 1 << 30; // 1GB
 
@@ -69,11 +67,15 @@ const HF_SIZE = H_SIZE + F_SIZE;
 
 let freeBlockPtr = HEAP_BASE;
 
+function print(): void {
+  logi(workerIdx);
+  logi(workersHeapOffset);
+  logi(HEAP_BASE);
+  logi(HEAP_LIMIT);
+}
+
 function allocInit(): void {
-  // logi(workerIdx);
-  // logi(workersHeapOffset);
-  // logi(HEAP_BASE);
-  // logi(HEAP_LIMIT);
+  print();
   const headerPtr = HEAP_BASE;
   setBlockUnused(headerPtr);
   setBlockSize(headerPtr, HEAP_SIZE);
@@ -118,15 +120,14 @@ function detachBlockFromFreeList(headerPtr: usize): void {
 }
 
 function alloc(reqSize: u32): usize {
+  // print();
   myAssert(reqSize > 0);
-  if (reqSize > MAX_SIZE_32) {
-    unreachable(); // TODO test
-    return NULL; // TODO
-  }
+  myAssert(reqSize <= MAX_SIZE_32);
   const headerPtr = searchFirstFit(reqSize);
   if (headerPtr == NULL) {
-    // compaction ?
-    return heapAlloc(reqSize); // TODO and good luck...
+    // compaction ? no...we alloc from the shared heap...
+    // logi(-1);
+    return heapAlloc(reqSize);
   }
   myAssert(!isBlockUsed(headerPtr));
   const header = changetype<HeaderBlock>(headerPtr);
@@ -176,6 +177,7 @@ function alloc(reqSize: u32): usize {
 }
 
 function dealloc(dataPtr: usize): void {
+  myAssert(false); // TODO add check addr heap !
   myAssert(dataPtr >= HEAP_SIZE + H_SIZE &&  dataPtr < HEAP_LIMIT - F_SIZE);
   let headerPtr = dataPtr - H_SIZE;
   myAssert(isBlockUsed(headerPtr));
@@ -260,5 +262,7 @@ function dealloc(dataPtr: usize): void {
   freeBlockPtr = headerPtr;
   // logi(freeBlockPtr);
 }
+
+allocInit(); // for each worker/module
 
 export { allocInit, alloc, dealloc };

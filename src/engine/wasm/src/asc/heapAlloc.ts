@@ -11,7 +11,7 @@ const ALIGN_MASK: u32 = ALIGN_SIZE - 1;
 const MAX_SIZE_32: usize = 1 << 30; // 1GB
 
 const HEAP_BASE = (heapOffset + ALIGN_MASK) & ~ALIGN_MASK;
-const OFFSET_PTR = HEAP_BASE; // loc of the next addr pointer
+const OFFSET_PTR = HEAP_BASE; // addr of the alloc pointer
 const START_OFFSET = (heapOffset + 8 + ALIGN_MASK) & ~ALIGN_MASK; // first alloc addr
 
 function heapAllocGetOffset(): usize {
@@ -36,6 +36,7 @@ function heapAlloc(reqSize: usize): usize {
       let pagesWanted = max(curPages, pagesNeeded); // double memory
       if (memory.grow(pagesWanted) < 0) {
         if (memory.grow(pagesNeeded) < 0) {
+          logi(curPages);
           unreachable(); // out of memory
         }
       }

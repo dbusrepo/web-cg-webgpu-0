@@ -58,14 +58,13 @@ class EngineWorker {
     syncStore(this._sleepArr, workerIdx, 0);
 
     await this.initWasmModules();
-    // this._frameBuffer = this._wasmData.ui8cFramebuffer;
   }
 
   private randColor(): number {
     const r = (Math.random() * 255) | 0;
     const g = (Math.random() * 255) | 0;
     const b = (Math.random() * 255) | 0;
-    const color = 0xff_00_00_00 | r | (g << 8) | (b << 16);
+    const color = (0xff << 24) | (b << 16) | (g << 8) | r; // abgr
     return color;
   }
 
@@ -102,19 +101,6 @@ class EngineWorker {
     } catch (e) {
       console.log(e);
     }
-    // const idx = this._config.workerIdx;
-    // const r = ( Math.random() * 255 ) | 0;
-    // const g = ( Math.random() * 255 ) | 0;
-    // const b = (Math.random() * 255 ) | 0;
-    // const color = 0xff_00_00_00 | r | (g << 8) | (b << 16);
-    // // ABGR
-    // for (;;) {
-    //   syncWait(this._syncArr, idx, 0);
-    //   // sleep(this._syncArr, idx, 1000);
-    //   clearBg(this._wasmModules, color, this._frameHeightRange);
-    //   syncStore(this._syncArr, idx, 0);
-    //   syncNotify(this._syncArr, idx);
-    // }
   }
 }
 

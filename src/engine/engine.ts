@@ -30,7 +30,7 @@ type EngineConfig = {
 };
 
 class Engine {
-  private static readonly NUM_ENGINE_WORKERS = 2; // required  >= 1
+  private static readonly NUM_ENGINE_WORKERS = 4; // required  >= 1
 
   // TODO
   private static readonly RENDER_PERIOD =

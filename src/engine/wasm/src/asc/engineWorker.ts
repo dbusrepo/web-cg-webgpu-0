@@ -15,10 +15,13 @@ declare const bgColor: i32;
 // assert
 declare function myAssert(c: boolean): void;
 
-// alloc
+// worker heap alloc
 declare function allocInit(): void;
 declare function alloc(size: usize): usize;
 declare function dealloc(blockPtr: usize): void;
+
+// shared heap alloc
+declare function heapAllocInit(): void;
 
 // utils
 declare function range(workerIdx: u32, numWorkers: u32, numTasks: u32): u64;
@@ -164,27 +167,35 @@ function run(): void {
   // printValues();
 
   // const f: usize = alloc(1);
-  // const g: usize = alloc(3);
-  // const h: usize = alloc(2);
+  // const g: usize = alloc(2);
+  // const h: usize = alloc(3);
   // logi(f);
   // logi(g);
   // logi(h);
-  // dealloc(g);
-  // const z: usize = alloc(2);
+  // dealloc(h);
+  // const z: usize = alloc(3);
   // logi(z);
+  // logi(-1);
 
+    // if (workerIdx > 0) {
+    //   // const a = alloc(256);
+    // }
+
+  // TODO handle the release/free ! worker vs heap !
   while (true) {
+    // if (workerIdx <= 0) {
+    // }
     atomic.wait<i32>(syncLoc, 0);
-    clearBg(bgColor, s, e); // TODO fix range
+    clearBg(bgColor, s, e);
     atomic.store<i32>(syncLoc, 0);
     atomic.notify(syncLoc);
-    break;
+    // break;
   }
 }
 
 function init(): void {
-  logi(heapOffset);
-  allocInit();
+  // logi(heapOffset);
+  heapAllocInit();
 }
 
 export { init, run };

@@ -106,6 +106,7 @@ async function loadEngineWorkerExport(
     draw,
     utils,
     alloc,
+    heapAlloc,
     myAssert,
   );
   return engineWorker;

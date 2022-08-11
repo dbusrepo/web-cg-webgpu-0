@@ -193,3 +193,11 @@ private draw_text(txt: string): void {
 private _sleepArr: Int32Array;
 engine._sleepArr = new Int32Array(new SharedArrayBuffer(NUM_BYTES_DWORD)); // for atomic sleep
 
+// worker main loop
+for (;;) {
+  syncWait(this._syncArr, idx, 0);
+  // sleep(this._syncArr, idx, 1000);
+  clearBg(this._wasmModules, color, this._frameHeightRange);
+  syncStore(this._syncArr, idx, 0);
+  syncNotify(this._syncArr, idx);
+}
