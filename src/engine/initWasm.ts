@@ -1,8 +1,10 @@
 // import assert from 'assert';
 
 // ASC modules here
-import myAssertWasm from './wasm/build/asc/myassert.wasm';
-import myAssertExport from './wasm/build/asc/myassert';
+import mutexWasm from './wasm/build/asc/mutex.wasm';
+import mutexExport from './wasm/build/asc/mutex';
+import myAssertWasm from './wasm/build/asc/myAssert.wasm';
+import myAssertExport from './wasm/build/asc/myAssert';
 import heapAllocWasm from './wasm/build/asc/heapAlloc.wasm';
 import heapAllocExport from './wasm/build/asc/heapAlloc';
 import workerHeapAllocWasm from './wasm/build/asc/workerHeapAlloc.wasm';
@@ -67,6 +69,7 @@ async function loadWasm<T>(
       abort: (...args: any[]) => {
         console.log('abort!');
       },
+      'performance.now': () => performance.now(),
     },
   });
   return instance.instance.exports;
@@ -75,6 +78,11 @@ async function loadWasm<T>(
 async function loadEngineWorkerExport(
   wasmInit: WasmInput,
 ): Promise<typeof engineWorkerExport> {
+  const mutex = await loadWasm<typeof mutexExport>(
+    'mutex',
+    mutexWasm,
+    wasmInit,
+  );
   const myAssert = await loadWasm<typeof myAssertExport>(
     'myAssert',
     myAssertWasm,
@@ -85,8 +93,9 @@ async function loadEngineWorkerExport(
     heapAllocWasm,
     wasmInit,
     myAssert,
+    mutex,
   );
-  const alloc = await loadWasm<typeof workerHeapAllocExport>(
+  const workerAlloc = await loadWasm<typeof workerHeapAllocExport>(
     'workerHeapAlloc',
     workerHeapAllocWasm,
     wasmInit,
@@ -105,7 +114,7 @@ async function loadEngineWorkerExport(
     wasmInit,
     draw,
     utils,
-    alloc,
+    workerAlloc,
     heapAlloc,
     myAssert,
   );

@@ -5,6 +5,10 @@ reserved by app | module memory (data + heap):  the module part starts from the
 memoryBase value in asconfig: since we don't use the data+heap part we set it to
 the start value * page size....
 
+remove these? not using the data+heap part so...
+    "initialMemory": 10,
+    "memoryBase": 4194304,
+
 Note on the project: only Chrome supported
 
 2 see:

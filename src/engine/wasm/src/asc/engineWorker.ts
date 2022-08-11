@@ -31,8 +31,6 @@ declare function clearBg(c: i32, s: i32, e: i32): void;
 
 /**********************************************************************/
 
-// export const syncArr = memory.data(16);
-
 const syncLoc = syncArrayOffset + workerIdx * sizeof<i32>();
 const sleepLoc = sleepArrayOffset + workerIdx * sizeof<i32>();
 // const heapLoc = heapOffset + workerIdx * workerHeapSize;
@@ -55,29 +53,37 @@ type float = f32;
 // const v = _new<Vec>();
 // logi(changetype<usize>(v));
 
-// @unmanaged
-class Vec {
+class Vec3 {
     x: float;
     y: float;
     z: float;
     // w: float;
     // position, also color (r,g,b)
     // constructor(public x: float = 0.0, public y: float = 0.0, public z: float = 0.0) {}
+    init(x: float, y: float, z: float): void {
+      this.x = x;
+      this.y = y;
+      this.z = z;
+    }
+
+    static new(x: float, y: float, z: float): Vec3 {
+      const size = offsetof<Vec3>();
+      const f: usize = alloc(size);
+      const p = changetype<Vec3>(f);
+      p.x = x; p.y = y; p.z = z;
+      return p;
+    }
+
+    static delete(v: Vec3): void {
+      const ptr = changetype<usize>(v);
+      dealloc(ptr);
+    }
 }
 
 // @global function __new(size: usize, id: u32): usize {
 //   logi(<i32>size);
 //   return 0;
 // }
-
-let startOff: usize = __heap_base;
-
-function memAlloc(size: usize): usize {
-  logi(size);
-  const asd = startOff;
-  startOff += size;
-  return asd;
-}
 
 // export function instantiateRaw<T>(): T {
 //     // when field is class with nonnull, it's unsafe.
@@ -87,42 +93,6 @@ function memAlloc(size: usize): usize {
 //     // It's safe.
 //     return instantiate<T>();
 // }
-
-export function newVec(val: f32): Vec {
-  const addr = memAlloc(offsetof<Vec>());
-  logi(addr);
-  const vec = changetype<Vec>(addr);
-  vec.x = val;
-  // logf(vec.x);
-  return vec;
-  // return new Vec();
-}
-
-// TODO remove
-function newTypeArr32u(size: usize): Uint32Array {
-  const addr = memAlloc(size * 4);
-  logi(addr);
-  const vec = changetype<Uint32Array>(addr);
-  return vec;
-}
-
-// // Let's utilize the entire heap as our image buffer
-// const offset = __heap_base;
-// var TOP = offset + 8;
-
-// store<usize>(offset, TOP);
-
-// export function __allocator_get_offset(): usize {
-//   return atomic.load<usize>(offset);
-// }
-
-// export function __memory_allocate(size: usize): usize {
-//   log(__heap_base);
-//   return 0;
-// }
-
-// const v = new Vec(1,2,3);
-
 
 function printValues(): void {
 
@@ -147,10 +117,25 @@ function printValues(): void {
 
 /**********************************************************************/
 
+function testVec3(): Vec3 {
+  // const f: usize = alloc(16);
+  // const p = changetype<Vec3>(f);
+  // p.init(3, 4, 5);
+  // return p;
+  return Vec3.new(3, 4, 5);
+}
+
 function run(): void {
+
+  // logi(<i32>process.hrtime());
+
   const r = range(workerIdx, numWorkers, frameHeight);
   const s = <i32>(r >>> 32);
   const e = <i32>r;
+
+  // const v = testVec3();
+  // Vec3.delete(v);
+
   // logi(s);
   // logi(e);
   // logi(heapOffset);
@@ -166,13 +151,19 @@ function run(): void {
   // logi(alloc(1));
   // printValues();
 
-  // const f: usize = alloc(1);
-  // const g: usize = alloc(2);
-  // const h: usize = alloc(3);
+  // const f: usize = alloc(12);
+  // // const g: usize = alloc(2);
+  // // const h: usize = alloc(3);
   // logi(f);
+
+  // const g: usize = alloc(5);
   // logi(g);
-  // logi(h);
   // dealloc(f);
+  // // dealloc(g);
+
+  // const h: usize = alloc(7);
+  // logi(h);
+
   // logi(-1);
   // dealloc(h);
   // logi(-1);
@@ -186,11 +177,28 @@ function run(): void {
     //   // const a = alloc(256);
     // }
 
-  // const a = alloc(65536);
+  logi(-1);
 
-  // TODO handle the release/free ! worker vs heap !
   while (true) {
+    // const f: usize = alloc(12);
+    // // const g: usize = alloc(2);
+    // // const h: usize = alloc(3);
+    // logi(f);
+    // // logi(g);
+    // // logi(h);
+    // const g: usize = alloc(5);
+    // logi(g);
+    // dealloc(f);
+    // dealloc(g);
+
+
+    // const h: usize = alloc(7);
+    // // dealloc(h);
+    // logi(h);
+
+    // const a = alloc(77);
     // if (workerIdx <= 0) {
+    // const a = alloc(12);
     // }
     atomic.wait<i32>(syncLoc, 0);
     clearBg(bgColor, s, e);

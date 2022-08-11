@@ -10,6 +10,7 @@
 
     "initialMemory": 64,
     "memoryBase": 4194304,
+
     "maximumMemory": 1000,
     "importMemory": true,
     "sharedMemory": true,

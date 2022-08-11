@@ -33,21 +33,25 @@ class HeaderBlock extends Block {
 
 class FooterBlock extends Block {}
 
+@inline
 function setBlockUsed(blockPtr: usize): void {
   const block = changetype<Block>(blockPtr);
   block.size |= BLOCK_USAGE_BIT_MASK;
 }
 
+@inline
 function setBlockUnused(blockPtr: usize): void {
   const block = changetype<Block>(blockPtr);
   block.size &= ~BLOCK_USAGE_BIT_MASK;
 }
 
+@inline
 function isBlockUsed(blockPtr: usize): boolean {
   const block = changetype<Block>(blockPtr);
   return (block.size & BLOCK_USAGE_BIT_MASK) !== 0;
 }
 
+@inline
 function setBlockSize(blockPtr: usize, size: u32): void {
   const block = changetype<Block>(blockPtr);
   const usageBit = block.size & BLOCK_USAGE_BIT_MASK;
@@ -55,6 +59,7 @@ function setBlockSize(blockPtr: usize, size: u32): void {
   block.size = usageBit | size;
 }
 
+@inline
 function getBlockSize(blockPtr: usize): u32 {
   const block = changetype<Block>(blockPtr);
   return block.size & ~BLOCK_USAGE_BIT_MASK;
@@ -139,6 +144,7 @@ function alloc(reqSize: u32): usize {
   // print();
   myAssert(reqSize > 0);
   myAssert(reqSize <= MAX_SIZE_32);
+  // return heapAlloc(reqSize); // TODO REMOVE
   const headerPtr = searchFirstFit(reqSize);
   if (headerPtr == NULL) {
     // compaction ? no...we alloc from the shared heap...

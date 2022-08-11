@@ -100,6 +100,7 @@ class EngineWorker {
       this._wasmModules.engineWorker.run();
     } catch (e) {
       console.log(e);
+      // TODO post msg ?
     }
   }
 }
