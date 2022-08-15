@@ -12,6 +12,7 @@ ASC_BUILD_DIR := build/asc
 ASC_SOURCE_FILES := $(wildcard $(ASC_SOURCE_DIR)/*.ts)
 ASC_BUILD_FILES := $(ASC_SOURCE_FILES:$(ASC_SOURCE_DIR)/%.ts=$(ASC_BUILD_DIR)/%.wasm)
 ASC_BINDINGS = esm
+ASC_DEP_FILES := $(ASC_SOURCE_FILES:.ts=.d)
 
 # SOURCE_WAT_FILES = $(wildcard $(SOURCE_DIR)/wat/*.wat)
 
@@ -42,14 +43,20 @@ build_asc: init_asc_build $(ASC_BUILD_FILES)
 	@echo 'Asc files compilation terminated.'
 
 init_asc_build:
-	@echo $(MAKEFILE_LIST)
 	@echo 'Compiling asc files...'
 	@mkdir -p $(ASC_BUILD_DIR)
 
 $(ASC_BUILD_DIR)/%.wasm: $(ASC_SOURCE_DIR)/%.ts build_flags $(ASC_CONFIG_FILE)
-	@echo
-	@echo Compiling $@ ...
+	$(info GEN $@)
 	asc --config $(ASC_CONFIG_FILE) $< -o $@ -t $(basename $@).wat -b $(ASC_BINDINGS) --target $(TARGET)
+
+-include $(ASC_DEP_FILES)
+
+%.d: %.ts
+	$(info GEN $@)
+	@node extract-imports.js $< > $@
+
+
 
 # **************************************************
 # COMPILE WAT
@@ -66,7 +73,7 @@ init_wat_build:
 
 $(WAT_BUILD_DIR)/%.wasm: $(WAT_SOURCE_DIR)/%.wat build_flags
 	@echo
-	@echo Compiling $@ ...
+	$(info GEN $@)
 	wat2wasm $< $(WAT_2_WASM_FLAGS) -o $@
 ifeq ($(TARGET), $(TARGET_SPEED))
 	wasm-opt $@ -o $@ $(WASM_OPT_SPEED)
@@ -77,12 +84,14 @@ else
 endif
 
 clean-asc:
+	rm $(ASC_DEP_FILES)
 	rm -rf ./build/asc
 
 clean-wat:
 	rm -rf ./build/wat
 
 clean:
+	rm $(ASC_DEP_FILES)
 	rm -rf ./build/
 
 # SOURCE_ASC_PATHS = $(wildcard $(SOURCE_DIR)/asc/*.ts)

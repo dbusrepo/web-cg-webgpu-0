@@ -8,4 +8,5 @@ npm-debug.log
 .vscode
 *.wasm
 *.map
+src/engine/wasm/src/asc/*.d
 build_flags

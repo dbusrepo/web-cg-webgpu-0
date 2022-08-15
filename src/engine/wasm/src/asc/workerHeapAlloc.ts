@@ -1,12 +1,11 @@
+import { myAssert } from './myAssert';
+
 // env
 declare function logi(i: i32): void;
 
 declare const workerIdx: u32;
 declare const workersHeapOffset: usize;
 declare const workerHeapSize: u32;
-
-// myAssert
-declare function myAssert(c: boolean): void;
 
 // heapAlloc
 declare function heapAlloc(reqSize: usize): usize;
@@ -262,4 +261,4 @@ function dealloc(dataPtr: usize): void {
 
 allocInit(); // for each worker/module
 
-export { allocInit, alloc, dealloc };
+export { alloc, dealloc };

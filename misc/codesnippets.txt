@@ -201,3 +201,12 @@ for (;;) {
   syncStore(this._syncArr, idx, 0);
   syncNotify(this._syncArr, idx);
 }
+
+
+$(ASC_BUILD_DIR)/%.wasm: $(ASC_SOURCE_DIR)/%.ts build_flags $(ASC_CONFIG_FILE)
+	@echo
+	@echo Compiling $@ ...
+	asc --config $(ASC_CONFIG_FILE) $< -o $@ -t $(basename $@).wat -b $(ASC_BINDINGS) --target $(TARGET)
+
+
+	@echo $(MAKEFILE_LIST)

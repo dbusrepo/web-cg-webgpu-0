@@ -1,3 +1,6 @@
+import { myAssert } from './myAssert';
+import { Vec3 } from './Vec3';
+
 // env
 declare function logf(i: f32): void;
 declare function logi(i: i32): void;
@@ -12,11 +15,7 @@ declare const numWorkers: i32;
 declare const heapOffset: usize;
 declare const bgColor: i32;
 
-// assert
-declare function myAssert(c: boolean): void;
-
 // worker heap alloc
-declare function allocInit(): void;
 declare function alloc(size: usize): usize;
 declare function dealloc(blockPtr: usize): void;
 
@@ -28,6 +27,10 @@ declare function range(workerIdx: u32, numWorkers: u32, numTasks: u32): u64;
 
 // draw
 declare function clearBg(c: i32, s: i32, e: i32): void;
+
+// Vec3
+declare function newVec3(x: f32, y: f32, z: f32): Vec3;
+declare function deleteVec3(v: Vec3): void;
 
 /**********************************************************************/
 
@@ -53,32 +56,32 @@ type float = f32;
 // const v = _new<Vec>();
 // logi(changetype<usize>(v));
 
-class Vec3 {
-    x: float;
-    y: float;
-    z: float;
-    // w: float;
-    // position, also color (r,g,b)
-    // constructor(public x: float = 0.0, public y: float = 0.0, public z: float = 0.0) {}
-    init(x: float, y: float, z: float): void {
-      this.x = x;
-      this.y = y;
-      this.z = z;
-    }
+// class Vec3 {
+//     x: float;
+//     y: float;
+//     z: float;
+//     // w: float;
+//     // position, also color (r,g,b)
+//     // constructor(public x: float = 0.0, public y: float = 0.0, public z: float = 0.0) {}
+//     init(x: float, y: float, z: float): void {
+//       this.x = x;
+//       this.y = y;
+//       this.z = z;
+//     }
 
-    static new(x: float, y: float, z: float): Vec3 {
-      const size = offsetof<Vec3>();
-      const f: usize = alloc(size);
-      const p = changetype<Vec3>(f);
-      p.x = x; p.y = y; p.z = z;
-      return p;
-    }
+//     static new(x: float, y: float, z: float): Vec3 {
+//       const size = offsetof<Vec3>();
+//       const f: usize = alloc(size);
+//       const p = changetype<Vec3>(f);
+//       p.x = x; p.y = y; p.z = z;
+//       return p;
+//     }
 
-    static delete(v: Vec3): void {
-      const ptr = changetype<usize>(v);
-      dealloc(ptr);
-    }
-}
+//     static delete(v: Vec3): void {
+//       const ptr = changetype<usize>(v);
+//       dealloc(ptr);
+//     }
+// }
 
 // @global function __new(size: usize, id: u32): usize {
 //   logi(<i32>size);
@@ -122,7 +125,10 @@ function testVec3(): Vec3 {
   // const p = changetype<Vec3>(f);
   // p.init(3, 4, 5);
   // return p;
-  return Vec3.new(3, 4, 5);
+  // return Vec3.new(3, 4, 5);
+  const v = newVec3(3, 4, 5);
+  v.init(7,2,3);
+  return v;
 }
 
 function run(): void {
@@ -133,7 +139,8 @@ function run(): void {
   const s = <i32>(r >>> 32);
   const e = <i32>r;
 
-  // const v = testVec3();
+  const v = testVec3();
+  logf(v.x);
   // Vec3.delete(v);
 
   // logi(s);

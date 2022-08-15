@@ -1,13 +1,10 @@
+import { myAssert } from './myAssert';
+import { lock, unlock } from './mutex';
+
 // env
 declare function logi(i: i32): void;
+
 declare const heapOffset: usize;
-
-// assert
-declare function myAssert(c: boolean): void;
-
-// mutex
-declare function lock(addr: usize): void;
-declare function unlock(addr: usize): void;
 
 /**********************************************************************/
 
@@ -35,8 +32,8 @@ class Block {
 const BLOCK_USAGE_BIT_POS = 31;
 const BLOCK_USAGE_BIT_MASK = 1 << BLOCK_USAGE_BIT_POS;
 
-const HEADER_SIZE = sizeof<u32>(); // size field
-const BLOCK_SIZE = offsetof<Block>();
+const HEADER_SIZE: u32 = sizeof<u32>(); // size field
+const BLOCK_SIZE: u32 = offsetof<Block>();
 
 function setBlockUsed(blockPtr: usize): void {
   const block = changetype<Block>(blockPtr);
