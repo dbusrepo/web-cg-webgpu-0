@@ -208,5 +208,91 @@ $(ASC_BUILD_DIR)/%.wasm: $(ASC_SOURCE_DIR)/%.ts build_flags $(ASC_CONFIG_FILE)
 	@echo Compiling $@ ...
 	asc --config $(ASC_CONFIG_FILE) $< -o $@ -t $(basename $@).wat -b $(ASC_BINDINGS) --target $(TARGET)
 
-
 	@echo $(MAKEFILE_LIST)
+
+
+// function _new<T>(): T {
+//   assert(isReference<T>());
+//   const size = offsetof<T>();
+//   // logi(addr);
+//   const addr = alloc(size);
+//   // logi(addr);
+//   return changetype<T>(addr);
+// }
+
+// const v = _new<Vec>();
+// logi(changetype<usize>(v));
+
+// class Vec3 {
+//     x: float;
+//     y: float;
+//     z: float;
+//     // w: float;
+//     // position, also color (r,g,b)
+//     // constructor(public x: float = 0.0, public y: float = 0.0, public z: float = 0.0) {}
+//     init(x: float, y: float, z: float): void {
+//       this.x = x;
+//       this.y = y;
+//       this.z = z;
+//     }
+
+//     static new(x: float, y: float, z: float): Vec3 {
+//       const size = offsetof<Vec3>();
+//       const f: usize = alloc(size);
+//       const p = changetype<Vec3>(f);
+//       p.x = x; p.y = y; p.z = z;
+//       return p;
+//     }
+
+//     static delete(v: Vec3): void {
+//       const ptr = changetype<usize>(v);
+//       dealloc(ptr);
+//     }
+// }
+
+// @global function __new(size: usize, id: u32): usize {
+//   logi(<i32>size);
+//   return 0;
+// }
+
+// export function instantiateRaw<T>(): T {
+//     // when field is class with nonnull, it's unsafe.
+//     if (isReference<T>()) {
+//         return changetype<T>(__new(offsetof<T>(), idof<T>()));
+//     }
+//     // It's safe.
+//     return instantiate<T>();
+// }
+
+function printValues(): void {
+
+  // const myArr = new StaticArray<i32>(100);
+  // logi(memory.grow(1));
+
+  // logi(<i32>heap.alloc(16));
+  // logi(sleepArr);
+  
+  // NativeMathf.seed
+
+  // logi(syncLoc);
+
+  // logi(ASC_MEMORY_BASE);
+  // const myblock = heap.alloc(16);
+  // logi(memory.size()); //<<16);
+  logi(i32(__data_end));
+  logi(<i32>__heap_base);
+  // logi(<i32>myblock);
+  // log(heap.alloc(10));
+}
+
+// const workerAlloc = await loadWasm<typeof workerHeapAllocExport>(
+//   'workerHeapAlloc',
+//   workerHeapAllocWasm,
+//   wasmInit,
+// );
+const engineWorker = await loadWasm<typeof engineWorkerExport>(
+  'engineWorker',
+  engineWorkerWasm,
+  wasmInit,
+  // workerAlloc,
+);

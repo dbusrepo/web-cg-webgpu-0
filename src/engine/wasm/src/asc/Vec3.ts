@@ -1,9 +1,7 @@
 import { myAssert } from './myAssert';
+import { alloc, dealloc } from './workerHeapAlloc';
 
-// worker heap alloc
-declare function alloc(size: usize): usize;
-declare function dealloc(blockPtr: usize): void;
-
+type float = f32;
 
 class Vec3 {
   static blockPtr: usize;
@@ -43,4 +41,4 @@ function initVec3(): void {
 initVec3();
 
 
-export { Vec3, newVec3, deleteVec3 };
+export { float, Vec3, newVec3, deleteVec3 };

@@ -1,10 +1,6 @@
 import { myAssert } from './myAssert';
 import { lock, unlock } from './mutex';
-
-// env
-declare function logi(i: i32): void;
-
-declare const heapOffset: usize;
+import { logi, heapOffset } from './env';
 
 /**********************************************************************/
 

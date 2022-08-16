@@ -1,9 +1,4 @@
-declare const frameBufferOffset: i32;
-declare const frameWidth: i32;
-declare const frameHeight: i32;
-
-declare function logf(i: f32): void;
-declare function logi(i: i32): void;
+import { logi, logf, frameBufferOffset, frameWidth, frameHeight } from './env';
 
 function clearBg(
   color: i32,

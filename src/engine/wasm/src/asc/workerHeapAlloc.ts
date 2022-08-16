@@ -1,29 +1,27 @@
 import { myAssert } from './myAssert';
-
-// env
-declare function logi(i: i32): void;
-
-declare const workerIdx: u32;
-declare const workersHeapOffset: usize;
-declare const workerHeapSize: u32;
-
-// heapAlloc
-declare function heapAlloc(reqSize: usize): usize;
-declare function heapDealloc(dataPtr: usize): void;
+import { heapAllocInit, heapAlloc, heapDealloc } from './heapAlloc';
+import { logi, workerIdx, workersHeapOffset, workerHeapSize } from './env';
 
 /**********************************************************************/
+
+const NULL: usize = 0;
+const MAX_SIZE_32: u32 = 1 << 30; // 1GB
 
 const WORKER_HEAP_BASE: usize = workersHeapOffset + workerIdx * workerHeapSize;
 const WORKER_HEAP_LIMIT: usize = WORKER_HEAP_BASE + workerHeapSize;
 
-const MAX_SIZE_32: u32 = 1 << 30; // 1GB
+let freeBlockPtr = WORKER_HEAP_BASE;
+
+const BLOCK_USAGE_BIT_POS = 31;
+const BLOCK_USAGE_BIT_MASK = 1 << BLOCK_USAGE_BIT_POS;
+
+const H_SIZE: u32 = offsetof<HeaderBlock>();
+const F_SIZE: u32 = offsetof<FooterBlock>();
+const HF_SIZE = H_SIZE + F_SIZE;
 
 class Block {
   size: u32 // bit 31 in field 'size' is the used flag
 }
-
-const BLOCK_USAGE_BIT_POS = 31;
-const BLOCK_USAGE_BIT_MASK = 1 << BLOCK_USAGE_BIT_POS;
 
 class HeaderBlock extends Block {
   next: usize;
@@ -64,34 +62,6 @@ function getBlockSize(blockPtr: usize): u32 {
   return block.size & ~BLOCK_USAGE_BIT_MASK;
 }
 
-const NULL: usize = 0;
-const H_SIZE: u32 = offsetof<HeaderBlock>();
-const F_SIZE: u32 = offsetof<FooterBlock>();
-const HF_SIZE = H_SIZE + F_SIZE;
-
-let freeBlockPtr = WORKER_HEAP_BASE;
-
-function print(): void {
-  logi(workerIdx);
-  logi(workersHeapOffset);
-  logi(WORKER_HEAP_BASE);
-  logi(WORKER_HEAP_LIMIT);
-}
-
-function allocInit(): void {
-  print();
-  const headerPtr = WORKER_HEAP_BASE;
-  setBlockUnused(headerPtr);
-  setBlockSize(headerPtr, workerHeapSize);
-
-  const footerPtr = WORKER_HEAP_LIMIT - F_SIZE;
-  setBlockUnused(footerPtr);
-  setBlockSize(footerPtr, workerHeapSize);
-
-  // free list of blocks as a doubly linked cyclic list
-  const header = changetype<HeaderBlock>(headerPtr);
-  header.next = header.prev = headerPtr;
-}
 
 function searchFirstFit(reqSize: u32): usize {
   if (freeBlockPtr == NULL) {
@@ -259,6 +229,31 @@ function dealloc(dataPtr: usize): void {
   // logi(getBlockSize(freeBlockPtr));
 }
 
-allocInit(); // for each worker/module
+function print(): void {
+  logi(workerIdx);
+  logi(workersHeapOffset);
+  logi(WORKER_HEAP_BASE);
+  logi(WORKER_HEAP_LIMIT);
+}
 
-export { alloc, dealloc };
+function allocInit(): void {
+  print();
+  const headerPtr = WORKER_HEAP_BASE;
+  setBlockUnused(headerPtr);
+  setBlockSize(headerPtr, workerHeapSize);
+
+  const footerPtr = WORKER_HEAP_LIMIT - F_SIZE;
+  setBlockUnused(footerPtr);
+  setBlockSize(footerPtr, workerHeapSize);
+
+  // free list of blocks as a doubly linked cyclic list
+  const header = changetype<HeaderBlock>(headerPtr);
+  header.next = header.prev = headerPtr;
+
+  // shared heap init
+  if (workerIdx == 0) {
+    heapAllocInit();
+  }
+}
+
+export { allocInit, alloc, dealloc };

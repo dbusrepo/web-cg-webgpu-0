@@ -1,14 +1,5 @@
 // import assert from 'assert';
 
-// ASC modules here
-import heapAllocWasm from './wasm/build/asc/heapAlloc.wasm';
-import heapAllocExport from './wasm/build/asc/heapAlloc';
-import workerHeapAllocWasm from './wasm/build/asc/workerHeapAlloc.wasm';
-import workerHeapAllocExport from './wasm/build/asc/workerHeapAlloc';
-import utilsWasm from './wasm/build/asc/utils.wasm';
-import utilsExport from './wasm/build/asc/utils';
-import drawWasm from './wasm/build/asc/draw.wasm';
-import drawExport from './wasm/build/asc/draw';
 import engineWorkerWasm from './wasm/build/asc/engineWorker.wasm';
 import engineWorkerExport from './wasm/build/asc/engineWorker';
 
@@ -56,16 +47,16 @@ async function loadWasm<T>(
     {},
   );
   const instance = await wasm({
-    [name]: {
-      ...wasmInit,
-      ...otherImpObj,
-    },
+    // [name]: {
+    // },
     env: {
-      memory: wasmInit.memory,
+      // memory: wasmInit.memory,
       abort: (...args: any[]) => {
         console.log('abort!');
       },
       'performance.now': () => performance.now(),
+      ...wasmInit,
+      ...otherImpObj,
     },
   });
   return instance.instance.exports;
@@ -74,40 +65,18 @@ async function loadWasm<T>(
 async function loadEngineWorkerExport(
   wasmInit: WasmInput,
 ): Promise<typeof engineWorkerExport> {
-  const heapAlloc = await loadWasm<typeof heapAllocExport>(
-    'heapAlloc',
-    heapAllocWasm,
-    wasmInit,
-  );
-  const workerAlloc = await loadWasm<typeof workerHeapAllocExport>(
-    'workerHeapAlloc',
-    workerHeapAllocWasm,
-    wasmInit,
-    heapAlloc,
-  );
-  const utils = await loadWasm<typeof utilsExport>(
-    'utils',
-    utilsWasm,
-    wasmInit,
-  );
-  const draw = await loadWasm<typeof drawExport>('draw', drawWasm, wasmInit);
   const engineWorker = await loadWasm<typeof engineWorkerExport>(
     'engineWorker',
     engineWorkerWasm,
     wasmInit,
-    draw,
-    utils,
-    workerAlloc,
-    heapAlloc,
   );
   return engineWorker;
 }
 
 async function loadWasmModules(wasmInit: WasmInput): Promise<WasmModules> {
   const engineWorker = await loadEngineWorkerExport(wasmInit);
-  if (wasmInit.workerIdx === 0) {
-    engineWorker.init();
-  }
+  // if (wasmInit.workerIdx === 0) {}
+  engineWorker.init();
   return {
     engineWorker,
   };

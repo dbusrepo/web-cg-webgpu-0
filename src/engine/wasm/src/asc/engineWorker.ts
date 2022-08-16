@@ -1,122 +1,18 @@
 import { myAssert } from './myAssert';
-import { Vec3 } from './Vec3';
+import { allocInit, alloc, dealloc } from './workerHeapAlloc';
+import { Vec3, newVec3, deleteVec3 } from './Vec3';
+import { range } from './utils';
+import { clearBg } from './draw';
 
-// env
-declare function logf(i: f32): void;
-declare function logi(i: i32): void;
-
-declare const frameWidth: i32;
-declare const frameHeight: i32;
-declare const frameBufferOffset: i32;
-declare const syncArrayOffset: i32;
-declare const sleepArrayOffset: i32;
-declare const workerIdx: i32;
-declare const numWorkers: i32;
-declare const heapOffset: usize;
-declare const bgColor: i32;
-
-// worker heap alloc
-declare function alloc(size: usize): usize;
-declare function dealloc(blockPtr: usize): void;
-
-// shared heap alloc
-declare function heapAllocInit(): void;
-
-// utils
-declare function range(workerIdx: u32, numWorkers: u32, numTasks: u32): u64;
-
-// draw
-declare function clearBg(c: i32, s: i32, e: i32): void;
-
-// Vec3
-declare function newVec3(x: f32, y: f32, z: f32): Vec3;
-declare function deleteVec3(v: Vec3): void;
+import { bgColor, heapOffset, numWorkers, workerIdx, logi, logf,
+         frameWidth, frameHeight, frameBufferOffset, syncArrayOffset, 
+         sleepArrayOffset } from './env';
 
 /**********************************************************************/
 
 const syncLoc = syncArrayOffset + workerIdx * sizeof<i32>();
 const sleepLoc = sleepArrayOffset + workerIdx * sizeof<i32>();
 // const heapLoc = heapOffset + workerIdx * workerHeapSize;
-
-/**********************************************************************/
-
-type float = f32;
-
-/**********************************************************************/
-
-// function _new<T>(): T {
-//   assert(isReference<T>());
-//   const size = offsetof<T>();
-//   // logi(addr);
-//   const addr = alloc(size);
-//   // logi(addr);
-//   return changetype<T>(addr);
-// }
-
-// const v = _new<Vec>();
-// logi(changetype<usize>(v));
-
-// class Vec3 {
-//     x: float;
-//     y: float;
-//     z: float;
-//     // w: float;
-//     // position, also color (r,g,b)
-//     // constructor(public x: float = 0.0, public y: float = 0.0, public z: float = 0.0) {}
-//     init(x: float, y: float, z: float): void {
-//       this.x = x;
-//       this.y = y;
-//       this.z = z;
-//     }
-
-//     static new(x: float, y: float, z: float): Vec3 {
-//       const size = offsetof<Vec3>();
-//       const f: usize = alloc(size);
-//       const p = changetype<Vec3>(f);
-//       p.x = x; p.y = y; p.z = z;
-//       return p;
-//     }
-
-//     static delete(v: Vec3): void {
-//       const ptr = changetype<usize>(v);
-//       dealloc(ptr);
-//     }
-// }
-
-// @global function __new(size: usize, id: u32): usize {
-//   logi(<i32>size);
-//   return 0;
-// }
-
-// export function instantiateRaw<T>(): T {
-//     // when field is class with nonnull, it's unsafe.
-//     if (isReference<T>()) {
-//         return changetype<T>(__new(offsetof<T>(), idof<T>()));
-//     }
-//     // It's safe.
-//     return instantiate<T>();
-// }
-
-function printValues(): void {
-
-  // const myArr = new StaticArray<i32>(100);
-  // logi(memory.grow(1));
-
-  // logi(<i32>heap.alloc(16));
-  // logi(sleepArr);
-  
-  // NativeMathf.seed
-
-  // logi(syncLoc);
-
-  // logi(ASC_MEMORY_BASE);
-  // const myblock = heap.alloc(16);
-  // logi(memory.size()); //<<16);
-  logi(i32(__data_end));
-  logi(<i32>__heap_base);
-  // logi(<i32>myblock);
-  // log(heap.alloc(10));
-}
 
 /**********************************************************************/
 
@@ -198,9 +94,8 @@ function run(): void {
     // dealloc(f);
     // dealloc(g);
 
-
     // const h: usize = alloc(7);
-    // // dealloc(h);
+    // dealloc(h);
     // logi(h);
 
     // const a = alloc(77);
@@ -217,7 +112,7 @@ function run(): void {
 
 function init(): void {
   // logi(heapOffset);
-  heapAllocInit();
+  allocInit();
 }
 
 export { init, run };
