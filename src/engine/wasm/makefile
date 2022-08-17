@@ -83,6 +83,9 @@ else
 	wasm-opt $@ -o $@ $(WASM_OPT_DEBUG)
 endif
 
+clean-dep:
+	rm $(ASC_DEP_FILES)
+
 clean-asc:
 	rm $(ASC_DEP_FILES)
 	rm -rf ./build/asc

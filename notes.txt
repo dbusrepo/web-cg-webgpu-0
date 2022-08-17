@@ -1,15 +1,27 @@
+random info...
+
 see asconfig.json:
 
-each worker instantiate the same modules, passing the global memory: wasm mem:
+each worker instantiate each wasm module ...passing the global memory + the
+other import vars... 
+
+->att on module instance vs import for let module var ? For now we use only one
+module (the engine worker module) and all other files are simply imported (with
+import in each other), so we avoid problems with multiple modules with different
+var referring to the same location in memory (es free list ptr for the worker
+alloc, while the shared heap alloc should be ok since var are locked in
+memory...?)
+
+wasm mem layout:
 reserved by app | module memory (data + heap):  the module part starts from the
 memoryBase value in asconfig: since we don't use the data+heap part we set it to
-the start value * page size....
+the start value * page size....maybe we don't set it ?
 
-remove these? not using the data+heap part so...
+remove these? i don't use the data+heap part so...
     "initialMemory": 10,
     "memoryBase": 4194304,
 
-Note on the project: only Chrome supported
+-> only Chrome supported !
 
 2 see:
 

@@ -1,4 +1,4 @@
-import { logi, logf, frameBufferOffset, frameWidth, frameHeight } from './env';
+import { logi, logf, frameBufferOffset, frameWidth, frameHeight } from './importVars';
 
 function clearBg(
   color: i32,

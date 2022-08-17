@@ -1,12 +1,11 @@
 import { myAssert } from './myAssert';
 import { allocInit, alloc, dealloc } from './workerHeapAlloc';
-import { Vec3, newVec3, deleteVec3 } from './Vec3';
+import { Vec3, newVec3, delVec3 } from './Vec3';
 import { range } from './utils';
 import { clearBg } from './draw';
-
 import { bgColor, heapOffset, numWorkers, workerIdx, logi, logf,
          frameWidth, frameHeight, frameBufferOffset, syncArrayOffset, 
-         sleepArrayOffset } from './env';
+         sleepArrayOffset } from './importVars';
 
 /**********************************************************************/
 
@@ -23,7 +22,7 @@ function testVec3(): Vec3 {
   // return p;
   // return Vec3.new(3, 4, 5);
   const v = newVec3(3, 4, 5);
-  v.init(7,2,3);
+  // v.init(7,2,3);
   return v;
 }
 
@@ -35,8 +34,9 @@ function run(): void {
   const s = <i32>(r >>> 32);
   const e = <i32>r;
 
-  const v = testVec3();
-  logf(v.x);
+  // const v = testVec3();
+  // logf(v.x);
+
   // Vec3.delete(v);
 
   // logi(s);
@@ -82,6 +82,7 @@ function run(): void {
 
   logi(-1);
 
+  let c: f32 = 0.0;
   while (true) {
     // const f: usize = alloc(12);
     // // const g: usize = alloc(2);
@@ -93,6 +94,10 @@ function run(): void {
     // logi(g);
     // dealloc(f);
     // dealloc(g);
+
+    // const v = newVec3(c, c+1, c+2);
+    // c+=3;
+    // delVec3(v);
 
     // const h: usize = alloc(7);
     // dealloc(h);

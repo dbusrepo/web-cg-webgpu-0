@@ -1,15 +1,19 @@
 import { myAssert } from './myAssert';
 import { heapAllocInit, heapAlloc, heapDealloc } from './heapAlloc';
-import { logi, workerIdx, workersHeapOffset, workerHeapSize } from './env';
+import { logi, workerIdx, workersHeapOffset, workerHeapSize } from './importVars';
+import { NULL, MAX_ALLOC_SIZE } from './common';
 
 /**********************************************************************/
-
-const NULL: usize = 0;
-const MAX_SIZE_32: u32 = 1 << 30; // 1GB
 
 const WORKER_HEAP_BASE: usize = workersHeapOffset + workerIdx * workerHeapSize;
 const WORKER_HEAP_LIMIT: usize = WORKER_HEAP_BASE + workerHeapSize;
 
+// TODO note: let var here: this is a module var
+// ok if this file is used/imported only in one module? otherwise different
+// modules would operate on the same worker heap ?
+// sol: 1) don't use import 2) use a module for this file and import its
+// function with declare in others ?
+// 1) ok this should be used only with engineworker module...
 let freeBlockPtr = WORKER_HEAP_BASE;
 
 const BLOCK_USAGE_BIT_POS = 31;
@@ -52,7 +56,7 @@ function isBlockUsed(blockPtr: usize): boolean {
 function setBlockSize(blockPtr: usize, size: u32): void {
   const block = changetype<Block>(blockPtr);
   const usageBit = block.size & BLOCK_USAGE_BIT_MASK;
-  myAssert(size <= MAX_SIZE_32);
+  myAssert(size <= MAX_ALLOC_SIZE);
   block.size = usageBit | size;
 }
 
@@ -112,7 +116,7 @@ function replaceNode(nodePtr: usize, newNodePtr: usize = NULL): void {
 function alloc(reqSize: u32): usize {
   // print();
   myAssert(reqSize > 0);
-  myAssert(reqSize <= MAX_SIZE_32);
+  myAssert(reqSize <= MAX_ALLOC_SIZE);
   // return heapAlloc(reqSize); // TODO REMOVE
   const headerPtr = searchFirstFit(reqSize);
   if (headerPtr == NULL) {

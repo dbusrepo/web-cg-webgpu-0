@@ -1,21 +1,19 @@
 import { myAssert } from './myAssert';
 import { lock, unlock } from './mutex';
-import { logi, heapOffset } from './env';
+import { logi, heapOffset } from './importVars';
+import { NULL, MAX_ALLOC_SIZE } from './common';
 
 /**********************************************************************/
 
-const NULL: usize = 0;
-const MAX_SIZE_32: u32 = 1 << 30; // 1GB
-
-// const ALIGN_BITS: u32 = 3;
-// const ALIGN_SIZE: u32 = 1 << ALIGN_BITS;
-// const ALIGN_MASK: u32 = ALIGN_SIZE - 1;
+const ALIGN_BITS = <i32>sizeof<usize>();
+const ALIGN_SIZE: u32 = 1 << ALIGN_BITS;
+const ALIGN_MASK: u32 = ALIGN_SIZE - 1;
 
 const HEAP_BASE = heapOffset;
 const MUTEX_PTR = (heapOffset + 3) & ~3; // align to 4 bytes
-const ALLOC_PTR_PTR = (MUTEX_PTR + 4 + 7) & ~7; // after the mutex, align to 8 bytes
-const FREE_PTR_PTR = ALLOC_PTR_PTR + 8; // after the offset pointer, the free list ptr
-const START_ALLOC_PTR = FREE_PTR_PTR  + 8; // after the free block ptr ptr, the alloc area
+const ALLOC_PTR_PTR = (MUTEX_PTR + 4 + ALIGN_MASK) & ~ALIGN_MASK; // after the mutex, align to X bytes
+const FREE_PTR_PTR = ALLOC_PTR_PTR + ALIGN_SIZE; // after the offset pointer, the free list ptr
+const START_ALLOC_PTR = FREE_PTR_PTR  + ALIGN_SIZE; // after the free block ptr ptr, the alloc area
 
 // each block has an header with the size stored before the data, the rest
 // is 'shared' with the data but used only when the block is unused/in the free
@@ -49,7 +47,7 @@ function isBlockUsed(blockPtr: usize): boolean {
 function setBlockSize(blockPtr: usize, size: u32): void {
   const block = changetype<Block>(blockPtr);
   const usageBit = block.size & BLOCK_USAGE_BIT_MASK;
-  myAssert(size <= MAX_SIZE_32);
+  myAssert(size <= MAX_ALLOC_SIZE);
   block.size = usageBit | size;
 }
 
@@ -88,8 +86,8 @@ function allocNewBlock(reqSize: u32): usize {
   let dataSize: u32;
   do {
     curOffset = atomicGetAllocPtr();
-    // align data (and the block next field) to 8 bytes
-    blockPtr = ((curOffset + HEADER_SIZE + 7) & ~7) - HEADER_SIZE;
+    // align data (and the block next field)
+    blockPtr = ((curOffset + HEADER_SIZE + ALIGN_MASK) & ~ALIGN_MASK) - HEADER_SIZE;
     dataSize = max(BLOCK_SIZE - HEADER_SIZE, reqSize);
     newOffset = blockPtr + HEADER_SIZE + dataSize;
     checkGrowMemory(curOffset, newOffset);
@@ -99,7 +97,6 @@ function allocNewBlock(reqSize: u32): usize {
   setBlockUsed(blockPtr);
   setBlockSize(blockPtr, dataSize);
   let dataPtr = blockPtr + HEADER_SIZE;
-  // logi(dataPtr % 8);
   return dataPtr;
 }
 
@@ -120,7 +117,7 @@ function searchFreeList(reqSize: u32): usize {
 
 function heapAlloc(reqSize: u32): usize {
   myAssert(reqSize > 0);
-  myAssert(reqSize <= MAX_SIZE_32);
+  myAssert(reqSize <= MAX_ALLOC_SIZE);
   let dataPtr: usize = NULL;
   const freePtr = atomic.load<usize>(FREE_PTR_PTR);
   if (freePtr != NULL) {

@@ -48,15 +48,16 @@ async function loadWasm<T>(
   );
   const instance = await wasm({
     // [name]: {
-    // },
+    importVars: {
+      ...wasmInit,
+      ...otherImpObj,
+    },
     env: {
-      // memory: wasmInit.memory,
+      memory: wasmInit.memory,
       abort: (...args: any[]) => {
         console.log('abort!');
       },
       'performance.now': () => performance.now(),
-      ...wasmInit,
-      ...otherImpObj,
     },
   });
   return instance.instance.exports;
