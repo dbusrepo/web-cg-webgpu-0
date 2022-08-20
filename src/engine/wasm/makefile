@@ -34,7 +34,7 @@ WASM_OPT_SIZE:= --converge --dce -Oz $(WASM_OPT_FLAGS)
 WASM_OPT_DEBUG:= -O --debuginfo $(WASM_OPT_FLAGS)
 
 
-.PHONY: all build_asc build_wat clean force
+.PHONY: all build_asc build_wat force clean clean-asc clean-asc-dep clean-wat
 
 all: build_asc
 
@@ -54,7 +54,9 @@ build_asc: init_asc_build $(ASC_BUILD_FILES)
 init_asc_build:
 	@mkdir -p $(ASC_BUILD_DIR)
 
+ifeq (,$(findstring clean,$(MAKECMDGOALS)))
 -include $(ASC_DEP_FILES)
+endif
 
 $(ASC_BUILD_DIR)/%.wasm: $(ASC_SOURCE_DIR)/%.ts build_flags $(ASC_CONFIG_FILE)
 	$(info GEN $@)
@@ -62,7 +64,8 @@ $(ASC_BUILD_DIR)/%.wasm: $(ASC_SOURCE_DIR)/%.ts build_flags $(ASC_CONFIG_FILE)
 
 %.d: %.ts
 	$(info GEN $@)
-	@node extract-imports.js $< > $@
+	@rm -f $@; \
+	node extract-imports.js $< > $@
 
 # **************************************************
 # COMPILE WAT
@@ -91,18 +94,16 @@ else
 	wasm-opt $@ -o $@ $(WASM_OPT_DEBUG)
 endif
 
-clean-dep:
-	rm $(ASC_DEP_FILES)
+clean-asc-dep:
+	rm -f ./src/asc/*.d
 
-clean-asc:
-	rm $(ASC_DEP_FILES)
+clean-asc: clean-asc-dep
 	rm -rf ./build/asc
 
 clean-wat:
 	rm -rf ./build/wat
 
-clean:
-	rm $(ASC_DEP_FILES)
+clean: clean-asc-dep
 	rm -rf ./build/
 
 # SOURCE_ASC_PATHS = $(wildcard $(SOURCE_DIR)/asc/*.ts)

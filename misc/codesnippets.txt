@@ -385,3 +385,7 @@ function testVec3(): Vec3 {
     atomic.notify(syncLoc);
     break;
   }
+
+
+# ifeq (build_asc,$(findstring build_asc,$(MAKECMDGOALS)))
+ifneq "" "$(or $(findstring build_asc,$(MAKECMDGOALS)), $(findstring all,$(MAKECMDGOALS)))"
