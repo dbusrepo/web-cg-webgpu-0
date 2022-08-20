@@ -1,16 +1,7 @@
 console font size
-
 autoCompletion
-
 stats
-
 memory
-
 fps unlocked
-
 when in full mode show stats only after console closed
-
 stats config
-
-problem with make dep files: a wasm should depend also on his import wasm !
-engine vs vec3 vs arena alloc!
