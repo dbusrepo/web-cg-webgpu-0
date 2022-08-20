@@ -2,8 +2,8 @@ import { logi, logf, frameBufferOffset, frameWidth, frameHeight } from './import
 
 function clearBg(
   color: i32,
-  start: i32,
-  end: i32,
+  start: u32,
+  end: u32,
 ): void {
 
   let value = v128.splat<i32>(color);

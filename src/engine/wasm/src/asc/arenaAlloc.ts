@@ -5,7 +5,7 @@ import { logi } from './importVars';
 
 class ArenaAlloc<T> {
 
-  private static readonly PTR_SIZE: usize = sizeof<usize>();
+  private static readonly PTR_SIZE: u32 = sizeof<usize>();
 
   private static ALIGN_SIZE: u32 = <u32>ArenaAlloc.PTR_SIZE;
   private static ALIGN_MASK: u32 = ArenaAlloc.ALIGN_SIZE - 1;
@@ -21,7 +21,7 @@ class ArenaAlloc<T> {
   private constructor() {}
 
   public init(numElementsPerBlock: u32): void {
-    const objSize = offsetof<T>();
+    const objSize: u32 = offsetof<T>();
     this.allocSize = max(objSize, ArenaAlloc.PTR_SIZE);
     // round alloc size to align size
     this.allocSize = (this.allocSize + ArenaAlloc.ALIGN_MASK) & (~ArenaAlloc.ALIGN_MASK);

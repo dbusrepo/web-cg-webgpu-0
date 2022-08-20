@@ -6,13 +6,20 @@ TARGET_SPEED := release-speed
 TARGET_SIZE := release-size
 TARGET ?= $(TARGET_DEBUG)
 
+ASC_BINDINGS := esm
+
 ASC_CONFIG_FILE := asconfig.json
 ASC_SOURCE_DIR := src/asc
 ASC_BUILD_DIR := build/asc
-ASC_SOURCE_FILES := $(wildcard $(ASC_SOURCE_DIR)/*.ts)
+
+ASC_ALL_SOURCE_FILES := $(wildcard $(ASC_SOURCE_DIR)/*.ts)
+ASC_DEP_FILES := $(ASC_ALL_SOURCE_FILES:.ts=.d)
+
+# modules to build
+ASC_MODULES := engineWorker
+
+ASC_SOURCE_FILES := $(ASC_MODULES:%=$(ASC_SOURCE_DIR)/%.ts)
 ASC_BUILD_FILES := $(ASC_SOURCE_FILES:$(ASC_SOURCE_DIR)/%.ts=$(ASC_BUILD_DIR)/%.wasm)
-ASC_BINDINGS = esm
-ASC_DEP_FILES := $(ASC_SOURCE_FILES:.ts=.d)
 
 # SOURCE_WAT_FILES = $(wildcard $(SOURCE_DIR)/wat/*.wat)
 
@@ -29,7 +36,7 @@ WASM_OPT_DEBUG:= -O --debuginfo $(WASM_OPT_FLAGS)
 
 .PHONY: all build_asc build_wat clean force
 
-all: build_asc build_wat
+all: build_asc
 
 build_flags: force
 	@echo '$(TARGET)' | cmp -s - $@ || echo '$(TARGET)' > $@
@@ -38,29 +45,30 @@ build_flags: force
 # COMPILE ASC
 # **************************************************
 
+build_dep_only: $(ASC_DEP_FILES)
+	@echo 'Dependencies file generation terminated.'
+
 build_asc: init_asc_build $(ASC_BUILD_FILES)
-	@echo
 	@echo 'Asc files compilation terminated.'
 
 init_asc_build:
-	@echo 'Compiling asc files...'
 	@mkdir -p $(ASC_BUILD_DIR)
+
+-include $(ASC_DEP_FILES)
 
 $(ASC_BUILD_DIR)/%.wasm: $(ASC_SOURCE_DIR)/%.ts build_flags $(ASC_CONFIG_FILE)
 	$(info GEN $@)
 	asc --config $(ASC_CONFIG_FILE) $< -o $@ -t $(basename $@).wat -b $(ASC_BINDINGS) --target $(TARGET)
 
--include $(ASC_DEP_FILES)
-
 %.d: %.ts
 	$(info GEN $@)
 	@node extract-imports.js $< > $@
 
-
-
 # **************************************************
 # COMPILE WAT
 # **************************************************
+
+# not used
 
 build_wat: init_wat_build $(WAT_BUILD_FILES)
 	@echo

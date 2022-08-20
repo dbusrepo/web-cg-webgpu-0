@@ -241,7 +241,7 @@ function print(): void {
 }
 
 function allocInit(): void {
-  print();
+  // print();
   const headerPtr = WORKER_HEAP_BASE;
   setBlockUnused(headerPtr);
   setBlockSize(headerPtr, workerHeapSize);
