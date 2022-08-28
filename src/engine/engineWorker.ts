@@ -88,7 +88,7 @@ class EngineWorker {
       sleepArrayOffset: memOffsets[WasmMemUtils.MemRegions.SLEEP_ARRAY],
       workerIdx,
       numWorkers,
-      workersHeapOffset: memOffsets[WasmMemUtils.MemRegions.WORKERS_HEAP],
+      workersHeapOffset: memOffsets[WasmMemUtils.MemRegions.WORKERS_HEAPS],
       workerHeapSize,
       heapOffset: memOffsets[WasmMemUtils.MemRegions.HEAP],
       bgColor: randColor(),

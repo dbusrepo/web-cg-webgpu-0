@@ -70,10 +70,9 @@ class Engine {
 
     this.loadImages();
 
-    const wasmMemConfig = this.buildWasmMemConfig(frameWidth * frameHeight);
-    this._wasmMemConfig = wasmMemConfig;
+    this.buildWasmMemConfig(frameWidth * frameHeight);
 
-    this._wasmMemRegionsSizes = WasmMemUtils.calcMemRegionsSizes(wasmMemConfig);
+    this._wasmMemRegionsSizes = WasmMemUtils.calcMemRegionsSizes(this._wasmMemConfig);
 
     this._wasmMemRegionsOffsets = WasmMemUtils.calcMemRegionsOffsets(
       this._wasmMemConfig,
@@ -88,8 +87,8 @@ class Engine {
       this._wasmMemRegionsOffsets,
     );
 
-    console.log(`Wasm mem start: ${defaultConfig.wasmMemStartOffset}`);
-    console.log(`Wasm mem size: ${wasmMemStartSize}`);
+    console.log(`wasm mem start: ${defaultConfig.wasmMemStartOffset}`);
+    console.log(`wasm mem size: ${wasmMemStartSize}`);
 
     const wasmMemTotalStartSize = wasmMemStartOffset + wasmMemStartSize;
     this.initWasmMemory(wasmMemTotalStartSize);
@@ -107,7 +106,7 @@ class Engine {
     this._ctx = ctx;
   }
 
-  private buildWasmMemConfig(numPixels: number): WasmMemUtils.MemConfig {
+  private buildWasmMemConfig(numPixels: number): void {
     const { wasmWorkerHeapPages, wasmMemStartOffset } = defaultConfig;
     const numWorkers = Engine.NUM_ENGINE_WORKERS;
     const wasmMemConfig: WasmMemUtils.MemConfig = {
@@ -121,7 +120,7 @@ class Engine {
       workerHeapSize: PAGE_SIZE_BYTES * wasmWorkerHeapPages,
       images: this.buildWasmImages(this._images),
     };
-    return wasmMemConfig;
+    this._wasmMemConfig = wasmMemConfig;
   }
 
   private initWasmMemViews(): void {
@@ -168,11 +167,11 @@ class Engine {
 
   private initWasmMemory(wasmMemSize: number): void {
     console.log(
-      `Start mem pages required: ${Math.ceil(wasmMemSize / PAGE_SIZE_BYTES)}`,
+      `wasm mem pages required: ${Math.ceil(wasmMemSize / PAGE_SIZE_BYTES)}`,
     );
     const { wasmMemStartPages: initial, wasmMemMaxPages: maximum } =
       defaultConfig;
-    console.log(`Default start mem pages: ${initial}`);
+    console.log(`wasm mem start pages: ${initial}`);
     assert(initial * PAGE_SIZE_BYTES >= wasmMemSize);
     const memory = new WebAssembly.Memory({
       initial,

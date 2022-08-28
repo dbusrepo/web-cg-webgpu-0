@@ -14,25 +14,48 @@ type MemConfig = {
 
 // all regions are bounded except (at least for now) for the last part, the
 // shared heap that can grow.
-const enum MemRegions { // TODO change name?
+const enum MemRegions {
   RGBA_FRAMEBUFFER = 'RGBA_FRAMEBUFFER',
   PAL_IDX_FRAMEBUFFER = 'PAL_IDX_FRAMEBUFFER',
   PALETTE = 'PALETTE',
   SYNC_ARRAY = 'SYNC_ARRAY',
   SLEEP_ARRAY = 'SLEEP_ARRAY',
   IMAGES = 'IMAGES',
-  WORKERS_HEAP = 'WORKERS_HEAP',
+  WORKERS_HEAPS = 'WORKERS_HEAPS',
   HEAP = 'HEAP',
 }
 
-const LAST_MEM_REG = 'HEAP';
+type MemRegionKeyType = keyof typeof MemRegions;
+
+// allocation order/layout seq
+const MEM_REGIONS_SEQ: MemRegionKeyType[] = [
+  MemRegions.RGBA_FRAMEBUFFER,
+  MemRegions.PAL_IDX_FRAMEBUFFER,
+  MemRegions.PALETTE,
+  MemRegions.SYNC_ARRAY,
+  MemRegions.SLEEP_ARRAY,
+  MemRegions.IMAGES,
+  MemRegions.WORKERS_HEAPS,
+  MemRegions.HEAP,
+];
 
 type MemRegionsData = {
-  -readonly [key in keyof typeof MemRegions]: number;
+  -readonly [key in MemRegionKeyType]: number;
+};
+
+const memRegionsAlignSizes: MemRegionsData = {
+  [MemRegions.RGBA_FRAMEBUFFER]: 4,
+  [MemRegions.PAL_IDX_FRAMEBUFFER]: 4,
+  [MemRegions.PALETTE]: 4,
+  [MemRegions.SYNC_ARRAY]: 4,
+  [MemRegions.SLEEP_ARRAY]: 4,
+  [MemRegions.IMAGES]: 4,
+  [MemRegions.WORKERS_HEAPS]: 4,
+  [MemRegions.HEAP]: 64,
 };
 
 // Calc the (static) sizes of the start regions.
-// sizes are in bytes
+// sizes are in bytes, and they include the alignment space
 function calcMemRegionsSizes(config: MemConfig): MemRegionsData {
   const {
     rgbaFrameBufferSize,
@@ -45,90 +68,71 @@ function calcMemRegionsSizes(config: MemConfig): MemRegionsData {
     paletteSize,
   } = config;
 
-  const sizes = {} as MemRegionsData;
+  const sizes: MemRegionsData = {
+    [MemRegions.RGBA_FRAMEBUFFER]: rgbaFrameBufferSize,
+    [MemRegions.PAL_IDX_FRAMEBUFFER]: palIdxFrameBufferSize,
+    [MemRegions.PALETTE]: paletteSize,
+    [MemRegions.SYNC_ARRAY]: syncArraySize,
+    [MemRegions.SLEEP_ARRAY]: sleepArraySize,
+    [MemRegions.IMAGES]: calcImagesRegionSize(images),
+    [MemRegions.WORKERS_HEAPS]: numWorkers * workerHeapSize,
+    [MemRegions.HEAP]: 0,
+  };
 
-  // rgba framebuffer
-  sizes[MemRegions.RGBA_FRAMEBUFFER] = rgbaFrameBufferSize;
-  sizes[MemRegions.PAL_IDX_FRAMEBUFFER] = palIdxFrameBufferSize;
-  sizes[MemRegions.PALETTE] = paletteSize;
-  sizes[MemRegions.SYNC_ARRAY] = syncArraySize;
-  sizes[MemRegions.SLEEP_ARRAY] = sleepArraySize;
-  // workers heaps
-  const workersHeapsSize = numWorkers * workerHeapSize;
-  sizes[MemRegions.WORKERS_HEAP] = workersHeapsSize;
-  // images
+  sizes[MemRegions.HEAP] = 0; // force it to 0 'cause it is the last and it can expand
+
+  // console.log(JSON.stringify(sizes));
+
+  return sizes;
+}
+
+function calcImagesRegionSize(images: Assets.WasmImage[]): number {
   const imagesIndexSize = Assets.WasmImage.OFFSET_SIZE * images.length;
   const imagesHeaderDataSize = images.reduce(
     (size, img) => (size += img.size),
     0,
   );
-  const imagesSize = imagesIndexSize + imagesHeaderDataSize;
-  sizes[MemRegions.IMAGES] = imagesSize;
-
-  // last mem region: the shared heap
-  // it can expand and it is the last region, so we set it to 0.
-  // used in the total size formula below
-  sizes[MemRegions.HEAP] = 0;
-
-  return sizes;
+  return imagesIndexSize + imagesHeaderDataSize;
 }
 
 // Calc the (static) offset of the start regions
 function calcMemRegionsOffsets(
   config: MemConfig,
-  sizes: MemRegionsData,
+  sizes: Readonly<MemRegionsData>,
 ): MemRegionsData {
   const { startOffset } = config;
 
-  // TODO check alignments ?
+  const alignSizes = {} as MemRegionsData;
+
+  for (const region of MEM_REGIONS_SEQ) {
+    alignSizes[region] = sizes[region];
+    if (sizes[region]) {
+      const alignSize = memRegionsAlignSizes[region] - 1;
+      alignSizes[region] += alignSize;
+    }
+  }
 
   const offsets = {} as MemRegionsData;
 
-  let offs = startOffset;
+  let curOffset = startOffset;
 
-  // rgba framebuffer
-  offsets[MemRegions.RGBA_FRAMEBUFFER] = offs;
-  offs += sizes[MemRegions.RGBA_FRAMEBUFFER];
+  for (const region of MEM_REGIONS_SEQ) {
+    const alignMask = memRegionsAlignSizes[region] - 1;
+    offsets[region] = (curOffset + alignMask) & ~alignMask;
+    curOffset += alignSizes[region];
+  }
 
-  // palette indexes framebuffer
-  offsets[MemRegions.PAL_IDX_FRAMEBUFFER] = offs;
-  offs += sizes[MemRegions.PAL_IDX_FRAMEBUFFER];
-
-  // palette
-  offsets[MemRegions.PALETTE] = offs;
-  offs += sizes[MemRegions.PALETTE];
-
-  // sync array
-  offsets[MemRegions.SYNC_ARRAY] = offs;
-  offs += sizes[MemRegions.SYNC_ARRAY];
-
-  // sleep array
-  offsets[MemRegions.SLEEP_ARRAY] = offs;
-  offs += sizes[MemRegions.SLEEP_ARRAY];
-
-  // images
-  offsets[MemRegions.IMAGES] = offs; // offset alignment to 4/8 bytes ?
-  offs += sizes[MemRegions.IMAGES];
-
-  // private worker heap
-  offsets[MemRegions.WORKERS_HEAP] = offs;
-  offs += sizes[MemRegions.WORKERS_HEAP];
-
-  // shared heap
-  offsets[MemRegions.HEAP] = offs;
+  // console.log(JSON.stringify(offsets));
 
   return offsets;
 }
 
-// the shared heap is the last part of the memory and it can expand. The
-// starting allocated memory starts from the startOffset and ends where the
-// shared heap starts.
 function getMemStartSize(
   startOffset: number,
   sizes: MemRegionsData,
   offsets: MemRegionsData,
 ): number {
-  return offsets[LAST_MEM_REG] + sizes[LAST_MEM_REG] - startOffset;
+  return offsets[MemRegions.HEAP] + sizes[MemRegions.HEAP] - startOffset;
 }
 
 export {
