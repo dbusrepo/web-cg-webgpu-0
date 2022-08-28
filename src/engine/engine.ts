@@ -1,25 +1,23 @@
 import assert from 'assert';
+import * as WasmMemUtils from './wasmMemUtils';
 import {
-  MemoryRegion,
-  MemoryRegionsData,
-  MemRegionConfig,
-  memRegionSizes,
-  memRegionOffsets,
-} from './memoryRegions';
-// import loader from '@assemblyscript/loader';
-// import assert from 'assert';
-import { defaultConfig } from '../config/config';
-import {
+  BYTES_PER_PIXEL,
+  PALETTE_SIZE,
   TypedArray,
   StatsNames,
   StatsValues,
-  PAGE_SIZE,
+  PAGE_SIZE_BYTES,
   MILLI_IN_SEC,
 } from '../common';
-import { syncStore, syncWait, syncNotify, sleep } from './utils';
+
+// import loader from '@assemblyscript/loader';
+// import assert from 'assert';
+import { defaultConfig } from '../config/config';
+import { syncStore, syncWait, syncNotify } from './utils';
+import * as Assets from './image';
 
 // import * as loadUtils from '../utils/loadFiles'; // TODO
-import { EngineWorkerConfig, EngineWorker } from './engineWorker';
+import { EngineWorkerConfig } from './engineWorker';
 
 // test img loading... TODO
 // import myImgUrl from 'images/samplePNGImage.png';
@@ -30,13 +28,13 @@ type EngineConfig = {
 };
 
 class Engine {
-  private static readonly NUM_ENGINE_WORKERS = 2; // required  >= 1
+  private static readonly NUM_ENGINE_WORKERS = 2; // >= 1
 
   // TODO
   private static readonly RENDER_PERIOD =
-    MILLI_IN_SEC / defaultConfig.target_fps;
+    MILLI_IN_SEC / defaultConfig.targetFPS;
   private static readonly UPDATE_PERIOD =
-    (defaultConfig.multiplier * MILLI_IN_SEC) / defaultConfig.target_ups;
+    (defaultConfig.multiplier * MILLI_IN_SEC) / defaultConfig.targetUPS;
   private static readonly UPDATE_TIME_MAX = Engine.UPDATE_PERIOD * 8;
 
   private static readonly UPD_TIME_ARR_LENGTH = 4;
@@ -45,117 +43,146 @@ class Engine {
   private static readonly FPS_ARR_LENGTH = 8;
   private static readonly STATS_PERIOD = MILLI_IN_SEC;
 
-  private _engineConfig: EngineConfig;
+  private _config: EngineConfig;
   private _ctx: OffscreenCanvasRenderingContext2D;
   private _imageData: ImageData;
 
-  protected _frameBuffer: Uint8ClampedArray;
-  protected _syncArr: Int32Array;
-  protected _sleepArr: Int32Array;
+  private _wasmMemConfig: WasmMemUtils.MemConfig;
+  private _wasmMemRegionsSizes: WasmMemUtils.MemRegionsData;
+  private _wasmMemRegionsOffsets: WasmMemUtils.MemRegionsData;
+  private _wasmMem: WebAssembly.Memory;
+
+  private _wasmRgbaFramebuffer: Uint8ClampedArray;
+  private _wasmSyncArr: Int32Array;
+  private _images: Assets.Image[];
 
   private _workers: Worker[];
 
   public async init(config: EngineConfig): Promise<void> {
-    assert(Engine.NUM_ENGINE_WORKERS >= 1);
+    this._config = config;
 
-    this._engineConfig = config;
+    const { canvas } = config;
 
-    const { canvas, sendStats } = config;
+    this.initOffscreenCanvasContext(canvas);
 
+    const { width: frameWidth, height: frameHeight } = canvas;
+    this._imageData = this._ctx.createImageData(frameWidth, frameHeight);
+
+    this.loadImages();
+
+    const wasmMemConfig = this.buildWasmMemConfig(frameWidth * frameHeight);
+    this._wasmMemConfig = wasmMemConfig;
+
+    this._wasmMemRegionsSizes = WasmMemUtils.calcMemRegionsSizes(wasmMemConfig);
+
+    this._wasmMemRegionsOffsets = WasmMemUtils.calcMemRegionsOffsets(
+      this._wasmMemConfig,
+      this._wasmMemRegionsSizes,
+    );
+
+    const { wasmMemStartOffset } = defaultConfig;
+
+    const wasmMemStartSize = WasmMemUtils.getMemStartSize(
+      wasmMemStartOffset,
+      this._wasmMemRegionsSizes,
+      this._wasmMemRegionsOffsets,
+    );
+
+    console.log(`Wasm mem start: ${defaultConfig.wasmMemStartOffset}`);
+    console.log(`Wasm mem size: ${wasmMemStartSize}`);
+
+    const wasmMemTotalStartSize = wasmMemStartOffset + wasmMemStartSize;
+    this.initWasmMemory(wasmMemTotalStartSize);
+
+    this.initWasmMemViews();
+
+    await engine.initEngineWorkers(wasmMemStartSize);
+  }
+
+  private initOffscreenCanvasContext(canvas: OffscreenCanvas): void {
     const ctx = <OffscreenCanvasRenderingContext2D>(
       canvas.getContext('2d', { alpha: false })
     );
     ctx.imageSmoothingEnabled = false;
     this._ctx = ctx;
+  }
 
-    const frameWidth = canvas.width;
-    const frameHeight = canvas.height;
-    this._imageData = this._ctx.createImageData(frameWidth, frameHeight);
-
-    const memConfig: MemRegionConfig = {
-      frameWidth,
-      frameHeight,
-      numWorkers: Engine.NUM_ENGINE_WORKERS,
+  private buildWasmMemConfig(numPixels: number): WasmMemUtils.MemConfig {
+    const { wasmWorkerHeapPages, wasmMemStartOffset } = defaultConfig;
+    const numWorkers = Engine.NUM_ENGINE_WORKERS;
+    const wasmMemConfig: WasmMemUtils.MemConfig = {
+      startOffset: wasmMemStartOffset,
+      rgbaFrameBufferSize: numPixels * BYTES_PER_PIXEL,
+      palIdxFrameBufferSize: numPixels,
+      paletteSize: PALETTE_SIZE * BYTES_PER_PIXEL,
+      syncArraySize: numWorkers * Int32Array.BYTES_PER_ELEMENT,
+      sleepArraySize: numWorkers * Int32Array.BYTES_PER_ELEMENT,
+      numWorkers,
+      workerHeapSize: PAGE_SIZE_BYTES * wasmWorkerHeapPages,
+      images: this.buildWasmImages(this._images),
     };
+    return wasmMemConfig;
+  }
 
-    const memSizes = memRegionSizes(memConfig);
-    const memOffsets = memRegionOffsets(memConfig, memSizes);
-    const memInitialSize = Object.values(memSizes).reduce(
-      (acc, size) => acc + size,
-      0,
+  private initWasmMemViews(): void {
+    const rgbaFrameBufferRegion = WasmMemUtils.MemRegions.RGBA_FRAMEBUFFER;
+    this._wasmRgbaFramebuffer = new Uint8ClampedArray(
+      this._wasmMem.buffer,
+      this._wasmMemRegionsOffsets[rgbaFrameBufferRegion],
+      this._wasmMemRegionsSizes[rgbaFrameBufferRegion],
     );
-
-    // TODO
-    console.log('mem initial size is: ' + memInitialSize);
-
-    const memory = this.initMemory(memInitialSize);
-
-    this._frameBuffer = new Uint8ClampedArray(
-      memory.buffer,
-      memOffsets[MemoryRegion.FRAMEBUFFER],
-      memSizes[MemoryRegion.FRAMEBUFFER],
+    const syncArrayRegion = WasmMemUtils.MemRegions.SYNC_ARRAY;
+    this._wasmSyncArr = new Int32Array(
+      this._wasmMem.buffer,
+      this._wasmMemRegionsOffsets[syncArrayRegion],
+      this._wasmMemRegionsSizes[syncArrayRegion] / Int32Array.BYTES_PER_ELEMENT,
     );
+  }
 
-    this._syncArr = new Int32Array(
-      memory.buffer,
-      memOffsets[MemoryRegion.SYNC_ARRAY],
-      memSizes[MemoryRegion.SYNC_ARRAY],
-    );
+  private loadImages(): void {
+    this._images = [];
+    // TODO ...
+  }
 
-    this._sleepArr = new Int32Array(
-      memory.buffer,
-      memOffsets[MemoryRegion.SLEEP_ARRAY],
-      memSizes[MemoryRegion.SLEEP_ARRAY],
-    );
-
-    await engine.initEngineWorkers(
-      memInitialSize,
-      memSizes,
-      memOffsets,
-      memory,
-    );
+  private buildWasmImages(images: Assets.Image[]): Assets.WasmImage[] {
+    return [];
   }
 
   private buildWorkerConfig(
     idx: number,
-    memInitialSize: number,
-    memSizes: MemoryRegionsData,
-    memOffsets: MemoryRegionsData,
-    memory: WebAssembly.Memory,
+    wasmMemStartSize: number,
   ): EngineWorkerConfig {
     return {
       workerIdx: idx,
       numWorkers: Engine.NUM_ENGINE_WORKERS,
-      frameWidth: this._engineConfig.canvas.width,
-      frameHeight: this._engineConfig.canvas.height,
-      memInitialSize,
-      memSizes,
-      memOffsets,
-      memory,
+      frameWidth: this._config.canvas.width,
+      frameHeight: this._config.canvas.height,
+      wasmMemStartOffset: defaultConfig.wasmMemStartOffset,
+      wasmWorkerHeapSize: defaultConfig.wasmWorkerHeapPages * PAGE_SIZE_BYTES,
+      wasmMemStartSize,
+      wasmMem: this._wasmMem,
+      wasmMemRegionsSizes: this._wasmMemRegionsSizes,
+      wasmMemRegionsOffsets: this._wasmMemRegionsOffsets,
     };
   }
 
-  private initMemory(memStartSize: number): WebAssembly.Memory {
-    const initialPages = defaultConfig.initial_mem_pages;
-    console.log(`Initial mem pages: ${initialPages}`);
+  private initWasmMemory(wasmMemSize: number): void {
     console.log(
-      `Initial mem pages required: ${Math.ceil(memStartSize / PAGE_SIZE)}`,
+      `Start mem pages required: ${Math.ceil(wasmMemSize / PAGE_SIZE_BYTES)}`,
     );
-    assert(initialPages * PAGE_SIZE >= memStartSize);
+    const { wasmMemStartPages: initial, wasmMemMaxPages: maximum } =
+      defaultConfig;
+    console.log(`Default start mem pages: ${initial}`);
+    assert(initial * PAGE_SIZE_BYTES >= wasmMemSize);
     const memory = new WebAssembly.Memory({
-      initial: initialPages,
-      maximum: 1000, // TODO
+      initial,
+      maximum,
       shared: true,
     });
-    return memory;
+    this._wasmMem = memory;
   }
 
-  private async initEngineWorkers(
-    memInitialSize: number,
-    memSizes: MemoryRegionsData,
-    memOffsets: MemoryRegionsData,
-    memory: WebAssembly.Memory,
-  ): Promise<void> {
+  private async initEngineWorkers(wasmMemStartSize: number): Promise<void> {
     assert(Engine.NUM_ENGINE_WORKERS >= 1);
 
     this._workers = [];
@@ -193,16 +220,13 @@ class Engine {
           console.log(`Worker id=${workerIdx} error: ${error.message}\n`);
           reject(error);
         };
-        const engineWorkerConfig: EngineWorkerConfig = this.buildWorkerConfig(
+        const workerConfig = this.buildWorkerConfig(
           workerIdx,
-          memInitialSize,
-          memSizes,
-          memOffsets,
-          memory,
+          wasmMemStartSize,
         );
         worker.postMessage({
           command: 'init',
-          params: engineWorkerConfig,
+          params: workerConfig,
         });
       }
     });
@@ -334,7 +358,7 @@ class Engine {
         const fpsIdx = fpsCount++ % Engine.FPS_ARR_LENGTH;
         fpsArr[fpsIdx] = fps;
         upsArr[fpsIdx] = ups;
-        if (this._engineConfig.sendStats) {
+        if (this._config.sendStats) {
           const avgFps = Math.round(calcAvgArrValue(fpsArr, fpsCount));
           const avgUps = Math.round(calcAvgArrValue(upsArr, fpsCount));
           const avgMaxFps = Math.round(
@@ -359,17 +383,17 @@ class Engine {
 
   private renderFrame(): void {
     for (let i = 0; i < Engine.NUM_ENGINE_WORKERS; ++i) {
-      syncStore(this._syncArr, i, 1);
-      syncNotify(this._syncArr, i);
+      syncStore(this._wasmSyncArr, i, 1);
+      syncNotify(this._wasmSyncArr, i);
     }
     for (let i = 0; i < Engine.NUM_ENGINE_WORKERS; ++i) {
-      syncWait(this._syncArr, i, 1);
+      syncWait(this._wasmSyncArr, i, 1);
     }
     this.updateImage();
   }
 
   private updateImage(): void {
-    this._imageData.data.set(this._frameBuffer);
+    this._imageData.data.set(this._wasmRgbaFramebuffer);
     this._ctx.putImageData(this._imageData, 0, 0);
   }
 

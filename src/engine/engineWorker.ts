@@ -1,97 +1,103 @@
-import {
-  MemoryRegion,
-  MemoryRegionsData,
-  WORKER_HEAP_SIZE,
-} from './memoryRegions';
+import * as WasmMemUtils from './wasmMemUtils';
 import { WasmModules, WasmInput, loadWasmModules } from './initWasm';
-import { syncStore, syncWait, syncNotify, sleep } from './utils';
+import { syncStore, randColor } from './utils';
 
 type EngineWorkerConfig = {
-  workerIdx: number; // >= 1
+  workerIdx: number;
   numWorkers: number;
   frameWidth: number;
   frameHeight: number;
-  memInitialSize: number;
-  memOffsets: MemoryRegionsData;
-  memSizes: MemoryRegionsData;
-  memory: WebAssembly.Memory;
+  wasmMem: WebAssembly.Memory;
+  wasmMemStartOffset: number;
+  wasmMemStartSize: number;
+  wasmMemRegionsOffsets: WasmMemUtils.MemRegionsData;
+  wasmMemRegionsSizes: WasmMemUtils.MemRegionsData;
+  wasmWorkerHeapSize: number;
 };
 
 class EngineWorker {
   protected _config: EngineWorkerConfig;
-  protected _wasmInitInput: WasmInput;
+
+  protected _wasmInput: WasmInput;
   protected _wasmModules: WasmModules;
-  protected _memi8: Uint8Array;
-  protected _memi32: Uint32Array;
-  protected _frameBuffer: Uint8ClampedArray;
-  protected _syncArr: Int32Array;
-  protected _sleepArr: Int32Array;
+  protected _wasmMemUI8: Uint8Array;
+  protected _wasmRgbaFramebuffer: Uint8ClampedArray;
+  protected _wasmSyncArr: Int32Array;
+  protected _wasmSleepArr: Int32Array;
 
   public async init(config: EngineWorkerConfig): Promise<void> {
     this._config = config;
-
-    const { memory, workerIdx } = config;
-
-    this._memi8 = new Uint8Array(memory.buffer, 0, config.memInitialSize);
-    this._memi32 = new Uint32Array(memory.buffer, 0, config.memInitialSize / 4);
-
-    this._frameBuffer = new Uint8ClampedArray(
-      memory.buffer,
-      config.memOffsets[MemoryRegion.FRAMEBUFFER],
-      config.memSizes[MemoryRegion.FRAMEBUFFER],
-    );
-
-    this._syncArr = new Int32Array(
-      memory.buffer,
-      config.memOffsets[MemoryRegion.SYNC_ARRAY],
-      config.memSizes[MemoryRegion.SYNC_ARRAY],
-    );
-
-    syncStore(this._syncArr, workerIdx, 0);
-
-    this._sleepArr = new Int32Array(
-      memory.buffer,
-      config.memOffsets[MemoryRegion.SLEEP_ARRAY],
-      config.memSizes[MemoryRegion.SLEEP_ARRAY],
-    );
-
-    syncStore(this._sleepArr, workerIdx, 0);
-
+    this.initWasmMemViews();
     await this.initWasmModules();
   }
 
-  private randColor(): number {
-    const r = (Math.random() * 255) | 0;
-    const g = (Math.random() * 255) | 0;
-    const b = (Math.random() * 255) | 0;
-    const color = (0xff << 24) | (b << 16) | (g << 8) | r; // abgr
-    return color;
+  private initWasmMemViews(): void {
+    const {
+      wasmMem,
+      workerIdx,
+      wasmMemStartOffset,
+      wasmMemStartSize,
+      wasmMemRegionsOffsets: memOffsets,
+      wasmMemRegionsSizes: memSizes,
+    } = this._config;
+
+    const wasmMemSize = wasmMemStartOffset + wasmMemStartSize;
+    this._wasmMemUI8 = new Uint8Array(wasmMem.buffer, 0, wasmMemSize);
+
+    const rgbaFrameBufferRegion = WasmMemUtils.MemRegions.RGBA_FRAMEBUFFER;
+    this._wasmRgbaFramebuffer = new Uint8ClampedArray(
+      wasmMem.buffer,
+      memOffsets[rgbaFrameBufferRegion],
+      memSizes[rgbaFrameBufferRegion],
+    );
+
+    const syncArrayRegion = WasmMemUtils.MemRegions.SYNC_ARRAY;
+    this._wasmSyncArr = new Int32Array(
+      wasmMem.buffer,
+      memOffsets[syncArrayRegion],
+      memSizes[syncArrayRegion] / Int32Array.BYTES_PER_ELEMENT,
+    );
+    syncStore(this._wasmSyncArr, workerIdx, 0);
+
+    const sleepArrayRegion = WasmMemUtils.MemRegions.SLEEP_ARRAY;
+    this._wasmSleepArr = new Int32Array(
+      wasmMem.buffer,
+      memOffsets[sleepArrayRegion],
+      memSizes[sleepArrayRegion] / Int32Array.BYTES_PER_ELEMENT,
+    );
+    syncStore(this._wasmSleepArr, workerIdx, 0);
   }
 
   private async initWasmModules(): Promise<void> {
-    const initData: WasmInput = {
-      memory: this._config.memory,
-      frameWidth: this._config.frameWidth,
-      frameHeight: this._config.frameHeight,
-      frameBufferOffset: this._config.memOffsets[MemoryRegion.FRAMEBUFFER],
-      syncArrayOffset: this._config.memOffsets[MemoryRegion.SYNC_ARRAY],
-      sleepArrayOffset: this._config.memOffsets[MemoryRegion.SLEEP_ARRAY],
-      workersHeapOffset: this._config.memOffsets[MemoryRegion.WORKERS_HEAP],
-      heapOffset: this._config.memOffsets[MemoryRegion.HEAP],
-      workerHeapSize: WORKER_HEAP_SIZE,
-      workerIdx: this._config.workerIdx,
-      numWorkers: this._config.numWorkers,
-      bgColor: this.randColor(),
-      logf: (f: number) =>
-        console.log(`Worker [${this._config.workerIdx}]: ${f}`),
-      logi: (i: number) =>
-        console.log(`Worker [${this._config.workerIdx}]: ${i}`),
+    const {
+      wasmMem: memory,
+      frameWidth,
+      frameHeight,
+      wasmMemRegionsOffsets: memOffsets,
+      wasmWorkerHeapSize: workerHeapSize,
+      numWorkers,
+      workerIdx,
+    } = this._config;
+
+    const wasmInput: WasmInput = {
+      memory,
+      frameWidth,
+      frameHeight,
+      frameBufferOffset: memOffsets[WasmMemUtils.MemRegions.RGBA_FRAMEBUFFER],
+      syncArrayOffset: memOffsets[WasmMemUtils.MemRegions.SYNC_ARRAY],
+      sleepArrayOffset: memOffsets[WasmMemUtils.MemRegions.SLEEP_ARRAY],
+      workerIdx,
+      numWorkers,
+      workersHeapOffset: memOffsets[WasmMemUtils.MemRegions.WORKERS_HEAP],
+      workerHeapSize,
+      heapOffset: memOffsets[WasmMemUtils.MemRegions.HEAP],
+      bgColor: randColor(),
+      logf: (f: number) => console.log(`Worker [${workerIdx}]: ${f}`),
+      logi: (i: number) => console.log(`Worker [${workerIdx}]: ${i}`),
     };
 
-    this._wasmInitInput = initData;
-    this._wasmModules = await loadWasmModules(initData);
-    // console.log('HERE: ' + this._wasmModules.engineWorker.newVec(12));
-    // console.log('HERE: ' + this._wasmModules.engineWorker.newVec(16));
+    this._wasmInput = wasmInput;
+    this._wasmModules = await loadWasmModules(wasmInput);
   }
 
   run(): void {

@@ -389,3 +389,5 @@ function testVec3(): Vec3 {
 
 # ifeq (build_asc,$(findstring build_asc,$(MAKECMDGOALS)))
 ifneq "" "$(or $(findstring build_asc,$(MAKECMDGOALS)), $(findstring all,$(MAKECMDGOALS)))"
+
+ifeq (,$(findstring clean,$(MAKECMDGOALS)))

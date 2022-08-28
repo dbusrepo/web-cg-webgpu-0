@@ -16,6 +16,14 @@ function range(workerIdx: number, numWorkers: number, numTasks: number): Range {
   return [start, end];
 }
 
+function randColor(): number {
+  const r = (Math.random() * 255) | 0;
+  const g = (Math.random() * 255) | 0;
+  const b = (Math.random() * 255) | 0;
+  const color = (0xff << 24) | (b << 16) | (g << 8) | r; // abgr
+  return color;
+}
+
 function sleep(sleepArr: Int32Array, idx: number, timeoutMs: number): void {
   Atomics.wait(sleepArr, idx, 0, Math.max(1, timeoutMs | 0));
 }
@@ -32,4 +40,4 @@ function syncNotify(syncArr: Int32Array, idx: number): void {
   Atomics.notify(syncArr, idx);
 }
 
-export { syncStore, syncWait, syncNotify, sleep, range, Range };
+export { range, Range, randColor, syncStore, syncWait, syncNotify, sleep };
