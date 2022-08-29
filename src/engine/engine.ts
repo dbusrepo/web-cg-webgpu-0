@@ -14,7 +14,6 @@ import {
 // import assert from 'assert';
 import { defaultConfig } from '../config/config';
 import { syncStore, syncWait, syncNotify } from './utils';
-import * as Assets from './image';
 
 // import * as loadUtils from '../utils/loadFiles'; // TODO
 import { EngineWorkerConfig } from './engineWorker';
@@ -27,8 +26,16 @@ type EngineConfig = {
   sendStats: boolean;
 };
 
+type WasmMemConfigInput = {
+  numPixels: number;
+  imagesSize: number;
+  startOffset: number,
+  workerHeapPages: number,
+  numWorkers: number,
+};
+
 class Engine {
-  private static readonly NUM_ENGINE_WORKERS = 2; // >= 1
+  private static readonly NUM_WORKERS = 2; // >= 1
 
   // TODO
   private static readonly RENDER_PERIOD =
@@ -54,7 +61,6 @@ class Engine {
 
   private _wasmRgbaFramebuffer: Uint8ClampedArray;
   private _wasmSyncArr: Int32Array;
-  private _images: Assets.Image[];
 
   private _workers: Worker[];
 
@@ -68,9 +74,17 @@ class Engine {
     const { width: frameWidth, height: frameHeight } = canvas;
     this._imageData = this._ctx.createImageData(frameWidth, frameHeight);
 
-    this.loadImages();
+    // launch workers
 
-    this.buildWasmMemConfig(frameWidth * frameHeight);
+    const wasmMemConfig: WasmMemConfigInput = {
+      numPixels: frameWidth * frameHeight,
+      imagesSize: 0,
+      startOffset: defaultConfig.wasmMemStartOffset,
+      workerHeapPages: defaultConfig.wasmWorkerHeapPages,
+      numWorkers: Engine.NUM_WORKERS,
+    };
+
+    this.buildWasmMemConfig(wasmMemConfig);
 
     this._wasmMemRegionsSizes = WasmMemUtils.calcMemRegionsSizes(this._wasmMemConfig);
 
@@ -96,6 +110,7 @@ class Engine {
     this.initWasmMemViews();
 
     await engine.initEngineWorkers(wasmMemStartSize);
+    // wait workers ?
   }
 
   private initOffscreenCanvasContext(canvas: OffscreenCanvas): void {
@@ -106,19 +121,19 @@ class Engine {
     this._ctx = ctx;
   }
 
-  private buildWasmMemConfig(numPixels: number): void {
-    const { wasmWorkerHeapPages, wasmMemStartOffset } = defaultConfig;
-    const numWorkers = Engine.NUM_ENGINE_WORKERS;
+  private buildWasmMemConfig(wasmMemConfigInput: WasmMemConfigInput): void {
+    const { startOffset, workerHeapPages, numPixels, imagesSize, numWorkers } =
+      wasmMemConfigInput;
     const wasmMemConfig: WasmMemUtils.MemConfig = {
-      startOffset: wasmMemStartOffset,
+      startOffset,
       rgbaFrameBufferSize: numPixels * BYTES_PER_PIXEL,
       palIdxFrameBufferSize: numPixels,
       paletteSize: PALETTE_SIZE * BYTES_PER_PIXEL,
       syncArraySize: numWorkers * Int32Array.BYTES_PER_ELEMENT,
       sleepArraySize: numWorkers * Int32Array.BYTES_PER_ELEMENT,
       numWorkers,
-      workerHeapSize: PAGE_SIZE_BYTES * wasmWorkerHeapPages,
-      images: this.buildWasmImages(this._images),
+      workerHeapSize: PAGE_SIZE_BYTES * workerHeapPages,
+      imagesSize,
     };
     this._wasmMemConfig = wasmMemConfig;
   }
@@ -138,22 +153,13 @@ class Engine {
     );
   }
 
-  private loadImages(): void {
-    this._images = [];
-    // TODO ...
-  }
-
-  private buildWasmImages(images: Assets.Image[]): Assets.WasmImage[] {
-    return [];
-  }
-
   private buildWorkerConfig(
     idx: number,
     wasmMemStartSize: number,
   ): EngineWorkerConfig {
     return {
       workerIdx: idx,
-      numWorkers: Engine.NUM_ENGINE_WORKERS,
+      numWorkers: Engine.NUM_WORKERS,
       frameWidth: this._config.canvas.width,
       frameHeight: this._config.canvas.height,
       wasmMemStartOffset: defaultConfig.wasmMemStartOffset,
@@ -182,17 +188,17 @@ class Engine {
   }
 
   private async initEngineWorkers(wasmMemStartSize: number): Promise<void> {
-    assert(Engine.NUM_ENGINE_WORKERS >= 1);
+    assert(Engine.NUM_WORKERS >= 1);
 
     this._workers = [];
 
-    let count = Engine.NUM_ENGINE_WORKERS;
+    let count = Engine.NUM_WORKERS;
     const now = Date.now();
 
     return new Promise((resolve, reject) => {
       for (
         let workerIdx = 0;
-        workerIdx < Engine.NUM_ENGINE_WORKERS;
+        workerIdx < Engine.NUM_WORKERS;
         ++workerIdx
       ) {
         const worker = new Worker(
@@ -381,11 +387,11 @@ class Engine {
   }
 
   private renderFrame(): void {
-    for (let i = 0; i < Engine.NUM_ENGINE_WORKERS; ++i) {
+    for (let i = 0; i < Engine.NUM_WORKERS; ++i) {
       syncStore(this._wasmSyncArr, i, 1);
       syncNotify(this._wasmSyncArr, i);
     }
-    for (let i = 0; i < Engine.NUM_ENGINE_WORKERS; ++i) {
+    for (let i = 0; i < Engine.NUM_WORKERS; ++i) {
       syncWait(this._wasmSyncArr, i, 1);
     }
     this.updateImage();

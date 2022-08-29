@@ -1,4 +1,4 @@
-import * as Assets from './image';
+import * as Assets from './assets/images/image';
 
 type MemConfig = {
   startOffset: number;
@@ -9,7 +9,7 @@ type MemConfig = {
   paletteSize: number;
   sleepArraySize: number;
   workerHeapSize: number;
-  images: Assets.WasmImage[];
+  imagesSize: number;
 };
 
 // all regions are bounded except (at least for now) for the last part, the
@@ -61,7 +61,7 @@ function calcMemRegionsSizes(config: MemConfig): MemRegionsData {
     rgbaFrameBufferSize,
     palIdxFrameBufferSize,
     numWorkers,
-    images,
+    imagesSize,
     workerHeapSize,
     syncArraySize,
     sleepArraySize,
@@ -74,7 +74,7 @@ function calcMemRegionsSizes(config: MemConfig): MemRegionsData {
     [MemRegions.PALETTE]: paletteSize,
     [MemRegions.SYNC_ARRAY]: syncArraySize,
     [MemRegions.SLEEP_ARRAY]: sleepArraySize,
-    [MemRegions.IMAGES]: calcImagesRegionSize(images),
+    [MemRegions.IMAGES]: imagesSize,
     [MemRegions.WORKERS_HEAPS]: numWorkers * workerHeapSize,
     [MemRegions.HEAP]: 0,
   };
@@ -86,14 +86,14 @@ function calcMemRegionsSizes(config: MemConfig): MemRegionsData {
   return sizes;
 }
 
-function calcImagesRegionSize(images: Assets.WasmImage[]): number {
-  const imagesIndexSize = Assets.WasmImage.OFFSET_SIZE * images.length;
-  const imagesHeaderDataSize = images.reduce(
-    (size, img) => (size += img.size),
-    0,
-  );
-  return imagesIndexSize + imagesHeaderDataSize;
-}
+// function calcImagesRegionSize(images: Assets.WasmImage[]): number {
+//   const imagesIndexSize = Assets.WasmImage.OFFSET_SIZE * images.length;
+//   const imagesHeaderDataSize = images.reduce(
+//     (size, img) => (size += img.size),
+//     0,
+//   );
+//   return imagesIndexSize + imagesHeaderDataSize;
+// }
 
 // Calc the (static) offset of the start regions
 function calcMemRegionsOffsets(
