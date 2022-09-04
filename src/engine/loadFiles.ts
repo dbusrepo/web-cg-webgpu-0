@@ -1,10 +1,14 @@
-function loadFileAsArrayBuffer(file: File) {
+import assert from 'assert';
+
+function loadFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
   return new Promise((resolve) => {
     let fileReader = new FileReader();
     fileReader.addEventListener(
       'load',
       (e) => {
-        resolve(e.target!.result);
+        const { result } = e.target!;
+        assert(result instanceof ArrayBuffer);
+        resolve(result);
       },
       false,
     );

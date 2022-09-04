@@ -23,6 +23,7 @@ function run(): void {
     clearBg(bgColor, s, e);
     atomic.store<i32>(syncLoc, 0);
     atomic.notify(syncLoc);
+    break;
   }
 }
 
