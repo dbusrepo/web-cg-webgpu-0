@@ -1,3 +1,4 @@
+import assert from 'assert';
 import * as WasmMemUtils from './wasmMemUtils';
 import { WasmModules, WasmInput, loadWasmModules } from './initWasm';
 import { syncStore, randColor } from './utils';
@@ -7,6 +8,9 @@ type EngineWorkerConfig = {
   numWorkers: number;
   frameWidth: number;
   frameHeight: number;
+};
+
+type EngineWorkerWasmMemoryConfig = {
   wasmMem: WebAssembly.Memory;
   wasmMemStartOffset: number;
   wasmMemStartSize: number;
@@ -17,8 +21,9 @@ type EngineWorkerConfig = {
 
 class EngineWorker {
   protected _config: EngineWorkerConfig;
+  protected _wasmMemConfig: EngineWorkerWasmMemoryConfig;
 
-  protected _wasmInput: WasmInput;
+  protected _wasmInitInput: WasmInput;
   protected _wasmModules: WasmModules;
   protected _wasmMemUI8: Uint8Array;
   protected _wasmRgbaFramebuffer: Uint8ClampedArray;
@@ -27,6 +32,11 @@ class EngineWorker {
 
   public async init(config: EngineWorkerConfig): Promise<void> {
     this._config = config;
+
+  }
+
+  public async initWasm(config: EngineWorkerWasmMemoryConfig): Promise<void> {
+    this._wasmMemConfig = config;
     this.initWasmMemViews();
     await this.initWasmModules();
   }
@@ -34,12 +44,13 @@ class EngineWorker {
   private initWasmMemViews(): void {
     const {
       wasmMem,
-      workerIdx,
       wasmMemStartOffset,
       wasmMemStartSize,
       wasmMemRegionsOffsets: memOffsets,
       wasmMemRegionsSizes: memSizes,
-    } = this._config;
+    } = this._wasmMemConfig;
+
+    const { workerIdx } = this._config;
 
     const wasmMemSize = wasmMemStartOffset + wasmMemStartSize;
     this._wasmMemUI8 = new Uint8Array(wasmMem.buffer, 0, wasmMemSize);
@@ -71,13 +82,11 @@ class EngineWorker {
   private async initWasmModules(): Promise<void> {
     const {
       wasmMem: memory,
-      frameWidth,
-      frameHeight,
       wasmMemRegionsOffsets: memOffsets,
       wasmWorkerHeapSize: workerHeapSize,
-      numWorkers,
-      workerIdx,
-    } = this._config;
+    } = this._wasmMemConfig;
+
+    const { frameWidth, frameHeight, numWorkers, workerIdx } = this._config;
 
     const wasmInput: WasmInput = {
       memory,
@@ -96,7 +105,7 @@ class EngineWorker {
       logi: (i: number) => console.log(`Worker [${workerIdx}]: ${i}`),
     };
 
-    this._wasmInput = wasmInput;
+    this._wasmInitInput = wasmInput;
     this._wasmModules = await loadWasmModules(wasmInput);
   }
 
@@ -119,6 +128,11 @@ const commands = {
     await engineWorker.init(config);
     postMessage('ready');
   },
+  async initWasm(config: EngineWorkerWasmMemoryConfig): Promise<void> {
+    assert(engineWorker);
+    await engineWorker.initWasm(config);
+    postMessage('ready');
+  },
   run(): void {
     engineWorker.run();
   },
@@ -133,4 +147,4 @@ self.addEventListener('message', async ({ data: { command, params } }) => {
   }
 });
 
-export { EngineWorker, EngineWorkerConfig };
+export { EngineWorker, EngineWorkerConfig, EngineWorkerWasmMemoryConfig };

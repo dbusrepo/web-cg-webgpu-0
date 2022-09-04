@@ -16,7 +16,7 @@ import { defaultConfig } from '../config/config';
 import { syncStore, syncWait, syncNotify } from './utils';
 
 // import * as loadUtils from '../utils/loadFiles'; // TODO
-import { EngineWorkerConfig } from './engineWorker';
+import { EngineWorkerConfig, EngineWorkerWasmMemoryConfig } from './engineWorker';
 
 // test img loading... TODO
 // import myImgUrl from 'images/samplePNGImage.png';
@@ -74,7 +74,7 @@ class Engine {
     const { width: frameWidth, height: frameHeight } = canvas;
     this._imageData = this._ctx.createImageData(frameWidth, frameHeight);
 
-    // launch workers
+    const initWorkersPromise = engine.initEngineWorkers();
 
     const wasmMemConfig: WasmMemConfigInput = {
       numPixels: frameWidth * frameHeight,
@@ -85,13 +85,6 @@ class Engine {
     };
 
     this.buildWasmMemConfig(wasmMemConfig);
-
-    this._wasmMemRegionsSizes = WasmMemUtils.calcMemRegionsSizes(this._wasmMemConfig);
-
-    this._wasmMemRegionsOffsets = WasmMemUtils.calcMemRegionsOffsets(
-      this._wasmMemConfig,
-      this._wasmMemRegionsSizes,
-    );
 
     const { wasmMemStartOffset } = defaultConfig;
 
@@ -105,13 +98,14 @@ class Engine {
     console.log(`wasm mem size: ${wasmMemStartSize}`);
 
     const wasmMemTotalStartSize = wasmMemStartOffset + wasmMemStartSize;
-    this.initWasmMemory(wasmMemTotalStartSize);
+    this.allocWasmMemory(wasmMemTotalStartSize);
 
     this.initWasmMemViews();
 
-    await engine.initEngineWorkers(wasmMemStartSize);
-    // wait workers ?
+    await initWorkersPromise;
+    await this.initWorkersWasmMemory(wasmMemStartSize);
   }
+
 
   private initOffscreenCanvasContext(canvas: OffscreenCanvas): void {
     const ctx = <OffscreenCanvasRenderingContext2D>(
@@ -136,6 +130,13 @@ class Engine {
       imagesSize,
     };
     this._wasmMemConfig = wasmMemConfig;
+    this._wasmMemRegionsSizes = WasmMemUtils.calcMemRegionsSizes(
+      this._wasmMemConfig,
+    );
+    this._wasmMemRegionsOffsets = WasmMemUtils.calcMemRegionsOffsets(
+      this._wasmMemConfig,
+      this._wasmMemRegionsSizes,
+    );
   }
 
   private initWasmMemViews(): void {
@@ -155,13 +156,19 @@ class Engine {
 
   private buildWorkerConfig(
     idx: number,
-    wasmMemStartSize: number,
   ): EngineWorkerConfig {
     return {
       workerIdx: idx,
       numWorkers: Engine.NUM_WORKERS,
       frameWidth: this._config.canvas.width,
       frameHeight: this._config.canvas.height,
+    };
+  }
+
+  private buildWorkerWasmMemoryConfig(
+    wasmMemStartSize: number,
+  ): EngineWorkerWasmMemoryConfig {
+    return {
       wasmMemStartOffset: defaultConfig.wasmMemStartOffset,
       wasmWorkerHeapSize: defaultConfig.wasmWorkerHeapPages * PAGE_SIZE_BYTES,
       wasmMemStartSize,
@@ -171,7 +178,7 @@ class Engine {
     };
   }
 
-  private initWasmMemory(wasmMemSize: number): void {
+  private allocWasmMemory(wasmMemSize: number): void {
     console.log(
       `wasm mem pages required: ${Math.ceil(wasmMemSize / PAGE_SIZE_BYTES)}`,
     );
@@ -187,20 +194,53 @@ class Engine {
     this._wasmMem = memory;
   }
 
-  private async initEngineWorkers(wasmMemStartSize: number): Promise<void> {
+  private async initWorkersWasmMemory(wasmMemStartSize: number): Promise<void> {
+    let workerCount = Engine.NUM_WORKERS;
+    const initStart = Date.now();
+    console.log('Initializing wasm memory with workers...');
+    return new Promise((resolve, reject) => {
+      for (let workerIdx = 0; workerIdx < Engine.NUM_WORKERS; ++workerIdx) {
+        const worker = this._workers[workerIdx];
+        worker.onmessage = ({ data: msg }) => {
+          --workerCount;
+          console.log(
+            `Worker id=${workerIdx} wasm mem ready, count=${workerCount}, time=${
+              Date.now() - initStart
+            }ms`,
+          );
+          if (!workerCount) {
+            console.log(
+              `All workers ready. Wasm memory initiliazed. After ${
+                Date.now() - initStart
+              }ms`,
+            );
+            resolve();
+          }
+        };
+        worker.onerror = (error) => {
+          console.log(`Worker id=${workerIdx} error: ${error.message}\n`);
+          reject(error);
+        };
+        const workerConfig = this.buildWorkerWasmMemoryConfig(wasmMemStartSize);
+        worker.postMessage({
+          command: 'initWasm',
+          params: workerConfig,
+        });
+      }
+    });
+  }
+
+  private async initEngineWorkers(): Promise<void> {
     assert(Engine.NUM_WORKERS >= 1);
 
     this._workers = [];
 
-    let count = Engine.NUM_WORKERS;
-    const now = Date.now();
+    let workerCount = Engine.NUM_WORKERS;
+    const initStart = Date.now();
 
+    console.log('Initializing workers...');
     return new Promise((resolve, reject) => {
-      for (
-        let workerIdx = 0;
-        workerIdx < Engine.NUM_WORKERS;
-        ++workerIdx
-      ) {
+      for (let workerIdx = 0; workerIdx < Engine.NUM_WORKERS; ++workerIdx) {
         const worker = new Worker(
           new URL('./engineWorker.ts', import.meta.url),
           {
@@ -210,14 +250,14 @@ class Engine {
         );
         this._workers.push(worker);
         worker.onmessage = ({ data: msg }) => {
-          // TODO
+          --workerCount;
           console.log(
-            `Worker ready: id=${workerIdx}, count=${--count}, time=${
-              Date.now() - now
+            `Worker id=${workerIdx} init, count=${workerCount}, time=${
+              Date.now() - initStart
             }ms`,
           );
-          if (count === 0) {
-            console.log(`All workers ready. After ${Date.now() - now}ms`);
+          if (!workerCount) {
+            console.log(`All workers ready. After ${Date.now() - initStart}ms`);
             resolve();
           }
         };
@@ -225,10 +265,7 @@ class Engine {
           console.log(`Worker id=${workerIdx} error: ${error.message}\n`);
           reject(error);
         };
-        const workerConfig = this.buildWorkerConfig(
-          workerIdx,
-          wasmMemStartSize,
-        );
+        const workerConfig = this.buildWorkerConfig(workerIdx);
         worker.postMessage({
           command: 'init',
           params: workerConfig,
