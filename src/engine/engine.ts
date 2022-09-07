@@ -16,7 +16,10 @@ import { defaultConfig } from '../config/config';
 import { syncStore, syncWait, syncNotify } from './utils';
 
 // import * as loadUtils from '../utils/loadFiles'; // TODO
-import { EngineWorkerConfig, EngineWorkerWasmMemoryConfig } from './engineWorker';
+import {
+  EngineWorkerConfig,
+  EngineWorkerWasmMemoryConfig,
+} from './engineWorker';
 
 // test img loading... TODO
 // import myImgUrl from 'images/samplePNGImage.png';
@@ -35,7 +38,7 @@ type WasmMemConfigInput = {
 };
 
 class Engine {
-  private static readonly NUM_WORKERS = 2; // >= 1
+  private static readonly NUM_WORKERS = 1; // >= 1
 
   // TODO
   private static readonly RENDER_PERIOD =

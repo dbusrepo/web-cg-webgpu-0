@@ -2,6 +2,9 @@ import assert from 'assert';
 import * as WasmMemUtils from './wasmMemUtils';
 import { WasmModules, WasmInput, loadWasmModules } from './initWasm';
 import { syncStore, randColor } from './utils';
+import * as loadUtils from './loadUtils';
+
+// import myImgUrl from '../asset/images/samplePNGImage.png';
 
 type EngineWorkerConfig = {
   workerIdx: number;
@@ -32,7 +35,15 @@ class EngineWorker {
 
   public async init(config: EngineWorkerConfig): Promise<void> {
     this._config = config;
+    // load png as arraybuffer
+    // const imgUrl = (await import('../asset/images/samplePNGImage.png')).default;
+    // const imgRes = await loadUtils.loadResAsArrayBuffer(imgUrl);
+    // console.log(imgRes);
 
+    // not working !
+    // const imgUrl = (await import('../asset/images/samplePNGImage.png')).default;
+    // const imgData = await loadUtils.loadImageAsImageData(imgUrl);
+    // console.log(imgData);
   }
 
   public async initWasm(config: EngineWorkerWasmMemoryConfig): Promise<void> {

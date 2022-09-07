@@ -1,5 +1,3 @@
-import * as Assets from './assets/images/image';
-
 type MemConfig = {
   startOffset: number;
   rgbaFrameBufferSize: number;

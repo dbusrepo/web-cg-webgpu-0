@@ -6,16 +6,21 @@ function clearBg(
   end: u32,
 ): void {
 
-  let value = v128.splat<i32>(color);
   const startOff: i32 = frameBufferOffset + start * frameWidth * 4;
   const endOff: i32 = frameBufferOffset + end * frameWidth * 4;
+
+  // let value = v128.splat<i32>(color);
   // TODO check bounds ?
-  for (let i = startOff; i != endOff; i += 32) {
-    v128.store(i, value);
-    v128.store(i + 16, value);
-  }
+  // for (let i = startOff; i < endOff; i += 32) {
+  //   v128.store(i, value);
+  //   v128.store(i + 16, value);
+  // }
 
   // TODO handle remainder elements here ?
+
+  for (let ptr = startOff; ptr != endOff; ptr += 4) {
+    store<i32>(ptr, color);
+  }
 
   // test first and last pixel
   // store<u32>(frameBufferOffset, 0xFF_00_00_FF);
