@@ -34,6 +34,7 @@
     "@types/assert": "^1.5.6",
     "@types/dat.gui": "^0.7.7",
     "@types/offscreencanvas": "^2019.7.0",
+    "@types/pako": "^2.0.0",
     "@types/react": "^18.0.15",
     "@types/webpack": "^5.28.0",
     "@types/webpack-dev-server": "^4.7.1",
@@ -75,6 +76,7 @@
   "dependencies": {
     "dat.gui": "^0.7.9",
     "fast-glob": "^3.2.11",
+    "pako": "^2.0.4",
     "preact": "^10.10.0",
     "preact-fullscreen": "^0.1.2",
     "react": "^18.2.0",
