@@ -105,6 +105,8 @@ class Engine {
       numWorkers: Engine.NUM_WORKERS,
     };
 
+    console.log(wasmMemConfig);
+
     this._buildWasmMemConfig(wasmMemConfig);
 
     const { wasmMemStartOffset } = defaultConfig;
@@ -126,13 +128,14 @@ class Engine {
     await this.initWasmMemoryWorkers(wasmMemStartSize);
   }
 
-  private _addImageIndex2WorkersOffsets(): void {
-    const wasmImageIndexSize = WasmMemUtils.getImageIndexSize(this._imagesUrls.length);
-    // update also worker images offsets with index size
-    for (let workerIdx = 0; workerIdx < Engine.NUM_WORKERS; ++workerIdx) {
-      this._workersInitData.wasmImagesOffsets[workerIdx] += wasmImageIndexSize;
-    }
-  }
+  // not used
+  // private _addImageIndex2WorkersOffsets(): void {
+  //   const wasmImageIndexSize = WasmMemUtils.getImageIndexSize(this._imagesUrls.length);
+  //   // update also worker images offsets with index size
+  //   for (let workerIdx = 0; workerIdx < Engine.NUM_WORKERS; ++workerIdx) {
+  //     this._workersInitData.wasmImagesOffsets[workerIdx] += wasmImageIndexSize;
+  //   }
+  // }
 
   private _getWasmImagesRegionSize(): number {
     const wasmImageIndexSize = WasmMemUtils.getImageIndexSize(this._imagesUrls.length);
@@ -200,6 +203,7 @@ class Engine {
       frameWidth: this._config.canvas.width,
       frameHeight: this._config.canvas.height,
       imageUrls: this._getImgsUrlsWorker(idx),
+      usePalette: false, // TODO
     };
   }
 
@@ -221,7 +225,7 @@ class Engine {
       wasmMemRegionsSizes: this._wasmMemRegionsSizes,
       wasmMemRegionsOffsets: this._wasmMemRegionsOffsets,
       wasmImagesIndexOffset: this._wasmMemRegionsOffsets[WasmMemUtils.MemRegions.IMAGES],
-      wasmImagesOffset: this._workersInitData.wasmImagesOffsets,
+      wasmImagesOffsets: this._workersInitData.wasmImagesOffsets,
       wasmImagesSizes: this._workersInitData.imagesSizes,
     };
   }
@@ -246,7 +250,7 @@ class Engine {
     let workerCount = Engine.NUM_WORKERS;
     const initStart = Date.now();
     console.log('Initializing wasm memory with workers...');
-    this._addImageIndex2WorkersOffsets();
+    // this._addImageIndex2WorkersOffsets();
     return new Promise((resolve, reject) => {
       for (let workerIdx = 0; workerIdx < Engine.NUM_WORKERS; ++workerIdx) {
         const worker = this._workers[workerIdx];

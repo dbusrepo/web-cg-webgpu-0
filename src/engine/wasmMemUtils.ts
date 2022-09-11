@@ -146,18 +146,19 @@ function getImageIndexSize(numImages: number) {
   );
 }
 
-function writeImageIndex(imageIndex: Uint32Array, imagesSizes: [number, number][]) {
+// bpp bytes per pixel, 1 or 4
+function writeImageIndex(imageIndex: Uint32Array, imagesSizes: [number, number][], bpp: number) {
   const numImages = imagesSizes.length;
   const WIDTHS_OFFSET = numImages; // skip numImages ptrs
   const HEIGHTS_OFFSET = WIDTHS_OFFSET + numImages;
   const IMAGES_DATA = getImageIndexSize(numImages);
   for (let i = 0, totalSize = 0; i < imagesSizes.length; ++i) {
-    const imgSize = imagesSizes[i][0] * imagesSizes[i][1];
     imageIndex[i] = IMAGES_DATA + totalSize; // set index for img i
     // eslint-disable-next-line prefer-destructuring
     imageIndex[WIDTHS_OFFSET + i] = imagesSizes[i][0]; // save w
     // eslint-disable-next-line prefer-destructuring
     imageIndex[HEIGHTS_OFFSET + i] = imagesSizes[i][1]; // save h
+    const imgSize = bpp * imagesSizes[i][0] * imagesSizes[i][1];
     totalSize += imgSize;
   }
 }
