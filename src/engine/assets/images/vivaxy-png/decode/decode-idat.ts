@@ -13,7 +13,6 @@ import { typedArrayToChannels } from '../helpers/channels';
 import { buildImages, getPixelIndex } from '../helpers/interlace';
 
 export default function decodeIDAT(
-  outPixels: Uint8Array,
   deflatedData: Uint8Array,
   interlace: number,
   colorType: COLOR_TYPES,
@@ -22,9 +21,9 @@ export default function decodeIDAT(
   depth: number,
   palette?: [number, number, number, number][],
   transparent?: [number, number, number, number],
-): void {
+) {
   // let pixels: number[] = [];
-  // let pixels = new Uint8Array();
+  let pixels: Uint8Array = new Uint8Array(width * height);
 
   // inflate
   const inflatedData = pako.inflate(deflatedData);
@@ -123,12 +122,12 @@ export default function decodeIDAT(
           heightIndex,
         );
         for (let i = 0; i < pixel.length; i++) {
-          outPixels[pixelIndex + i] = pixel[i];
+          pixels[pixelIndex + i] = pixel[i];
         }
       }
 
       dataIndex += scanlineWidth;
     }
   }
-  // return pixels;
+  return pixels;
 }

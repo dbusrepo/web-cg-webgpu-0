@@ -17,8 +17,9 @@ import { syncStore, syncWait, syncNotify } from './utils';
 
 // import * as loadUtils from '../utils/loadFiles'; // TODO
 import {
-  EngineWorkerConfig,
-  EngineWorkerWasmMemoryConfig,
+  WorkerConfig,
+  WorkerWasmMemConfig,
+  WorkerInitData,
 } from './engineWorker';
 
 // test img loading... TODO
@@ -29,16 +30,20 @@ type EngineConfig = {
   sendStats: boolean;
 };
 
+type WorkersInitData = {
+  imagesSize: number;
+};
+
 type WasmMemConfigInput = {
   numPixels: number;
   imagesSize: number;
-  startOffset: number,
-  workerHeapPages: number,
-  numWorkers: number,
+  startOffset: number;
+  workerHeapPages: number;
+  numWorkers: number;
 };
 
 class Engine {
-  private static readonly NUM_WORKERS = 1; // >= 1
+  private static readonly NUM_WORKERS = 2; // >= 1
 
   // TODO
   private static readonly RENDER_PERIOD =
@@ -56,6 +61,11 @@ class Engine {
   private _config: EngineConfig;
   private _ctx: OffscreenCanvasRenderingContext2D;
   private _imageData: ImageData;
+  private _startTime: number;
+
+  private _assetsUrls: string[];
+  private _workers: Worker[];
+  private _workersInitData: WorkersInitData;
 
   private _wasmMemConfig: WasmMemUtils.MemConfig;
   private _wasmMemRegionsSizes: WasmMemUtils.MemRegionsData;
@@ -65,29 +75,34 @@ class Engine {
   private _wasmRgbaFramebuffer: Uint8ClampedArray;
   private _wasmSyncArr: Int32Array;
 
-  private _workers: Worker[];
 
   public async init(config: EngineConfig): Promise<void> {
+    this._startTime = Date.now();
+
     this._config = config;
 
     const { canvas } = config;
 
-    this.initOffscreenCanvasContext(canvas);
+    this._initOffscreenCanvasContext(canvas);
 
     const { width: frameWidth, height: frameHeight } = canvas;
     this._imageData = this._ctx.createImageData(frameWidth, frameHeight);
 
-    const initWorkersPromise = engine.initEngineWorkers();
+    await this._loadAssetUrls();
+
+    await this._initWorkers();
+
+    // console.log(this._workersInitData);
 
     const wasmMemConfig: WasmMemConfigInput = {
       numPixels: frameWidth * frameHeight,
-      imagesSize: 0,
+      imagesSize: this._workersInitData.imagesSize, // TODO calc img area size
       startOffset: defaultConfig.wasmMemStartOffset,
       workerHeapPages: defaultConfig.wasmWorkerHeapPages,
       numWorkers: Engine.NUM_WORKERS,
     };
 
-    this.buildWasmMemConfig(wasmMemConfig);
+    this._buildWasmMemConfig(wasmMemConfig);
 
     const { wasmMemStartOffset } = defaultConfig;
 
@@ -103,14 +118,19 @@ class Engine {
     const wasmMemTotalStartSize = wasmMemStartOffset + wasmMemStartSize;
     this.allocWasmMemory(wasmMemTotalStartSize);
 
-    this.initWasmMemViews();
+    this._initWasmMemViews();
 
-    await initWorkersPromise;
     await this.initWorkersWasmMemory(wasmMemStartSize);
   }
 
+  private async _loadAssetUrls() {
+    const imgUrl = (await import('../asset/images/samplePNGImage.png')).default;
+    const imgUrl2 = (await import('../asset/images/samplePNGImage2.png'))
+      .default;
+    this._assetsUrls = [imgUrl, imgUrl2];
+  }
 
-  private initOffscreenCanvasContext(canvas: OffscreenCanvas): void {
+  private _initOffscreenCanvasContext(canvas: OffscreenCanvas): void {
     const ctx = <OffscreenCanvasRenderingContext2D>(
       canvas.getContext('2d', { alpha: false })
     );
@@ -118,7 +138,7 @@ class Engine {
     this._ctx = ctx;
   }
 
-  private buildWasmMemConfig(wasmMemConfigInput: WasmMemConfigInput): void {
+  private _buildWasmMemConfig(wasmMemConfigInput: WasmMemConfigInput): void {
     const { startOffset, workerHeapPages, numPixels, imagesSize, numWorkers } =
       wasmMemConfigInput;
     const wasmMemConfig: WasmMemUtils.MemConfig = {
@@ -142,7 +162,7 @@ class Engine {
     );
   }
 
-  private initWasmMemViews(): void {
+  private _initWasmMemViews(): void {
     const rgbaFrameBufferRegion = WasmMemUtils.MemRegions.RGBA_FRAMEBUFFER;
     this._wasmRgbaFramebuffer = new Uint8ClampedArray(
       this._wasmMem.buffer,
@@ -157,20 +177,24 @@ class Engine {
     );
   }
 
-  private buildWorkerConfig(
-    idx: number,
-  ): EngineWorkerConfig {
+  private _buildWorkerConfig(idx: number): WorkerConfig {
     return {
       workerIdx: idx,
       numWorkers: Engine.NUM_WORKERS,
       frameWidth: this._config.canvas.width,
       frameHeight: this._config.canvas.height,
+      imageUrls: this._getImgsUrlsWorker(idx),
     };
+  }
+
+  private _getImgsUrlsWorker(idx: number): string[] {
+    // return this._assetsUrls;
+    return [this._assetsUrls[idx]];
   }
 
   private buildWorkerWasmMemoryConfig(
     wasmMemStartSize: number,
-  ): EngineWorkerWasmMemoryConfig {
+  ): WorkerWasmMemConfig {
     return {
       wasmMemStartOffset: defaultConfig.wasmMemStartOffset,
       wasmWorkerHeapSize: defaultConfig.wasmWorkerHeapPages * PAGE_SIZE_BYTES,
@@ -214,7 +238,7 @@ class Engine {
           if (!workerCount) {
             console.log(
               `All workers ready. Wasm memory initiliazed. After ${
-                Date.now() - initStart
+                Date.now() - this._startTime
               }ms`,
             );
             resolve();
@@ -233,10 +257,17 @@ class Engine {
     });
   }
 
-  private async initEngineWorkers(): Promise<void> {
+  private async _initWorkers(): Promise<void> {
     assert(Engine.NUM_WORKERS >= 1);
 
     this._workers = [];
+    this._workersInitData = {
+      imagesSize: 0,
+    };
+
+    const updateWorkersData = (initData: WorkerInitData) => {
+      this._workersInitData.imagesSize += initData.imagesSize;
+    };
 
     let workerCount = Engine.NUM_WORKERS;
     const initStart = Date.now();
@@ -252,15 +283,16 @@ class Engine {
           },
         );
         this._workers.push(worker);
-        worker.onmessage = ({ data: msg }) => {
+        worker.onmessage = ({ data: initData }) => {
+          updateWorkersData(initData);
           --workerCount;
           console.log(
             `Worker id=${workerIdx} init, count=${workerCount}, time=${
               Date.now() - initStart
-            }ms`,
+            }ms with data = ${JSON.stringify(initData)}`,
           );
           if (!workerCount) {
-            console.log(`All workers ready. After ${Date.now() - initStart}ms`);
+            console.log(`Workers init done. After ${Date.now() - this._startTime}ms`);
             resolve();
           }
         };
@@ -268,7 +300,7 @@ class Engine {
           console.log(`Worker id=${workerIdx} error: ${error.message}\n`);
           reject(error);
         };
-        const workerConfig = this.buildWorkerConfig(workerIdx);
+        const workerConfig = this._buildWorkerConfig(workerIdx);
         worker.postMessage({
           command: 'init',
           params: workerConfig,

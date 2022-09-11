@@ -9,10 +9,10 @@ abstract class BitImage {
   setSize(w: number, h: number) {
     this._width = w;
     this._height = h;
-    this._setPixels();
+    this._allocPixels();
   }
 
-  protected abstract _setPixels(): void;
+  protected abstract _allocPixels(): void;
 
   get width() {
     return this._width;

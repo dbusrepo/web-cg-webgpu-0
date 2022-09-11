@@ -24,17 +24,17 @@ function decodeColorInfo(arrayBuffer: ArrayBuffer): [number, number] {
 
 function decodeSizes(arrayBuffer: ArrayBuffer): [number, number] {
   const view = new DataView(arrayBuffer, 16, 8);
-  // true param here for little endian
-  const width = view.getUint32(0, true);
-  const height = view.getUint32(4, true);
+  // little endian ? set last param of getUint32
+  const width = view.getUint32(0);
+  const height = view.getUint32(4);
   return [width, height];
 }
 
-function decode(arrayBuffer: ArrayBuffer, outPixels: Uint8Array): Metadata {
+function decode(arrayBuffer: ArrayBuffer): Metadata {
   const typedArray = new Uint8Array(arrayBuffer);
   let idatUint8Array = new Uint8Array();
 
-  const metadata: Metadata = {
+  const metadata = {
     width: 0,
     height: 0,
     depth: 0,
@@ -42,8 +42,7 @@ function decode(arrayBuffer: ArrayBuffer, outPixels: Uint8Array): Metadata {
     compression: 0,
     interlace: 0,
     filter: 0,
-    // data: new Uint8Array(),
-  };
+  } as Metadata;
 
   // Helpers
   let index = 0;
@@ -502,8 +501,7 @@ function decode(arrayBuffer: ArrayBuffer, outPixels: Uint8Array): Metadata {
   parseChunkBegin();
 
   // Decode all IDAT
-  decodeIDAT(
-    outPixels,
+  metadata.data = decodeIDAT(
     idatUint8Array,
     metadata.interlace,
     metadata.colorType,
@@ -513,8 +511,6 @@ function decode(arrayBuffer: ArrayBuffer, outPixels: Uint8Array): Metadata {
     metadata.palette,
     metadata.transparent,
   );
-
-  // metadata.data = outPixels;
 
   return metadata;
 }

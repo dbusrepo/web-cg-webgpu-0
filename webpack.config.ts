@@ -51,6 +51,9 @@ const config: webpack.Configuration = {
       'react-dom': 'preact/compat', // Must be below test-utils
       'react/jsx-runtime': 'preact/jsx-runtime',
     },
+    fallback: {
+      stream: require.resolve('stream-browserify')
+    }
   },
   module: {
     rules: [
@@ -103,6 +106,12 @@ const config: webpack.Configuration = {
     }),
     new ProvidePlugin({
       process: 'process/browser',
+    }),
+    // to use file-type i had to add this and the fallback above
+    // https://stackoverflow.com/questions/72133210/react-unhandledschemeerror-nodebuffer-is-not-handled-by-plugins
+    // see also https://gist.github.com/ef4/d2cf5672a93cf241fd47c020b9b3066a
+    new webpack.NormalModuleReplacementPlugin(/node:/, (resource) => {
+      resource.request = resource.request.replace(/^node:/, "");
     }),
   ],
 };

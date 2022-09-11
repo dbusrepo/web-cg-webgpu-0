@@ -1,19 +1,32 @@
 import assert from 'assert';
+import { fileTypeFromBuffer } from 'file-type';
 import * as WasmMemUtils from './wasmMemUtils';
 import { WasmModules, WasmInput, loadWasmModules } from './initWasm';
 import { syncStore, randColor } from './utils';
 import * as loadUtils from './loadUtils';
+import { BitImage } from './assets/images/bitImage';
+import { BitImage24 } from './assets/images/bitImage24';
+
+import { PngDecoder24 } from './assets/images/vivaxy-png/PngDecoder24';
+
+// const ASSETS_PATH = '../asset';
+// const IMAGES_PATH = `${ASSETS_PATH}/images`;
 
 // import myImgUrl from '../asset/images/samplePNGImage.png';
 
-type EngineWorkerConfig = {
+type WorkerConfig = {
   workerIdx: number;
   numWorkers: number;
   frameWidth: number;
   frameHeight: number;
+  imageUrls: string[];
 };
 
-type EngineWorkerWasmMemoryConfig = {
+type WorkerInitData = {
+  imagesSize: number;
+};
+
+type WorkerWasmMemConfig = {
   wasmMem: WebAssembly.Memory;
   wasmMemStartOffset: number;
   wasmMemStartSize: number;
@@ -22,37 +35,98 @@ type EngineWorkerWasmMemoryConfig = {
   wasmWorkerHeapSize: number;
 };
 
+type AssetsBuffers = {
+  images: ArrayBuffer[];
+};
+
 class EngineWorker {
-  protected _config: EngineWorkerConfig;
-  protected _wasmMemConfig: EngineWorkerWasmMemoryConfig;
+  private _config: WorkerConfig;
+  private _wasmMemConfig: WorkerWasmMemConfig;
+  private _images: BitImage[];
 
-  protected _wasmInitInput: WasmInput;
-  protected _wasmModules: WasmModules;
-  protected _wasmMemUI8: Uint8Array;
-  protected _wasmRgbaFramebuffer: Uint8ClampedArray;
-  protected _wasmSyncArr: Int32Array;
-  protected _wasmSleepArr: Int32Array;
+  private _wasmInitInput: WasmInput;
+  private _wasmModules: WasmModules;
+  private _wasmMemUI8: Uint8Array;
+  private _wasmRgbaFramebuffer: Uint8ClampedArray;
+  private _wasmSyncArr: Int32Array;
+  private _wasmSleepArr: Int32Array;
 
-  public async init(config: EngineWorkerConfig): Promise<void> {
+  public async init(config: WorkerConfig): Promise<WorkerInitData> {
     this._config = config;
     // load png as arraybuffer
     // const imgUrl = (await import('../asset/images/samplePNGImage.png')).default;
-    // const imgRes = await loadUtils.loadResAsArrayBuffer(imgUrl);
-    // console.log(imgRes);
-
-    // not working !
-    // const imgUrl = (await import('../asset/images/samplePNGImage.png')).default;
-    // const imgData = await loadUtils.loadImageAsImageData(imgUrl);
-    // console.log(imgData);
+    // const imgBuffer = await loadUtils.loadResAsArrayBuffer(imgUrl);
+    // const pngDecoder = new PngDecoder24();
+    // const [w, h] = pngDecoder.readSize(imgBuffer);
+    // console.log(w, h);
+    const assetsBuffers = await this._loadAssets();
+    return { imagesSize: await this._getImagesTotalSize(assetsBuffers.images) };
   }
 
-  public async initWasm(config: EngineWorkerWasmMemoryConfig): Promise<void> {
+  private async _getImagesTotalSize(
+    imageBuffers: ArrayBuffer[],
+  ): Promise<number> {
+    const pngDecoder = new PngDecoder24();
+    let size = 0;
+    imageBuffers.forEach((imgBuffer) => {
+      const [w, h] = pngDecoder.readSizes(imgBuffer);
+      size += w * h;
+    });
+    return size;
+  }
+
+  private async _loadImageBuffers(): Promise<ArrayBuffer[]> {
+    let size = 0;
+    const imageBuffers = await Promise.all(
+      this._config.imageUrls.map(async (url) =>
+        loadUtils.loadResAsArrayBuffer(url),
+      ),
+    );
+    return imageBuffers;
+  }
+
+  private async _loadAssets(): Promise<AssetsBuffers> {
+    const imageBuffers = await this._loadImageBuffers();
+    await this._loadImages(imageBuffers);
+    return {
+      images: imageBuffers,
+    };
+  }
+
+  private async _loadImages(imageBuffers: ArrayBuffer[]): Promise<void> {
+    this._images = await Promise.all(
+      imageBuffers.map(async (imgBuffer) => this._loadImage(imgBuffer)),
+    );
+  }
+
+  private async _loadImage(imageBuffer: ArrayBuffer): Promise<BitImage> {
+    const fileType = await fileTypeFromBuffer(imageBuffer);
+    if (!fileType) {
+      throw new Error(`_loadImage: file type not found`);
+    }
+    switch (fileType.ext) {
+      case 'png': {
+        const pngDecoder = new PngDecoder24();
+        const bitImage = new BitImage24();
+        pngDecoder.read(imageBuffer, bitImage);
+        return bitImage;
+      }
+      // break;
+      default:
+        throw new Error(`_loadImage does not support ${fileType.ext} loading`);
+    }
+  }
+
+  public async initWasm(config: WorkerWasmMemConfig): Promise<void> {
     this._wasmMemConfig = config;
-    this.initWasmMemViews();
+    this._initWasmMemViews();
+    this._initWasmImages();
     await this.initWasmModules();
   }
 
-  private initWasmMemViews(): void {
+  private _initWasmImages() {}
+
+  private _initWasmMemViews(): void {
     const {
       wasmMem,
       wasmMemStartOffset,
@@ -131,21 +205,21 @@ class EngineWorker {
   }
 }
 
-let engineWorker: EngineWorker;
+let worker: EngineWorker;
 
 const commands = {
-  async init(config: EngineWorkerConfig): Promise<void> {
-    engineWorker = new EngineWorker();
-    await engineWorker.init(config);
-    postMessage('ready');
+  async init(config: WorkerConfig): Promise<void> {
+    worker = new EngineWorker();
+    const initData = await worker.init(config);
+    postMessage(initData);
   },
-  async initWasm(config: EngineWorkerWasmMemoryConfig): Promise<void> {
-    assert(engineWorker);
-    await engineWorker.initWasm(config);
+  async initWasm(config: WorkerWasmMemConfig): Promise<void> {
+    assert(worker);
+    await worker.initWasm(config);
     postMessage('ready');
   },
   run(): void {
-    engineWorker.run();
+    worker.run();
   },
 };
 
@@ -158,4 +232,4 @@ self.addEventListener('message', async ({ data: { command, params } }) => {
   }
 });
 
-export { EngineWorker, EngineWorkerConfig, EngineWorkerWasmMemoryConfig };
+export { EngineWorker, WorkerConfig, WorkerWasmMemConfig, WorkerInitData };
