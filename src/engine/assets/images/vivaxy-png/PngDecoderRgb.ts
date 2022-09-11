@@ -1,10 +1,10 @@
 import assert from 'assert';
 import { decodeColorInfo, decodeSizes, decode } from './decode';
-import { BitImage24 } from '../bitImage24';
+import { BitImageRGB } from '../bitImageRgb';
 import { COLOR_TYPES } from './helpers/color-types';
 import { PngDecoder } from '../pngDecoder';
 
-class PngDecoder24 implements PngDecoder {
+class PngDecoderRGB implements PngDecoder {
   // private checkType(input: ArrayBuffer): void {
   //   const [bitDepth, colorType] = decodeColorInfo(input);
   //   assert(bitDepth === 8);
@@ -17,7 +17,7 @@ class PngDecoder24 implements PngDecoder {
     return decodeSizes(input);
   }
 
-  read(input: ArrayBuffer, output: BitImage24): void {
+  read(input: ArrayBuffer, output: BitImageRGB): void {
     // this.checkType(input);
     const [width, height] = decodeSizes(input);
     output.setSize(width, height);
@@ -45,4 +45,4 @@ class PngDecoder24 implements PngDecoder {
   }
 }
 
-export { PngDecoder24 };
+export { PngDecoderRGB };

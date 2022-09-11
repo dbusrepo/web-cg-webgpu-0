@@ -5,9 +5,8 @@ import { WasmModules, WasmInput, loadWasmModules } from './initWasm';
 import { syncStore, randColor } from './utils';
 import * as loadUtils from './loadUtils';
 import { BitImage } from './assets/images/bitImage';
-import { BitImage24 } from './assets/images/bitImage24';
-
-import { PngDecoder24 } from './assets/images/vivaxy-png/PngDecoder24';
+import { BitImageRGB } from './assets/images/bitImageRgb';
+import { PngDecoderRGB } from './assets/images/vivaxy-png/PngDecoderRgb';
 
 // const ASSETS_PATH = '../asset';
 // const IMAGES_PATH = `${ASSETS_PATH}/images`;
@@ -66,7 +65,7 @@ class EngineWorker {
   private async _getImagesTotalSize(
     imageBuffers: ArrayBuffer[],
   ): Promise<number> {
-    const pngDecoder = new PngDecoder24();
+    const pngDecoder = new PngDecoderRGB();
     let size = 0;
     imageBuffers.forEach((imgBuffer) => {
       const [w, h] = pngDecoder.readSizes(imgBuffer);
@@ -106,8 +105,8 @@ class EngineWorker {
     }
     switch (fileType.ext) {
       case 'png': {
-        const pngDecoder = new PngDecoder24();
-        const bitImage = new BitImage24();
+        const pngDecoder = new PngDecoderRGB();
+        const bitImage = new BitImageRGB();
         pngDecoder.read(imageBuffer, bitImage);
         return bitImage;
       }
