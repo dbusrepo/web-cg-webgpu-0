@@ -32,6 +32,8 @@ type EngineConfig = {
 
 type WorkersInitData = {
   imagesSize: number;
+  imagesSizes: [number, number][];
+  wasmImagesOffsets: number[];
 };
 
 type WasmMemConfigInput = {
@@ -63,7 +65,8 @@ class Engine {
   private _imageData: ImageData;
   private _startTime: number;
 
-  private _assetsUrls: string[];
+  private _imagesUrls: string[];
+
   private _workers: Worker[];
   private _workersInitData: WorkersInitData;
 
@@ -88,7 +91,7 @@ class Engine {
     const { width: frameWidth, height: frameHeight } = canvas;
     this._imageData = this._ctx.createImageData(frameWidth, frameHeight);
 
-    await this._loadAssetUrls();
+    await this._loadImagesUrls();
 
     await this._initWorkers();
 
@@ -96,7 +99,7 @@ class Engine {
 
     const wasmMemConfig: WasmMemConfigInput = {
       numPixels: frameWidth * frameHeight,
-      imagesSize: this._workersInitData.imagesSize, // TODO calc img area size
+      imagesSize: this._getWasmImagesRegionSize(),
       startOffset: defaultConfig.wasmMemStartOffset,
       workerHeapPages: defaultConfig.wasmWorkerHeapPages,
       numWorkers: Engine.NUM_WORKERS,
@@ -120,14 +123,27 @@ class Engine {
 
     this._initWasmMemViews();
 
-    await this.initWorkersWasmMemory(wasmMemStartSize);
+    await this.initWasmMemoryWorkers(wasmMemStartSize);
   }
 
-  private async _loadAssetUrls() {
+  private _addImageIndex2WorkersOffsets(): void {
+    const wasmImageIndexSize = WasmMemUtils.getImageIndexSize(this._imagesUrls.length);
+    // update also worker images offsets with index size
+    for (let workerIdx = 0; workerIdx < Engine.NUM_WORKERS; ++workerIdx) {
+      this._workersInitData.wasmImagesOffsets[workerIdx] += wasmImageIndexSize;
+    }
+  }
+
+  private _getWasmImagesRegionSize(): number {
+    const wasmImageIndexSize = WasmMemUtils.getImageIndexSize(this._imagesUrls.length);
+    return this._workersInitData.imagesSize + wasmImageIndexSize;
+  }
+
+  private async _loadImagesUrls() {
     const imgUrl = (await import('../asset/images/samplePNGImage.png')).default;
     const imgUrl2 = (await import('../asset/images/samplePNGImage2.png'))
       .default;
-    this._assetsUrls = [imgUrl, imgUrl2];
+    this._imagesUrls = [imgUrl, imgUrl2];
   }
 
   private _initOffscreenCanvasContext(canvas: OffscreenCanvas): void {
@@ -187,12 +203,14 @@ class Engine {
     };
   }
 
+  // TODO use range 
   private _getImgsUrlsWorker(idx: number): string[] {
     // return this._assetsUrls;
-    return [this._assetsUrls[idx]];
+    return [this._imagesUrls[idx]];
   }
 
-  private buildWorkerWasmMemoryConfig(
+  private _buildWorkerWasmMemoryConfig(
+    workerIdx: number,
     wasmMemStartSize: number,
   ): WorkerWasmMemConfig {
     return {
@@ -202,6 +220,9 @@ class Engine {
       wasmMem: this._wasmMem,
       wasmMemRegionsSizes: this._wasmMemRegionsSizes,
       wasmMemRegionsOffsets: this._wasmMemRegionsOffsets,
+      wasmImagesIndexOffset: this._wasmMemRegionsOffsets[WasmMemUtils.MemRegions.IMAGES],
+      wasmImagesOffset: this._workersInitData.wasmImagesOffsets,
+      wasmImagesSizes: this._workersInitData.imagesSizes,
     };
   }
 
@@ -221,10 +242,11 @@ class Engine {
     this._wasmMem = memory;
   }
 
-  private async initWorkersWasmMemory(wasmMemStartSize: number): Promise<void> {
+  private async initWasmMemoryWorkers(wasmMemStartSize: number): Promise<void> {
     let workerCount = Engine.NUM_WORKERS;
     const initStart = Date.now();
     console.log('Initializing wasm memory with workers...');
+    this._addImageIndex2WorkersOffsets();
     return new Promise((resolve, reject) => {
       for (let workerIdx = 0; workerIdx < Engine.NUM_WORKERS; ++workerIdx) {
         const worker = this._workers[workerIdx];
@@ -248,7 +270,7 @@ class Engine {
           console.log(`Worker id=${workerIdx} error: ${error.message}\n`);
           reject(error);
         };
-        const workerConfig = this.buildWorkerWasmMemoryConfig(wasmMemStartSize);
+        const workerConfig = this._buildWorkerWasmMemoryConfig(workerIdx, wasmMemStartSize);
         worker.postMessage({
           command: 'initWasm',
           params: workerConfig,
@@ -263,10 +285,35 @@ class Engine {
     this._workers = [];
     this._workersInitData = {
       imagesSize: 0,
+      wasmImagesOffsets: new Array(Engine.NUM_WORKERS).fill(0),
+      imagesSizes: [],
     };
 
-    const updateWorkersData = (initData: WorkerInitData) => {
-      this._workersInitData.imagesSize += initData.imagesSize;
+    // offset to fill array of sizes ([w,h]) in worker order in updateWorkersData
+    const workerSizesOffset: number[] = new Array(Engine.NUM_WORKERS).fill(0);
+
+    const updateWorkersData = (workerIdx: number, workerData: WorkerInitData) => {
+      this._workersInitData.imagesSize += workerData.imagesSize;
+      // update wasm mem image offsets for workers that follow workerIdx
+      for (
+        let nextWorker = workerIdx + 1;
+        nextWorker < Engine.NUM_WORKERS;
+        nextWorker++
+      ) {
+        this._workersInitData.wasmImagesOffsets[nextWorker] +=
+          workerData.imagesSize;
+      }
+      // insert the sizes for images from worker idx
+      this._workersInitData.imagesSizes.splice(
+        workerSizesOffset[workerIdx],
+        0,
+        ...workerData.imagesSizes,
+      );
+      // console.log(
+      //   'worker ' + workerIdx + ' inserting ',
+      //   workerData.imagesSizes,
+      //   ' at pos ' + workerSizesOffset[workerIdx],
+      // );
     };
 
     let workerCount = Engine.NUM_WORKERS;
@@ -284,7 +331,7 @@ class Engine {
         );
         this._workers.push(worker);
         worker.onmessage = ({ data: initData }) => {
-          updateWorkersData(initData);
+          updateWorkersData(workerIdx, initData);
           --workerCount;
           console.log(
             `Worker id=${workerIdx} init, count=${workerCount}, time=${
@@ -301,6 +348,14 @@ class Engine {
           reject(error);
         };
         const workerConfig = this._buildWorkerConfig(workerIdx);
+        // udpate offsets for images sizes output array
+        for (
+          let nextWorker = workerIdx + 1;
+          nextWorker < Engine.NUM_WORKERS;
+          nextWorker++
+        ) {
+          workerSizesOffset[nextWorker] += workerConfig.imageUrls.length;
+        }
         worker.postMessage({
           command: 'init',
           params: workerConfig,

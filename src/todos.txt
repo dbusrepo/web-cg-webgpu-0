@@ -6,3 +6,5 @@ fps unlocked
 when in full mode show stats only after console closed
 stats config
 in src/engine/memoryRegions.ts check alignment for sync and sleep array ?
+palette flag (check wasm mem sizes...)
+

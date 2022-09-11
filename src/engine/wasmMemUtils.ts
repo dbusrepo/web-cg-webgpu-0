@@ -133,6 +133,35 @@ function getMemStartSize(
   return offsets[MemRegions.HEAP] + sizes[MemRegions.HEAP] - startOffset;
 }
 
+// IMAGES REGION: INDEX IMAGES
+// INDEX: rel PTRS (distances) TO IMAGES Ws Hs 
+const IMAGE_INDEX_PTR_SIZEOF = Uint32Array.BYTES_PER_ELEMENT;
+const IMAGE_INDEX_W_SIZEOF = Uint32Array.BYTES_PER_ELEMENT;
+const IMAGE_INDEX_H_SIZEOF = Uint32Array.BYTES_PER_ELEMENT;
+
+function getImageIndexSize(numImages: number) {
+  return (
+    (IMAGE_INDEX_PTR_SIZEOF + IMAGE_INDEX_W_SIZEOF + IMAGE_INDEX_H_SIZEOF) *
+    numImages
+  );
+}
+
+function writeImageIndex(imageIndex: Uint32Array, imagesSizes: [number, number][]) {
+  const numImages = imagesSizes.length;
+  const WIDTHS_OFFSET = numImages; // skip numImages ptrs
+  const HEIGHTS_OFFSET = WIDTHS_OFFSET + numImages;
+  const IMAGES_DATA = getImageIndexSize(numImages);
+  for (let i = 0, totalSize = 0; i < imagesSizes.length; ++i) {
+    const imgSize = imagesSizes[i][0] * imagesSizes[i][1];
+    imageIndex[i] = IMAGES_DATA + totalSize; // set index for img i
+    // eslint-disable-next-line prefer-destructuring
+    imageIndex[WIDTHS_OFFSET + i] = imagesSizes[i][0]; // save w
+    // eslint-disable-next-line prefer-destructuring
+    imageIndex[HEIGHTS_OFFSET + i] = imagesSizes[i][1]; // save h
+    totalSize += imgSize;
+  }
+}
+
 export {
   MemConfig,
   MemRegions,
@@ -140,4 +169,6 @@ export {
   calcMemRegionsSizes,
   calcMemRegionsOffsets,
   getMemStartSize,
+  getImageIndexSize,
+  writeImageIndex,
 };

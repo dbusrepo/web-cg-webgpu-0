@@ -21,9 +21,12 @@ type WorkerConfig = {
   imageUrls: string[];
 };
 
-type WorkerInitData = {
+type WorkerInitImagesData = {
   imagesSize: number;
+  imagesSizes: [number, number][];
 };
+
+type WorkerInitData = {} & WorkerInitImagesData;
 
 type WorkerWasmMemConfig = {
   wasmMem: WebAssembly.Memory;
@@ -32,6 +35,9 @@ type WorkerWasmMemConfig = {
   wasmMemRegionsOffsets: WasmMemUtils.MemRegionsData;
   wasmMemRegionsSizes: WasmMemUtils.MemRegionsData;
   wasmWorkerHeapSize: number;
+  wasmImagesIndexOffset: number;
+  wasmImagesOffset: number[];
+  wasmImagesSizes: [number, number][];
 };
 
 type AssetsBuffers = {
@@ -49,6 +55,8 @@ class EngineWorker {
   private _wasmRgbaFramebuffer: Uint8ClampedArray;
   private _wasmSyncArr: Int32Array;
   private _wasmSleepArr: Int32Array;
+  private _wasmImagesIndex: Uint32Array;
+  private _wasmImagesData: Uint32Array;
 
   public async init(config: WorkerConfig): Promise<WorkerInitData> {
     this._config = config;
@@ -59,19 +67,21 @@ class EngineWorker {
     // const [w, h] = pngDecoder.readSize(imgBuffer);
     // console.log(w, h);
     const assetsBuffers = await this._loadAssets();
-    return { imagesSize: await this._getImagesTotalSize(assetsBuffers.images) };
+    return { ...await this._getImagesInitData(assetsBuffers.images) };
   }
 
-  private async _getImagesTotalSize(
+  private async _getImagesInitData(
     imageBuffers: ArrayBuffer[],
-  ): Promise<number> {
+  ): Promise<WorkerInitImagesData> {
     const pngDecoder = new PngDecoderRGB();
     let size = 0;
+    let sizes: [number, number][] = [];
     imageBuffers.forEach((imgBuffer) => {
       const [w, h] = pngDecoder.readSizes(imgBuffer);
       size += w * h;
+      sizes.push([w, h]);
     });
-    return size;
+    return { imagesSize: size, imagesSizes: sizes };
   }
 
   private async _loadImageBuffers(): Promise<ArrayBuffer[]> {
@@ -119,11 +129,23 @@ class EngineWorker {
   public async initWasm(config: WorkerWasmMemConfig): Promise<void> {
     this._wasmMemConfig = config;
     this._initWasmMemViews();
-    this._initWasmImages();
+    this._writeAssets2WasmMem();
     await this.initWasmModules();
   }
 
-  private _initWasmImages() {}
+  private _writeAssets2WasmMem() {
+    console.log(this._wasmMemConfig.wasmImagesSizes);
+    if (this._config.workerIdx === 0) { // first worker writes the images index
+      WasmMemUtils.writeImageIndex(
+        this._wasmImagesIndex,
+        this._wasmMemConfig.wasmImagesSizes,
+      );
+    }
+    // fill wasm mem after wasmImagesIndex (use another view! uint8...) for
+    // images of this worker...
+    console.log(this._wasmImagesIndex);
+    console.log(this._wasmImagesData);
+  }
 
   private _initWasmMemViews(): void {
     const {
@@ -161,6 +183,21 @@ class EngineWorker {
       memSizes[sleepArrayRegion] / Int32Array.BYTES_PER_ELEMENT,
     );
     syncStore(this._wasmSleepArr, workerIdx, 0);
+
+    const imagesRegion = WasmMemUtils.MemRegions.IMAGES;
+    const imagesIndexSize = WasmMemUtils.getImageIndexSize(this._wasmMemConfig.wasmImagesOffset.length);
+
+    this._wasmImagesIndex = new Uint32Array(
+      wasmMem.buffer,
+      memOffsets[imagesRegion],
+      imagesIndexSize / Uint32Array.BYTES_PER_ELEMENT,
+    );
+
+    this._wasmImagesData = new Uint32Array(
+      wasmMem.buffer,
+      memOffsets[imagesRegion] + imagesIndexSize,
+      (memSizes[imagesRegion] - imagesIndexSize) / Uint32Array.BYTES_PER_ELEMENT,
+    );
   }
 
   private async initWasmModules(): Promise<void> {
