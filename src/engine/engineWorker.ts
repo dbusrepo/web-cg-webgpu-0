@@ -36,8 +36,9 @@ type WorkerWasmMemConfig = {
   wasmMemRegionsOffsets: WasmMemUtils.MemRegionsData;
   wasmMemRegionsSizes: WasmMemUtils.MemRegionsData;
   wasmWorkerHeapSize: number;
-  wasmImagesIndexOffset: number;
+  wasmImagesIndexOffset: number; // images region starts here
   wasmImagesOffsets: number[];
+  wasmImagesSize: number[];
   wasmImagesSizes: [number, number][];
 };
 
@@ -194,25 +195,30 @@ class EngineWorker {
 
   private _writeAssets2WasmMem() {
     console.log(this._wasmMemConfig.wasmImagesSizes);
-    if (this._config.workerIdx === 0) { // first worker writes the images index
+    if (this._config.workerIdx === 0) {
+      // first worker writes the images index
       const bpp = this._config.usePalette ? 1 : 4; // TODO
+      console.log(this._wasmMemConfig.wasmImagesSizes);
       WasmMemUtils.writeImageIndex(
         this._wasmImagesIndex,
         this._wasmMemConfig.wasmImagesSizes,
         bpp,
       );
     }
-    // write loaded images to wasm mem: rgba or palette indexes
-    let curOffset =
-      this._wasmMemConfig.wasmImagesOffsets[this._config.workerIdx];
-    for (let i = 0; i < this._images.length; ++i) {
+    // each worker writes its loaded images to wasm mem: rgba or palette indexes
+    const workerImagesData = new Uint8Array(
+      this._wasmImagesData.buffer,
+      this._wasmMemConfig.wasmImagesOffsets[this._config.workerIdx],
+      this._wasmMemConfig.wasmImagesSize[this._config.workerIdx],
+    );
+    for (let i = 0, imgOffset = 0; i < this._images.length; ++i) {
       const { pixels } = this._images[i];
       // TODO check offset values in index to see if they are correct...
-      this._wasmImagesData.set(pixels, curOffset);
-      curOffset += pixels.length;
+      workerImagesData.set(pixels, imgOffset);
+      imgOffset += pixels.length;
     }
-    // console.log(this._wasmImagesIndex);
-    // console.log(this._wasmImagesData);
+    console.log(this._wasmImagesIndex);
+    console.log(this._config.workerIdx, workerImagesData);
   }
 
   private async initWasmModules(): Promise<void> {

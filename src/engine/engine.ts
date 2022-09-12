@@ -31,7 +31,8 @@ type EngineConfig = {
 };
 
 type WorkersInitData = {
-  imagesSize: number;
+  totalImagesSize: number;
+  imagesSize: number[];
   imagesSizes: [number, number][];
   wasmImagesOffsets: number[];
 };
@@ -77,7 +78,6 @@ class Engine {
 
   private _wasmRgbaFramebuffer: Uint8ClampedArray;
   private _wasmSyncArr: Int32Array;
-
 
   public async init(config: EngineConfig): Promise<void> {
     this._startTime = Date.now();
@@ -139,7 +139,7 @@ class Engine {
 
   private _getWasmImagesRegionSize(): number {
     const wasmImageIndexSize = WasmMemUtils.getImageIndexSize(this._imagesUrls.length);
-    return this._workersInitData.imagesSize + wasmImageIndexSize;
+    return this._workersInitData.totalImagesSize + wasmImageIndexSize;
   }
 
   private async _loadImagesUrls() {
@@ -224,9 +224,11 @@ class Engine {
       wasmMem: this._wasmMem,
       wasmMemRegionsSizes: this._wasmMemRegionsSizes,
       wasmMemRegionsOffsets: this._wasmMemRegionsOffsets,
-      wasmImagesIndexOffset: this._wasmMemRegionsOffsets[WasmMemUtils.MemRegions.IMAGES],
+      wasmImagesIndexOffset:
+        this._wasmMemRegionsOffsets[WasmMemUtils.MemRegions.IMAGES],
       wasmImagesOffsets: this._workersInitData.wasmImagesOffsets,
       wasmImagesSizes: this._workersInitData.imagesSizes,
+      wasmImagesSize: this._workersInitData.imagesSize,
     };
   }
 
@@ -288,16 +290,18 @@ class Engine {
 
     this._workers = [];
     this._workersInitData = {
-      imagesSize: 0,
+      totalImagesSize: 0,
       wasmImagesOffsets: new Array(Engine.NUM_WORKERS).fill(0),
-      imagesSizes: [],
+      imagesSize: new Array(Engine.NUM_WORKERS),
+      imagesSizes: new Array(Engine.NUM_WORKERS),
     };
 
     // offset to fill array of sizes ([w,h]) in worker order in updateWorkersData
     const workerSizesOffset: number[] = new Array(Engine.NUM_WORKERS).fill(0);
 
     const updateWorkersData = (workerIdx: number, workerData: WorkerInitData) => {
-      this._workersInitData.imagesSize += workerData.imagesSize;
+      this._workersInitData.imagesSize[workerIdx] = workerData.imagesSize;
+      this._workersInitData.totalImagesSize += workerData.imagesSize;
       // update wasm mem image offsets for workers that follow workerIdx
       for (
         let nextWorker = workerIdx + 1;
@@ -308,11 +312,18 @@ class Engine {
           workerData.imagesSize;
       }
       // insert the sizes for images from worker idx
-      this._workersInitData.imagesSizes.splice(
-        workerSizesOffset[workerIdx],
-        0,
-        ...workerData.imagesSizes,
-      );
+      for (
+        let i = 0, j = workerSizesOffset[workerIdx];
+        i < workerData.imagesSizes.length;
+        ++i
+      ) {
+        this._workersInitData.imagesSizes[j] = workerData.imagesSizes[i];
+      }
+      // this._workersInitData.imagesSizes.splice(
+      //   workerSizesOffset[workerIdx],
+      //   0,
+      //   ...workerData.imagesSizes,
+      // );
       // console.log(
       //   'worker ' + workerIdx + ' inserting ',
       //   workerData.imagesSizes,
