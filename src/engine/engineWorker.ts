@@ -23,7 +23,7 @@ type WorkerConfig = {
 };
 
 type WorkerInitImagesData = {
-  imagesSize: number;
+  totalImagesSize: number; // in bytes
   imagesSizes: [number, number][];
 };
 
@@ -37,9 +37,10 @@ type WorkerWasmMemConfig = {
   wasmMemRegionsSizes: WasmMemUtils.MemRegionsData;
   wasmWorkerHeapSize: number;
   wasmImagesIndexOffset: number; // images region starts here
-  wasmImagesOffsets: number[];
-  wasmImagesSize: number[];
-  wasmImagesSizes: [number, number][];
+  wasmWorkerImagesOffsets: number[]; // for each worker gives the offsets of its images
+  wasmWorkerImagesSize: number[]; // for each worker gives the total size of its images
+  wasmImagesSizes: [number, number][]; // for each image gives its sizes [w, h]
+  wasmImagesOffsets: number[]; // for each image gives its offsets wrt the start of the images region (so it consider the index area)
 };
 
 type AssetsBuffers = {
@@ -75,18 +76,39 @@ class EngineWorker {
   private async _getImagesInitData(
     imageBuffers: ArrayBuffer[],
   ): Promise<WorkerInitImagesData> {
-    // TODO add check on file type
-    const pngDecoder = new PngDecoderRGBA();
-    let size = 0;
-    const bpp = this._config.usePalette ? 1 : 4; // TODO
-    let sizes: [number, number][] = [];
-    imageBuffers.forEach((imgBuffer) => {
-      const imgSizes = pngDecoder.readSizes(imgBuffer);
-      sizes.push(imgSizes);
-      const [w, h] = imgSizes;
-      size += w * h * bpp;
+    const imagesSizes = await Promise.all(
+      imageBuffers.map(async (imgBuffer) => {
+        const fileType = await fileTypeFromBuffer(imgBuffer);
+        if (!fileType) {
+          throw new Error(`_getImagesInitData: file type not found`);
+        }
+        let imgSizes; // [w,h]
+        switch (fileType.ext) {
+          case 'png':
+            {
+              const pngDecoder = new PngDecoderRGBA();
+              imgSizes = pngDecoder.readSizes(imgBuffer);
+            }
+            break;
+          default:
+            throw new Error(
+              `_loadImage does not support ${fileType.ext} loading`,
+            );
+        }
+        return imgSizes;
+      }),
+    );
+    let totalImagesSize = 0;
+    imagesSizes.forEach(([w, h]) => {
+      const imageSize = w * h * this._getBytesPerPixel();
+      totalImagesSize += imageSize;
     });
-    return { imagesSize: size, imagesSizes: sizes };
+    return { totalImagesSize, imagesSizes };
+  }
+
+  private _getBytesPerPixel(): number {
+    const bpp = this._config.usePalette ? 1 : 4;
+    return bpp;
   }
 
   private async _loadImageBuffers(): Promise<ArrayBuffer[]> {
@@ -177,7 +199,7 @@ class EngineWorker {
 
     const imagesRegion = WasmMemUtils.MemRegions.IMAGES;
     const imagesIndexSize = WasmMemUtils.getImageIndexSize(
-      this._wasmMemConfig.wasmImagesOffsets.length,
+      this._wasmMemConfig.wasmWorkerImagesOffsets.length,
     );
 
     this._wasmImagesIndex = new Uint32Array(
@@ -194,31 +216,30 @@ class EngineWorker {
   }
 
   private _writeAssets2WasmMem() {
-    console.log(this._wasmMemConfig.wasmImagesSizes);
     if (this._config.workerIdx === 0) {
       // first worker writes the images index
-      const bpp = this._config.usePalette ? 1 : 4; // TODO
-      console.log(this._wasmMemConfig.wasmImagesSizes);
+      // console.log('images offsets: ', this._wasmMemConfig.wasmImagesOffsets);
+      // console.log(this._wasmMemConfig.wasmImagesSizes);
       WasmMemUtils.writeImageIndex(
         this._wasmImagesIndex,
+        this._wasmMemConfig.wasmImagesOffsets,
         this._wasmMemConfig.wasmImagesSizes,
-        bpp,
+        this._getBytesPerPixel(),
       );
+      console.log('image index: ', this._wasmImagesIndex);
     }
     // each worker writes its loaded images to wasm mem: rgba or palette indexes
     const workerImagesData = new Uint8Array(
       this._wasmImagesData.buffer,
-      this._wasmMemConfig.wasmImagesOffsets[this._config.workerIdx],
-      this._wasmMemConfig.wasmImagesSize[this._config.workerIdx],
+      this._wasmMemConfig.wasmWorkerImagesOffsets[this._config.workerIdx],
+      this._wasmMemConfig.wasmWorkerImagesSize[this._config.workerIdx],
     );
     for (let i = 0, imgOffset = 0; i < this._images.length; ++i) {
       const { pixels } = this._images[i];
-      // TODO check offset values in index to see if they are correct...
       workerImagesData.set(pixels, imgOffset);
       imgOffset += pixels.length;
     }
-    console.log(this._wasmImagesIndex);
-    console.log(this._config.workerIdx, workerImagesData);
+    // console.log(this._config.workerIdx, workerImagesData);
   }
 
   private async initWasmModules(): Promise<void> {

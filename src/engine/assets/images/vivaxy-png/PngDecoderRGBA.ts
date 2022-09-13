@@ -36,6 +36,7 @@ class PngDecoderRGBA implements PngDecoder {
     // this.checkType(input);
     const metadata = decode(input);
     const { width, height, data: sourcePixels } = metadata;
+    // console.log(sourcePixels);
     output.setSize(width, height);
     const { pixels } = output;
     switch (metadata.colorType) {

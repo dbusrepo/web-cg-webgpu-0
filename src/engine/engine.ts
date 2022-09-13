@@ -32,18 +32,21 @@ type EngineConfig = {
 
 type WorkersInitData = {
   totalImagesSize: number;
-  imagesSize: number[];
+  workerImagesSizes: number[];
+  workerImagesOffsets: number[];
   imagesSizes: [number, number][];
-  wasmImagesOffsets: number[];
+  imagesOffsets: number[];
 };
 
 type WasmMemConfigInput = {
-  numPixels: number;
-  imagesSize: number;
+  numPixels: number; // TODO rename?
+  imagesRegionSize: number;
   startOffset: number;
   workerHeapPages: number;
   numWorkers: number;
 };
+
+const USE_PALETTE = false; // TODO
 
 class Engine {
   private static readonly NUM_WORKERS = 2; // >= 1
@@ -99,7 +102,7 @@ class Engine {
 
     const wasmMemConfig: WasmMemConfigInput = {
       numPixels: frameWidth * frameHeight,
-      imagesSize: this._getWasmImagesRegionSize(),
+      imagesRegionSize: this._getWasmImagesRegionSize(),
       startOffset: defaultConfig.wasmMemStartOffset,
       workerHeapPages: defaultConfig.wasmWorkerHeapPages,
       numWorkers: Engine.NUM_WORKERS,
@@ -137,6 +140,11 @@ class Engine {
   //   }
   // }
 
+  private _getBytesPerPixel(): number {
+    const bpp = USE_PALETTE ? 1 : 4;
+    return bpp;
+  }
+
   private _getWasmImagesRegionSize(): number {
     const wasmImageIndexSize = WasmMemUtils.getImageIndexSize(this._imagesUrls.length);
     return this._workersInitData.totalImagesSize + wasmImageIndexSize;
@@ -158,7 +166,7 @@ class Engine {
   }
 
   private _buildWasmMemConfig(wasmMemConfigInput: WasmMemConfigInput): void {
-    const { startOffset, workerHeapPages, numPixels, imagesSize, numWorkers } =
+    const { startOffset, workerHeapPages, numPixels, imagesRegionSize, numWorkers } =
       wasmMemConfigInput;
     const wasmMemConfig: WasmMemUtils.MemConfig = {
       startOffset,
@@ -169,7 +177,7 @@ class Engine {
       sleepArraySize: numWorkers * Int32Array.BYTES_PER_ELEMENT,
       numWorkers,
       workerHeapSize: PAGE_SIZE_BYTES * workerHeapPages,
-      imagesSize,
+      imagesRegionSize,
     };
     this._wasmMemConfig = wasmMemConfig;
     this._wasmMemRegionsSizes = WasmMemUtils.calcMemRegionsSizes(
@@ -226,9 +234,10 @@ class Engine {
       wasmMemRegionsOffsets: this._wasmMemRegionsOffsets,
       wasmImagesIndexOffset:
         this._wasmMemRegionsOffsets[WasmMemUtils.MemRegions.IMAGES],
-      wasmImagesOffsets: this._workersInitData.wasmImagesOffsets,
+      wasmWorkerImagesOffsets: this._workersInitData.workerImagesOffsets,
       wasmImagesSizes: this._workersInitData.imagesSizes,
-      wasmImagesSize: this._workersInitData.imagesSize,
+      wasmWorkerImagesSize: this._workersInitData.workerImagesSizes,
+      wasmImagesOffsets: this._workersInitData.imagesOffsets,
     };
   }
 
@@ -291,25 +300,26 @@ class Engine {
     this._workers = [];
     this._workersInitData = {
       totalImagesSize: 0,
-      wasmImagesOffsets: new Array(Engine.NUM_WORKERS).fill(0),
-      imagesSize: new Array(Engine.NUM_WORKERS),
-      imagesSizes: new Array(Engine.NUM_WORKERS),
+      workerImagesOffsets: new Array(Engine.NUM_WORKERS).fill(0),
+      workerImagesSizes: new Array(Engine.NUM_WORKERS),
+      imagesSizes: [],
+      imagesOffsets: [], 
     };
 
     // offset to fill array of sizes ([w,h]) in worker order in updateWorkersData
     const workerSizesOffset: number[] = new Array(Engine.NUM_WORKERS).fill(0);
 
     const updateWorkersData = (workerIdx: number, workerData: WorkerInitData) => {
-      this._workersInitData.imagesSize[workerIdx] = workerData.imagesSize;
-      this._workersInitData.totalImagesSize += workerData.imagesSize;
+      this._workersInitData.workerImagesSizes[workerIdx] = workerData.totalImagesSize;
+      this._workersInitData.totalImagesSize += workerData.totalImagesSize;
       // update wasm mem image offsets for workers that follow workerIdx
       for (
         let nextWorker = workerIdx + 1;
         nextWorker < Engine.NUM_WORKERS;
         nextWorker++
       ) {
-        this._workersInitData.wasmImagesOffsets[nextWorker] +=
-          workerData.imagesSize;
+        this._workersInitData.workerImagesOffsets[nextWorker] +=
+          workerData.totalImagesSize;
       }
       // insert the sizes for images from worker idx
       for (
@@ -329,6 +339,21 @@ class Engine {
       //   workerData.imagesSizes,
       //   ' at pos ' + workerSizesOffset[workerIdx],
       // );
+    };
+
+    const calcImagesOffsets = () => {
+      const numImages = this._workersInitData.imagesSizes.length;
+      const imagesOffsets = new Array<number>(numImages);
+      let prevSize: number;
+      imagesOffsets[0] = WasmMemUtils.getImageIndexSize(numImages);
+      this._workersInitData.imagesSizes.forEach(([w, h], idx) => {
+        const imageSize = w * h * this._getBytesPerPixel();
+        if (idx > 0) {
+          imagesOffsets[idx] = imagesOffsets[idx - 1] + prevSize;
+        }
+        prevSize = imageSize;
+      });
+      this._workersInitData.imagesOffsets = imagesOffsets;
     };
 
     let workerCount = Engine.NUM_WORKERS;
@@ -355,6 +380,7 @@ class Engine {
           );
           if (!workerCount) {
             console.log(`Workers init done. After ${Date.now() - this._startTime}ms`);
+            calcImagesOffsets();
             resolve();
           }
         };

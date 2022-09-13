@@ -18,7 +18,7 @@
     "webpack": "webpack",
     "build": "npm run build:wasm && webpack",
     "server": "webpack-dev-server",
-    "start": "npm run cleandist && npm run build && webpack-dev-server && npm run onchange:wasm &",
+    "start": "npm run cleandist && npm run build && webpack-dev-server && npm run onchange:wasm",
     "prod": "webpack --production",
     "clean": "rimraf dist/ && cd src/engine/wasm && make clean",
     "cleandist": "rimraf dist/"
