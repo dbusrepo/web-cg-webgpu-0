@@ -1,6 +1,8 @@
 # https://stackoverflow.com/questions/3871444/making-all-rules-depend-on-the-makefile-itself
 .EXTRA_PREREQS:= $(abspath $(lastword $(MAKEFILE_LIST)))
 
+# MAKEFLAGS += --no-print-directory
+
 TARGET_DEBUG := debug
 TARGET_SPEED := release-speed
 TARGET_SIZE := release-size
@@ -45,11 +47,12 @@ build_flags: force
 # COMPILE ASC
 # **************************************************
 
+# @echo 'Asc files compilation terminated.'
+
 build_dep_only: $(ASC_DEP_FILES)
 	@echo 'Dependencies file generation terminated.'
 
 build_asc: init_asc_build $(ASC_BUILD_FILES)
-	@echo 'Asc files compilation terminated.'
 
 init_asc_build:
 	@mkdir -p $(ASC_BUILD_DIR)

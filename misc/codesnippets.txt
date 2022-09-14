@@ -442,3 +442,7 @@ private async initEngineWorkers(wasmMemStartSize: number): Promise<void> {
     }
   });
 }
+
+&& npm run onchange:wasm
+
+"onchange:wasm": "onchange -v -i 'src/engine/wasm/makefile' 'src/engine/wasm/asconfig.json' 'src/engine/wasm/src/**/*.ts' -- make --no-print-directory --debug=basic -C src/engine/wasm ",

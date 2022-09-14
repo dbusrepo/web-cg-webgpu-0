@@ -11,3 +11,4 @@ export declare const syncArrayOffset: i32;
 export declare const sleepArrayOffset: i32;
 export declare const numWorkers: i32;
 export declare const bgColor: i32;
+
