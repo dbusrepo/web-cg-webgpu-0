@@ -27,6 +27,9 @@ interface WasmInput {
   logi: (v: number) => void;
   logf: (v: number) => void;
   bgColor: number;
+  imagesIndexOffset: number;
+  numImages: number;
+  initMem: () => void;
 }
 
 interface WasmModules {

@@ -108,7 +108,7 @@ class Engine {
       numWorkers: Engine.NUM_WORKERS,
     };
 
-    console.log(wasmMemConfig);
+    // console.log('wasm mem config: ', wasmMemConfig);
 
     this._buildWasmMemConfig(wasmMemConfig);
 
