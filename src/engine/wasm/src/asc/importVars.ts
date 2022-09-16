@@ -14,5 +14,3 @@ export declare const bgColor: i32;
 
 export declare const imagesIndexOffset: u32;
 export declare const numImages: u32;
-
-export declare function initMem(): void;

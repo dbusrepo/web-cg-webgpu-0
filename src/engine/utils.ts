@@ -1,3 +1,11 @@
+type TypedArray =
+  | Int8Array
+  | Uint8Array
+  | Int16Array
+  | Uint16Array
+  | Int32Array
+  | Uint32Array;
+
 type Range = [start: number, end: number];
 
 // split [0..numTasks-1] between [0..numWorkers-1] workers and get the index
@@ -28,7 +36,7 @@ function sleep(sleepArr: Int32Array, idx: number, timeoutMs: number): void {
   Atomics.wait(sleepArr, idx, 0, Math.max(1, timeoutMs | 0));
 }
 
-function syncStore(syncArr: Int32Array, idx: number, value: number): void {
+function syncStore(syncArr: TypedArray, idx: number, value: number): void {
   Atomics.store(syncArr, idx, value);
 }
 

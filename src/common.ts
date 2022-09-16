@@ -19,23 +19,22 @@ type StatsValues = {
   [property in keyof typeof StatsNames]: number;
 };
 
-type TypedArray =
-  | Int8Array
-  | Uint8Array
-  | Uint8ClampedArray
-  | Int16Array
-  | Uint16Array
-  | Int32Array
-  | Uint32Array
-  | Float32Array
-  | Float64Array;
+// type TypedArray =
+//   | Int8Array
+//   | Uint8Array
+//   | Uint8ClampedArray
+//   | Int16Array
+//   | Uint16Array
+//   | Int32Array
+//   | Uint32Array
+//   | Float32Array
+//   | Float64Array;
 
 export {
   MILLI_IN_SEC,
   PAGE_SIZE_BYTES,
   BYTES_PER_PIXEL,
   PALETTE_SIZE,
-  TypedArray,
   StatsNames,
   StatsValues,
 };

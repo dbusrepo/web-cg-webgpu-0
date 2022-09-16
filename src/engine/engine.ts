@@ -3,7 +3,6 @@ import * as WasmMemUtils from './wasmMemUtils';
 import {
   BYTES_PER_PIXEL,
   PALETTE_SIZE,
-  TypedArray,
   StatsNames,
   StatsValues,
   PAGE_SIZE_BYTES,
@@ -173,7 +172,7 @@ class Engine {
       rgbaFrameBufferSize: numPixels * BYTES_PER_PIXEL,
       palIdxFrameBufferSize: numPixels,
       paletteSize: PALETTE_SIZE * BYTES_PER_PIXEL,
-      syncArraySize: numWorkers * Int32Array.BYTES_PER_ELEMENT,
+      syncArraySize: (numWorkers + 1) * Int32Array.BYTES_PER_ELEMENT,
       sleepArraySize: numWorkers * Int32Array.BYTES_PER_ELEMENT,
       numWorkers,
       workerHeapSize: PAGE_SIZE_BYTES * workerHeapPages,
@@ -455,7 +454,7 @@ class Engine {
       requestAnimationFrame(renderLoop);
     };
 
-    const calcAvgArrValue = (values: TypedArray, count: number) => {
+    const calcAvgArrValue = (values: Float32Array | Float64Array, count: number) => {
       let acc = 0;
       const numIter = Math.min(count, values.length);
       for (let i = 0; i < numIter; i++) {

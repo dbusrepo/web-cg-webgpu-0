@@ -29,7 +29,6 @@ interface WasmInput {
   bgColor: number;
   imagesIndexOffset: number;
   numImages: number;
-  initMem: () => void;
 }
 
 interface WasmModules {

@@ -147,16 +147,22 @@ function getImageIndexSize(numImages: number) {
 }
 
 // bpp bytes per pixel, 1 or 4
-function writeImageIndex(
+function writeImagesIndex(
   imageIndex: Uint32Array,
   imagesOffsets: number[],
   imagesSizes: [number, number][],
   bpp: number,
 ) {
+
+  // imageIndex[0] = 13;
+  // Atomics.store(this._wasmImagesIndex, 0, 13);
+  // sleep(this._wasmSleepArr, 0, 50);
+
   const numImages = imagesSizes.length;
   const WIDTHS_OFFSET = numImages; // skip numImages ptrs
   const HEIGHTS_OFFSET = WIDTHS_OFFSET + numImages;
   for (let i = 0; i < imagesSizes.length; ++i) {
+    // Atomics.store(imageIndex, i, imagesOffsets[i]);
     imageIndex[i] = imagesOffsets[i];
     // eslint-disable-next-line prefer-destructuring
     imageIndex[WIDTHS_OFFSET + i] = imagesSizes[i][0]; // save w
@@ -173,5 +179,5 @@ export {
   calcMemRegionsOffsets,
   getMemStartSize,
   getImageIndexSize,
-  writeImageIndex,
+  writeImagesIndex as writeImageIndex,
 };
