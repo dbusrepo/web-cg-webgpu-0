@@ -1,9 +1,8 @@
 import { myAssert } from './myAssert';
-import { alloc, dealloc } from './workerHeapAlloc';
 import { ArenaAlloc, newArena } from './arenaAlloc';
 import { logi } from './importVars';
 
-type float = f32;
+type float = f32; // TODO
 
 const VEC3_PER_BLOCK: u32 = 256;
 

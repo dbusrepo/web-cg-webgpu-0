@@ -7,7 +7,7 @@ class ArenaAlloc<T> {
 
   private static readonly PTR_SIZE: u32 = sizeof<usize>();
 
-  private static ALIGN_SIZE: u32 = <u32>ArenaAlloc.PTR_SIZE;
+  private static ALIGN_SIZE: u32 = (1 << alignof<usize>());
   private static ALIGN_MASK: u32 = ArenaAlloc.ALIGN_SIZE - 1;
 
   private blockSize: u32; // tot bytes allocated per block

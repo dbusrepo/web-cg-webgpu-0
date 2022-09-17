@@ -223,82 +223,29 @@ class EngineWorker {
     console.log('Init wasm memory...');
     if (this._config.workerIdx === 0) {
       // first worker writes the images index
-      // console.log('images offsets: ', this._wasmMemConfig.wasmImagesOffsets);
-      // console.log(this._wasmMemConfig.wasmImagesSizes);
-
-      // this._wasmImagesIndex[0] = 13;
-      // sleep(this._wasmSleepArr, 0, 50);
-
-      // writeImagesIndex(this._wasmImagesIndex);
-
       WasmMemUtils.writeImageIndex(
         this._wasmImagesIndex,
         this._wasmMemConfig.wasmImagesOffsets,
         this._wasmMemConfig.wasmImagesSizes,
         this._getBytesPerPixel(),
       );
-
-      // this._wasmImagesIndex[0] = 12;
-      // Atomics.store(this._wasmImagesIndex, 0, 12);
-
-      // Atomics.store(this._wasmImagesIndex, 0, 12);
-      // console.log(this._config.workerIdx, this._wasmImagesIndex);
-
-      // console.log('index[0]: ', new DataView(this._wasmImagesIndex.buffer).getUint32(0));
-      // console.log('index[0]: ', Atomics.load(this._wasmImagesIndex, 0));
-      // console.log('index[0]: ', this._wasmImagesIndex[0]);
-
-      // ***
-      // Atomics.store(this._wasmImagesIndex, 0, 13);
-      // console.log(this._config.workerIdx, Atomics.load(this._wasmImagesIndex, 0));
-
-      // const val = new DataView(
-      //   this._wasmMemConfig.wasmMem.buffer,
-      //   this._wasmMemConfig.wasmMemRegionsOffsets[WasmMemUtils.MemRegions.IMAGES],
-      //   4,
-      // ).getUint32(0);
-
-      // const typArr = new Uint32Array(
-      //   this._wasmMemConfig.wasmMem.buffer,
-      //   this._wasmMemConfig.wasmMemRegionsOffsets[WasmMemUtils.MemRegions.IMAGES],
-      //   6
-      // );
-
-      // const val = typArr[0];
-
-      // console.log(this._config.workerIdx, new DataView(this._wasmMemConfig.wasmMem.buffer, 321056).getUint32(0));
-      // console.log(this._config.workerIdx, val);
-      // console.log(this._config.workerIdx, this._wasmImagesIndex[0]);
-      // console.log(this._config.workerIdx, Atomics.load(this._wasmImagesIndex, 0));
-
-      // console.log(this._config.workerIdx, Atomics.load(this._wasmImagesIndex, 0));
-
-      // this._sab = new SharedArrayBuffer(4);
-      // Atomics.store(new Uint32Array(this._sab, 0, 1), 0, 22);
-      // console.log(this._config.workerIdx, new Uint32Array(this._sab, 0, 1));
     }
-    // each worker writes the loaded images buffers to wasm mem: rgba or palette indexes
-
+    // each worker writes the loaded images to the wasm mem
     const workerImagesOffset =
       this._wasmImagesData.byteOffset +
       this._wasmMemConfig.wasmWorkerImagesOffsets[this._config.workerIdx];
-    // console.log('images offset: ', workerImagesOffset);
-    // console.log('images sizes: ', this._wasmMemConfig.wasmWorkerImagesSize[this._config.workerIdx]);
 
     const workerImagesData = new Uint8Array(
       this._wasmImagesData.buffer,
       workerImagesOffset,
       this._wasmMemConfig.wasmWorkerImagesSize[this._config.workerIdx],
     );
-    // console.log(workerImagesData);
 
     for (let i = 0, imgOffset = 0; i < this._workerImages.length; ++i) {
       const { pixels } = this._workerImages[i];
       workerImagesData.set(pixels, imgOffset);
       imgOffset += pixels.length;
     }
-    // sleep(this._wasmSleepArr, 0, 50);
-    // console.log(this._config.workerIdx, workerImagesData);
   }
 
   private async initWasmModules(): Promise<void> {
@@ -325,8 +272,9 @@ class EngineWorker {
       workerHeapSize,
       heapOffset: memOffsets[WasmMemUtils.MemRegions.HEAP],
       bgColor: randColor(),
-      logf: (f: number) => console.log(`Worker [${workerIdx}]: ${f}`),
-      logi: (i: number) => console.log(`Worker [${workerIdx}]: ${i}`),
+      logf: (f: number) => console.log(`[wasm] Worker [${workerIdx}]: ${f}`),
+      logi: (i: number) => console.log(`[wasm] Worker [${workerIdx}]: ${i}`),
+      usePalette: this._config.usePalette ? 1 : 0,
     };
 
     this._wasmInitInput = wasmInput;

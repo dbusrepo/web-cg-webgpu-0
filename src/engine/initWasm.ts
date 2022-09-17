@@ -29,6 +29,7 @@ interface WasmInput {
   bgColor: number;
   imagesIndexOffset: number;
   numImages: number;
+  usePalette: number;
 }
 
 interface WasmModules {
