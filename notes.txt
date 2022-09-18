@@ -23,6 +23,8 @@ remove these? i don't use the data+heap part so...
 
 -> only Chrome supported !
 
+u32 for block sizes
+
 2 see:
 
 pre element:

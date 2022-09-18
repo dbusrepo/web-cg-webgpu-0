@@ -1,4 +1,5 @@
 import { myAssert } from './myAssert';
+import { alloc, dealloc } from './workerHeapAlloc';
 import { ArenaAlloc, newArena } from './arenaAlloc';
 import { logi } from './importVars';
 
@@ -6,17 +7,26 @@ const OBJ_ALLOC_BLOCK_SIZE = 64;
 let objectAllocatorsArena: ArenaAlloc;
 
 class ObjectAllocator<T> {
-  arena: ArenaAlloc;
+  private arena: ArenaAlloc;
   private constructor() {}
-  init(blockSize: u32): void {
-    const objSize = offsetof<T>();
-    this.arena = newArena(objSize, blockSize);
+  private getObjectSize(): u32 {
+    return offsetof<T>();
+  }
+  init(arenaBlockSize: u32): void {
+    this.arena = newArena(this.getObjectSize(), arenaBlockSize);
   }
   new(): T {
     return changetype<T>(this.arena.alloc());
   }
   delete(v: T): void {
     this.arena.dealloc(changetype<usize>(v));
+  }
+  newArray(length: u32): usize {
+    const allocSize = length * this.getObjectSize();
+    return alloc(allocSize);
+  }
+  deleteArray(arr: usize): void {
+    dealloc(arr);
   }
 }
 
@@ -27,7 +37,7 @@ function newObjectAllocator<T>(blockSize: u32): ObjectAllocator<T> {
 }
 
 function initObjectAllocatorsArena(): void {
-  const objSize = offsetof<ObjectAllocator<Object>>();
+  const objSize: u32 = offsetof<ObjectAllocator<Object>>();
   objectAllocatorsArena = newArena(objSize, OBJ_ALLOC_BLOCK_SIZE);
 }
 

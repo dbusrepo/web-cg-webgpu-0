@@ -11,7 +11,7 @@ import { bgColor, heapOffset, numWorkers, workerIdx, logi, logf,
 import { usePalette, imagesIndexOffset, numImages } from './importVars';
 import { BitImage } from './bitImage';
 // import { loadImages } from './imagesLoader';
-import { MyArray } from './myArray';
+import { MyArray, newArray, deleteArray } from './myArray';
 
 const syncLoc = syncArrayOffset + workerIdx * sizeof<i32>();
 const sleepLoc = sleepArrayOffset + workerIdx * sizeof<i32>();
@@ -19,6 +19,17 @@ const sleepLoc = sleepArrayOffset + workerIdx * sizeof<i32>();
 function run(): void {
 
   initModules();
+
+  let arr = newArray<Vec3>(10, 4);
+  logi(arr.length);
+  logi(arr.start);
+  // logi(arr.end);
+  // logf(arr.atIdx(2).x);
+  deleteArray(arr);
+  arr = newArray<Vec3>(10, 4);
+  deleteArray(arr);
+  logi(arr.length);
+  logi(arr.start);
 
   // logi(<i32>process.hrtime());
 

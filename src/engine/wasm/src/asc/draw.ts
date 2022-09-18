@@ -6,8 +6,8 @@ function clearBg(
   end: u32,
 ): void {
 
-  const startOff: i32 = frameBufferOffset + start * frameWidth * 4;
-  const endOff: i32 = frameBufferOffset + end * frameWidth * 4;
+  const startOff: usize = frameBufferOffset + start * frameWidth * 4;
+  const endOff: usize = frameBufferOffset + end * frameWidth * 4;
 
   // let value = v128.splat<i32>(color);
   // TODO check bounds ?

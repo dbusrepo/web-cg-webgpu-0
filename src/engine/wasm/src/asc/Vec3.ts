@@ -2,7 +2,7 @@ import { myAssert } from './myAssert';
 import { logi } from './importVars';
 import { ObjectAllocator, newObjectAllocator } from './objectAllocator';
 
-const VEC3_BLOCKS_SIZE: u32 = 256;
+const VEC3_BLOCK_SIZE: u32 = 256;
 
 class Vec3 {
 
@@ -29,7 +29,7 @@ function newVec3(x: f32, y: f32, z: f32): Vec3 {
 }
 
 function initVec3Allocator(): void {
-  vec3Alloc = newObjectAllocator<Vec3>(VEC3_BLOCKS_SIZE);
+  vec3Alloc = newObjectAllocator<Vec3>(VEC3_BLOCK_SIZE);
 }
 
 export { Vec3, initVec3Allocator, vec3Alloc, newVec3 };

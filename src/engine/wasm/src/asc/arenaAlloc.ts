@@ -10,11 +10,11 @@ class ArenaAlloc {
   private static ALIGN_SIZE: u32 = (1 << alignof<usize>());
   private static ALIGN_MASK: u32 = ArenaAlloc.ALIGN_SIZE - 1;
 
-  blockSize: u32; // tot bytes allocated per block
+  private blockSize: u32; // tot bytes allocated per block
   private allocSize: u32; // total bytes (obj+align pad) per obj, obj are aligned
   private numElementsPerBlock: u32; // number of allocable objs per block
   private block: usize = 0; // block ptr
-  private blockPos: u32; // pos next allocation in block
+  private nextPtr: usize; // pos next allocation in block
   private sizeLeft: u32; // number of remaining allocable objs in cur block
   private freePtr: usize = 0; // free list head ptr
 
@@ -34,7 +34,7 @@ class ArenaAlloc {
   private allocBlock(): void {
     // TODO the previous block is lost...
     this.block = alloc(this.blockSize);
-    this.blockPos = <u32>(this.block + ArenaAlloc.ALIGN_MASK) & (~ArenaAlloc.ALIGN_MASK)
+    this.nextPtr = (this.block + ArenaAlloc.ALIGN_MASK) & (~ArenaAlloc.ALIGN_MASK)
     this.sizeLeft = this.numElementsPerBlock;
   }
 
@@ -50,8 +50,8 @@ class ArenaAlloc {
         this.allocBlock();
       }
       this.sizeLeft--;
-      dataPtr = this.blockPos;
-      this.blockPos += this.allocSize;
+      dataPtr = this.nextPtr;
+      this.nextPtr += this.allocSize;
     }
     myAssert(dataPtr % ArenaAlloc.ALIGN_SIZE == 0);
     return dataPtr;

@@ -24,6 +24,10 @@ class BitImage {
 
 let bitImageAllocator: ObjectAllocator<BitImage>;
 
+function initBitImageAllocator(): void {
+  bitImageAllocator = newObjectAllocator<BitImage>(BITIMAGES_PER_BLOCK);
+}
+
 // function newBitImage(pixels: usize, width: u32, height: u32): BitImage {
 //   const bitImage = arena.alloc();
 //   bitImage.init(pixels, width, height);
@@ -42,10 +46,6 @@ let bitImageAllocator: ObjectAllocator<BitImage>;
 // function delBitImage(bitImage: BitImage): void {
 //   arena.dealloc(bitImage);
 // }
-
-function initBitImageAllocator(): void {
-  bitImageAllocator = newObjectAllocator<BitImage>(BITIMAGES_PER_BLOCK);
-}
 
 // initBitImage();
 
