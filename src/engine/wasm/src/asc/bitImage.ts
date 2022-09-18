@@ -1,10 +1,8 @@
 import { myAssert } from './myAssert';
-import { ArenaAlloc, newArena } from './arenaAlloc';
 import { alloc, dealloc } from './workerHeapAlloc';
+import { ObjectAllocator, newObjectAllocator } from './objectAllocator';
 
 const BITIMAGES_PER_BLOCK: u32 = 128;
-
-let arena: ArenaAlloc<BitImage>;
 
 class BitImage {
 
@@ -24,29 +22,33 @@ class BitImage {
 
 }
 
-function newBitImage(pixels: usize, width: u32, height: u32): BitImage {
-  const bitImage = arena.alloc();
-  bitImage.init(pixels, width, height);
-  return bitImage;
+let bitImageAllocator: ObjectAllocator<BitImage>;
+
+// function newBitImage(pixels: usize, width: u32, height: u32): BitImage {
+//   const bitImage = arena.alloc();
+//   bitImage.init(pixels, width, height);
+//   return bitImage;
+// }
+
+// function newBitImageArray(size: u32): usize {
+//   const ptrsArr = alloc(size * BitImage.size);
+//   return ptrsArr;
+// }
+
+// function delBitImageArray(array: usize): void {
+//   dealloc(array);
+// }
+
+// function delBitImage(bitImage: BitImage): void {
+//   arena.dealloc(bitImage);
+// }
+
+function initBitImageAllocator(): void {
+  bitImageAllocator = newObjectAllocator<BitImage>(BITIMAGES_PER_BLOCK);
 }
 
-function newBitImageArray(size: u32): usize {
-  const ptrsArr = alloc(size * BitImage.size);
-  return ptrsArr;
-}
+// initBitImage();
 
-function delBitImageArray(array: usize): void {
-  dealloc(array);
-}
+export { BitImage, initBitImageAllocator };
 
-function delBitImage(bitImage: BitImage): void {
-  arena.dealloc(bitImage);
-}
-
-function initBitImage(): void {
-  arena = newArena<BitImage>(BITIMAGES_PER_BLOCK);
-}
-
-initBitImage();
-
-export { BitImage, newBitImage, delBitImage, newBitImageArray };
+// export { BitImage, newBitImage, delBitImage, newBitImageArray };

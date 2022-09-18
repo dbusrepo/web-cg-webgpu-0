@@ -1,20 +1,16 @@
 import { myAssert } from './myAssert';
-import { ArenaAlloc, newArena } from './arenaAlloc';
 import { logi } from './importVars';
+import { ObjectAllocator, newObjectAllocator } from './objectAllocator';
 
-type float = f32; // TODO
-
-const VEC3_PER_BLOCK: u32 = 256;
-
-let arena: ArenaAlloc<Vec3>;
+const VEC3_BLOCKS_SIZE: u32 = 256;
 
 class Vec3 {
 
-  x: f32; // TODO use float type ?
+  x: f32;
   y: f32;
   z: f32;
 
-  // constructor(public x: float = 0.0, public y: float = 0.0, public z: float = 0.0) {}
+  // constructor(public x: f32 = 0.0, public y: f32 = 0.0, public z: f32 = 0.0) {}
   private constructor() {}
 
   init(x: f32, y: f32, z: f32): void {
@@ -24,20 +20,16 @@ class Vec3 {
   }
 }
 
+let vec3Alloc: ObjectAllocator<Vec3>;
+
 function newVec3(x: f32, y: f32, z: f32): Vec3 {
-  const p = arena.alloc();
+  const p = vec3Alloc.new();
   p.init(x, y, z)
   return p;
 }
 
-function delVec3(v: Vec3): void {
-  arena.dealloc(v);
+function initVec3Allocator(): void {
+  vec3Alloc = newObjectAllocator<Vec3>(VEC3_BLOCKS_SIZE);
 }
 
-function initVec3(): void {
-  arena = newArena<Vec3>(VEC3_PER_BLOCK);
-}
-
-initVec3();
-
-export { float, Vec3, newVec3, delVec3 };
+export { Vec3, initVec3Allocator, vec3Alloc, newVec3 };

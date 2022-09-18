@@ -257,6 +257,13 @@ class EngineWorker {
 
     const { frameWidth, frameHeight, numWorkers, workerIdx } = this._config;
 
+    const logf = (f: number) =>
+      console.log(`[wasm] Worker [${workerIdx}]: ${f}`);
+    const logi = (i: number) => {
+      // console.trace();
+      console.log(`[wasm] Worker [${workerIdx}]: ${i}`);
+    };
+
     const wasmInput: WasmInput = {
       memory,
       frameWidth,
@@ -272,9 +279,9 @@ class EngineWorker {
       workerHeapSize,
       heapOffset: memOffsets[WasmMemUtils.MemRegions.HEAP],
       bgColor: randColor(),
-      logf: (f: number) => console.log(`[wasm] Worker [${workerIdx}]: ${f}`),
-      logi: (i: number) => console.log(`[wasm] Worker [${workerIdx}]: ${i}`),
       usePalette: this._config.usePalette ? 1 : 0,
+      logi,
+      logf,
     };
 
     this._wasmInitInput = wasmInput;

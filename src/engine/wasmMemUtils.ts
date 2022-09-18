@@ -153,11 +153,6 @@ function writeImagesIndex(
   imagesSizes: [number, number][],
   bpp: number,
 ) {
-
-  // imageIndex[0] = 13;
-  // Atomics.store(this._wasmImagesIndex, 0, 13);
-  // sleep(this._wasmSleepArr, 0, 50);
-
   const numImages = imagesSizes.length;
   const WIDTHS_OFFSET = numImages; // skip numImages ptrs
   const HEIGHTS_OFFSET = WIDTHS_OFFSET + numImages;

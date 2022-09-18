@@ -18,7 +18,7 @@ function clearBg(
 
   // TODO handle remainder elements here ?
 
-  for (let ptr = startOff; ptr != endOff; ptr += 4) {
+  for (let ptr = startOff; ptr < endOff; ptr += 4) {
     store<i32>(ptr, color);
   }
 

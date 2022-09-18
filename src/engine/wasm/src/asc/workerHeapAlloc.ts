@@ -115,6 +115,7 @@ function replaceNode(nodePtr: usize, newNodePtr: usize = NULL): void {
 
 function alloc(reqSize: u32): usize {
   // print();
+  // logi(reqSize);
   myAssert(reqSize > 0);
   myAssert(reqSize <= MAX_ALLOC_SIZE);
   // return heapAlloc(reqSize); // TODO REMOVE

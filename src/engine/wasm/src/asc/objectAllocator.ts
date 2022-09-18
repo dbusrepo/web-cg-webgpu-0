@@ -2,35 +2,33 @@ import { myAssert } from './myAssert';
 import { ArenaAlloc, newArena } from './arenaAlloc';
 import { logi } from './importVars';
 
-type BaseType = ObjectAllocator<Object>;
-let arena: ArenaAlloc<BaseType>;
-
 const OBJ_ALLOC_BLOCK_SIZE = 64;
+let objectAllocatorsArena: ArenaAlloc;
 
 class ObjectAllocator<T> {
-  arena: ArenaAlloc<T>;
-  constructor(blockSize: number) {
-    this.arena = newArena<T>(blockSize);
+  arena: ArenaAlloc;
+  private constructor() {}
+  init(blockSize: u32): void {
+    const objSize = offsetof<T>();
+    this.arena = newArena(objSize, blockSize);
   }
   new(): T {
-    const p = this.arena.alloc();
-    return p;
+    return changetype<T>(this.arena.alloc());
   }
   delete(v: T): void {
-    this.arena.dealloc(v);
+    this.arena.dealloc(changetype<usize>(v));
   }
 }
 
-function newObjectAllocator<T>(): ObjectAllocator<T> {
-  const p = arena.alloc();
-  return p as ObjectAllocator<T>;
+function newObjectAllocator<T>(blockSize: u32): ObjectAllocator<T> {
+  const objAlloc = changetype<ObjectAllocator<T>>(objectAllocatorsArena.alloc());
+  objAlloc.init(blockSize);
+  return objAlloc;
 }
 
-function initObjectAllocator(): void {
-  arena = newArena<BaseType>(OBJ_ALLOC_BLOCK_SIZE);
+function initObjectAllocatorsArena(): void {
+  const objSize = offsetof<ObjectAllocator<Object>>();
+  objectAllocatorsArena = newArena(objSize, OBJ_ALLOC_BLOCK_SIZE);
 }
 
-initObjectAllocator();
-
-export { ObjectAllocator };
-
+export { ObjectAllocator, initObjectAllocatorsArena, newObjectAllocator };
