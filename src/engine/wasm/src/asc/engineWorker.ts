@@ -12,6 +12,7 @@ import { usePalette, imagesIndexOffset, numImages } from './importVars';
 import { BitImage } from './bitImage';
 // import { loadImages } from './imagesLoader';
 import { Vector, newVector, deleteVector } from './vector';
+import { Pointer } from './pointer';
 
 const syncLoc = syncArrayOffset + workerIdx * sizeof<i32>();
 const sleepLoc = sleepArrayOffset + workerIdx * sizeof<i32>();
@@ -20,16 +21,17 @@ function run(): void {
 
   initModules();
 
-  let arr = newVector<Vec3>(10, 4);
-  logi(arr.length);
+  logi(offsetof<Pointer<usize>>());
+
+  let arr = newVector<u32>(2);
+  // logi(arr.length);
   logi(arr.start);
-  // logi(arr.end);
-  // logf(arr.atIdx(2).x);
-  deleteVector(arr);
-  arr = newVector<Vec3>(10, 4);
-  deleteVector(arr);
-  logi(arr.length);
-  logi(arr.start);
+  // arr[0] = 3;
+  logi(arr[1]);
+  // // // logi(arr.end);
+  // logi(changetype<usize>(arr.atIdx(0)));
+  // logi(changetype<usize>(arr.atIdx(1)));
+  // // deleteVector(arr);
 
   // logi(<i32>process.hrtime());
 
@@ -74,7 +76,7 @@ function run(): void {
     clearBg(bgColor, s, e);
     atomic.store<i32>(syncLoc, 0);
     atomic.notify(syncLoc);
-    // break;
+    break;
   }
 
 }

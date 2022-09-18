@@ -446,3 +446,13 @@ private async initEngineWorkers(wasmMemStartSize: number): Promise<void> {
 && npm run onchange:wasm
 
 "onchange:wasm": "onchange -v -i 'src/engine/wasm/makefile' 'src/engine/wasm/asconfig.json' 'src/engine/wasm/src/**/*.ts' -- make --no-print-directory --debug=basic -C src/engine/wasm ",
+
+let arr = newVector<u32>(2);
+logi(arr.length);
+logi(arr.start);
+logi(arr.end);
+// // logi(arr.end);
+logi(changetype<usize>(arr.atIdx(0)));
+logi(changetype<usize>(arr.atIdx(1)));
+// deleteVector(arr);
+

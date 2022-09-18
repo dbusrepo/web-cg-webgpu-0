@@ -48,7 +48,7 @@ type WasmMemConfigInput = {
 const USE_PALETTE = false; // TODO
 
 class Engine {
-  private static readonly NUM_WORKERS = 2; // >= 1
+  private static readonly NUM_WORKERS = 1; // >= 1
 
   // TODO
   private static readonly RENDER_PERIOD =
