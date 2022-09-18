@@ -6,12 +6,17 @@ import { alloc, dealloc } from './workerHeapAlloc';
 const ARR_BLOCK_SIZE: u32 = 128;
 let arrayArena: ArenaAlloc;
 
-class MyArray<T> {
+class Vector<T> {
   private _array: usize;
   private _allocSize: u32;
   private _data: usize;
   private _objSize: u32;
   private _length: u32;
+
+  private constructor() {
+    this._array = this._data = 0;
+    this._allocSize = this._objSize = this._length = 0;
+  }
 
   init(length: u32, objSize: u32, alignLg2: u32): void {
     this._length = length;
@@ -53,21 +58,21 @@ class MyArray<T> {
   }
 }
 
-function initMyArrayAllocator(): void {
-  const objSize: u32 = offsetof<MyArray<Object>>();
+function initVectorAllocator(): void {
+  const objSize: u32 = offsetof<Vector<Object>>();
   arrayArena = newArena(objSize, ARR_BLOCK_SIZE);
 }
 
-function newArray<T>(length: u32, alignLg2: u32): MyArray<T> {
+function newVector<T>(length: u32, alignLg2: u32): Vector<T> {
   const objSize: u32 = offsetof<T>();
-  const myArray = changetype<MyArray<T>>(arrayArena.alloc());
+  const myArray = changetype<Vector<T>>(arrayArena.alloc());
   myArray.init(length, objSize, alignLg2);
   return myArray;
 }
 
-function deleteArray<T>(array: MyArray<T>): void {
+function deleteVector<T>(array: Vector<T>): void {
   dealloc(array.physArr);
   arrayArena.dealloc(changetype<usize>(array));
 }
 
-export { MyArray, initMyArrayAllocator, newArray, deleteArray };
+export { Vector, initVectorAllocator, newVector, deleteVector };
