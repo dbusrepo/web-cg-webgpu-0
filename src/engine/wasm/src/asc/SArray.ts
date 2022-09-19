@@ -6,7 +6,7 @@ import { logi } from './importVars';
 const ARR_BLOCK_SIZE: u32 = 128;
 let arrayArena: ArenaAlloc;
 
-class Vector<T> {
+@unmanaged class SArray<T> {
   private _array: usize;
   private _allocSize: u32;
   private _data: usize;
@@ -49,33 +49,52 @@ class Vector<T> {
   }
 
   @inline at(offs: usize): T {
-    return changetype<T>(this._data + offs);
+    const ptr = this._data + offs;
+    if (isReference<T>()) {
+      return changetype<T>(ptr);
+    } else {
+      return load<T>(ptr);
+    }
   }
 
+  // @inline @operator("[]") atIdx(idx: u32): T {
   @inline @operator("[]") get(idx: i32): T {
-    // @inline @operator("[]") atIdx(idx: u32): T {
-    logi(-3);
-    const offs = this.objSize * idx;
-    return changetype<T>(this._data + offs);
+    const offs = usize(this.objSize) * idx;
+    return this.at(offs);
+  }
+
+  @inline setValue(offs: usize, value: T): void {
+    const ptr = this._data + offs;
+    if (isReference<T>()) {
+      myAssert(value != null);
+      memory.copy(ptr, changetype<usize>(value), offsetof<T>());
+    } else {
+      store<T>(ptr, value);
+    }
+  }
+
+  @inline @operator("[]=") set(idx: i32, value: T): void {
+    const offs = usize(this.objSize) * idx;
+    this.setValue(offs, value);
   }
 
 }
 
-function initVectorAllocator(): void {
-  const objSize: u32 = offsetof<Vector<Object>>();
+function initSArrayAllocator(): void {
+  const objSize: u32 = offsetof<SArray<Object>>();
   arrayArena = newArena(objSize, ARR_BLOCK_SIZE);
 }
 
-function newVector<T>(length: u32, alignLg2: u32 = alignof<T>()): Vector<T> {
+function newSArray<T>(length: u32, alignLg2: u32 = alignof<T>()): SArray<T> {
   const objSize: u32 = isReference<T>() ? offsetof<T>() : sizeof<T>();
-  const myArray = changetype<Vector<T>>(arrayArena.alloc());
+  const myArray = changetype<SArray<T>>(arrayArena.alloc());
   myArray.init(length, objSize, alignLg2);
   return myArray;
 }
 
-function deleteVector<T>(vec: Vector<T>): void {
+function deleteSArray<T>(vec: SArray<T>): void {
   dealloc(vec.array);
   arrayArena.dealloc(changetype<usize>(vec));
 }
 
-export { Vector, initVectorAllocator, newVector, deleteVector };
+export { SArray, initSArrayAllocator, newSArray, deleteSArray };

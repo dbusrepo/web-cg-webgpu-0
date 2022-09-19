@@ -1,11 +1,11 @@
 import { initObjectAllocatorsArena } from './objectAllocator';
 import { initVec3Allocator } from './vec3';
 import { initBitImageAllocator } from  './bitImage';
-import { initVectorAllocator } from './vector';
+import { initSArrayAllocator } from './SArray';
 
 function initModules(): void {
   initObjectAllocatorsArena();
-  initVectorAllocator();
+  initSArrayAllocator();
   initVec3Allocator();
   initBitImageAllocator();
 }

@@ -11,7 +11,7 @@ import { bgColor, heapOffset, numWorkers, workerIdx, logi, logf,
 import { usePalette, imagesIndexOffset, numImages } from './importVars';
 import { BitImage } from './bitImage';
 // import { loadImages } from './imagesLoader';
-import { Vector, newVector, deleteVector } from './vector';
+import { SArray, newSArray, deleteSArray } from './SArray';
 import { Pointer } from './pointer';
 
 const syncLoc = syncArrayOffset + workerIdx * sizeof<i32>();
@@ -21,13 +21,21 @@ function run(): void {
 
   initModules();
 
-  logi(offsetof<Pointer<usize>>());
+  // logi(offsetof<Pointer<usize>>());
 
-  let arr = newVector<u32>(2);
+  // if (isManaged<T>()) ERROR("Unsafe unmanaged set of a managed object");
+
+  let arr = newSArray<u32>(2);
   // logi(arr.length);
-  logi(arr.start);
-  // arr[0] = 3;
+  logi(<u32>arr.start);
+  // arr.set(4, 2);
+  // arr.set(8, 3);
+  // @ts-ignore
+  arr[1] = 2;
+  arr[2] = 3;
   logi(arr[1]);
+  logi(arr[2]);
+
   // // // logi(arr.end);
   // logi(changetype<usize>(arr.atIdx(0)));
   // logi(changetype<usize>(arr.atIdx(1)));
