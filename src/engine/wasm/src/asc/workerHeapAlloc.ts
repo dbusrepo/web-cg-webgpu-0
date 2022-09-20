@@ -1,77 +1,62 @@
 import { myAssert } from './myAssert';
 import { heapAllocInit, heapAlloc, heapDealloc } from './heapAlloc';
 import { logi, workerIdx, workersHeapOffset, workerHeapSize } from './importVars';
-import { NULL, MAX_ALLOC_SIZE } from './common';
+import { MEM_BLOCK_USAGE_BIT_MASK, SIZE_T, MAX_ALLOC_SIZE, PTR_T, NULL_PTR, getTypeSize, getTypeAlignMask, } from './memUtils';
 
-/**********************************************************************/
+// Note: alignment is not handled here
 
-const WORKER_HEAP_BASE: usize = workersHeapOffset + workerIdx * workerHeapSize;
-const WORKER_HEAP_LIMIT: usize = WORKER_HEAP_BASE + workerHeapSize;
+const WORKER_HEAP_BASE: PTR_T = workersHeapOffset + workerIdx * workerHeapSize;
+const WORKER_HEAP_LIMIT: PTR_T = WORKER_HEAP_BASE + workerHeapSize;
 
-// TODO note: let var here: this is a module var
-// ok if this file is used/imported only in one module? otherwise different
-// modules would operate on the same worker heap ?
-// sol: 1) don't use import 2) use a module for this file and import its
-// function with declare in others ?
-// 1) ok this should be used only with engineworker module...
 let freeBlockPtr = WORKER_HEAP_BASE;
 
-const BLOCK_USAGE_BIT_POS = 31;
-const BLOCK_USAGE_BIT_MASK = 1 << BLOCK_USAGE_BIT_POS;
-
-const H_SIZE: u32 = offsetof<HeaderBlock>();
-const F_SIZE: u32 = offsetof<FooterBlock>();
-const HF_SIZE = H_SIZE + F_SIZE;
-
 class Block {
-  size: u32 // bit 31 in field 'size' is the used flag
+  size: SIZE_T;
 }
 
+const H_SIZE = getTypeSize<HeaderBlock>();
+const F_SIZE = getTypeSize<FooterBlock>();
+const HF_SIZE = H_SIZE + F_SIZE;
+
 class HeaderBlock extends Block {
-  next: usize;
-  prev: usize;
+  next: PTR_T;
+  prev: PTR_T;
 }
 
 class FooterBlock extends Block {}
 
-@inline
-function setBlockUsed(blockPtr: usize): void {
+@inline function setBlockUsed(blockPtr: PTR_T): void {
   const block = changetype<Block>(blockPtr);
-  block.size |= BLOCK_USAGE_BIT_MASK;
+  block.size |= MEM_BLOCK_USAGE_BIT_MASK;
 }
 
-@inline
-function setBlockUnused(blockPtr: usize): void {
+@inline function setBlockUnused(blockPtr: PTR_T): void {
   const block = changetype<Block>(blockPtr);
-  block.size &= ~BLOCK_USAGE_BIT_MASK;
+  block.size &= ~MEM_BLOCK_USAGE_BIT_MASK;
 }
 
-@inline
-function isBlockUsed(blockPtr: usize): boolean {
+@inline function isBlockUsed(blockPtr: PTR_T): boolean {
   const block = changetype<Block>(blockPtr);
-  return (block.size & BLOCK_USAGE_BIT_MASK) !== 0;
+  return (block.size & MEM_BLOCK_USAGE_BIT_MASK) !== 0;
 }
 
-@inline
-function setBlockSize(blockPtr: usize, size: u32): void {
+@inline function setBlockSize(blockPtr: PTR_T, size: SIZE_T): void {
   const block = changetype<Block>(blockPtr);
-  const usageBit = block.size & BLOCK_USAGE_BIT_MASK;
+  const usageBit = block.size & MEM_BLOCK_USAGE_BIT_MASK;
   myAssert(size <= MAX_ALLOC_SIZE);
   block.size = usageBit | size;
 }
 
-@inline
-function getBlockSize(blockPtr: usize): u32 {
+@inline function getBlockSize(blockPtr: PTR_T): SIZE_T {
   const block = changetype<Block>(blockPtr);
-  return block.size & ~BLOCK_USAGE_BIT_MASK;
+  return block.size & ~MEM_BLOCK_USAGE_BIT_MASK;
 }
 
-
-function searchFirstFit(reqSize: u32): usize {
-  if (freeBlockPtr == NULL) {
-    return NULL;
+function searchFirstFit(reqSize: SIZE_T): PTR_T {
+  if (freeBlockPtr == NULL_PTR) {
+    return NULL_PTR;
   }
-  let found: boolean = false;
+  let found = false;
   let ptr = freeBlockPtr;
   do {
     if (getBlockSize(ptr) - HF_SIZE >= reqSize) {
@@ -80,47 +65,47 @@ function searchFirstFit(reqSize: u32): usize {
       ptr = changetype<HeaderBlock>(ptr).next;
     }
   } while (!found && ptr != freeBlockPtr);
-  return found ? ptr : NULL;
+  return found ? ptr : NULL_PTR;
 }
 
-// remove node from the free list or subst it with newNode if newNode != NULL
-function replaceNode(nodePtr: usize, newNodePtr: usize = NULL): void {
-  myAssert(nodePtr != NULL);
+// remove node from the free list or subst it with newNode if newNode is not null
+function replaceNode(nodePtr: PTR_T, newNodePtr: PTR_T = NULL_PTR): void {
+  myAssert(nodePtr != NULL_PTR);
   const node = changetype<HeaderBlock>(nodePtr);
-  const single = node.next == nodePtr;
+  const single = (node.next == nodePtr);
   if (single) {
     myAssert(freeBlockPtr == nodePtr);
-    if (newNodePtr != NULL) {
+    if (newNodePtr != NULL_PTR) {
       const newNode = changetype<HeaderBlock>(newNodePtr);
       freeBlockPtr = newNode.prev = newNode.next = newNodePtr;
     } else {
-      freeBlockPtr = NULL;
+      freeBlockPtr = NULL_PTR;
     }
   } else {
-    const prevNext = newNodePtr != NULL ? newNodePtr : node.next;
-    const nextPrev = newNodePtr != NULL ? newNodePtr : node.prev;
+    const prevNext = newNodePtr != NULL_PTR ? newNodePtr : node.next;
+    const nextPrev = newNodePtr != NULL_PTR ? newNodePtr : node.prev;
     changetype<HeaderBlock>(node.prev).next = prevNext;
     changetype<HeaderBlock>(node.next).prev = nextPrev;
     if (nodePtr == freeBlockPtr) {
       freeBlockPtr = prevNext;
     }
-    if (newNodePtr != NULL) {
+    if (newNodePtr != NULL_PTR) {
       const newNode = changetype<HeaderBlock>(newNodePtr);
       newNode.prev = node.prev;
       newNode.next = node.next;
     }
   }
-  node.next = node.prev = NULL;
+  node.next = node.prev = NULL_PTR;
 }
 
-function alloc(reqSize: u32): usize {
+function alloc(reqSize: SIZE_T): PTR_T {
   // print();
   // logi(reqSize);
   myAssert(reqSize > 0);
   myAssert(reqSize <= MAX_ALLOC_SIZE);
   // return heapAlloc(reqSize); // TODO REMOVE
   const headerPtr = searchFirstFit(reqSize);
-  if (headerPtr == NULL) {
+  if (headerPtr == NULL_PTR) {
     // compaction ? no...we alloc from the shared heap...
     return heapAlloc(reqSize);
   }
@@ -158,8 +143,8 @@ function alloc(reqSize: u32): usize {
   return allocated;
 }
 
-function dealloc(dataPtr: usize): void {
-  myAssert(dataPtr != NULL);
+function dealloc(dataPtr: PTR_T): void {
+  myAssert(dataPtr != NULL_PTR);
   if (dataPtr >= WORKER_HEAP_LIMIT) {
     return heapDealloc(dataPtr);
   }
@@ -174,7 +159,7 @@ function dealloc(dataPtr: usize): void {
   setBlockUnused(footerPtr);
 
   let header = changetype<HeaderBlock>(headerPtr);
-  if (freeBlockPtr == NULL) {
+  if (freeBlockPtr == NULL_PTR) {
     header.next = header.prev = headerPtr;
     freeBlockPtr = headerPtr;
     return;
@@ -220,7 +205,7 @@ function dealloc(dataPtr: usize): void {
   }
 
   // add the free (coalesced) block to the free list
-  if (freeBlockPtr == NULL) {
+  if (freeBlockPtr == NULL_PTR) {
     header.next = header.prev = headerPtr;
   } else {
     const freeBlock = changetype<HeaderBlock>(freeBlockPtr);
@@ -232,13 +217,6 @@ function dealloc(dataPtr: usize): void {
   freeBlockPtr = headerPtr;
   // logi(freeBlockPtr);
   // logi(getBlockSize(freeBlockPtr));
-}
-
-function print(): void {
-  logi(workerIdx);
-  logi(workersHeapOffset);
-  logi(WORKER_HEAP_BASE);
-  logi(WORKER_HEAP_LIMIT);
 }
 
 function allocInit(): void {
@@ -260,5 +238,12 @@ function allocInit(): void {
     heapAllocInit();
   }
 }
+
+// function print(): void {
+//   logi(workerIdx);
+//   logi(workersHeapOffset);
+//   logi(WORKER_HEAP_BASE);
+//   logi(WORKER_HEAP_LIMIT);
+// }
 
 export { allocInit, alloc, dealloc };

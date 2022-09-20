@@ -11,8 +11,9 @@ import { bgColor, heapOffset, numWorkers, workerIdx, logi, logf,
 import { usePalette, imagesIndexOffset, numImages } from './importVars';
 import { BitImage } from './bitImage';
 // import { loadImages } from './imagesLoader';
-import { SArray, newSArray, deleteSArray } from './SArray';
+import { DArray, newDArray, deleteDArray } from './darray';
 import { Pointer } from './pointer';
+import { SArray, newSArray } from './sarray';
 
 const syncLoc = syncArrayOffset + workerIdx * sizeof<i32>();
 const sleepLoc = sleepArrayOffset + workerIdx * sizeof<i32>();
@@ -21,20 +22,46 @@ function run(): void {
 
   initModules();
 
+  const arr = newSArray<u32>(10, 2);
+
   // logi(offsetof<Pointer<usize>>());
+
+  // store<u32>(0, 2);
+  // logi(load<u32>(0));
+  // // logi(offsetof<Pointer<usize>>());
+  // const p = new Pointer<usize>(0);
+  // p.deref = 3;
+  // logi(load<u32>(0));
 
   // if (isManaged<T>()) ERROR("Unsafe unmanaged set of a managed object");
 
-  let arr = newSArray<u32>(2);
+  // let arr = newDArray<u32>(2);
   // logi(arr.length);
-  logi(<u32>arr.start);
+  // logi(<u32>arr.start);
+
+  // arr.push(4);
+  // arr.push(5);
+  // arr.push(6);
+  // arr.push(6);
+  // arr.push(6);
+  // arr.push(6);
+  // arr.push(6);
+  // arr.push(6);
+  // arr.push(6);
+  // logi(arr.length);
+  // logi(arr[0]);
+  // logi(arr[1]);
+
+  // arr.push(5);
+
   // arr.set(4, 2);
   // arr.set(8, 3);
   // @ts-ignore
-  arr[1] = 2;
-  arr[2] = 3;
-  logi(arr[1]);
-  logi(arr[2]);
+
+  // arr[1] = 2;
+  // arr[2] = 3;
+  // logi(arr[1]);
+  // logi(arr[2]);
 
   // // // logi(arr.end);
   // logi(changetype<usize>(arr.atIdx(0)));
@@ -80,7 +107,7 @@ function run(): void {
 
   while (true) {
     atomic.wait<i32>(syncLoc, 0);
-    const v = vec3Alloc.new();
+    // const v = vec3Alloc.new();
     clearBg(bgColor, s, e);
     atomic.store<i32>(syncLoc, 0);
     atomic.notify(syncLoc);

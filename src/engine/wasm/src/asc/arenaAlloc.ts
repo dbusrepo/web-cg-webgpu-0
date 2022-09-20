@@ -1,74 +1,89 @@
 import { myAssert } from './myAssert';
 import { alloc, dealloc } from './workerHeapAlloc';
-import { MAX_ALLOC_SIZE } from './common';
+import { PTR_SIZE, PTR_ALIGN_MASK, SIZE_T, MAX_ALLOC_SIZE, 
+         PTR_T, NULL_PTR, getTypeSize, getTypeAlignMask } from './memUtils';
 import { logi } from './importVars';
 
-class ArenaAlloc {
+// The arena allocs a block of objects. Free objects are linked in a free list
+// Pointers in the free list are stored at the beginning of object memory, each
+// object is aligned to the ptr size, sizeof(RAW_PTR)
 
-  private static readonly PTR_SIZE: u32 = sizeof<usize>();
+@final @unmanaged class ArenaAlloc {
 
-  private static ALIGN_SIZE: u32 = (1 << alignof<usize>());
-  private static ALIGN_MASK: u32 = ArenaAlloc.ALIGN_SIZE - 1;
+  private _blockPtr: PTR_T; // block ptr
+  private _nextPtr: PTR_T; // next allocation in block
+  private _freePtr: PTR_T; // free list head ptr
+  private _numLeft: SIZE_T; // number of remaining allocable objs in cur block
+  private _numPerBlock: SIZE_T; // number of allocable objs per block
+  private _blockSize: SIZE_T; // tot bytes allocated per block
+  private _objSize: SIZE_T; // total bytes (obj+align pad) per obj, obj are aligned
 
-  private blockSize: u32; // tot bytes allocated per block
-  private allocSize: u32; // total bytes (obj+align pad) per obj, obj are aligned
-  private numElementsPerBlock: u32; // number of allocable objs per block
-  private block: usize = 0; // block ptr
-  private nextPtr: usize; // pos next allocation in block
-  private sizeLeft: u32; // number of remaining allocable objs in cur block
-  private freePtr: usize = 0; // free list head ptr
+  // private constructor() { 
+  //   this._blockPtr = NULL_PTR;
+  //   this._freePtr = NULL_PTR;
+  //   this._nextPtr = NULL_PTR;
+  //   this._blockSize = 0;
+  //   this._objSize = 0;
+  //   this._numPerBlock = 0;
+  //   this._sizeLeft = 0;
+  // }
 
-  private constructor() {}
-
-  public init(objSize: u32, numElementsPerBlock: u32): void {
-    this.allocSize = max(objSize, ArenaAlloc.PTR_SIZE);
-    // round alloc size to align size
-    this.allocSize = (this.allocSize + ArenaAlloc.ALIGN_MASK) & (~ArenaAlloc.ALIGN_MASK);
-    // add align mask to block size to align first obj...
-    this.blockSize = (this.allocSize * numElementsPerBlock) + ArenaAlloc.ALIGN_MASK;
-    // logi(this.blockSize);
-    myAssert(this.blockSize <= MAX_ALLOC_SIZE);
-    this.numElementsPerBlock = numElementsPerBlock;
+  constructor(allocPtr: PTR_T, objSize: SIZE_T, numElementsPerBlock: i32) {
+    myAssert(objSize > 0);
+    myAssert(numElementsPerBlock > 0);
+    const arena = changetype<ArenaAlloc>(allocPtr);
+    const minObjSize = max(objSize, PTR_SIZE);
+    const objSizeAlign = minObjSize + PTR_ALIGN_MASK;
+    const blockSize = (objSizeAlign * numElementsPerBlock) + PTR_ALIGN_MASK;
+    myAssert(objSizeAlign <= MAX_ALLOC_SIZE);
+    arena._blockSize = blockSize;
+    arena._objSize = objSizeAlign;
+    arena._numPerBlock = numElementsPerBlock;
+    arena._blockPtr = NULL_PTR;
+    arena._freePtr = NULL_PTR;
+    arena._nextPtr = NULL_PTR;
+    arena._numLeft = 0;
+    return arena;
   }
 
-  private allocBlock(): void {
+  @inline private allocBlock(): void {
     // TODO the previous block is lost...
-    this.block = alloc(this.blockSize);
-    this.nextPtr = (this.block + ArenaAlloc.ALIGN_MASK) & (~ArenaAlloc.ALIGN_MASK)
-    this.sizeLeft = this.numElementsPerBlock;
+    this._blockPtr = alloc(this._blockSize);
+    this._nextPtr = (this._blockPtr + PTR_ALIGN_MASK) & ~PTR_ALIGN_MASK;
+    this._numLeft = this._numPerBlock;
   }
 
-  public alloc(): usize {
-    // logi(changetype<u32>(this));
-    // logi(-3);
-    let dataPtr: usize;
-    if (this.freePtr != 0) {
-      dataPtr = this.freePtr;
-      this.freePtr = load<usize>(this.freePtr);
+  public alloc(): PTR_T {
+    let dataPtr: PTR_T;
+    if (this._freePtr != NULL_PTR) {
+      dataPtr = this._freePtr;
+      this._freePtr = load<PTR_T>(this._freePtr);
     } else {
-      if (this.block == 0 || this.sizeLeft == 0) {
+      if (this._numLeft == 0) {
         this.allocBlock();
       }
-      this.sizeLeft--;
-      dataPtr = this.nextPtr;
-      this.nextPtr += this.allocSize;
+      myAssert(this._nextPtr !== NULL_PTR);
+      dataPtr = this._nextPtr;
+      this._nextPtr += this._objSize;
+      this._numLeft--;
     }
-    myAssert(dataPtr % ArenaAlloc.ALIGN_SIZE == 0);
+    myAssert((dataPtr & PTR_ALIGN_MASK) == 0);
     return dataPtr;
   }
 
-  public dealloc(ptr: usize): void {
-    store<usize>(ptr, this.freePtr);
-    this.freePtr = ptr;
+  @inline public dealloc(ptr: PTR_T): void {
+    if (ptr != NULL_PTR) {
+      store<PTR_T>(ptr, this._freePtr);
+      this._freePtr = ptr;
+    }
   }
 
 }
 
-function newArena(objSize: u32, numElementsPerBlock: u32): ArenaAlloc {
-  const arenaObjSize = <u32>offsetof<ArenaAlloc>();
-  const ptr: usize = alloc(arenaObjSize);
-  const arena = changetype<ArenaAlloc>(ptr);
-  arena.init(objSize, numElementsPerBlock);
+function newArena(objSize: SIZE_T, numElementsPerBlock: i32): ArenaAlloc {
+  const arenaSize = getTypeSize<ArenaAlloc>();
+  const ptr: PTR_T = alloc(arenaSize);
+  const arena = new ArenaAlloc(ptr, objSize, numElementsPerBlock);
   return arena;
 }
 

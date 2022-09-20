@@ -1,73 +1,68 @@
 import { myAssert } from './myAssert';
-import { lock, unlock } from './mutex';
+import { LOCK_T, lock, unlock } from './mutex';
 import { logi, heapOffset } from './importVars';
-import { NULL, MAX_ALLOC_SIZE } from './common';
+import { PTR_SIZE, PTR_ALIGN_MASK, SIZE_T, MAX_ALLOC_SIZE, MEM_BLOCK_USAGE_BIT_MASK,
+         PTR_T, NULL_PTR, getTypeSize, getTypeAlignMask } from './memUtils';
 
-/**********************************************************************/
+const LOCK_SIZE = getTypeSize<LOCK_T>();
+const MUTEX_ALIGN_MASK = getTypeAlignMask<LOCK_T>();
 
-const ALIGN_BITS = <i32>sizeof<usize>();
-const ALIGN_SIZE: u32 = 1 << ALIGN_BITS;
-const ALIGN_MASK: u32 = ALIGN_SIZE - 1;
+const HEAP_BASE: PTR_T = heapOffset;
+const MUTEX_PTR: PTR_T = (heapOffset + MUTEX_ALIGN_MASK) & ~MUTEX_ALIGN_MASK; // align to 4 bytes
+const ALLOC_PTR_PTR: PTR_T = (MUTEX_PTR + LOCK_SIZE + PTR_ALIGN_MASK) & ~PTR_ALIGN_MASK; // after the mutex, align to X bytes
+const FREE_PTR_PTR: PTR_T = ALLOC_PTR_PTR + PTR_SIZE; // after the offset pointer, the free list ptr
+const START_ALLOC_PTR: PTR_T = FREE_PTR_PTR  + PTR_SIZE; // after the free block ptr ptr, the alloc area
 
-const HEAP_BASE = heapOffset;
-const MUTEX_PTR = (heapOffset + 3) & ~3; // align to 4 bytes
-const ALLOC_PTR_PTR = (MUTEX_PTR + 4 + ALIGN_MASK) & ~ALIGN_MASK; // after the mutex, align to X bytes
-const FREE_PTR_PTR = ALLOC_PTR_PTR + ALIGN_SIZE; // after the offset pointer, the free list ptr
-const START_ALLOC_PTR = FREE_PTR_PTR  + ALIGN_SIZE; // after the free block ptr ptr, the alloc area
-
-// each block has an header with the size stored before the data, the rest
+// each block has a header with the size stored before the data, the rest
 // is 'shared' with the data but used only when the block is unused/in the free
 // list
 class Block {
-  size: u32; // stored before data
-  next: usize; // stored with data, so alloc size >= sizeof(usize)
+  size: SIZE_T; // header before data
+  next: PTR_T; // 'shared' with data
 }
 
-const BLOCK_USAGE_BIT_POS = 31;
-const BLOCK_USAGE_BIT_MASK = 1 << BLOCK_USAGE_BIT_POS;
+const HEADER_SIZE = getTypeSize<SIZE_T>(); // only size field for the header...
+const BLOCK_SIZE = getTypeSize<Block>();
 
-const HEADER_SIZE: u32 = sizeof<u32>(); // size field
-const BLOCK_SIZE: u32 = offsetof<Block>();
-
-function setBlockUsed(blockPtr: usize): void {
+@inline function setBlockUsed(blockPtr: PTR_T): void {
   const block = changetype<Block>(blockPtr);
-  block.size |= BLOCK_USAGE_BIT_MASK;
+  block.size |= MEM_BLOCK_USAGE_BIT_MASK;
 }
 
-function setBlockUnused(blockPtr: usize): void {
+@inline function setBlockUnused(blockPtr: PTR_T): void {
   const block = changetype<Block>(blockPtr);
-  block.size &= ~BLOCK_USAGE_BIT_MASK;
+  block.size &= ~MEM_BLOCK_USAGE_BIT_MASK;
 }
 
-function isBlockUsed(blockPtr: usize): boolean {
+@inline function isBlockUsed(blockPtr: PTR_T): boolean {
   const block = changetype<Block>(blockPtr);
-  return (block.size & BLOCK_USAGE_BIT_MASK) !== 0;
+  return (block.size & MEM_BLOCK_USAGE_BIT_MASK) !== 0;
 }
 
-function setBlockSize(blockPtr: usize, size: u32): void {
+@inline function setBlockSize(blockPtr: PTR_T, size: SIZE_T): void {
   const block = changetype<Block>(blockPtr);
-  const usageBit = block.size & BLOCK_USAGE_BIT_MASK;
+  const usageBit = block.size & MEM_BLOCK_USAGE_BIT_MASK;
   myAssert(size <= MAX_ALLOC_SIZE);
   block.size = usageBit | size;
 }
 
-function getBlockSize(blockPtr: usize): u32 {
+@inline function getBlockSize(blockPtr: PTR_T): SIZE_T {
   const block = changetype<Block>(blockPtr);
-  return block.size & ~BLOCK_USAGE_BIT_MASK;
+  return block.size & ~MEM_BLOCK_USAGE_BIT_MASK;
 }
 
-function atomicGetAllocPtr(): usize {
-  return atomic.load<usize>(ALLOC_PTR_PTR);
+@inline function atomicGetAllocPtr(): PTR_T {
+  return atomic.load<PTR_T>(ALLOC_PTR_PTR);
 }
 
-function heapAllocSetOffset(curOffset: usize, newOffset: usize): usize {
-  return atomic.cmpxchg<usize>(ALLOC_PTR_PTR, curOffset, newOffset);
+@inline function heapAllocSetOffset(curOffset: PTR_T, newOffset: PTR_T): PTR_T {
+  return atomic.cmpxchg<PTR_T>(ALLOC_PTR_PTR, curOffset, newOffset);
 }
 
 // thread safe?
-function checkGrowMemory(curOffset: usize, nextOffset: usize): void {
+@inline function checkGrowMemory(curOffset: PTR_T, nextOffset: PTR_T): void {
   let curPages = memory.size();
-  if (nextOffset > (<usize>curPages) << 16) {
+  if (nextOffset > (<PTR_T>curPages) << 16) {
     let pagesNeeded = <i32>(((nextOffset - curOffset  + 0xffff) & ~0xffff) >>> 16);
     let pagesWanted = <i32>max(curPages, pagesNeeded); // double memory
     if (memory.grow(pagesWanted) < 0) {
@@ -79,15 +74,15 @@ function checkGrowMemory(curOffset: usize, nextOffset: usize): void {
   }
 }
 
-function allocNewBlock(reqSize: u32): usize {
-  let curOffset: usize;
-  let newOffset: usize;
-  let blockPtr: usize;
-  let dataSize: u32;
+function allocNewBlock(reqSize: SIZE_T): PTR_T {
+  let curOffset: PTR_T;
+  let newOffset: PTR_T;
+  let blockPtr: SIZE_T;
+  let dataSize: SIZE_T;
   do {
     curOffset = atomicGetAllocPtr();
     // align data (and the block next field)
-    blockPtr = ((curOffset + HEADER_SIZE + ALIGN_MASK) & ~ALIGN_MASK) - HEADER_SIZE;
+    blockPtr = ((curOffset + HEADER_SIZE + PTR_ALIGN_MASK) & ~PTR_ALIGN_MASK) - HEADER_SIZE;
     dataSize = max(BLOCK_SIZE - HEADER_SIZE, reqSize);
     newOffset = blockPtr + HEADER_SIZE + dataSize;
     checkGrowMemory(curOffset, newOffset);
@@ -100,61 +95,61 @@ function allocNewBlock(reqSize: u32): usize {
   return dataPtr;
 }
 
-function searchFreeList(reqSize: u32): usize {
+function searchFreeList(reqSize: SIZE_T): PTR_T {
   let blockPtrPtr = FREE_PTR_PTR;
-  let blockPtr = atomic.load<usize>(blockPtrPtr);
-  while (blockPtr != NULL) {
+  let blockPtr = atomic.load<PTR_T>(blockPtrPtr);
+  while (blockPtr != NULL_PTR) {
     const block = changetype<Block>(blockPtr);
     const size = block.size;
     if (size >= reqSize) {
       break;
     }
     blockPtrPtr = blockPtr + HEADER_SIZE;
-    blockPtr = atomic.load<usize>(blockPtrPtr);
+    blockPtr = atomic.load<PTR_T>(blockPtrPtr);
   }
   return blockPtrPtr;
 }
 
-function heapAlloc(reqSize: u32): usize {
+function heapAlloc(reqSize: SIZE_T): PTR_T {
   myAssert(reqSize > 0);
   myAssert(reqSize <= MAX_ALLOC_SIZE);
-  let dataPtr: usize = NULL;
-  const freePtr = atomic.load<usize>(FREE_PTR_PTR);
-  if (freePtr != NULL) {
+  let dataPtr: PTR_T = NULL_PTR;
+  const freePtr = atomic.load<PTR_T>(FREE_PTR_PTR);
+  if (freePtr != NULL_PTR) {
     // search+remove from free list: coarse gain sync, assume low contention...
     lock(MUTEX_PTR);
     const prevPtrPtr = searchFreeList(reqSize);
-    let blockPtr = atomic.load<usize>(prevPtrPtr);
-    if (blockPtr != NULL) {
+    let blockPtr = atomic.load<PTR_T>(prevPtrPtr);
+    if (blockPtr != NULL_PTR) {
       myAssert(!isBlockUsed(blockPtr));
       setBlockUsed(blockPtr);
       dataPtr = blockPtr + HEADER_SIZE;
-      const nextPtr = atomic.load<usize>(dataPtr);
-      atomic.store<usize>(prevPtrPtr, nextPtr);
+      const nextPtr = atomic.load<PTR_T>(dataPtr);
+      atomic.store<PTR_T>(prevPtrPtr, nextPtr);
     }
     unlock(MUTEX_PTR);
   }
-  if (dataPtr == NULL) {
+  if (dataPtr == NULL_PTR) {
     dataPtr = allocNewBlock(reqSize);
   }
   return dataPtr;
 }
 
-function heapDealloc(dataPtr: usize): void {
+function heapDealloc(dataPtr: PTR_T): void {
   lock(MUTEX_PTR);
   const blockPtr = dataPtr - HEADER_SIZE;
   myAssert(isBlockUsed(blockPtr));
   setBlockUnused(blockPtr);
-  const freePtr = atomic.load<usize>(FREE_PTR_PTR);
-  atomic.store<usize>(dataPtr, freePtr);
-  atomic.store<usize>(FREE_PTR_PTR, blockPtr);
+  const freePtr = atomic.load<PTR_T>(FREE_PTR_PTR);
+  atomic.store<PTR_T>(dataPtr, freePtr);
+  atomic.store<PTR_T>(FREE_PTR_PTR, blockPtr);
   unlock(MUTEX_PTR);
 }
 
-function heapAllocInit(): void {
+@inline function heapAllocInit(): void {
   // logi(START_ALLOC_PTR);
-  store<usize>(ALLOC_PTR_PTR, START_ALLOC_PTR);
-  store<usize>(FREE_PTR_PTR, NULL);
+  store<PTR_T>(ALLOC_PTR_PTR, START_ALLOC_PTR);
+  store<PTR_T>(FREE_PTR_PTR, NULL_PTR);
 }
 
 export { heapAllocInit, heapAlloc, heapDealloc };
