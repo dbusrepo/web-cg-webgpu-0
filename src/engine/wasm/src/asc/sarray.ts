@@ -1,6 +1,6 @@
 import { myAssert } from './myAssert';
+import { alloc, dealloc } from './memManager';
 import { ArenaAlloc, newArena } from './arenaAlloc';
-import { alloc, dealloc } from './workerHeapAlloc';
 import { logi } from './importVars';
 
 // SArray: 

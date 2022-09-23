@@ -11,10 +11,19 @@ TARGET ?= $(TARGET_DEBUG)
 ASC_BINDINGS := esm
 
 ASC_CONFIG_FILE := asconfig.json
-ASC_SOURCE_DIR := src/asc
-ASC_BUILD_DIR := build/asc
 
-ASC_ALL_SOURCE_FILES := $(wildcard $(ASC_SOURCE_DIR)/*.ts)
+SOURCE_DIR := src
+BUILD_DIR := build
+
+ASC_SOURCE_DIR := $(SOURCE_DIR)/asc
+ASC_BUILD_DIR := $(BUILD_DIR)/asc
+
+# rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
+
+ASC_ALL_SOURCE_FILES := $(shell find src/asc/ -type f -name '*.ts')
+# ASC_ALL_SOURCE_FILES := $(wildcard $(ASC_SOURCE_DIR)/**/*.ts)
+
+# ASC_DEP_FILES := $(wildcard $(ASC_SOURCE_DIR)/*.d)
 ASC_DEP_FILES := $(ASC_ALL_SOURCE_FILES:.ts=.d)
 
 # modules to build
@@ -34,7 +43,6 @@ WASM_OPT_FLAGS := --zero-filled-memory --all-features --disable-mutable-globals 
 WASM_OPT_SPEED:= --converge --dce -O3 $(WASM_OPT_FLAGS)
 WASM_OPT_SIZE:= --converge --dce -Oz $(WASM_OPT_FLAGS)
 WASM_OPT_DEBUG:= -O --debuginfo $(WASM_OPT_FLAGS)
-
 
 .PHONY: all build_asc build_wat force clean clean-asc clean-asc-dep clean-wat
 
@@ -98,16 +106,16 @@ else
 endif
 
 clean-asc-dep:
-	rm -f ./src/asc/*.d
+	rm -f $(ASC_DEP_FILES)
 
 clean-asc: clean-asc-dep
-	rm -rf ./build/asc
+	rm -rf $(BUILD_DIR)/asc
 
 clean-wat:
-	rm -rf ./build/wat
+	rm -rf $(BUILD_DIR)/wat
 
 clean: clean-asc-dep
-	rm -rf ./build/
+	rm -rf $(BUILD_DIR)/
 
 # SOURCE_ASC_PATHS = $(wildcard $(SOURCE_DIR)/asc/*.ts)
 # SOURCE_ASC_NAMES = $(notdir $(SOURCE_ASC_PATHS))

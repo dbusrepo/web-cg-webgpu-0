@@ -135,21 +135,22 @@ function heapAlloc(reqSize: SIZE_T): PTR_T {
   return dataPtr;
 }
 
-function heapDealloc(dataPtr: PTR_T): void {
+function heapDealloc(ptr: PTR_T): void {
+  myAssert(ptr >= START_ALLOC_PTR);
   lock(MUTEX_PTR);
-  const blockPtr = dataPtr - HEADER_SIZE;
+  const blockPtr = ptr - HEADER_SIZE;
   myAssert(isBlockUsed(blockPtr));
   setBlockUnused(blockPtr);
   const freePtr = atomic.load<PTR_T>(FREE_PTR_PTR);
-  atomic.store<PTR_T>(dataPtr, freePtr);
+  atomic.store<PTR_T>(ptr, freePtr);
   atomic.store<PTR_T>(FREE_PTR_PTR, blockPtr);
   unlock(MUTEX_PTR);
 }
 
-@inline function heapAllocInit(): void {
+@inline function sharedHeapInit(): void {
   // logi(START_ALLOC_PTR);
   store<PTR_T>(ALLOC_PTR_PTR, START_ALLOC_PTR);
   store<PTR_T>(FREE_PTR_PTR, NULL_PTR);
 }
 
-export { heapAllocInit, heapAlloc, heapDealloc };
+export { sharedHeapInit, heapAlloc, heapDealloc };

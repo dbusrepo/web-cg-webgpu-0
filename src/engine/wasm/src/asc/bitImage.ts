@@ -1,5 +1,5 @@
 import { myAssert } from './myAssert';
-import { alloc, dealloc } from './workerHeapAlloc';
+import { alloc, dealloc } from './memManager';
 import { ObjectAllocator, newObjectAllocator } from './objectAllocator';
 
 const BITIMAGES_PER_BLOCK: u32 = 128;

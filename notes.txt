@@ -206,6 +206,10 @@ dal main...
 
 https://stackoverflow.com/questions/58564090/create-input-text-that-starts-with-certain-prefix-and-is-not-errasable
 
+* make
+https://stackoverflow.com/questions/2483182/recursive-wildcards-in-gnu-make
+https://stackoverflow.com/questions/59924183/makefiles-how-to-properly-use-wildcard-to-recursively-descend
+
 -how to link another remote:
 
 for ex. from a specific project that wants to link this as another remote:

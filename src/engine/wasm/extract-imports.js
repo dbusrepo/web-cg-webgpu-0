@@ -13,11 +13,14 @@ function changeExtension(file, extension, newDir) {
 }
 
 const srcFile = process.argv[2];
+
 if (srcFile == undefined || path.extname(srcFile) !== ASC_EXT) {
   console.log('Invocation error: source file arg required');
   process.exit(1);
 }
+
 const text = fs.readFileSync(srcFile).toString();
+
 // console.log(text);
 // https://stackoverflow.com/questions/52086611/regex-for-matching-js-import-statements
 // https://regex101.com/r/FEN5ks/1

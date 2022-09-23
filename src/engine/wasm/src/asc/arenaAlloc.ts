@@ -1,5 +1,5 @@
 import { myAssert } from './myAssert';
-import { alloc, dealloc } from './workerHeapAlloc';
+import { alloc, dealloc } from './memManager';
 import { PTR_SIZE, PTR_ALIGN_MASK, SIZE_T, MAX_ALLOC_SIZE, 
          PTR_T, NULL_PTR, getTypeSize, getTypeAlignMask } from './memUtils';
 import { logi } from './importVars';
@@ -25,10 +25,10 @@ import { logi } from './importVars';
   //   this._blockSize = 0;
   //   this._objSize = 0;
   //   this._numPerBlock = 0;
-  //   this._sizeLeft = 0;
+  //   this._numLeft = 0;
   // }
 
-  constructor(allocPtr: PTR_T, objSize: SIZE_T, numElementsPerBlock: i32) {
+  constructor(allocPtr: PTR_T, objSize: SIZE_T, numElementsPerBlock: u32) {
     myAssert(objSize > 0);
     myAssert(numElementsPerBlock > 0);
     const arena = changetype<ArenaAlloc>(allocPtr);
@@ -58,12 +58,13 @@ import { logi } from './importVars';
     if (this._freePtr != NULL_PTR) {
       dataPtr = this._freePtr;
       this._freePtr = load<PTR_T>(this._freePtr);
+      myAssert(this._freePtr == NULL_PTR || (this._freePtr & PTR_ALIGN_MASK) == 0);
     } else {
       if (this._numLeft == 0) {
         this.allocBlock();
       }
-      myAssert(this._nextPtr !== NULL_PTR);
-      dataPtr = this._nextPtr;
+      myAssert(this._numLeft > 0 && this._nextPtr !== NULL_PTR);
+      dataPtr = (this._nextPtr + PTR_ALIGN_MASK) & ~PTR_ALIGN_MASK;
       this._nextPtr += this._objSize;
       this._numLeft--;
     }
@@ -73,6 +74,7 @@ import { logi } from './importVars';
 
   @inline public dealloc(ptr: PTR_T): void {
     if (ptr != NULL_PTR) {
+      myAssert((ptr & PTR_ALIGN_MASK) == 0); // add other checks ?
       store<PTR_T>(ptr, this._freePtr);
       this._freePtr = ptr;
     }
@@ -80,7 +82,7 @@ import { logi } from './importVars';
 
 }
 
-function newArena(objSize: SIZE_T, numElementsPerBlock: i32): ArenaAlloc {
+function newArena(objSize: SIZE_T, numElementsPerBlock: u32): ArenaAlloc {
   const arenaSize = getTypeSize<ArenaAlloc>();
   const ptr: PTR_T = alloc(arenaSize);
   const arena = new ArenaAlloc(ptr, objSize, numElementsPerBlock);

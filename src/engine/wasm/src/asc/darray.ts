@@ -1,8 +1,8 @@
 import { myAssert } from './myAssert';
-import { ArenaAlloc, newArena } from './arenaAlloc';
-import { alloc, dealloc } from './workerHeapAlloc';
-import { logi } from './importVars';
+import { alloc, dealloc } from './memManager';
 import { SIZE_T, PTR_T, getTypeSize } from './memUtils';
+import { ArenaAlloc, newArena } from './arenaAlloc';
+import { logi } from './importVars';
 
 
 function calcAllocSize(capacity: u32, objSize: u32, alignMask: u32): u32 {

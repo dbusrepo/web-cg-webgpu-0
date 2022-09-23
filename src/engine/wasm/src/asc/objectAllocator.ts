@@ -1,5 +1,5 @@
 import { myAssert } from './myAssert';
-import { alloc, dealloc } from './workerHeapAlloc';
+import { alloc, dealloc } from './memManager';
 import { ArenaAlloc, newArena } from './arenaAlloc';
 import { logi } from './importVars';
 

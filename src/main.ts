@@ -26,6 +26,7 @@ class Main {
     // const aPanel = this.buildViewPanel('Panel', board, row0);
     // this.panels.push(aPanel);
     this.panels.push(enginePanel);
+    board.style.display = 'none';
     // this.panels.push(this.buildViewPanel('Panel 2', board, row1));
   }
 

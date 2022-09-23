@@ -1,9 +1,11 @@
 import { myAssert } from './myAssert';
-import { heapAllocInit, heapAlloc, heapDealloc } from './heapAlloc';
+import { heapAlloc, heapDealloc } from './heapAlloc';
 import { logi, workerIdx, workersHeapOffset, workerHeapSize } from './importVars';
 import { MEM_BLOCK_USAGE_BIT_MASK, SIZE_T, MAX_ALLOC_SIZE, PTR_T, NULL_PTR, getTypeSize, getTypeAlignMask, } from './memUtils';
 
-// Note: alignment is not handled here
+// Mem mananger: worker (private) heap mem handling:
+// list of blocks
+// uses the shared heap (see heapAlloc) when no blocks are available
 
 const WORKER_HEAP_BASE: PTR_T = workersHeapOffset + workerIdx * workerHeapSize;
 const WORKER_HEAP_LIMIT: PTR_T = WORKER_HEAP_BASE + workerHeapSize;
@@ -143,13 +145,13 @@ function alloc(reqSize: SIZE_T): PTR_T {
   return allocated;
 }
 
-function dealloc(dataPtr: PTR_T): void {
-  myAssert(dataPtr != NULL_PTR);
-  if (dataPtr >= WORKER_HEAP_LIMIT) {
-    return heapDealloc(dataPtr);
+function dealloc(ptr: PTR_T): void {
+  myAssert(ptr != NULL_PTR);
+  if (ptr >= WORKER_HEAP_LIMIT) {
+    return heapDealloc(ptr);
   }
-  myAssert(dataPtr >= WORKER_HEAP_BASE + H_SIZE &&  dataPtr < WORKER_HEAP_LIMIT - F_SIZE);
-  let headerPtr = dataPtr - H_SIZE;
+  myAssert(ptr >= WORKER_HEAP_BASE + H_SIZE &&  ptr < WORKER_HEAP_LIMIT - F_SIZE);
+  let headerPtr = ptr - H_SIZE;
   myAssert(isBlockUsed(headerPtr));
   let blockSize = getBlockSize(headerPtr);
   myAssert(blockSize > 0);
@@ -219,8 +221,10 @@ function dealloc(dataPtr: PTR_T): void {
   // logi(getBlockSize(freeBlockPtr));
 }
 
-function allocInit(): void {
+function initMemManager(): void {
+
   // print();
+
   const headerPtr = WORKER_HEAP_BASE;
   setBlockUnused(headerPtr);
   setBlockSize(headerPtr, workerHeapSize);
@@ -233,10 +237,6 @@ function allocInit(): void {
   const header = changetype<HeaderBlock>(headerPtr);
   header.next = header.prev = headerPtr;
 
-  // shared heap init
-  if (workerIdx == 0) {
-    heapAllocInit();
-  }
 }
 
 // function print(): void {
@@ -246,4 +246,4 @@ function allocInit(): void {
 //   logi(WORKER_HEAP_LIMIT);
 // }
 
-export { allocInit, alloc, dealloc };
+export { initMemManager, alloc, dealloc };
