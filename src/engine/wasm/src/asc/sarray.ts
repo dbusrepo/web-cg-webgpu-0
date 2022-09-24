@@ -30,7 +30,11 @@ const HEADER_SIZE = getTypeSize<Header>();
 
   @inline @operator("[]") get(idx: u32): T {
     const ptr = this.idx2Ptr(idx);
-    return changetype<T>(ptr);
+    if (isReference<T>()) {
+      return changetype<T>(ptr);
+    } else {
+      return load<T>(ptr);
+    }
   }
 
   @inline @operator("[]=") set(idx: u32, value: T): void {
@@ -55,6 +59,7 @@ function newSArray<T>(length: u32, objAlignLg2: SIZE_T = alignof<T>()): SArray<T
   }
   const alignMask: SIZE_T = max(<SIZE_T>(1) << objAlignLg2, objSize) - 1;
   const objSizeAlign: SIZE_T = max(alignMask + 1, objSize);
+  logi(objSizeAlign);
   myAssert(isSizePowerTwo(objSizeAlign));
   const dataSize: SIZE_T = length * objSizeAlign + alignMask;
   const arraySize = HEADER_SIZE + dataSize;
