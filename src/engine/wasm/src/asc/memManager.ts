@@ -239,6 +239,11 @@ function initMemManager(): void {
 
 }
 
+// pre: ptr != NULL_PTR
+@inline function assertPtrLowerBound(ptr: PTR_T): void {
+  myAssert(ptr >= WORKER_HEAP_BASE + H_SIZE);
+}
+
 // function print(): void {
 //   logi(workerIdx);
 //   logi(workersHeapOffset);
@@ -246,4 +251,4 @@ function initMemManager(): void {
 //   logi(WORKER_HEAP_LIMIT);
 // }
 
-export { initMemManager, alloc, dealloc };
+export { initMemManager, alloc, dealloc, assertPtrLowerBound };
