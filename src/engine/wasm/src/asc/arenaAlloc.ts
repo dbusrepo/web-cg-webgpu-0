@@ -16,7 +16,7 @@ import { logi } from './importVars';
   private _numPerBlock: SIZE_T; // number of allocable objs per block
   private _blockSize: SIZE_T; // tot bytes allocated per block
   private _objSize: SIZE_T; // total bytes (obj+align pad) per obj, obj are aligned
-  private _alignMask: usize; // objects align mask
+  private _alignMask: SIZE_T; // objects align mask
 
   // private constructor() { 
   //   this._blockPtr = NULL_PTR;
@@ -28,15 +28,13 @@ import { logi } from './importVars';
   //   this._numLeft = 0;
   // }
 
-  constructor(allocPtr: PTR_T, objSize: SIZE_T, numObjsPerBlock: u32, objAlignLg2: usize) {
+  constructor(allocPtr: PTR_T, objSize: SIZE_T, numObjsPerBlock: u32, objAlignLg2: SIZE_T) {
     myAssert(objSize > 0);
     myAssert(numObjsPerBlock > 0);
     const arena = changetype<ArenaAlloc>(allocPtr);
     const minObjSize = max(objSize, PTR_SIZE);
-    logi(minObjSize);
-    let alignMask = max(<SIZE_T>(1) << objAlignLg2, PTR_ALIGN_MASK + 1) - 1;
-    logi(alignMask + 1);
-    let objSizeAlign: usize;
+    const alignMask: SIZE_T = max(<SIZE_T>(1) << objAlignLg2, PTR_ALIGN_MASK + 1) - 1;
+    let objSizeAlign: SIZE_T;
     let blockSize: SIZE_T;
     if ((minObjSize & alignMask) != 0) {
       if (minObjSize < alignMask + 1) {
@@ -50,8 +48,6 @@ import { logi } from './importVars';
       objSizeAlign = minObjSize;
       blockSize = (objSizeAlign * numObjsPerBlock) + alignMask;
     }
-    logi(objSizeAlign);
-    logi(blockSize);
     myAssert(objSizeAlign <= MAX_ALLOC_SIZE);
     arena._blockSize = blockSize;
     arena._objSize = objSizeAlign;
@@ -101,7 +97,7 @@ import { logi } from './importVars';
 
 }
 
-function newArena(objSize: SIZE_T, numObjsPerBlock: u32, objAlignLg2: usize = alignof<PTR_T>()): ArenaAlloc {
+function newArena(objSize: SIZE_T, numObjsPerBlock: u32, objAlignLg2: SIZE_T = alignof<PTR_T>()): ArenaAlloc {
   const arenaSize = getTypeSize<ArenaAlloc>();
   const ptr: PTR_T = alloc(arenaSize);
   const arena = new ArenaAlloc(ptr, objSize, numObjsPerBlock, objAlignLg2);

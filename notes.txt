@@ -210,6 +210,13 @@ https://stackoverflow.com/questions/58564090/create-input-text-that-starts-with-
 https://stackoverflow.com/questions/2483182/recursive-wildcards-in-gnu-make
 https://stackoverflow.com/questions/59924183/makefiles-how-to-properly-use-wildcard-to-recursively-descend
 
+* misc 2
+https://www.geeksforgeeks.org/program-to-find-whether-a-given-number-is-power-of-2/
+https://stackoverflow.com/questions/600293/how-to-check-if-a-number-is-a-power-of-2
+https://stackoverflow.com/questions/30924280/what-is-the-best-way-to-determine-if-a-given-number-is-a-power-of-two
+https://stackoverflow.com/questions/466204/rounding-up-to-next-power-of-2
+https://stackoverflow.com/questions/47074126/log2-of-an-integer-that-is-a-power-of-2
+
 -how to link another remote:
 
 for ex. from a specific project that wants to link this as another remote:

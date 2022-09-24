@@ -77,7 +77,7 @@ const BLOCK_SIZE = getTypeSize<Block>();
 function allocNewBlock(reqSize: SIZE_T): PTR_T {
   let curOffset: PTR_T;
   let newOffset: PTR_T;
-  let blockPtr: SIZE_T;
+  let blockPtr: PTR_T;
   let dataSize: SIZE_T;
   do {
     curOffset = atomicGetAllocPtr();
