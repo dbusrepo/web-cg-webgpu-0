@@ -12,7 +12,7 @@ import { bgColor, heapOffset, numWorkers, workerIdx, logi, logf,
 import { usePalette, imagesIndexOffset, numImages } from './importVars';
 import { BitImage } from './bitImage';
 // import { loadImages } from './imagesLoader';
-import { DArray, newDArray, deleteDArray } from './darray';
+// import { DArray, newDArray, deleteDArray } from './darray';
 import { Pointer } from './pointer';
 import { SArray, newSArray } from './sarray';
 import { test } from './test/test';
@@ -28,13 +28,12 @@ function init(): void {
 
 function initWorkerMem(): void {
   initMemManager();
-  // initAllocators(); // workers allocators
+  initAllocators();
 }
 
 function run(): void {
 
   initWorkerMem();
-
   test();
 
   // const r = range(workerIdx, numWorkers, frameHeight);

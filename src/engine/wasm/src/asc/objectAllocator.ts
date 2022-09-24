@@ -1,44 +1,38 @@
 import { myAssert } from './myAssert';
 import { alloc, dealloc } from './memManager';
+import { PTR_SIZE, PTR_ALIGN_MASK, SIZE_T, MAX_ALLOC_SIZE, 
+         PTR_T, NULL_PTR, getTypeSize, getTypeAlignMask } from './memUtils';
 import { ArenaAlloc, newArena } from './arenaAlloc';
 import { logi } from './importVars';
 
-const OBJ_ALLOC_BLOCK_SIZE = 64;
+class ObjectAllocator<T> {
+  private _arena: ArenaAlloc;
+
+  init(numObjPerBlock: u32): void {
+    this._arena = newArena(getTypeSize<T>(), numObjPerBlock);
+  }
+
+  new(): T {
+    return changetype<T>(this._arena.alloc());
+  }
+
+  delete(v: T): void {
+    this._arena.dealloc(changetype<PTR_T>(v));
+  }
+}
+
 let objectAllocatorsArena: ArenaAlloc;
 
-class ObjectAllocator<T> {
-  private arena: ArenaAlloc;
-  private constructor() {}
-  private getObjectSize(): u32 {
-    return offsetof<T>();
-  }
-  init(arenaBlockSize: u32): void {
-    this.arena = newArena(this.getObjectSize(), arenaBlockSize);
-  }
-  new(): T {
-    return changetype<T>(this.arena.alloc());
-  }
-  delete(v: T): void {
-    this.arena.dealloc(changetype<usize>(v));
-  }
-  newArray(length: u32): usize {
-    const allocSize = length * this.getObjectSize();
-    return alloc(allocSize);
-  }
-  deleteArray(arr: usize): void {
-    dealloc(arr);
-  }
-}
-
-function newObjectAllocator<T>(blockSize: u32): ObjectAllocator<T> {
-  const objAlloc = changetype<ObjectAllocator<T>>(objectAllocatorsArena.alloc());
-  objAlloc.init(blockSize);
-  return objAlloc;
-}
-
 function initObjectAllocatorsArena(): void {
-  const objSize: u32 = offsetof<ObjectAllocator<Object>>();
-  objectAllocatorsArena = newArena(objSize, OBJ_ALLOC_BLOCK_SIZE);
+  const NUM_OBJ_ALLOC_PER_BLOCK = 64;
+  const objSize: SIZE_T = offsetof<ObjectAllocator<Object>>();
+  objectAllocatorsArena = newArena(objSize, NUM_OBJ_ALLOC_PER_BLOCK);
+}
+
+function newObjectAllocator<T>(numObjPerBlock: u32): ObjectAllocator<T> {
+  const objAlloc = changetype<ObjectAllocator<T>>(objectAllocatorsArena.alloc());
+  objAlloc.init(numObjPerBlock);
+  return objAlloc;
 }
 
 export { ObjectAllocator, initObjectAllocatorsArena, newObjectAllocator };

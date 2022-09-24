@@ -5,7 +5,7 @@ import { initDArrayAllocator } from './darray';
 
 function initAllocators(): void {
   initObjectAllocatorsArena();
-  initDArrayAllocator();
+  // initDArrayAllocator();
   initVec3Allocator();
   // initBitImageAllocator(); // va in ecc
 }
