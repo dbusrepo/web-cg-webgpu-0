@@ -42,6 +42,8 @@ https://wasmbyexample.dev/examples/webassembly-linear-memory/webassembly-linear-
 
 asc: 
 https://github.com/AssemblyScript/assemblyscript/pull/1547
+compile time asserts?
+https://github.com/AssemblyScript/assemblyscript/issues/2171
 
 module imports:
 

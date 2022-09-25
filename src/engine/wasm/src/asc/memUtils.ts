@@ -6,6 +6,10 @@ export const NULL_PTR: PTR_T = 0; // TODO note
 export const PTR_SIZE: SIZE_T = getTypeSize<PTR_T>();
 export const PTR_ALIGN_MASK: SIZE_T = getTypeAlignMask<PTR_T>();
 
+@inline function GET_PTR<T>(v: T): PTR_T {
+  return changetype<PTR_T>(v);
+}
+
 // Max alloc size for blocks allocated by the mem manager
 export const MAX_ALLOC_SIZE: SIZE_T = <SIZE_T>(1) << 30; // 1GB
 
@@ -48,4 +52,4 @@ export const MEM_BLOCK_USAGE_BIT_MASK = getUsageBitMask();
   return <SIZE_T>((1 << alignof<PTR_T>()) - 1);
 }
 
-export { ilog2, nextPowerOfTwo, isSizePowerTwo, getTypeSize, getValueTypeSize, getTypeAlignMask };
+export { GET_PTR, ilog2, nextPowerOfTwo, isSizePowerTwo, getTypeSize, getValueTypeSize, getTypeAlignMask };

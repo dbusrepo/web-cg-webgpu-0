@@ -12,7 +12,7 @@ const WORKER_HEAP_LIMIT: PTR_T = WORKER_HEAP_BASE + workerHeapSize;
 
 let freeBlockPtr = WORKER_HEAP_BASE;
 
-class Block {
+@unmanaged class Block {
   size: SIZE_T;
 }
 
@@ -20,12 +20,12 @@ const H_SIZE = getTypeSize<HeaderBlock>();
 const F_SIZE = getTypeSize<FooterBlock>();
 const HF_SIZE = H_SIZE + F_SIZE;
 
-class HeaderBlock extends Block {
+@final @unmanaged class HeaderBlock extends Block {
   next: PTR_T;
   prev: PTR_T;
 }
 
-class FooterBlock extends Block {}
+@final @unmanaged class FooterBlock extends Block {}
 
 @inline function setBlockUsed(blockPtr: PTR_T): void {
   const block = changetype<Block>(blockPtr);

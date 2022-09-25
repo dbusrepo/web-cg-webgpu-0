@@ -1,7 +1,7 @@
 {
   "options": {
     "verbose": true,
-    "pedantic": true,
+    "pedantic": false,
     "measure": true,
     "traceResolution": true,
 

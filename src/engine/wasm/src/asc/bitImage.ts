@@ -4,7 +4,7 @@ import { ObjectAllocator, newObjectAllocator } from './objectAllocator';
 
 const BITIMAGES_PER_BLOCK: u32 = 128;
 
-class BitImage {
+@final @unmanaged class BitImage {
 
   static size: i32 = offsetof<BitImage>();
 

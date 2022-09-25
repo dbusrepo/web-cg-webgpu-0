@@ -5,7 +5,7 @@ import { PTR_SIZE, PTR_ALIGN_MASK, SIZE_T, MAX_ALLOC_SIZE,
 import { ArenaAlloc, newArena } from './arenaAlloc';
 import { logi } from './importVars';
 
-class ObjectAllocator<T> {
+@final @unmanaged class ObjectAllocator<T> {
   private _arena: ArenaAlloc;
 
   init(numObjPerBlock: u32): void {

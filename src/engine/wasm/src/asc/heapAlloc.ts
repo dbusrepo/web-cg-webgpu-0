@@ -16,7 +16,7 @@ const START_ALLOC_PTR: PTR_T = FREE_PTR_PTR  + PTR_SIZE; // after the free block
 // each block has a header with the size stored before the data, the rest
 // is 'shared' with the data but used only when the block is unused/in the free
 // list
-class Block {
+@final @unmanaged class Block {
   size: SIZE_T; // header before data
   next: PTR_T; // 'shared' with data
 }

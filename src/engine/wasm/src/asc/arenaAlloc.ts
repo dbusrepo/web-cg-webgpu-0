@@ -14,7 +14,7 @@ import { logi } from './importVars';
   private _freePtr: PTR_T; // free list head ptr
   private _numLeft: SIZE_T; // number of remaining allocable objs in cur block
   private _numPerBlock: SIZE_T; // number of allocable objs per block
-  _blockSize: SIZE_T; // tot bytes allocated per block
+  private _blockSize: SIZE_T; // tot bytes allocated per block
   private _objSize: SIZE_T; // total bytes (obj+align pad) per obj, obj are aligned
   private _alignMask: SIZE_T; // objects align mask
 
