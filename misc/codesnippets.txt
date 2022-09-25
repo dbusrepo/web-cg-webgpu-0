@@ -456,3 +456,28 @@ logi(changetype<usize>(arr.atIdx(0)));
 logi(changetype<usize>(arr.atIdx(1)));
 // deleteVector(arr);
 
+from darray:
+
+// @inline get objSize(): SIZE_T {
+//   return this._objSize;
+// }
+
+// @inline get start(): PTR_T {
+//   return this._data;
+// }
+
+// @inline get end(): PTR_T {
+//   return this._next;
+// }
+
+// @inline get length(): u32 {
+//   return this._count;
+// }
+
+// @inline get arrayStart(): PTR_T {
+//   return this._array;
+// }
+
+// @inline get arrayEnd(): PTR_T {
+//   return this._arrayEnd;
+// }

@@ -1,152 +1,122 @@
 import { myAssert } from './myAssert';
 import { alloc, dealloc } from './memManager';
-import { SIZE_T, PTR_T, getTypeSize } from './memUtils';
+import { ilog2, nextPowerOfTwo, isSizePowerTwo, PTR_T, NULL_PTR, getTypeSize, getTypeAlignMask, SIZE_T } from './memUtils';
 import { ArenaAlloc, newArena } from './arenaAlloc';
+import { Pointer } from './pointer';
 import { logi } from './importVars';
-
-
-function calcAllocSize(capacity: u32, objSize: u32, alignMask: u32): u32 {
-  return capacity * objSize + alignMask;
-}
 
 @final @unmanaged class DArray<T> {
   private _array: PTR_T; // physical array start
-  private _data: PTR_T;  // where data start
+  private _dataStart: PTR_T;  // where data start
+  private _dataEnd: PTR_T;
   private _next: PTR_T;
-  private _arrayEnd: PTR_T;
-  private _allocSize: SIZE_T;
   private _capacity: u32;
-  private _length: u32;
-  private _objSize: SIZE_T;
+  private _objSizeLg2: SIZE_T;
   private _alignMask: usize;
+  // private _allocSize: SIZE_T; // not used
 
-  // private constructor() {
-  //   this._array = this._data = 0;
-  //   this._allocSize = this._objSize = 0;
-  //   this._arrayEnd = 0;
-  //   this._length = 0;
-  //   this._next = 0;
-  //   this._alignMask = 0;
-  //   this._capacity = 0;
-  // }
-
-  constructor(allocPtr: PTR_T, initialCapacity: u32, alignLg2: usize) {
-    const darray = changetype<DArray<T>>(allocPtr);
-    darray.init(initialCapacity, alignLg2);
-    return darray;
-  }
-
-  private init(initialCapacity: u32, alignLg2: usize): void {
-    const capacity = max(initialCapacity, 1);
-    const objSize = getTypeSize<T>();
-    const alignMask = (<usize>(1) << alignLg2) - 1;
-    this._objSize = (objSize + alignMask) & ~alignMask; // TODO change
-    this._allocSize = calcAllocSize(capacity, this._objSize, this._alignMask);
-    this._array = alloc(this._allocSize);
-    this._data = (this._array + alignMask) & ~alignMask;
-    this._arrayEnd = this._data + capacity * objSize;
-    this._length = 0;
-    this._next = this._data;
+  init(initialCapacity: u32, objAlignLg2: SIZE_T = alignof<T>()): void {
+    myAssert(initialCapacity > 0);
+    const capacity = initialCapacity;
+    let objSize = getTypeSize<T>();
+    myAssert(objSize > 0);
+    if (!isSizePowerTwo(objSize)) {
+      objSize = nextPowerOfTwo(objSize);
+    }
+    const alignMask: SIZE_T = max(<SIZE_T>(1) << objAlignLg2, objSize) - 1;
+    const objSizeAlign = alignMask + 1;
+    myAssert(isSizePowerTwo(objSizeAlign));
+    const numBytesData = capacity * objSizeAlign;
+    const allocSize = numBytesData + this._alignMask;
+    this._array = alloc(allocSize);
+    this._dataStart = (this._array + alignMask) & ~alignMask;
+    this._dataEnd = this._dataStart + numBytesData;
+    this._next = this._dataStart;
+    this._objSizeLg2 = ilog2(objSizeAlign);
     this._alignMask = alignMask;
     this._capacity = capacity;
-    myAssert((this._data & alignMask) === 0);
+    myAssert((this._dataStart & alignMask) === 0);
+    myAssert(this.count == 0);
   }
 
-  @inline get objSize(): SIZE_T {
-    return this._objSize;
-  }
-
-  @inline get start(): PTR_T {
-    return this._data;
-  }
-
-  @inline get end(): PTR_T {
-    return this._next;
-  }
-
-  @inline get length(): u32 {
-    return this._length;
+  @inline get count(): SIZE_T {
+    return (this._next - this._dataStart) >> this._objSizeLg2;
   }
 
   @inline get arrayStart(): PTR_T {
     return this._array;
   }
 
-  @inline get arrayEnd(): PTR_T {
-    return this._arrayEnd;
+  @inline private idx2Ptr(idx: u32): PTR_T {
+    myAssert(idx < this.count);
+    const offset = idx << this._objSizeLg2;
+    return this._dataStart + offset;
   }
 
-  @inline at(ptr: PTR_T): T {
-    myAssert(ptr >= this.start && ptr < this.end);
-    if (isReference<T>()) {
-      return changetype<T>(ptr);
-    } else {
-      return load<T>(ptr);
+  @inline at(idx: u32): T {
+    const ptr = this.idx2Ptr(idx);
+    return new Pointer<T>(ptr).value;
+  }
+
+  @inline setValue(idx: u32, value: T): void {
+    const ptr = this.idx2Ptr(idx);
+    new Pointer<T>(ptr).value = value;
+  }
+
+  private checkMem(): void {
+    if (this._next >= this._dataEnd) {
+      myAssert(this._next == this._dataEnd);
+      const newCapacity = 2 * this._capacity;
+      const newNumBytesData = newCapacity * (1 << this._objSizeLg2); 
+      const newAllocSize = newNumBytesData + this._alignMask;
+      const newArray = alloc(newAllocSize);
+      const newDataStart = (newArray + this._alignMask) & ~this._alignMask;
+      const newArrayEnd = newDataStart + newNumBytesData;
+      const numSrcBytes = this._next - this._dataStart;
+      const newNext = newDataStart + numSrcBytes;
+      memory.copy(newDataStart, this._dataStart, numSrcBytes);
+      dealloc(this.arrayStart);
+      this._array = newArray;
+      this._dataStart = newDataStart;
+      this._dataEnd = newArrayEnd;
+      this._next = newNext;
+      this._capacity = newCapacity;
     }
-  }
-
-  // @inline @operator("[]") atIdx(idx: u32): T {
-  @inline @operator("[]") get(idx: u32): T {
-    myAssert(idx < this.length);
-    const ptr = this.start + this.objSize * idx;
-    return this.at(ptr);
-  }
-
-  @inline setValue(ptr: PTR_T, value: T): void {
-    myAssert(ptr >= this.start && ptr < this.end);
-    if (isReference<T>()) {
-      myAssert(value != null);
-      memory.copy(ptr, changetype<PTR_T>(value), offsetof<T>());
-    } else {
-      store<T>(ptr, value);
-    }
-  }
-
-  @inline @operator("[]=") set(idx: u32, value: T): void {
-    myAssert(idx < this.length);
-    const ptr = this.start + this.objSize * idx;
-    this.setValue(ptr, value);
   }
 
   @inline push(value: T): void {
-    if (this._next >= this.arrayEnd) {
-      const newCapacity = 2 * this._capacity;
-      const newAllocSize = calcAllocSize(newCapacity, this._objSize, this._alignMask);
-      const newArray = alloc(newAllocSize);
-      const newData = (newArray + this._alignMask) & ~this._alignMask;
-      const newNext = newData + this._next - this.start;
-      const newArrayEnd = newData + newCapacity * this._objSize;
-      memory.copy(newData, this._data, this.arrayEnd - this.start);
-      dealloc(this.arrayStart);
-      this._capacity = newCapacity;
-      this._array = newArray;
-      this._data = newData;
-      this._allocSize = newAllocSize;
-      this._next = newNext;
-      this._arrayEnd = newArrayEnd;
-    }
-    const _ptr = this._next;
-    this._next += this.objSize;
-    this.setValue(_ptr, value);
-    this._length++;
+    const ptr = this.alloc();
+    new Pointer<T>(ptr).value = value;
+  }
+
+  // like push but add a new uninitialized element and returns a pointer to it
+  @inline alloc(): PTR_T {
+    this.checkMem();
+    const ptr = this._next;
+    this._next += (1 << this._objSizeLg2);
+    return ptr;
   }
 
   // TODO
-  // @inline pop(): void {}
+  @inline pop(): void {
+    myAssert(this.count > 0);
+    this._next -= (1 << this._objSizeLg2);
+  }
 
 }
 
 let arrayArena: ArenaAlloc;
 
 @inline function initDArrayAllocator(): void {
-  const ARR_BLOCK_SIZE = 64;
+  const ARR_BLOCK_SIZE = 128;
   const objSize = getTypeSize<DArray<Object>>();
   arrayArena = newArena(objSize, ARR_BLOCK_SIZE);
 }
 
 @inline function newDArray<T>(initialCapacity: u32, alignLg2: usize = alignof<T>()): DArray<T> {
-  const ptr = arrayArena.alloc();
-  return new DArray<T>(ptr, initialCapacity, alignLg2);
+  const darray = changetype<DArray<T>>(arrayArena.alloc());
+  darray.init(initialCapacity, alignLg2);
+  return darray;
 }
 
 @inline function deleteDArray<T>(arr: DArray<T>): void {

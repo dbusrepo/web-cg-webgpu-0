@@ -2,6 +2,7 @@ import { myAssert } from './myAssert';
 import { alloc, dealloc } from './memManager';
 import { ArenaAlloc, newArena } from './arenaAlloc';
 import { ilog2, nextPowerOfTwo, isSizePowerTwo, PTR_T, NULL_PTR, getTypeSize, getTypeAlignMask, SIZE_T } from './memUtils';
+import { Pointer } from './pointer';
 import { logi } from './importVars';
 
 // SArray: a contigous block of memory: header info + data
@@ -40,23 +41,12 @@ const HEADER_SIZE = getTypeSize<Header>();
 
   @inline at(idx: u32): T {
     const ptr = this.idx2Ptr(idx);
-    if (isReference<T>()) {
-      return changetype<T>(ptr);
-    } else {
-      return load<T>(ptr);
-    }
+    return new Pointer<T>(ptr).value;
   }
 
   @inline set(idx: u32, value: T): void {
     const ptr = this.idx2Ptr(idx);
-    if (isReference<T>()) {
-      if (isNullable<T>()) {
-        myAssert(value != null);
-      }
-      memory.copy(ptr, changetype<PTR_T>(value), offsetof<T>());
-    } else {
-      store<T>(ptr, value);
-    }
+    new Pointer<T>(ptr).value = value;
   }
 
   // @inline @operator("[]") get(idx: u32): T {
@@ -77,7 +67,7 @@ function newSArray<T>(length: u32, objAlignLg2: SIZE_T = alignof<T>()): SArray<T
     objSize = nextPowerOfTwo(objSize);
   }
   const alignMask: SIZE_T = max(<SIZE_T>(1) << objAlignLg2, objSize) - 1;
-  const objSizeAlign: SIZE_T = max(alignMask + 1, objSize);
+  const objSizeAlign = alignMask + 1;
   myAssert(isSizePowerTwo(objSizeAlign));
   const dataSize: SIZE_T = length * objSizeAlign + alignMask;
   const arraySize = HEADER_SIZE + dataSize;
