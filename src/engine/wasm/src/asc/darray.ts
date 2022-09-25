@@ -27,7 +27,7 @@ import { logi } from './importVars';
     const objSizeAlign = alignMask + 1;
     myAssert(isSizePowerTwo(objSizeAlign));
     const numBytesData = capacity * objSizeAlign;
-    const allocSize = numBytesData + this._alignMask;
+    const allocSize = numBytesData + <SIZE_T>this._alignMask;
     this._array = alloc(allocSize);
     this._dataStart = (this._array + alignMask) & ~alignMask;
     this._dataEnd = this._dataStart + numBytesData;
@@ -40,25 +40,29 @@ import { logi } from './importVars';
   }
 
   @inline get count(): SIZE_T {
-    return (this._next - this._dataStart) >> this._objSizeLg2;
+    return <SIZE_T>(this._next - this._dataStart) >> this._objSizeLg2;
+  }
+
+  @inline get capacity(): SIZE_T {
+    return <SIZE_T>(this._dataEnd - this._dataStart) >> this._objSizeLg2;
   }
 
   @inline get arrayStart(): PTR_T {
     return this._array;
   }
 
-  @inline private idx2Ptr(idx: u32): PTR_T {
+  private idx2Ptr(idx: u32): PTR_T {
     myAssert(idx < this.count);
     const offset = idx << this._objSizeLg2;
     return this._dataStart + offset;
   }
 
-  @inline at(idx: u32): T {
+  at(idx: u32): T {
     const ptr = this.idx2Ptr(idx);
     return new Pointer<T>(ptr).value;
   }
 
-  @inline setValue(idx: u32, value: T): void {
+  setValue(idx: u32, value: T): void {
     const ptr = this.idx2Ptr(idx);
     new Pointer<T>(ptr).value = value;
   }
@@ -68,7 +72,7 @@ import { logi } from './importVars';
       myAssert(this._next == this._dataEnd);
       const newCapacity = 2 * this._capacity;
       const newNumBytesData = newCapacity * (1 << this._objSizeLg2); 
-      const newAllocSize = newNumBytesData + this._alignMask;
+      const newAllocSize = newNumBytesData + <SIZE_T>this._alignMask;
       const newArray = alloc(newAllocSize);
       const newDataStart = (newArray + this._alignMask) & ~this._alignMask;
       const newArrayEnd = newDataStart + newNumBytesData;
@@ -84,13 +88,13 @@ import { logi } from './importVars';
     }
   }
 
-  @inline push(value: T): void {
+  push(value: T): void {
     const ptr = this.alloc();
     new Pointer<T>(ptr).value = value;
   }
 
   // like push but add a new uninitialized element and returns a pointer to it
-  @inline alloc(): PTR_T {
+  alloc(): PTR_T {
     this.checkMem();
     const ptr = this._next;
     this._next += (1 << this._objSizeLg2);
@@ -98,7 +102,7 @@ import { logi } from './importVars';
   }
 
   // TODO
-  @inline pop(): void {
+  pop(): void {
     myAssert(this.count > 0);
     this._next -= (1 << this._objSizeLg2);
   }
@@ -107,19 +111,19 @@ import { logi } from './importVars';
 
 let arrayArena: ArenaAlloc;
 
-@inline function initDArrayAllocator(): void {
+function initDArrayAllocator(): void {
   const ARR_BLOCK_SIZE = 128;
   const objSize = getTypeSize<DArray<Object>>();
   arrayArena = newArena(objSize, ARR_BLOCK_SIZE);
 }
 
-@inline function newDArray<T>(initialCapacity: u32, alignLg2: usize = alignof<T>()): DArray<T> {
+function newDArray<T>(initialCapacity: u32, alignLg2: SIZE_T = alignof<T>()): DArray<T> {
   const darray = changetype<DArray<T>>(arrayArena.alloc());
   darray.init(initialCapacity, alignLg2);
   return darray;
 }
 
-@inline function deleteDArray<T>(arr: DArray<T>): void {
+function deleteDArray<T>(arr: DArray<T>): void {
   dealloc(arr.arrayStart);
   arrayArena.dealloc(changetype<PTR_T>(arr));
 }

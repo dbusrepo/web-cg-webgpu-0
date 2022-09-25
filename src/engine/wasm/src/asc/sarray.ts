@@ -20,7 +20,7 @@ const HEADER_SIZE = getTypeSize<Header>();
 
 @final @unmanaged class SArray<T> {
 
-  @inline private idx2Ptr(idx: u32): PTR_T {
+  private idx2Ptr(idx: u32): PTR_T {
     const dataPtr = changetype<PTR_T>(this);
     const header = changetype<Header>(dataPtr - HEADER_SIZE);
     myAssert(idx < header._length);
@@ -34,17 +34,17 @@ const HEADER_SIZE = getTypeSize<Header>();
     return dataPtr;
   }
 
-  @inline ptrAt(idx: u32): PTR_T {
+  ptrAt(idx: u32): PTR_T {
     const ptr = this.idx2Ptr(idx);
     return ptr;
   }
 
-  @inline at(idx: u32): T {
+  at(idx: u32): T {
     const ptr = this.idx2Ptr(idx);
     return new Pointer<T>(ptr).value;
   }
 
-  @inline set(idx: u32, value: T): void {
+  set(idx: u32, value: T): void {
     const ptr = this.idx2Ptr(idx);
     new Pointer<T>(ptr).value = value;
   }

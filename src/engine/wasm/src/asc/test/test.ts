@@ -7,9 +7,9 @@ import { refTest } from './ref';
 function test(): void {
   // memManagerTest();
   // arenaAllocTest();
-  sarrayTest();
   // refTest();
-  // darrayTest();
+  // sarrayTest();
+  darrayTest();
 }
 
 export { test };

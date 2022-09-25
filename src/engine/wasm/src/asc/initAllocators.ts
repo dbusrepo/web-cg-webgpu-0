@@ -7,9 +7,9 @@ import { initRefAllocator } from './ref';
 function initAllocators(): void {
   initObjectAllocatorsArena();
   initRefAllocator();
-  // initDArrayAllocator();
+  initDArrayAllocator();
   initVec3Allocator();
-  // initBitImageAllocator(); // va in ecc
+  // initBitImageAllocator();
 }
 
 export { initAllocators };
