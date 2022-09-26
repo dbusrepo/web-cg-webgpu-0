@@ -13,14 +13,14 @@ import { logi } from './importVars';
 @final @unmanaged class Header {
   _arrayPtr: PTR_T; // address returned by alloc (used for dealloc only)
   _objSizeLg2: SIZE_T; // lg2 of the size (includes padding for the alignment)
-  _length: u32; // to do some checks
+  _length: SIZE_T; // to do some checks
 }
 
 const HEADER_SIZE = getTypeSize<Header>();
 
 @final @unmanaged class SArray<T> {
 
-  private idx2Ptr(idx: u32): PTR_T {
+  private idx2Ptr(idx: SIZE_T): PTR_T {
     const dataPtr = changetype<PTR_T>(this);
     const header = changetype<Header>(dataPtr - HEADER_SIZE);
     myAssert(idx < header._length);
@@ -34,17 +34,17 @@ const HEADER_SIZE = getTypeSize<Header>();
     return dataPtr;
   }
 
-  ptrAt(idx: u32): PTR_T {
+  ptrAt(idx: SIZE_T): PTR_T {
     const ptr = this.idx2Ptr(idx);
     return ptr;
   }
 
-  at(idx: u32): T {
+  at(idx: SIZE_T): T {
     const ptr = this.idx2Ptr(idx);
     return new Pointer<T>(ptr).value;
   }
 
-  set(idx: u32, value: T): void {
+  set(idx: SIZE_T, value: T): void {
     const ptr = this.idx2Ptr(idx);
     new Pointer<T>(ptr).value = value;
   }
@@ -58,7 +58,7 @@ const HEADER_SIZE = getTypeSize<Header>();
 
 }
 
-function newSArray<T>(length: u32, objAlignLg2: SIZE_T = alignof<T>()): SArray<T> {
+function newSArray<T>(length: SIZE_T, objAlignLg2: SIZE_T = alignof<T>()): SArray<T> {
   // logi(objAlignLg2);
   myAssert(length > 0);
   let objSize = getTypeSize<T>();

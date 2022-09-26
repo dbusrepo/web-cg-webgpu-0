@@ -60,7 +60,7 @@ const BLOCK_SIZE = getTypeSize<Block>();
 }
 
 // thread safe?
-@inline function checkGrowMemory(curOffset: PTR_T, nextOffset: PTR_T): void {
+function checkGrowMemory(curOffset: PTR_T, nextOffset: PTR_T): void {
   let curPages = memory.size();
   if (nextOffset > (<PTR_T>curPages) << 16) {
     let pagesNeeded = <i32>(((nextOffset - curOffset  + 0xffff) & ~0xffff) >>> 16);
@@ -147,7 +147,7 @@ function heapDealloc(ptr: PTR_T): void {
   unlock(MUTEX_PTR);
 }
 
-@inline function sharedHeapInit(): void {
+function sharedHeapInit(): void {
   // logi(START_ALLOC_PTR);
   store<PTR_T>(ALLOC_PTR_PTR, START_ALLOC_PTR);
   store<PTR_T>(FREE_PTR_PTR, NULL_PTR);

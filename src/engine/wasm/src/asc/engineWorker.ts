@@ -11,7 +11,7 @@ import { bgColor, heapOffset, numWorkers, workerIdx, logi, logf,
          sleepArrayOffset } from './importVars';
 import { usePalette, imagesIndexOffset, numImages } from './importVars';
 import { BitImage } from './bitImage';
-// import { loadImages } from './imagesLoader';
+import { loadImages } from './imagesLoader';
 // import { DArray, newDArray, deleteDArray } from './darray';
 import { Pointer } from './pointer';
 import { SArray, newSArray } from './sarray';

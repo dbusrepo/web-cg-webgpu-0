@@ -12,6 +12,7 @@ export declare const sleepArrayOffset: usize;
 export declare const numWorkers: i32;
 export declare const bgColor: i32;
 
+
 export declare const imagesIndexOffset: usize;
 export declare const numImages: i32;
 export declare const usePalette: i32;

@@ -1,54 +1,27 @@
 import { myAssert } from './myAssert';
+import { PTR_T, SIZE_T } from './memUtils';
 import { alloc, dealloc } from './memManager';
 import { ObjectAllocator, newObjectAllocator } from './objectAllocator';
 
-const BITIMAGES_PER_BLOCK: u32 = 128;
-
 @final @unmanaged class BitImage {
 
-  static size: i32 = offsetof<BitImage>();
+  private _pixels: PTR_T = 0;
+  private _width: u32 = 0;
+  private _height: u32 = 0;
 
-  pixels: usize;
-  width: u32;
-  height: u32;
-
-  private constructor() {}
-
-  init(pixels: usize, width: u32, height: u32): void {
-    this.pixels = pixels;
-    this.width = width;
-    this.height = height;
+  init(pixels: PTR_T, width: u32, height: u32): void {
+    this._pixels = pixels;
+    this._width = width;
+    this._height = height;
   }
 
 }
 
-let bitImageAllocator: ObjectAllocator<BitImage>;
+let bitImageAlloc: ObjectAllocator<BitImage>;
 
 function initBitImageAllocator(): void {
-  bitImageAllocator = newObjectAllocator<BitImage>(BITIMAGES_PER_BLOCK);
+  const BITIMAGES_PER_BLOCK = 32128;
+  bitImageAlloc = newObjectAllocator<BitImage>(BITIMAGES_PER_BLOCK);
 }
 
-// function newBitImage(pixels: usize, width: u32, height: u32): BitImage {
-//   const bitImage = arena.alloc();
-//   bitImage.init(pixels, width, height);
-//   return bitImage;
-// }
-
-// function newBitImageArray(size: u32): usize {
-//   const ptrsArr = alloc(size * BitImage.size);
-//   return ptrsArr;
-// }
-
-// function delBitImageArray(array: usize): void {
-//   dealloc(array);
-// }
-
-// function delBitImage(bitImage: BitImage): void {
-//   arena.dealloc(bitImage);
-// }
-
-// initBitImage();
-
-export { BitImage, initBitImageAllocator };
-
-// export { BitImage, newBitImage, delBitImage, newBitImageArray };
+export { BitImage, initBitImageAllocator, bitImageAlloc };

@@ -1,18 +1,20 @@
 import { usePalette, imagesIndexOffset, numImages } from './importVars';
-import { BitImage, newBitImageArray } from './bitImage';
+import { BitImage } from './bitImage';
 import { logi } from './importVars';
+import {newSArray} from './sarray';
 
-function loadImages(): usize {
-  const arr = newBitImageArray(numImages);
-  const ptrSize: u32 = sizeof<usize>();
-  let imgPtr2off = imagesIndexOffset; // index contains offsets to images, widths, heights
-  for (let i = 0, offs = 0; i < numImages; i++, offs += BitImage.size) {
-    const image = changetype<BitImage>(arr + offs);
-    const pixels = imagesIndexOffset + load<u32>(imgPtr2off);
+const IMAGE_INDEX_OFF_SIZE = 4;
+type IMAGE_INDEX_PTR_T = u32;
+
+function loadImages(): SArray<T> {
+  const bitImages = newSArray<BitImage>(numImages);
+  const baseIndex = imagesIndexOffset;
+  for (let i = 0, imgPtrOff = 0; i < numImages; i++, imgPtrOff += sizeof<IMAGE_INDEX_PTR_T>()) {
+    const image = bitImages.at(i);
+    const pixels = load<IMAGE_INDEX_PTR_T>(baseIndex + imgPtr2off);
     image.init(pixels, 0, 0);
-    imgPtr2off += ptrSize;
   }
-  return arr;
+  return bitImages;
 }
 
 export { loadImages };

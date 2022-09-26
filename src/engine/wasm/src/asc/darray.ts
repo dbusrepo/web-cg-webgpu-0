@@ -6,16 +6,16 @@ import { Pointer } from './pointer';
 import { logi } from './importVars';
 
 @final @unmanaged class DArray<T> {
-  private _array: PTR_T; // physical array start
-  private _dataStart: PTR_T;  // where data start
-  private _dataEnd: PTR_T;
-  private _next: PTR_T;
-  private _capacity: u32;
-  private _objSizeLg2: SIZE_T;
-  private _alignMask: usize;
+  private _array: PTR_T = 0; // physical array start
+  private _dataStart: PTR_T = 0;  // where data start
+  private _dataEnd: PTR_T = 0;
+  private _next: PTR_T = 0;
+  private _capacity: SIZE_T = 0;
+  private _objSizeLg2: SIZE_T = 0;
+  private _alignMask: SIZE_T = 0;
   // private _allocSize: SIZE_T; // not used
 
-  init(initialCapacity: u32, objAlignLg2: SIZE_T = alignof<T>()): void {
+  init(initialCapacity: SIZE_T, objAlignLg2: SIZE_T = alignof<T>()): void {
     myAssert(initialCapacity > 0);
     const capacity = initialCapacity;
     let objSize = getTypeSize<T>();
@@ -51,18 +51,18 @@ import { logi } from './importVars';
     return this._array;
   }
 
-  private idx2Ptr(idx: u32): PTR_T {
+  private idx2Ptr(idx: SIZE_T): PTR_T {
     myAssert(idx < this.count);
     const offset = idx << this._objSizeLg2;
     return this._dataStart + offset;
   }
 
-  at(idx: u32): T {
+  at(idx: SIZE_T): T {
     const ptr = this.idx2Ptr(idx);
     return new Pointer<T>(ptr).value;
   }
 
-  setValue(idx: u32, value: T): void {
+  setValue(idx: SIZE_T, value: T): void {
     const ptr = this.idx2Ptr(idx);
     new Pointer<T>(ptr).value = value;
   }
@@ -117,7 +117,7 @@ function initDArrayAllocator(): void {
   arrayArena = newArena(objSize, ARR_BLOCK_SIZE);
 }
 
-function newDArray<T>(initialCapacity: u32, alignLg2: SIZE_T = alignof<T>()): DArray<T> {
+function newDArray<T>(initialCapacity: SIZE_T, alignLg2: SIZE_T = alignof<T>()): DArray<T> {
   const darray = changetype<DArray<T>>(arrayArena.alloc());
   darray.init(initialCapacity, alignLg2);
   return darray;

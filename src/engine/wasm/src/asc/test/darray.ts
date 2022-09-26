@@ -41,9 +41,10 @@ function darrayTest(): void {
   // logf(arr.at(0).x); // prints 1
   // logf(arr.at(1).x); // prints 4
 
-  // const arr = newDArray<u32>(3, 2); // initial cap 3
-  // logi(arr.capacity);
-  // arr.push(1);
+  const arr = newDArray<u32>(3, 2); // initial cap 3
+  logi(arr.capacity);
+  arr.push(1);
+  logi(arr.at(0));
   // arr.push(2);
   // arr.push(3);
   // arr.push(4); // realloc here

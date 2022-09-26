@@ -9,7 +9,7 @@ function initAllocators(): void {
   initRefAllocator();
   initDArrayAllocator();
   initVec3Allocator();
-  // initBitImageAllocator();
+  initBitImageAllocator();
 }
 
 export { initAllocators };

@@ -29,7 +29,7 @@ function newVec3(x: f32, y: f32, z: f32): Vec3 {
 }
 
 function initVec3Allocator(): void {
-  const NUM_VEC3_PER_BLOCK: u32 = 256;
+  const NUM_VEC3_PER_BLOCK = 256;
   vec3Alloc = newObjectAllocator<Vec3>(NUM_VEC3_PER_BLOCK);
 }
 

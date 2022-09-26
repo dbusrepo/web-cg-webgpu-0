@@ -26,13 +26,7 @@ const HEADER_SIZE = (() => {
 
 const INDEX_OFFSET_SIZE = 4;
 
-// images in wasm memory:
-// images are stored as: images index | img0 | img1 | ... where imgi is header|pixels
-// index: offset for each image to the img data, 4 bytes per offset
-// for each image store the header and the pixels data (rgba or indexes to palette)
-// the header has width, and height...
-// wasm module will use the base offset + img index to get the image data,
-// skipping the header to get the pixels...
+// TODO
 class WasmImage {
 
   constructor(private _image: Image) {}
