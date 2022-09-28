@@ -1,3 +1,5 @@
+import * as initImages from './wasmMemInitImages';
+
 type MemConfig = {
   startOffset: number;
   rgbaFrameBufferSize: number;
@@ -133,39 +135,6 @@ function getMemStartSize(
   return offsets[MemRegions.HEAP] + sizes[MemRegions.HEAP] - startOffset;
 }
 
-// IMAGES REGION: INDEX IMAGES
-// INDEX: rel PTRS (distances) TO IMAGES Ws Hs 
-const IMAGE_INDEX_PTR_SIZEOF = Uint32Array.BYTES_PER_ELEMENT;
-const IMAGE_INDEX_W_SIZEOF = Uint32Array.BYTES_PER_ELEMENT;
-const IMAGE_INDEX_H_SIZEOF = Uint32Array.BYTES_PER_ELEMENT;
-
-function getImageIndexSize(numImages: number) {
-  return (
-    (IMAGE_INDEX_PTR_SIZEOF + IMAGE_INDEX_W_SIZEOF + IMAGE_INDEX_H_SIZEOF) *
-    numImages
-  );
-}
-
-// bpp bytes per pixel, 1 or 4
-function writeImagesIndex(
-  imageIndex: Uint32Array,
-  imagesOffsets: number[],
-  imagesSizes: [number, number][],
-  bpp: number,
-) {
-  const numImages = imagesSizes.length;
-  const WIDTHS_OFFSET = numImages; // skip numImages ptrs
-  const HEIGHTS_OFFSET = WIDTHS_OFFSET + numImages;
-  for (let i = 0; i < imagesSizes.length; ++i) {
-    // Atomics.store(imageIndex, i, imagesOffsets[i]);
-    imageIndex[i] = imagesOffsets[i];
-    // eslint-disable-next-line prefer-destructuring
-    imageIndex[WIDTHS_OFFSET + i] = imagesSizes[i][0]; // save w
-    // eslint-disable-next-line prefer-destructuring
-    imageIndex[HEIGHTS_OFFSET + i] = imagesSizes[i][1]; // save h
-  }
-}
-
 export {
   MemConfig,
   MemRegions,
@@ -173,6 +142,5 @@ export {
   calcMemRegionsSizes,
   calcMemRegionsOffsets,
   getMemStartSize,
-  getImageIndexSize,
-  writeImagesIndex as writeImageIndex,
+  initImages,
 };

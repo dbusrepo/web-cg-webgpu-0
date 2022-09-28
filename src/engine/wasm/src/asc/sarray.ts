@@ -20,6 +20,11 @@ const HEADER_SIZE = getTypeSize<Header>();
 
 @final @unmanaged class SArray<T> {
 
+  // @inline private getHeader(): Header {
+  //   const dataPtr = changetype<PTR_T>(this);
+  //   return changetype<Header>(dataPtr - HEADER_SIZE);
+  // }
+
   private idx2Ptr(idx: SIZE_T): PTR_T {
     const dataPtr = changetype<PTR_T>(this);
     const header = changetype<Header>(dataPtr - HEADER_SIZE);
@@ -27,6 +32,12 @@ const HEADER_SIZE = getTypeSize<Header>();
     const offset = idx << header._objSizeLg2;
     const addr = dataPtr + offset;
     return addr;
+  }
+
+  @inline length(): i32 {
+    const dataPtr = changetype<PTR_T>(this);
+    const header = changetype<Header>(dataPtr - HEADER_SIZE);
+    return <i32>( header._length );
   }
 
   @inline dataPtr(): PTR_T {
@@ -48,6 +59,7 @@ const HEADER_SIZE = getTypeSize<Header>();
     const ptr = this.idx2Ptr(idx);
     new Pointer<T>(ptr).value = value;
   }
+
 
   // @inline @operator("[]") get(idx: u32): T {
   //   return this.at(idx);

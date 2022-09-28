@@ -36,6 +36,7 @@ type WorkerWasmMemConfig = {
   wasmMemRegionsOffsets: WasmMemUtils.MemRegionsData;
   wasmMemRegionsSizes: WasmMemUtils.MemRegionsData;
   wasmWorkerHeapSize: number;
+  wasmNumImages: number;
   wasmImagesIndexOffset: number; // images region starts here
   wasmWorkerImagesOffsets: number[]; // for each worker gives the offsets of its images
   wasmWorkerImagesSize: number[]; // for each worker gives the total size of its images
@@ -107,12 +108,14 @@ class EngineWorker {
     return { totalImagesSize, imagesSizes };
   }
 
+  // TODO
   private _getBytesPerPixel(): number {
     const bpp = this._config.usePalette ? 1 : 4;
     return bpp;
   }
 
   private async _loadImageBuffers(): Promise<ArrayBuffer[]> {
+    console.log('worker ', this._config.workerIdx, this._config.imageUrls);
     const imageBuffers = await Promise.all(
       this._config.imageUrls.map(async (url) =>
         loadUtils.loadResAsArrayBuffer(url),
@@ -198,10 +201,16 @@ class EngineWorker {
     );
     syncStore(this._wasmSleepArr, workerIdx, 0);
 
+    // Assets wasm mem init
+
+    // images data
+    const numImages = this._wasmMemConfig.wasmNumImages;
+    // ERROR ! da 1 invece dovrebbero essere 2...
+    console.log('NUM IMAGES: ', numImages);
     const imagesRegion = WasmMemUtils.MemRegions.IMAGES;
-    const imagesIndexSize = WasmMemUtils.getImageIndexSize(
-      this._wasmMemConfig.wasmWorkerImagesOffsets.length,
-    );
+
+    const imagesIndexSize = WasmMemUtils.initImages.getImageIndexSizeBytes(numImages);
+    console.log('IMAGE INDEX SIZE: ', imagesIndexSize);
 
     this._wasmImagesIndex = new Uint32Array(
       wasmMem.buffer,
@@ -222,15 +231,14 @@ class EngineWorker {
   private _initWasmMem() {
     console.log('Init wasm memory...');
     if (this._config.workerIdx === 0) {
-      // first worker writes the images index
-      WasmMemUtils.writeImageIndex(
+      // worker 0 writes the images index
+      WasmMemUtils.initImages.writeImageIndex(
         this._wasmImagesIndex,
         this._wasmMemConfig.wasmImagesOffsets,
         this._wasmMemConfig.wasmImagesSizes,
-        this._getBytesPerPixel(),
       );
     }
-    // each worker writes the loaded images to the wasm mem
+    // write the loaded images to wasm mem
     const workerImagesOffset =
       this._wasmImagesData.byteOffset +
       this._wasmMemConfig.wasmWorkerImagesOffsets[this._config.workerIdx];

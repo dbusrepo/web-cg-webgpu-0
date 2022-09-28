@@ -36,11 +36,11 @@ import { logi } from './importVars';
     this._alignMask = alignMask;
     this._capacity = capacity;
     myAssert((this._dataStart & alignMask) === 0);
-    myAssert(this.count == 0);
+    myAssert(this.length == 0);
   }
 
-  @inline get count(): SIZE_T {
-    return <SIZE_T>(this._next - this._dataStart) >> this._objSizeLg2;
+  @inline get length(): i32 {
+    return <i32>((this._next - this._dataStart) >> this._objSizeLg2);
   }
 
   @inline get capacity(): SIZE_T {
@@ -52,7 +52,7 @@ import { logi } from './importVars';
   }
 
   private idx2Ptr(idx: SIZE_T): PTR_T {
-    myAssert(idx < this.count);
+    myAssert(idx < this.length);
     const offset = idx << this._objSizeLg2;
     return this._dataStart + offset;
   }
@@ -103,7 +103,7 @@ import { logi } from './importVars';
 
   // TODO
   pop(): void {
-    myAssert(this.count > 0);
+    myAssert(this.length > 0);
     this._next -= (1 << this._objSizeLg2);
   }
 

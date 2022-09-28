@@ -10,17 +10,15 @@ type Range = [start: number, end: number];
 
 // split [0..numTasks-1] between [0..numWorkers-1] workers and get the index
 // range for worker workerIdx. Workers on head get one more task if needed.
+// Returns worker tasks [start, end)
 function range(workerIdx: number, numWorkers: number, numTasks: number): Range {
   const numTaskPerWorker = (numTasks / numWorkers) | 0;
   const numTougherThreads = numTasks % numWorkers;
   const isTougher = workerIdx < numTougherThreads;
-
   const start = isTougher
     ? workerIdx * (numTaskPerWorker + 1)
     : numTasks - (numWorkers - workerIdx) * numTaskPerWorker;
-
-  const end = start + numTaskPerWorker + Number(isTougher);
-
+  const end = start + numTaskPerWorker + (isTougher ? 1 : 0);
   return [start, end];
 }
 

@@ -11,7 +11,7 @@ import { bgColor, heapOffset, numWorkers, workerIdx, logi, logf,
          sleepArrayOffset } from './importVars';
 import { usePalette, imagesIndexOffset, numImages } from './importVars';
 import { BitImage } from './bitImage';
-import { loadImages } from './imagesLoader';
+import { initImages } from './initImages';
 // import { DArray, newDArray, deleteDArray } from './darray';
 import { Pointer } from './pointer';
 import { SArray, newSArray } from './sarray';
@@ -34,7 +34,17 @@ function initWorkerMem(): void {
 function run(): void {
 
   initWorkerMem();
-  test();
+  // test();
+  logi(numImages);
+  const images = initImages();
+  for (let i = 0; i < images.length(); ++i) {
+    const pixels = images.at(i).pixels;
+    logi(<i32>pixels);
+    const byte = load<u8>(pixels);
+    logi(byte);
+    logi(images.at(i).width);
+    logi(images.at(i).height);
+  }
 
   // const r = range(workerIdx, numWorkers, frameHeight);
   // const s = <u32>(r >>> 32);

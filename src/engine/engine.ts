@@ -12,7 +12,7 @@ import {
 // import loader from '@assemblyscript/loader';
 // import assert from 'assert';
 import { defaultConfig } from '../config/config';
-import { syncStore, syncWait, syncNotify } from './utils';
+import { range, syncStore, syncWait, syncNotify } from './utils';
 
 // import * as loadUtils from '../utils/loadFiles'; // TODO
 import {
@@ -30,6 +30,7 @@ type EngineConfig = {
 };
 
 type WorkersInitData = {
+  numImages: number;
   totalImagesSize: number;
   workerImagesSizes: number[];
   workerImagesOffsets: number[];
@@ -68,7 +69,7 @@ class Engine {
   private _imageData: ImageData;
   private _startTime: number;
 
-  private _imagesUrls: string[];
+  private _imagesPaths: string[];
 
   private _workers: Worker[];
   private _workersInitData: WorkersInitData;
@@ -93,7 +94,7 @@ class Engine {
     const { width: frameWidth, height: frameHeight } = canvas;
     this._imageData = this._ctx.createImageData(frameWidth, frameHeight);
 
-    await this._loadImagesUrls();
+    await this._loadImagesPaths();
 
     await this._initWorkers();
 
@@ -145,15 +146,16 @@ class Engine {
   }
 
   private _getWasmImagesRegionSize(): number {
-    const wasmImageIndexSize = WasmMemUtils.getImageIndexSize(this._imagesUrls.length);
+    const numImages = this._imagesPaths.length;
+    const wasmImageIndexSize = WasmMemUtils.initImages.getImageIndexSizeBytes(numImages);
     return this._workersInitData.totalImagesSize + wasmImageIndexSize;
   }
 
-  private async _loadImagesUrls() {
+  private async _loadImagesPaths() {
     const imgUrl = (await import('../asset/images/samplePNGImage.png')).default;
     const imgUrl2 = (await import('../asset/images/samplePNGImage2.png'))
       .default;
-    this._imagesUrls = [imgUrl, imgUrl2];
+    this._imagesPaths = [imgUrl, imgUrl2];
   }
 
   private _initOffscreenCanvasContext(canvas: OffscreenCanvas): void {
@@ -203,21 +205,24 @@ class Engine {
     );
   }
 
-  private _buildWorkerConfig(idx: number): WorkerConfig {
+  private _buildWorkerConfig(workerIdx: number): WorkerConfig {
     return {
-      workerIdx: idx,
+      workerIdx,
       numWorkers: Engine.NUM_WORKERS,
       frameWidth: this._config.canvas.width,
       frameHeight: this._config.canvas.height,
-      imageUrls: this._getImgsUrlsWorker(idx),
+      imageUrls: this._images2LoadWorker(workerIdx),
       usePalette: false, // TODO
     };
   }
 
-  // TODO use range 
-  private _getImgsUrlsWorker(idx: number): string[] {
-    // return this._assetsUrls;
-    return [this._imagesUrls[idx]];
+  private _images2LoadWorker(workerIdx: number): string[] {
+    const [start, end] = range(
+      workerIdx,
+      Engine.NUM_WORKERS,
+      this._imagesPaths.length,
+    );
+    return this._imagesPaths.slice(start, end);
   }
 
   private _buildWorkerWasmMemoryConfig(
@@ -231,6 +236,7 @@ class Engine {
       wasmMem: this._wasmMem,
       wasmMemRegionsSizes: this._wasmMemRegionsSizes,
       wasmMemRegionsOffsets: this._wasmMemRegionsOffsets,
+      wasmNumImages: this._workersInitData.numImages,
       wasmImagesIndexOffset:
         this._wasmMemRegionsOffsets[WasmMemUtils.MemRegions.IMAGES],
       wasmWorkerImagesOffsets: this._workersInitData.workerImagesOffsets,
@@ -298,6 +304,7 @@ class Engine {
 
     this._workers = [];
     this._workersInitData = {
+      numImages: 0, // updated later
       totalImagesSize: 0,
       workerImagesOffsets: new Array(Engine.NUM_WORKERS).fill(0),
       workerImagesSizes: new Array(Engine.NUM_WORKERS),
@@ -305,8 +312,21 @@ class Engine {
       imagesOffsets: [], 
     };
 
-    // offset to fill array of sizes ([w,h]) in worker order in updateWorkersData
-    const workerSizesOffset: number[] = new Array(Engine.NUM_WORKERS).fill(0);
+    // offset used to fill the sizes array (with [w,h]) in worker order in updateWorkersData
+    const workerSizesOffsets: number[] = new Array(Engine.NUM_WORKERS).fill(0);
+
+    const updateWorkersNumImagesOffset = (
+      workerIdx: number,
+      workerConfig: WorkerConfig,
+    ) => {
+      for (
+        let nextWorker = workerIdx + 1;
+        nextWorker < Engine.NUM_WORKERS;
+        nextWorker++
+      ) {
+        workerSizesOffsets[nextWorker] += workerConfig.imageUrls.length;
+      }
+    };
 
     const updateWorkersData = (workerIdx: number, workerData: WorkerInitData) => {
       this._workersInitData.workerImagesSizes[workerIdx] = workerData.totalImagesSize;
@@ -322,13 +342,14 @@ class Engine {
       }
       // insert the sizes for images from worker idx
       for (
-        let i = 0, j = workerSizesOffset[workerIdx];
+        let i = 0, j = workerSizesOffsets[workerIdx];
         i < workerData.imagesSizes.length;
-        ++i
+        ++i, ++j
       ) {
         this._workersInitData.imagesSizes[j] = workerData.imagesSizes[i];
       }
-      // this._workersInitData.imagesSizes.splice(
+      this._workersInitData.numImages += workerData.imagesSizes.length;
+        // this._workersInitData.imagesSizes.splice(
       //   workerSizesOffset[workerIdx],
       //   0,
       //   ...workerData.imagesSizes,
@@ -344,7 +365,7 @@ class Engine {
       const numImages = this._workersInitData.imagesSizes.length;
       const imagesOffsets = new Array<number>(numImages);
       let prevSize: number;
-      imagesOffsets[0] = WasmMemUtils.getImageIndexSize(numImages);
+      imagesOffsets[0] = WasmMemUtils.initImages.getImageIndexSizeBytes(numImages);
       this._workersInitData.imagesSizes.forEach(([w, h], idx) => {
         const imageSize = w * h * this._getBytesPerPixel();
         if (idx > 0) {
@@ -377,9 +398,12 @@ class Engine {
               Date.now() - initStart
             }ms with data = ${JSON.stringify(initData)}`,
           );
-          if (!workerCount) {
+          if (workerCount === 0) {
             console.log(`Workers init done. After ${Date.now() - this._startTime}ms`);
             calcImagesOffsets();
+            assert(
+              this._workersInitData.numImages === this._imagesPaths.length,
+            );
             resolve();
           }
         };
@@ -388,14 +412,7 @@ class Engine {
           reject(error);
         };
         const workerConfig = this._buildWorkerConfig(workerIdx);
-        // udpate offsets for images sizes output array
-        for (
-          let nextWorker = workerIdx + 1;
-          nextWorker < Engine.NUM_WORKERS;
-          nextWorker++
-        ) {
-          workerSizesOffset[nextWorker] += workerConfig.imageUrls.length;
-        }
+        updateWorkersNumImagesOffset(workerIdx, workerConfig);
         worker.postMessage({
           command: 'init',
           params: workerConfig,
