@@ -153,8 +153,8 @@ class Engine {
 
   private async _loadImagesPaths() {
     const imgUrl = (await import('../asset/images/samplePNGImage.png')).default;
-    const imgUrl2 = (await import('../asset/images/samplePNGImage2.png'))
-      .default;
+    // this._imagesPaths = [imgUrl];
+    const imgUrl2 = (await import('../asset/images/samplePNGImage2.png')).default;
     this._imagesPaths = [imgUrl, imgUrl2];
   }
 
@@ -523,7 +523,7 @@ class Engine {
       const elapsed = frameNow - frameThen;
       if (elapsed >= Engine.RENDER_PERIOD) {
         frameThen = frameNow - (elapsed % Engine.RENDER_PERIOD);
-        this.renderFrame();
+        this.drawFrame();
         const renderTime = performance.now() - startRenderTime;
         renderTimeArr[frameCount % renderTimeArr.length] = renderTime;
         frameCount++;
@@ -570,7 +570,7 @@ class Engine {
     requestAnimationFrame(init);
   }
 
-  private renderFrame(): void {
+  private drawFrame(): void {
     for (let i = 0; i < Engine.NUM_WORKERS; ++i) {
       syncStore(this._wasmSyncArr, i, 1);
       syncNotify(this._wasmSyncArr, i);

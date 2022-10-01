@@ -72,7 +72,7 @@ type Metadata = {
     palette: [number, number, number, number, number][];
   };
   lastModificationTime?: number; // Image last-modification time (UTC)
-  data: Uint8Array; // ImageData
+  data: number[],
 };
 
 export default Metadata;

@@ -16,6 +16,7 @@ import { initImages } from './initImages';
 import { Pointer } from './pointer';
 import { SArray, newSArray } from './sarray';
 import { test } from './test/test';
+import {PTR_T} from './memUtils';
 
 const syncLoc = syncArrayOffset + workerIdx * sizeof<i32>();
 const sleepLoc = sleepArrayOffset + workerIdx * sizeof<i32>();
@@ -35,29 +36,65 @@ function run(): void {
 
   initWorkerMem();
   // test();
-  logi(numImages);
+  // test images loading
+  // logi(numImages);
+  // const images = initImages();
+  // for (let i = 0; i < images.length(); ++i) {
+  //   const pixels = images.at(i).pixels;
+  //   logi(<i32>pixels);
+  //   const byte = load<u8>(pixels);
+  //   logi(byte);
+  //   logi(images.at(i).width);
+  //   logi(images.at(i).height);
+  // }
+
   const images = initImages();
-  for (let i = 0; i < images.length(); ++i) {
-    const pixels = images.at(i).pixels;
-    logi(<i32>pixels);
-    const byte = load<u8>(pixels);
-    logi(byte);
-    logi(images.at(i).width);
-    logi(images.at(i).height);
-  }
+  const image = images.at(1);
+  const width = image.width;
+  const height = image.height;
+
+  let screenPtr: PTR_T;
+  let pixels: PTR_T;
+
+  // // logi(image.height);
+  // for (let i = 0; i != frameHeight; ++i) {
+  //   let screenPtr: PTR_T = frameBufferOffset + i * frameWidth * 4;
+  //   const pixels: PTR_T = image.pixels + i * image.width * 4;
+  //   memory.copy(screenPtr, pixels, frameWidth * 4);
+
+  //   // screenPtr = frameBufferOffset + i * frameWidth * 4;
+  //   // pixels = image.pixels + i * image.width * 4;
+  //   // // logi(screenPtr);
+  //   // for (let j = 0; j != frameWidth; ++j) {
+  //   //   const col = load<u32>(pixels);
+  //   //   store<u32>(screenPtr, col);
+  //   //   // store<i32>(screenPtr, 0xFF_00_00_FF);
+  //   //   pixels += 4;
+  //   //   screenPtr += 4;
+  //   //   // logi(j);
+  //   // }
+  // }
+
 
   // const r = range(workerIdx, numWorkers, frameHeight);
   // const s = <u32>(r >>> 32);
   // const e = <u32>r;
 
-  // while (true) {
-  //   atomic.wait<i32>(syncLoc, 0);
-  //   // const v = vec3Alloc.new();
-  //   // clearBg(bgColor, s, e);
-  //   atomic.store<i32>(syncLoc, 0);
-  //   atomic.notify(syncLoc);
-  //   break;
-  // }
+  while (true) {
+    atomic.wait<i32>(syncLoc, 0);
+    // const v = vec3Alloc.new();
+    // clearBg(bgColor, s, e);
+
+    // // logi(image.height);
+    for (let i = 0; i != frameHeight; ++i) {
+      let screenPtr: PTR_T = frameBufferOffset + i * frameWidth * 4;
+      const pixels: PTR_T = image.pixels + i * image.width * 4;
+      memory.copy(screenPtr, pixels, frameWidth * 4);
+    }
+
+    atomic.store<i32>(syncLoc, 0);
+    atomic.notify(syncLoc);
+  }
 
 }
 

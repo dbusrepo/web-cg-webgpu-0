@@ -22,8 +22,7 @@ export default function decodeIDAT(
   palette?: [number, number, number, number][],
   transparent?: [number, number, number, number],
 ) {
-  // let pixels: number[] = [];
-  let pixels: Uint8Array = new Uint8Array(width * height);
+  let pixels: number[] = [];
 
   // inflate
   const inflatedData = pako.inflate(deflatedData);
@@ -122,7 +121,7 @@ export default function decodeIDAT(
           heightIndex,
         );
         for (let i = 0; i < pixel.length; i++) {
-          pixels[pixelIndex + i] = pixel[i];
+          pixels[pixelIndex + i] = pixel[i] | 0;
         }
       }
 

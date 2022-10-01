@@ -32,14 +32,7 @@ function writeImageIndex(
     const [ width, height ] = imagesSizes[i];
     imageIndex[WIDTHS_OFFS + i] = width;
     imageIndex[HEIGHTS_OFFS + i] = height;
-    console.log(
-      'HERE',
-      i,
-      width,
-      height,
-      imageIndex[WIDTHS_OFFS + i],
-      imageIndex[HEIGHTS_OFFS + i],
-    );
+    console.log('Image: ', i, width, height);
   }
 }
 
