@@ -1,3 +1,4 @@
+import * as initViews from './wasmMemViews';
 import * as initImages from './wasmMemInitImages';
 
 type MemConfig = {
@@ -142,4 +143,5 @@ export {
   buildMemRegionsDataOffsets,
   getMemStartSize,
   initImages,
+  initViews,
 };

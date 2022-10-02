@@ -1,13 +1,14 @@
 import assert from 'assert';
 import { fileTypeFromBuffer } from 'file-type';
-import * as WasmMemUtils from './wasmMemUtils';
+import * as WasmUtils from './wasmMemUtils';
 import { WasmModules, WasmInput, loadWasmModules } from './initWasm';
 import { syncStore, randColor, sleep } from './utils';
 import * as loadUtils from './loadUtils';
 import { BitImage } from './assets/images/bitImage';
 import { BitImageRGBA } from './assets/images/bitImageRGBA';
 import { PngDecoderRGBA } from './assets/images/vivaxy-png/PngDecoderRGBA';
-import { getImagesInitData } from './assets/images/utils';
+import { loadImagesInitData, loadImageRGBA } from './assets/images/utils';
+import { WorkerInitData, WorkerInitImagesData } from './workerInitTypes';
 
 type WorkerConfig = {
   workerIdx: number;
@@ -18,94 +19,26 @@ type WorkerConfig = {
   usePalette: boolean;
 };
 
-type WorkerInitImagesData = {
-  totalImagesSize: number; // in bytes
-  imagesSizes: [number, number][];
-};
-
-type WorkerInitData = WorkerInitImagesData; // {} & WorkerInitImagesData;
-
 type WorkerWasmMemConfig = {
   wasmMem: WebAssembly.Memory;
   wasmMemStartOffset: number;
   wasmMemStartSize: number;
-  wasmMemRegionsOffsets: WasmMemUtils.MemRegionsData;
-  wasmMemRegionsSizes: WasmMemUtils.MemRegionsData;
+  wasmMemRegionsOffsets: WasmUtils.MemRegionsData;
+  wasmMemRegionsSizes: WasmUtils.MemRegionsData;
   wasmWorkerHeapSize: number;
   wasmNumImages: number;
   wasmImagesIndexOffset: number; // images region starts here
-  wasmWorkerImagesOffsets: number[]; // for each worker gives the offsets of its images
-  wasmWorkerImagesSize: number[]; // for each worker gives the total size of its images
-  wasmImagesSizes: [number, number][]; // for each image gives its sizes [w, h]
-  wasmImagesOffsets: number[]; // for each image gives its offsets wrt the start of the images region (so it consider the index area)
+  wasmWorkerImagesOffsets: number[]; // worker images offsets
+  wasmWorkerImagesSize: number[]; // worker images total size
+  wasmImagesSizes: [number, number][]; // [w, h] for each image
+  wasmImagesOffsets: number[]; // image offsets from the beg of the image region
 };
 
 type AssetsBuffers = {
   images: ArrayBuffer[];
 };
 
-class WasmMemViews {
-  memUI8: Uint8Array;
-  frameBufferRGBA: Uint8ClampedArray;
-  syncArr: Int32Array;
-  sleepArr: Int32Array;
-  imagesIndex: Uint32Array;
-  imagesPixels: Uint8Array;
-
-  constructor(
-    wasmMem: WebAssembly.Memory,
-    wasmMemStartOffset: number,
-    wasmMemStartSize: number,
-    memOffsets: WasmMemUtils.MemRegionsData,
-    memSizes: WasmMemUtils.MemRegionsData,
-    numImages: number,
-    workerIdx: number,
-  ) {
-    const wasmMemSize = wasmMemStartOffset + wasmMemStartSize;
-    this.memUI8 = new Uint8Array(wasmMem.buffer, 0, wasmMemSize);
-
-    this.frameBufferRGBA = new Uint8ClampedArray(
-      wasmMem.buffer,
-      memOffsets[WasmMemUtils.MemRegions.FRAMEBUFFER_RGBA],
-      memSizes[WasmMemUtils.MemRegions.FRAMEBUFFER_RGBA],
-    );
-
-    this.syncArr = new Int32Array(
-      wasmMem.buffer,
-      memOffsets[WasmMemUtils.MemRegions.SYNC_ARRAY],
-      memSizes[WasmMemUtils.MemRegions.SYNC_ARRAY] /
-        Int32Array.BYTES_PER_ELEMENT,
-    );
-    syncStore(this.syncArr, workerIdx, 0);
-
-    this.sleepArr = new Int32Array(
-      wasmMem.buffer,
-      memOffsets[WasmMemUtils.MemRegions.SLEEP_ARRAY],
-      memSizes[WasmMemUtils.MemRegions.SLEEP_ARRAY] /
-        Int32Array.BYTES_PER_ELEMENT,
-    );
-    syncStore(this.sleepArr, workerIdx, 0);
-
-    // Assets mem views
-
-    // images data views
-    const imagesIndexSize =
-      WasmMemUtils.initImages.getImageIndexSizeBytes(numImages);
-
-    this.imagesIndex = new Uint32Array(
-      wasmMem.buffer,
-      memOffsets[WasmMemUtils.MemRegions.IMAGES],
-      imagesIndexSize / Uint32Array.BYTES_PER_ELEMENT,
-    );
-
-    this.imagesPixels = new Uint8Array(
-      wasmMem.buffer,
-      memOffsets[WasmMemUtils.MemRegions.IMAGES] + imagesIndexSize,
-      memSizes[WasmMemUtils.MemRegions.IMAGES] - imagesIndexSize,
-    );
-  }
-};
-
+type WasmMemViews = WasmUtils.initViews.WasmMemViews;
 
 class EngineWorker {
   private _config: WorkerConfig;
@@ -119,15 +52,10 @@ class EngineWorker {
 
   // private _sab: SharedArrayBuffer;
 
-  // private _getBPP(): number {
-  //   const bpp = this._config.usePalette ? 1 : 4;
-  //   return bpp;
-  // }
-
   public async init(config: WorkerConfig): Promise<WorkerInitData> {
     this._config = config;
     await this._initAssetsBuffers();
-    return { ...(await this._getImagesInitData()) };
+    return { ...(await loadImagesInitData(this._assetBuffers.images)) };
   }
 
   private async _initAssetsBuffers() {
@@ -147,45 +75,23 @@ class EngineWorker {
     return imageBuffers;
   }
 
-  private async _getImagesInitData(): Promise<WorkerInitImagesData> {
-    const imgsInfos = await getImagesInitData(this._assetBuffers.images);
-    // TODO note use getBPP as required by the engine, then when loading the
-    // images data 
-    const totalImagesSize = imgsInfos.reduce(
-      (size, imgInfo) => size + imgInfo.bpp * imgInfo.width * imgInfo.height,
-      0,
-    );
-    const imagesSizes = imgsInfos.map(
-      (imgInfo) => [imgInfo.width, imgInfo.height] as [number, number],
-    );
-    return { totalImagesSize, imagesSizes };
-  }
-
-  private async _loadImage(imageBuffer: ArrayBuffer): Promise<BitImage> {
-    // TODO check use palette ?
-    const fileType = await fileTypeFromBuffer(imageBuffer);
-    if (!fileType) {
-      throw new Error(`_loadImage: file type not found`);
-    }
-    switch (fileType.ext) {
-      case 'png': {
-        const bitImage = new BitImageRGBA();
-        new PngDecoderRGBA().read(imageBuffer, bitImage);
-        return bitImage;
-      }
-      // break;
-      default:
-        throw new Error(`_loadImage does not support ${fileType.ext} loading`);
-    }
-  }
 
   async loadAssets() {
     await this._loadImages();
   }
 
   private async _loadImages() {
+    const loadImageFromBuffer = async (
+      imgBuffer: ArrayBuffer,
+    ): Promise<BitImage> => {
+      if (this._config.usePalette) {
+        throw new Error('not yet impl');
+      } else {
+        return loadImageRGBA(imgBuffer);
+      }
+    };
     this._images = await Promise.all(
-      this._assetBuffers.images.map(async (imgBuffer) => this._loadImage(imgBuffer)),
+      this._assetBuffers.images.map(loadImageFromBuffer),
     );
   }
 
@@ -208,7 +114,7 @@ class EngineWorker {
     const { wasmNumImages: numImages } = this._wasmMemConfig;
     const { workerIdx } = this._config;
 
-    this._wasmMemViews = new WasmMemViews(
+    this._wasmMemViews = WasmUtils.initViews.buildWasmMemViews(
       mem,
       startOffs,
       startSize,
@@ -223,7 +129,7 @@ class EngineWorker {
     console.log('Init wasm memory...');
     if (this._config.workerIdx === 0) {
       // worker 0 writes the images index
-      WasmMemUtils.initImages.writeImageIndex(
+      WasmUtils.initImages.writeImageIndex(
         this._wasmMemViews.imagesIndex,
         this._wasmMemConfig.wasmImagesOffsets,
         this._wasmMemConfig.wasmImagesSizes,
@@ -270,16 +176,16 @@ class EngineWorker {
       memory,
       frameWidth,
       frameHeight,
-      frameBufferOffset: memOffsets[WasmMemUtils.MemRegions.FRAMEBUFFER_RGBA],
-      syncArrayOffset: memOffsets[WasmMemUtils.MemRegions.SYNC_ARRAY],
-      sleepArrayOffset: memOffsets[WasmMemUtils.MemRegions.SLEEP_ARRAY],
-      imagesIndexOffset: memOffsets[WasmMemUtils.MemRegions.IMAGES],
+      frameBufferOffset: memOffsets[WasmUtils.MemRegions.FRAMEBUFFER_RGBA],
+      syncArrayOffset: memOffsets[WasmUtils.MemRegions.SYNC_ARRAY],
+      sleepArrayOffset: memOffsets[WasmUtils.MemRegions.SLEEP_ARRAY],
+      imagesIndexOffset: memOffsets[WasmUtils.MemRegions.IMAGES],
       numImages: this._wasmMemConfig.wasmImagesSizes.length,
       workerIdx,
       numWorkers,
-      workersHeapOffset: memOffsets[WasmMemUtils.MemRegions.WORKERS_HEAPS],
+      workersHeapOffset: memOffsets[WasmUtils.MemRegions.WORKERS_HEAPS],
       workerHeapSize,
-      heapOffset: memOffsets[WasmMemUtils.MemRegions.HEAP],
+      heapOffset: memOffsets[WasmUtils.MemRegions.HEAP],
       bgColor: randColor(),
       usePalette: this._config.usePalette ? 1 : 0,
       logi,

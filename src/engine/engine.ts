@@ -1,6 +1,7 @@
 import assert from 'assert';
-import * as WasmMemUtils from './wasmMemUtils';
+import * as WasmUtils from './wasmMemUtils';
 import {
+  BPP_PAL,
   BPP_RGBA,
   PAL_ENTRY_SIZE,
   PALETTE_SIZE,
@@ -76,9 +77,9 @@ class Engine {
   private _workers: Worker[];
   private _workersInitData: WorkersInitData;
 
-  private _wasmMemConfig: WasmMemUtils.MemConfig;
-  private _wasmMemRegionsSizes: WasmMemUtils.MemRegionsData;
-  private _wasmMemRegionsOffsets: WasmMemUtils.MemRegionsData;
+  private _wasmMemConfig: WasmUtils.MemConfig;
+  private _wasmMemRegionsSizes: WasmUtils.MemRegionsData;
+  private _wasmMemRegionsOffsets: WasmUtils.MemRegionsData;
   private _wasmMem: WebAssembly.Memory;
 
   private _wasmMemViews: WasmMemViews;
@@ -115,7 +116,7 @@ class Engine {
 
     const { wasmMemStartOffset } = defaultConfig;
 
-    const wasmMemStartSize = WasmMemUtils.getMemStartSize(
+    const wasmMemStartSize = WasmUtils.getMemStartSize(
       wasmMemStartOffset,
       this._wasmMemRegionsSizes,
       this._wasmMemRegionsOffsets,
@@ -142,13 +143,12 @@ class Engine {
   // }
 
   private _getBPP(): number {
-    const bpp = this._config.usePalette ? 1 : 4;
-    return bpp;
+    return this._config.usePalette ? BPP_PAL : BPP_RGBA;
   }
 
   private _getWasmImagesRegionSize(): number {
     const numImages = this._imagesPaths.length;
-    const wasmImageIndexSize = WasmMemUtils.initImages.getImageIndexSizeBytes(numImages);
+    const wasmImageIndexSize = WasmUtils.initImages.getImageIndexSizeBytes(numImages);
     return this._workersInitData.totalImagesSize + wasmImageIndexSize;
   }
 
@@ -173,7 +173,7 @@ class Engine {
   private _buildWasmMemConfig(wasmMemConfigInput: WasmMemConfigInput): void {
     const { startOffset, workerHeapPages, numPixels, imagesRegionSize, numWorkers } =
       wasmMemConfigInput;
-    const wasmMemConfig: WasmMemUtils.MemConfig = {
+    const wasmMemConfig: WasmUtils.MemConfig = {
       startOffset,
       frameBufferRGBASize: numPixels * BPP_RGBA,
       frameBufferPalSize: this._config.usePalette ? numPixels : 0,
@@ -185,10 +185,10 @@ class Engine {
       imagesRegionSize,
     };
     this._wasmMemConfig = wasmMemConfig;
-    this._wasmMemRegionsSizes = WasmMemUtils.buildMemRegionSizesData(
+    this._wasmMemRegionsSizes = WasmUtils.buildMemRegionSizesData(
       this._wasmMemConfig,
     );
-    this._wasmMemRegionsOffsets = WasmMemUtils.buildMemRegionsDataOffsets(
+    this._wasmMemRegionsOffsets = WasmUtils.buildMemRegionsDataOffsets(
       this._wasmMemConfig,
       this._wasmMemRegionsSizes,
     );
@@ -202,7 +202,7 @@ class Engine {
     const memOffsets = this._wasmMemRegionsOffsets;
     const workerIdx = Engine.NUM_WORKERS;
 
-    this._wasmMemViews = new WasmMemViews(
+    this._wasmMemViews = WasmUtils.initViews.buildWasmMemViews(
       this._wasmMem,
       defaultConfig.wasmMemStartOffset,
       wasmMemStartSize,
@@ -246,7 +246,7 @@ class Engine {
       wasmMemRegionsOffsets: this._wasmMemRegionsOffsets,
       wasmNumImages: this._workersInitData.numImages,
       wasmImagesIndexOffset:
-        this._wasmMemRegionsOffsets[WasmMemUtils.MemRegions.IMAGES],
+        this._wasmMemRegionsOffsets[WasmUtils.MemRegions.IMAGES],
       wasmWorkerImagesOffsets: this._workersInitData.workerImagesOffsets,
       wasmImagesSizes: this._workersInitData.imagesSizes,
       wasmWorkerImagesSize: this._workersInitData.workerImagesSizes,
@@ -379,9 +379,9 @@ class Engine {
         const numImages = this._workersInitData.imagesSizes.length;
         const imagesOffsets = new Array<number>(numImages);
         let prevSize: number;
-        imagesOffsets[0] = WasmMemUtils.initImages.getImageIndexSizeBytes(numImages);
+        imagesOffsets[0] = WasmUtils.initImages.getImageIndexSizeBytes(numImages);
         this._workersInitData.imagesSizes.forEach(([w, h], idx) => {
-          const imageSize = w * h * this._getBPP(); // TODO use img info !
+          const imageSize = w * h * this._getBPP();
           if (idx > 0) {
             imagesOffsets[idx] = imagesOffsets[idx - 1] + prevSize;
           }
