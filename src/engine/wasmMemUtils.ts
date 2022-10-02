@@ -2,8 +2,8 @@ import * as initImages from './wasmMemInitImages';
 
 type MemConfig = {
   startOffset: number;
-  rgbaFrameBufferSize: number;
-  palIdxFrameBufferSize: number;
+  frameBufferRGBASize: number;
+  frameBufferPalSize: number;
   numWorkers: number;
   syncArraySize: number;
   paletteSize: number;
@@ -15,8 +15,8 @@ type MemConfig = {
 // all regions are bounded except (at least for now) for the last part, the
 // shared heap that can grow.
 const enum MemRegions {
-  RGBA_FRAMEBUFFER = 'RGBA_FRAMEBUFFER',
-  PAL_IDX_FRAMEBUFFER = 'PAL_IDX_FRAMEBUFFER',
+  FRAMEBUFFER_RGBA = 'FRAMEBUFFER_RGBA',
+  FRAMEBUFFER_PAL = 'FRAMEBUFFER_PAL',
   PALETTE = 'PALETTE',
   SYNC_ARRAY = 'SYNC_ARRAY',
   SLEEP_ARRAY = 'SLEEP_ARRAY',
@@ -29,8 +29,8 @@ type MemRegionKeyType = keyof typeof MemRegions;
 
 // allocation order/layout seq
 const MEM_REGIONS_SEQ: MemRegionKeyType[] = [
-  MemRegions.RGBA_FRAMEBUFFER,
-  MemRegions.PAL_IDX_FRAMEBUFFER,
+  MemRegions.FRAMEBUFFER_RGBA,
+  MemRegions.FRAMEBUFFER_PAL,
   MemRegions.PALETTE,
   MemRegions.SYNC_ARRAY,
   MemRegions.SLEEP_ARRAY,
@@ -44,8 +44,8 @@ type MemRegionsData = {
 };
 
 const memRegionsAlignSizes: MemRegionsData = {
-  [MemRegions.RGBA_FRAMEBUFFER]: 4,
-  [MemRegions.PAL_IDX_FRAMEBUFFER]: 4,
+  [MemRegions.FRAMEBUFFER_RGBA]: 4,
+  [MemRegions.FRAMEBUFFER_PAL]: 4,
   [MemRegions.PALETTE]: 4,
   [MemRegions.SYNC_ARRAY]: 4,
   [MemRegions.SLEEP_ARRAY]: 4,
@@ -54,12 +54,10 @@ const memRegionsAlignSizes: MemRegionsData = {
   [MemRegions.HEAP]: 64,
 };
 
-// Calc the (static) sizes of the start regions.
-// sizes are in bytes, and they include the alignment space
-function calcMemRegionsSizes(config: MemConfig): MemRegionsData {
+function buildMemRegionSizesData(config: MemConfig): MemRegionsData {
   const {
-    rgbaFrameBufferSize,
-    palIdxFrameBufferSize,
+    frameBufferRGBASize,
+    frameBufferPalSize,
     numWorkers,
     imagesRegionSize,
     workerHeapSize,
@@ -69,16 +67,17 @@ function calcMemRegionsSizes(config: MemConfig): MemRegionsData {
   } = config;
 
   const sizes: MemRegionsData = {
-    [MemRegions.RGBA_FRAMEBUFFER]: rgbaFrameBufferSize,
-    [MemRegions.PAL_IDX_FRAMEBUFFER]: palIdxFrameBufferSize,
+    [MemRegions.FRAMEBUFFER_RGBA]: frameBufferRGBASize,
+    [MemRegions.FRAMEBUFFER_PAL]: frameBufferPalSize,
     [MemRegions.PALETTE]: paletteSize,
     [MemRegions.SYNC_ARRAY]: syncArraySize,
     [MemRegions.SLEEP_ARRAY]: sleepArraySize,
     [MemRegions.IMAGES]: imagesRegionSize,
     [MemRegions.WORKERS_HEAPS]: numWorkers * workerHeapSize,
-    [MemRegions.HEAP]: 0,
+    [MemRegions.HEAP]: 0, // TODO
   };
 
+  // TODO
   sizes[MemRegions.HEAP] = 0; // force it to 0 'cause it is the last and it can expand
 
   // console.log(JSON.stringify(sizes));
@@ -96,7 +95,7 @@ function calcMemRegionsSizes(config: MemConfig): MemRegionsData {
 // }
 
 // Calc the (static) offset of the start regions
-function calcMemRegionsOffsets(
+function buildMemRegionsDataOffsets(
   config: MemConfig,
   sizes: Readonly<MemRegionsData>,
 ): MemRegionsData {
@@ -139,8 +138,8 @@ export {
   MemConfig,
   MemRegions,
   MemRegionsData,
-  calcMemRegionsSizes,
-  calcMemRegionsOffsets,
+  buildMemRegionSizesData,
+  buildMemRegionsDataOffsets,
   getMemStartSize,
   initImages,
 };

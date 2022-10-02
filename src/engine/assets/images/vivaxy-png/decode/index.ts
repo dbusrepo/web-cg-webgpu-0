@@ -15,19 +15,14 @@ import { decode as decodeUTF8 } from '../helpers/utf8';
 import { concatUInt8Array } from '../helpers/typed-array';
 import { CHROMATICITIES_DIVISION } from '../helpers/chromaticities';
 
-function decodeColorInfo(arrayBuffer: ArrayBuffer): [number, number] {
-  const view = new DataView(arrayBuffer, 24, 2);
-  const bitDepth = view.getUint8(0);
-  const colorType = view.getUint8(1);
-  return [bitDepth, colorType];
-}
-
-function decodeSizes(arrayBuffer: ArrayBuffer): [number, number] {
-  const view = new DataView(arrayBuffer, 16, 8);
+function decodeImageInfo(arrayBuffer: ArrayBuffer): [number, number, number, number] {
+  const view = new DataView(arrayBuffer, 16, 10);
   // little endian ? set last param of getUint32
   const width = view.getUint32(0);
   const height = view.getUint32(4);
-  return [width, height];
+  const bitDepth = view.getUint8(8);
+  const colorType = view.getUint8(9);
+  return [width, height, bitDepth, colorType];
 }
 
 function decode(arrayBuffer: ArrayBuffer): Metadata {
@@ -515,4 +510,4 @@ function decode(arrayBuffer: ArrayBuffer): Metadata {
   return metadata;
 }
 
-export { decodeColorInfo, decodeSizes, decode };
+export { decodeImageInfo, decode };

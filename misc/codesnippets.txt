@@ -1,3 +1,15 @@
+// load png as arraybuffer
+// const imgUrl = (await import('../asset/images/samplePNGImage.png')).default;
+// const imgBuffer = await loadUtils.loadResAsArrayBuffer(imgUrl);
+// const pngDecoder = new PngDecoder24();
+// const [w, h] = pngDecoder.readSize(imgBuffer);
+// console.log(w, h);
+
+
+// const ASSETS_PATH = '../asset';
+// const IMAGES_PATH = `${ASSETS_PATH}/images`;
+// import myImgUrl from '../asset/images/samplePNGImage.png';
+
 // function board_style(): object {
 //   return {
 //     // boxSizing: 'border-box',

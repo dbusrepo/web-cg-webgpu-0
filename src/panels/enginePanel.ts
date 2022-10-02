@@ -118,7 +118,8 @@ class EnginePanel extends Panel {
     const offCanvas = this.canvas.transferControlToOffscreen();
     const engineConfig: EngineConfig = {
       canvas: offCanvas,
-      sendStats: !!this._stats, // TODO check
+      sendStats: !!this._stats,
+      usePalette: false,
     };
     this._engineWorker.postMessage(
       {

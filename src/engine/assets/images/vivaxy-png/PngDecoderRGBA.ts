@@ -1,23 +1,32 @@
 import assert from 'assert';
-import { decodeColorInfo, decodeSizes, decode } from './decode';
+import { decodeImageInfo, decode } from './decode';
 import { BitImageRGBA } from '../bitImageRGBA';
 import { COLOR_TYPES } from './helpers/color-types';
 import { PngDecoder } from '../pngDecoder';
+import { ImageInfo } from '../imageDecoder';
+
+const BPP = 4;
 
 class PngDecoderRGBA implements PngDecoder {
 
-  // returns [w, h, bytes per pixel]. Used to allocate space for a BitImageRGBA
-  readSizes(input: ArrayBuffer): [number, number] {
+  readInfo(input: ArrayBuffer): ImageInfo {
     // this.checkType(input);
-    const sizes = decodeSizes(input);
-    return sizes;
+    const imgInfo = decodeImageInfo(input);
+    const depth =  imgInfo[2];
+    assert(depth === 8);
+    return {
+      width: imgInfo[0],
+      height: imgInfo[1],
+      depth: imgInfo[2],
+      bpp: BPP,
+    };
   }
 
   read(input: ArrayBuffer, output: BitImageRGBA): void {
     // this.checkType(input);
     const metadata = decode(input);
     const { width, height, data: sourcePixels } = metadata;
-    console.log(sourcePixels);
+    // console.log(sourcePixels);
     output.setSize(width, height);
     const { pixels } = output;
     switch (metadata.colorType) {

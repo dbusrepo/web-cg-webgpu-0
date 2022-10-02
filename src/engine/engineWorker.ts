@@ -7,11 +7,7 @@ import * as loadUtils from './loadUtils';
 import { BitImage } from './assets/images/bitImage';
 import { BitImageRGBA } from './assets/images/bitImageRGBA';
 import { PngDecoderRGBA } from './assets/images/vivaxy-png/PngDecoderRGBA';
-
-// const ASSETS_PATH = '../asset';
-// const IMAGES_PATH = `${ASSETS_PATH}/images`;
-
-// import myImgUrl from '../asset/images/samplePNGImage.png';
+import { getImagesInitData } from './assets/images/utils';
 
 type WorkerConfig = {
   workerIdx: number;
@@ -27,7 +23,7 @@ type WorkerInitImagesData = {
   imagesSizes: [number, number][];
 };
 
-type WorkerInitData = {} & WorkerInitImagesData;
+type WorkerInitData = WorkerInitImagesData; // {} & WorkerInitImagesData;
 
 type WorkerWasmMemConfig = {
   wasmMem: WebAssembly.Memory;
@@ -48,74 +44,101 @@ type AssetsBuffers = {
   images: ArrayBuffer[];
 };
 
+class WasmMemViews {
+  memUI8: Uint8Array;
+  frameBufferRGBA: Uint8ClampedArray;
+  syncArr: Int32Array;
+  sleepArr: Int32Array;
+  imagesIndex: Uint32Array;
+  imagesPixels: Uint8Array;
+
+  constructor(
+    wasmMem: WebAssembly.Memory,
+    wasmMemStartOffset: number,
+    wasmMemStartSize: number,
+    memOffsets: WasmMemUtils.MemRegionsData,
+    memSizes: WasmMemUtils.MemRegionsData,
+    numImages: number,
+    workerIdx: number,
+  ) {
+    const wasmMemSize = wasmMemStartOffset + wasmMemStartSize;
+    this.memUI8 = new Uint8Array(wasmMem.buffer, 0, wasmMemSize);
+
+    this.frameBufferRGBA = new Uint8ClampedArray(
+      wasmMem.buffer,
+      memOffsets[WasmMemUtils.MemRegions.FRAMEBUFFER_RGBA],
+      memSizes[WasmMemUtils.MemRegions.FRAMEBUFFER_RGBA],
+    );
+
+    this.syncArr = new Int32Array(
+      wasmMem.buffer,
+      memOffsets[WasmMemUtils.MemRegions.SYNC_ARRAY],
+      memSizes[WasmMemUtils.MemRegions.SYNC_ARRAY] /
+        Int32Array.BYTES_PER_ELEMENT,
+    );
+    syncStore(this.syncArr, workerIdx, 0);
+
+    this.sleepArr = new Int32Array(
+      wasmMem.buffer,
+      memOffsets[WasmMemUtils.MemRegions.SLEEP_ARRAY],
+      memSizes[WasmMemUtils.MemRegions.SLEEP_ARRAY] /
+        Int32Array.BYTES_PER_ELEMENT,
+    );
+    syncStore(this.sleepArr, workerIdx, 0);
+
+    // Assets mem views
+
+    // images data views
+    const imagesIndexSize =
+      WasmMemUtils.initImages.getImageIndexSizeBytes(numImages);
+
+    this.imagesIndex = new Uint32Array(
+      wasmMem.buffer,
+      memOffsets[WasmMemUtils.MemRegions.IMAGES],
+      imagesIndexSize / Uint32Array.BYTES_PER_ELEMENT,
+    );
+
+    this.imagesPixels = new Uint8Array(
+      wasmMem.buffer,
+      memOffsets[WasmMemUtils.MemRegions.IMAGES] + imagesIndexSize,
+      memSizes[WasmMemUtils.MemRegions.IMAGES] - imagesIndexSize,
+    );
+  }
+};
+
+
 class EngineWorker {
   private _config: WorkerConfig;
+  private _assetBuffers: AssetsBuffers;
+  // the images loaded by this worker, used in init
+  private _images: BitImage[]; // RGBA, PAL_IDX ?
   private _wasmMemConfig: WorkerWasmMemConfig;
-  private _workerImages: BitImage[]; // the images loaded by this worker during init
-
-  private _wasmInitInput: WasmInput;
+  // private _wasmInitInput: WasmInput;
+  private _wasmMemViews: WasmMemViews;
   private _wasmModules: WasmModules;
-  private _wasmMemUI8: Uint8Array;
-  private _wasmRgbaFramebuffer: Uint8ClampedArray;
-  private _wasmSyncArr: Int32Array;
-  private _wasmSleepArr: Int32Array;
-  private _wasmImagesIndex: Uint32Array;
-  private _wasmImagesData: Uint8Array;
-  private _sab: SharedArrayBuffer;
+
+  // private _sab: SharedArrayBuffer;
+
+  // private _getBPP(): number {
+  //   const bpp = this._config.usePalette ? 1 : 4;
+  //   return bpp;
+  // }
 
   public async init(config: WorkerConfig): Promise<WorkerInitData> {
     this._config = config;
-    // load png as arraybuffer
-    // const imgUrl = (await import('../asset/images/samplePNGImage.png')).default;
-    // const imgBuffer = await loadUtils.loadResAsArrayBuffer(imgUrl);
-    // const pngDecoder = new PngDecoder24();
-    // const [w, h] = pngDecoder.readSize(imgBuffer);
-    // console.log(w, h);
-    const assetsBuffers = await this._loadAssets();
-    return { ...(await this._getImagesInitData(assetsBuffers.images)) };
+    await this._initAssetsBuffers();
+    return { ...(await this._getImagesInitData()) };
   }
 
-  private async _getImagesInitData(
-    imageBuffers: ArrayBuffer[],
-  ): Promise<WorkerInitImagesData> {
-    const imagesSizes = await Promise.all(
-      imageBuffers.map(async (imgBuffer) => {
-        const fileType = await fileTypeFromBuffer(imgBuffer);
-        if (!fileType) {
-          throw new Error(`_getImagesInitData: file type not found`);
-        }
-        let imgSizes; // [w,h]
-        switch (fileType.ext) {
-          case 'png':
-            {
-              const pngDecoder = new PngDecoderRGBA();
-              imgSizes = pngDecoder.readSizes(imgBuffer);
-            }
-            break;
-          default:
-            throw new Error(
-              `_loadImage does not support ${fileType.ext} loading`,
-            );
-        }
-        return imgSizes;
-      }),
-    );
-    let totalImagesSize = 0;
-    imagesSizes.forEach(([w, h]) => {
-      const imageSize = w * h * this._getBytesPerPixel();
-      totalImagesSize += imageSize;
-    });
-    return { totalImagesSize, imagesSizes };
-  }
-
-  // TODO
-  private _getBytesPerPixel(): number {
-    const bpp = this._config.usePalette ? 1 : 4;
-    return bpp;
+  private async _initAssetsBuffers() {
+    const imageBuffers = await this._loadImageBuffers();
+    this._assetBuffers = {
+      images: imageBuffers,
+    };
   }
 
   private async _loadImageBuffers(): Promise<ArrayBuffer[]> {
-    console.log('worker ', this._config.workerIdx, this._config.imageUrls);
+    // console.log('worker ', this._config.workerIdx, this._config.imageUrls);
     const imageBuffers = await Promise.all(
       this._config.imageUrls.map(async (url) =>
         loadUtils.loadResAsArrayBuffer(url),
@@ -124,18 +147,18 @@ class EngineWorker {
     return imageBuffers;
   }
 
-  private async _loadAssets(): Promise<AssetsBuffers> {
-    const imageBuffers = await this._loadImageBuffers();
-    await this._loadImages(imageBuffers);
-    return {
-      images: imageBuffers,
-    };
-  }
-
-  private async _loadImages(imageBuffers: ArrayBuffer[]): Promise<void> {
-    this._workerImages = await Promise.all(
-      imageBuffers.map(async (imgBuffer) => this._loadImage(imgBuffer)),
+  private async _getImagesInitData(): Promise<WorkerInitImagesData> {
+    const imgsInfos = await getImagesInitData(this._assetBuffers.images);
+    // TODO note use getBPP as required by the engine, then when loading the
+    // images data 
+    const totalImagesSize = imgsInfos.reduce(
+      (size, imgInfo) => size + imgInfo.bpp * imgInfo.width * imgInfo.height,
+      0,
     );
+    const imagesSizes = imgsInfos.map(
+      (imgInfo) => [imgInfo.width, imgInfo.height] as [number, number],
+    );
+    return { totalImagesSize, imagesSizes };
   }
 
   private async _loadImage(imageBuffer: ArrayBuffer): Promise<BitImage> {
@@ -146,15 +169,24 @@ class EngineWorker {
     }
     switch (fileType.ext) {
       case 'png': {
-        const pngDecoder = new PngDecoderRGBA();
         const bitImage = new BitImageRGBA();
-        pngDecoder.read(imageBuffer, bitImage);
+        new PngDecoderRGBA().read(imageBuffer, bitImage);
         return bitImage;
       }
       // break;
       default:
         throw new Error(`_loadImage does not support ${fileType.ext} loading`);
     }
+  }
+
+  async loadAssets() {
+    await this._loadImages();
+  }
+
+  private async _loadImages() {
+    this._images = await Promise.all(
+      this._assetBuffers.images.map(async (imgBuffer) => this._loadImage(imgBuffer)),
+    );
   }
 
   public async initWasm(config: WorkerWasmMemConfig): Promise<void> {
@@ -166,65 +198,24 @@ class EngineWorker {
 
   private _initWasmMemViews(): void {
     const {
-      wasmMem,
-      wasmMemStartOffset,
-      wasmMemStartSize,
+      wasmMem: mem,
+      wasmMemStartOffset: startOffs,
+      wasmMemStartSize: startSize,
       wasmMemRegionsOffsets: memOffsets,
       wasmMemRegionsSizes: memSizes,
     } = this._wasmMemConfig;
 
+    const { wasmNumImages: numImages } = this._wasmMemConfig;
     const { workerIdx } = this._config;
 
-    const wasmMemSize = wasmMemStartOffset + wasmMemStartSize;
-    this._wasmMemUI8 = new Uint8Array(wasmMem.buffer, 0, wasmMemSize);
-
-    const rgbaFrameBufferRegion = WasmMemUtils.MemRegions.RGBA_FRAMEBUFFER;
-    this._wasmRgbaFramebuffer = new Uint8ClampedArray(
-      wasmMem.buffer,
-      memOffsets[rgbaFrameBufferRegion],
-      memSizes[rgbaFrameBufferRegion],
-    );
-
-    const syncArrayRegion = WasmMemUtils.MemRegions.SYNC_ARRAY;
-    this._wasmSyncArr = new Int32Array(
-      wasmMem.buffer,
-      memOffsets[syncArrayRegion],
-      memSizes[syncArrayRegion] / Int32Array.BYTES_PER_ELEMENT,
-    );
-    syncStore(this._wasmSyncArr, workerIdx, 0);
-
-    const sleepArrayRegion = WasmMemUtils.MemRegions.SLEEP_ARRAY;
-    this._wasmSleepArr = new Int32Array(
-      wasmMem.buffer,
-      memOffsets[sleepArrayRegion],
-      memSizes[sleepArrayRegion] / Int32Array.BYTES_PER_ELEMENT,
-    );
-    syncStore(this._wasmSleepArr, workerIdx, 0);
-
-    // Assets wasm mem init
-
-    // images data
-    const numImages = this._wasmMemConfig.wasmNumImages;
-    // ERROR ! da 1 invece dovrebbero essere 2...
-    console.log('NUM IMAGES: ', numImages);
-    const imagesRegion = WasmMemUtils.MemRegions.IMAGES;
-
-    const imagesIndexSize = WasmMemUtils.initImages.getImageIndexSizeBytes(numImages);
-    console.log('IMAGE INDEX SIZE: ', imagesIndexSize);
-
-    this._wasmImagesIndex = new Uint32Array(
-      wasmMem.buffer,
-      memOffsets[imagesRegion],
-      imagesIndexSize / Uint32Array.BYTES_PER_ELEMENT,
-    );
-
-    // console.log('image index: ', this._wasmImagesIndex);
-    // console.log('image index offset: ', memOffsets[imagesRegion]);
-
-    this._wasmImagesData = new Uint8Array(
-      wasmMem.buffer,
-      memOffsets[imagesRegion] + imagesIndexSize,
-      memSizes[imagesRegion] - imagesIndexSize,
+    this._wasmMemViews = new WasmMemViews(
+      mem,
+      startOffs,
+      startSize,
+      memOffsets,
+      memSizes,
+      numImages,
+      workerIdx,
     );
   }
 
@@ -233,25 +224,28 @@ class EngineWorker {
     if (this._config.workerIdx === 0) {
       // worker 0 writes the images index
       WasmMemUtils.initImages.writeImageIndex(
-        this._wasmImagesIndex,
+        this._wasmMemViews.imagesIndex,
         this._wasmMemConfig.wasmImagesOffsets,
         this._wasmMemConfig.wasmImagesSizes,
       );
     }
+
     // write the loaded images to wasm mem
     const workerImagesOffset =
-      this._wasmImagesData.byteOffset +
+      this._wasmMemViews.imagesPixels.byteOffset +
       this._wasmMemConfig.wasmWorkerImagesOffsets[this._config.workerIdx];
 
-    const workerImagesData = new Uint8Array(
-      this._wasmImagesData.buffer,
+    // get a uint8 view on worker images pixels
+    const workerImagesPixels = new Uint8Array(
+      this._wasmMemViews.imagesPixels.buffer,
       workerImagesOffset,
       this._wasmMemConfig.wasmWorkerImagesSize[this._config.workerIdx],
     );
 
-    for (let i = 0, imgOffset = 0; i < this._workerImages.length; ++i) {
-      const { pixels } = this._workerImages[i];
-      workerImagesData.set(pixels, imgOffset);
+    // copy loaded images pixels to wasm mem
+    for (let i = 0, imgOffset = 0; i < this._images.length; ++i) {
+      const { pixels } = this._images[i];
+      workerImagesPixels.set(pixels, imgOffset);
       imgOffset += pixels.length;
     }
   }
@@ -276,7 +270,7 @@ class EngineWorker {
       memory,
       frameWidth,
       frameHeight,
-      frameBufferOffset: memOffsets[WasmMemUtils.MemRegions.RGBA_FRAMEBUFFER],
+      frameBufferOffset: memOffsets[WasmMemUtils.MemRegions.FRAMEBUFFER_RGBA],
       syncArrayOffset: memOffsets[WasmMemUtils.MemRegions.SYNC_ARRAY],
       sleepArrayOffset: memOffsets[WasmMemUtils.MemRegions.SLEEP_ARRAY],
       imagesIndexOffset: memOffsets[WasmMemUtils.MemRegions.IMAGES],
@@ -292,7 +286,7 @@ class EngineWorker {
       logf,
     };
 
-    this._wasmInitInput = wasmInput;
+    // this._wasmInitInput = wasmInput;
     this._wasmModules = await loadWasmModules(wasmInput);
   }
 
@@ -318,6 +312,7 @@ const commands = {
   },
   async initWasm(config: WorkerWasmMemConfig): Promise<void> {
     assert(worker);
+    await worker.loadAssets();
     await worker.initWasm(config);
     postMessage('ready');
   },
@@ -326,7 +321,6 @@ const commands = {
   },
 };
 
-// ENTRY POINT
 self.addEventListener('message', async ({ data: { command, params } }) => {
   if (commands.hasOwnProperty(command)) {
     try {
@@ -335,4 +329,11 @@ self.addEventListener('message', async ({ data: { command, params } }) => {
   }
 });
 
-export { EngineWorker, WorkerConfig, WorkerWasmMemConfig, WorkerInitData };
+export {
+  EngineWorker,
+  WorkerConfig,
+  WorkerWasmMemConfig,
+  WorkerInitData,
+  WorkerInitImagesData,
+  WasmMemViews,
+};
