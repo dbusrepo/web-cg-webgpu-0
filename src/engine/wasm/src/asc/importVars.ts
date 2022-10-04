@@ -15,4 +15,4 @@ export declare const bgColor: i32;
 export declare const usePalette: i32;
 
 export declare const imagesIndexOffset: usize;
-export declare const numImages: i32;
+export declare const numImages: u32;

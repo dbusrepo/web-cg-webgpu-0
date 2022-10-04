@@ -53,10 +53,14 @@ function run(): void {
   const width = image.width;
   const height = image.height;
 
+
   let screenPtr: PTR_T;
   let pixels: PTR_T;
 
-  // // logi(image.height);
+  // logi(imagesIndexOffset);
+  // logi(image.pixels);
+  // logi(image.width);
+  // logi(image.height);
   // for (let i = 0; i != frameHeight; ++i) {
   //   let screenPtr: PTR_T = frameBufferOffset + i * frameWidth * 4;
   //   const pixels: PTR_T = image.pixels + i * image.width * 4;
@@ -85,7 +89,7 @@ function run(): void {
     // const v = vec3Alloc.new();
     // clearBg(bgColor, s, e);
 
-    // // logi(image.height);
+    // logi(image.height);
     for (let i = 0; i != frameHeight; ++i) {
       let screenPtr: PTR_T = frameBufferOffset + i * frameWidth * 4;
       const pixels: PTR_T = image.pixels + i * image.width * 4;
