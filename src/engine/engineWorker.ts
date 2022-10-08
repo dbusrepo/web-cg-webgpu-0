@@ -54,6 +54,11 @@ class EngineWorker {
 
   public async init(config: WorkerConfig): Promise<WorkerInitData> {
     this._config = config;
+
+    // test load res file as text
+    const resFile = (await import('../assets/images/images.res')).default;
+    console.log('RES HERE: ', await loadUtils.loadResAsText(resFile));
+
     await this._initAssetsBuffers();
     return { ...(await loadImagesInitData(this._assetBuffers.images)) };
   }

@@ -21,6 +21,11 @@ async function loadResAsArrayBuffer(url: string): Promise<ArrayBuffer> {
   return response.arrayBuffer();
 }
 
+async function loadResAsText(url: string): Promise<string> {
+  const response = await fetch(url);
+  return response.text();
+}
+
 function loadImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve) => {
     const img = new Image();
@@ -51,4 +56,5 @@ export {
   loadImageAsImageData,
   loadFileAsArrayBuffer,
   loadResAsArrayBuffer,
+  loadResAsText,
 };

@@ -9,3 +9,8 @@ declare module '*.png' {
   const content: any;
   export default content;
 }
+
+declare module '*.res' {
+  const content: string;
+  export default content;
+}

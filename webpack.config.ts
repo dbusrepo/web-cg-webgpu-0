@@ -1,13 +1,26 @@
+// https://gist.github.com/rupeshtiwari/e7235addd5f52dc3e449672c4d8b88d5
 // see https://webpack.js.org/configuration/configuration-languages/#typescript
 // https://survivejs.com/webpack/building/source-maps/
 // const HtmlWebpackPlugin = require('html-webpack-plugin');
 // const path = require('path');
-import * as path from 'path';
+import path from 'path';
 import * as webpack from 'webpack'; // TODO
+import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { ProvidePlugin } from 'webpack';
+import MiniCssExtractPlugin from "mini-css-extract-plugin";
+import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
+import TerserPlugin from "terser-webpack-plugin";
 // in case you run into any typescript error when configuring `devServer`
 import 'webpack-dev-server';
+import { argv } from 'process';
+
+let env = process.env['NODE_ENV'];
+
+// const isProduction = process.env.NODE_ENV == 'production';
+let isProduction =
+    (env && env.match(/production/)) ||
+    argv.reduce((prev, cur) => prev || cur === '--production', false);
 
 const config: webpack.Configuration = {
   entry: './src/main.ts',
@@ -55,6 +68,11 @@ const config: webpack.Configuration = {
       stream: require.resolve('stream-browserify')
     }
   },
+  performance: {
+      hints: false,
+      maxEntrypointSize: 51200,
+      maxAssetSize: 51200
+  },
   module: {
     rules: [
       {
@@ -78,6 +96,15 @@ const config: webpack.Configuration = {
         use: ['style-loader', 'css-loader'],
       },
       {
+          test: /\.css$/,
+          sideEffects: true,
+          use: [
+              MiniCssExtractPlugin.loader,
+              'css-loader'
+          ],
+          exclude: /node_modules/,
+      },
+      {
         test: /\.wasm$/,
         exclude: /node_modules/,
         loader: 'wasm-loader',
@@ -88,6 +115,10 @@ const config: webpack.Configuration = {
         generator: {
           filename: 'images/[hash][ext][query]',
         },
+      },
+      {
+        test: /\.res$/i,
+        type: 'asset/resource',
       },
       // {
       //   test: /\.wasm$/,
@@ -101,19 +132,28 @@ const config: webpack.Configuration = {
     ],
   },
   plugins: [
-    new HtmlWebpackPlugin({
-      template: './src/index.html',
-    }),
+    // new HtmlWebpackPlugin({
+    //   template: './src/index.html',
+    // }),
+    new CleanWebpackPlugin(),
     new ProvidePlugin({
       process: 'process/browser',
     }),
-    // to use file-type i had to add this and the fallback above
+    new MiniCssExtractPlugin(),
+    // to use file-type I add this and the 'fallback' above. See here:
     // https://stackoverflow.com/questions/72133210/react-unhandledschemeerror-nodebuffer-is-not-handled-by-plugins
     // see also https://gist.github.com/ef4/d2cf5672a93cf241fd47c020b9b3066a
     new webpack.NormalModuleReplacementPlugin(/node:/, (resource) => {
       resource.request = resource.request.replace(/^node:/, "");
     }),
   ],
+  optimization: {
+      minimize: isProduction ? true : false,
+      minimizer: [
+          new TerserPlugin({ test: /\.js(\?.*)?$/i }),
+          new CssMinimizerPlugin({})
+      ]
+  }
 };
 
 export default config;
