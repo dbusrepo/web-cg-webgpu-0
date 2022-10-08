@@ -2,6 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import {fileURLToPath} from 'url';
 
+// script to generate iamgesList.ts (for js/ts) and the asc file importImages.ts
+
 const FIELD_SEP = '=';
 
 // https://bobbyhadz.com/blog/javascript-dirname-is-not-defined-in-es-module-scope#:~:text=Conclusion%20%23,directory%20name%20of%20the%20path.
@@ -31,6 +33,7 @@ checkArgs();
 // if from another dir use the rel path for the script and the other args
 const IN_FILE = srcFile; // path.join(__dirname, srcFile);
 const OUT_FILE = outFile; // path.join(__dirname, outFile);
+const OUT_FILE_ASC = '../engine/wasm/src/asc/importImages.ts';
 
 const writeOpts = {
   encoding: 'utf8',
@@ -45,38 +48,52 @@ const getImagesUrlsSuffix = `  ];
 
 const imagesObjPrefix = `const images = {`;
 const imagesObjSuffix = `};\n`;
-const suffix = 'export { images, getImagesPaths };';
+
+const ascImagesIndexesObjPrefix = `const ascImagesOffsetsImport = {`;
+const ascImagesIndexesObjSuffix = `};\n`;
+
+const suffix = 'export { images, getImagesPaths, ascImagesOffsetsImport };';
 
 try {
   console.log(IN_FILE);
   const data = fs.readFileSync(IN_FILE, { encoding: 'utf8' });
 
-  let objBodyStr = '';
+  let objImagesBodyStr = '';
   let getImagesUrlsBodyStr = '';
   const lines = data.trimEnd().split(/\r?\n/); // trimeEnd removes the last newline
   console.log(lines);
   let first = true;
+  let ascIndicesObjBodyStr = '';
+  let ascIdx = 0;
+  let ascImportBodyStr = '';
   lines.forEach(line => {
     if (line.trim() == '') return;
     const fields = line.split(FIELD_SEP);
     const [imgKey, imgFile] = fields;
-    objBodyStr += `${first ? '':'\n'}  ${imgKey}: '${imgFile}',`;
+    objImagesBodyStr += `${first ? '':'\n'}  ${imgKey}: '${imgFile}',`;
     const importStmt = ` import('./${imgFile}'),`;
     getImagesUrlsBodyStr += `${first ? '':'\n'}   ${importStmt}`;
+    ascIndicesObjBodyStr += `${first ? '':'\n'}  ${imgKey}: ${ascIdx},`;
+    ascIdx++;
+    ascImportBodyStr += `export declare const ${imgKey}: u32;\n`;
     first = false;
   });
-  console.log(objBodyStr);
+  console.log(objImagesBodyStr);
   const fileStr = `${warnMsg}
 ${getImagesUrlsPrefix}
 ${getImagesUrlsBodyStr}
 ${getImagesUrlsSuffix}
 ${imagesObjPrefix}
-${objBodyStr}
+${objImagesBodyStr}
 ${imagesObjSuffix}
+${ascImagesIndexesObjPrefix}
+${ascIndicesObjBodyStr}
+${ascImagesIndexesObjSuffix}
 ${suffix}
 `;
 
   fs.writeFileSync(OUT_FILE, fileStr, writeOpts);
+  fs.writeFileSync(OUT_FILE_ASC, ascImportBodyStr, writeOpts);
 } catch (err) {
   console.error(err);
 }

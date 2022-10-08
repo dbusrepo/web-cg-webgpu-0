@@ -1,15 +1,20 @@
 // Do not modify. This file is auto generated from images.res with make
 const getImagesPaths = async () => {
   const paths = [
-    import('./samplePNGImage.png'),
     import('./samplePNGImage2.png'),
+    import('./samplePNGImage.png'),
   ];
   return (await Promise.all(paths)).map((imp) => imp.default);
 };
 
 const images = {
-  IMG1: 'samplePNGImage.png',
   MYIMG: 'samplePNGImage2.png',
+  IMG1: 'samplePNGImage.png',
 };
 
-export { images, getImagesPaths };
+const ascImagesOffsetsImport = {
+  MYIMG: 0,
+  IMG1: 1,
+};
+
+export { images, getImagesPaths, ascImagesOffsetsImport };

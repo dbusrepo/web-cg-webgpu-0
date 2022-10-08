@@ -2,6 +2,7 @@
 
 import engineWorkerWasm from './wasm/build/asc/engineWorker.wasm';
 import engineWorkerExport from './wasm/build/asc/engineWorker';
+import { ascImagesOffsetsImport } from '../assets/images/imagesList';
 
 // TODO
 type wasmBuilderFunc<T> = (
@@ -51,9 +52,12 @@ async function loadWasm<T>(
   );
   const instance = await wasm({
     // [name]: {
-    importVars: {
+    importVars: { // in asc import these props from file importVars.ts
       ...wasmInit,
       ...otherImpObj,
+    },
+    importImages: {
+      ...ascImagesOffsetsImport,
     },
     env: {
       memory: wasmInit.memory,

@@ -17,6 +17,7 @@ import { Pointer } from './pointer';
 import { SArray, newSArray } from './sarray';
 import { test } from './test/test';
 import {PTR_T} from './memUtils';
+import { MYIMG, IMG1 } from './importImages';
 
 const syncLoc = syncArrayOffset + workerIdx * sizeof<i32>();
 const sleepLoc = sleepArrayOffset + workerIdx * sizeof<i32>();
@@ -33,6 +34,8 @@ function initWorkerMem(): void {
 }
 
 function run(): void {
+
+  logi(MYIMG);
 
   initWorkerMem();
   // test();

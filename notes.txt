@@ -1,5 +1,13 @@
 random info...
 
+to add an image:
+under src/assets/images
+add a line to images.res: key=imagefile
+under src/assets there is a makefile that builds the ts file with compiled infos
+about the images and generates also a ts files with export declaration for asc
+under src/engine/wasm/src/asc/
+
+
 see asconfig.json:
 
 each worker instantiate each wasm module ...passing the global memory + the
