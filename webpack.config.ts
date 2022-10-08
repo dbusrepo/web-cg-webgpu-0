@@ -8,9 +8,9 @@ import * as webpack from 'webpack'; // TODO
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { ProvidePlugin } from 'webpack';
-import MiniCssExtractPlugin from "mini-css-extract-plugin";
-import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
-import TerserPlugin from "terser-webpack-plugin";
+// import MiniCssExtractPlugin from "mini-css-extract-plugin";
+// import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
+// import TerserPlugin from "terser-webpack-plugin";
 // in case you run into any typescript error when configuring `devServer`
 import 'webpack-dev-server';
 import { argv } from 'process';
@@ -95,15 +95,15 @@ const config: webpack.Configuration = {
         exclude: /node_modules/,
         use: ['style-loader', 'css-loader'],
       },
-      {
-          test: /\.css$/,
-          sideEffects: true,
-          use: [
-              MiniCssExtractPlugin.loader,
-              'css-loader'
-          ],
-          exclude: /node_modules/,
-      },
+      // {
+      //     test: /\.css$/,
+      //     sideEffects: true,
+      //     use: [
+      //         MiniCssExtractPlugin.loader,
+      //         'css-loader'
+      //     ],
+      //     exclude: /node_modules/,
+      // },
       {
         test: /\.wasm$/,
         exclude: /node_modules/,
@@ -116,10 +116,10 @@ const config: webpack.Configuration = {
           filename: 'images/[hash][ext][query]',
         },
       },
-      {
-        test: /\.res$/i,
-        type: 'asset/resource',
-      },
+      // {
+      //   test: /\.res$/i,
+      //   type: 'asset/resource',
+      // },
       // {
       //   test: /\.wasm$/,
       //   type: 'asset/resource',
@@ -132,14 +132,14 @@ const config: webpack.Configuration = {
     ],
   },
   plugins: [
-    // new HtmlWebpackPlugin({
-    //   template: './src/index.html',
-    // }),
+    new HtmlWebpackPlugin({
+      template: './src/index.html',
+    }),
     new CleanWebpackPlugin(),
     new ProvidePlugin({
       process: 'process/browser',
     }),
-    new MiniCssExtractPlugin(),
+    // new MiniCssExtractPlugin(),
     // to use file-type I add this and the 'fallback' above. See here:
     // https://stackoverflow.com/questions/72133210/react-unhandledschemeerror-nodebuffer-is-not-handled-by-plugins
     // see also https://gist.github.com/ef4/d2cf5672a93cf241fd47c020b9b3066a
@@ -149,12 +149,11 @@ const config: webpack.Configuration = {
   ],
   optimization: {
       minimize: isProduction ? true : false,
-      minimizer: [
-          new TerserPlugin({ test: /\.js(\?.*)?$/i }),
-          new CssMinimizerPlugin({})
-      ]
+      // minimizer: [
+      //     new TerserPlugin({ test: /\.js(\?.*)?$/i }),
+      //     new CssMinimizerPlugin({})
+      // ]
   }
 };
 
 export default config;
-

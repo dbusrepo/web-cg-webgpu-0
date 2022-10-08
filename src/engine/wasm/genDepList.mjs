@@ -1,25 +1,29 @@
-var path = require("path");
-const fs = require("fs");
-const { EOL } = require('os');
+import {readFileSync} from "fs";
+import {basename as _basename, extname, join, dirname} from "path";
+import {fileURLToPath} from 'url';
+import {EOL} from 'os';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+const BUILD_PATH = 'build/asc/'; // join(__dirname, 'build/asc/');
 const WASM_EXT = '.wasm';
 const ASC_EXT = '.ts';
 const DEP_EXT = '.d';
-const BUILD_PATH = 'build/asc/';
 
 function changeExtension(file, extension, newDir) {
-  const basename = path.basename(file, path.extname(file))
-  return path.join(newDir ?? path.dirname(file), basename + extension)
+  const basename = _basename(file, extname(file))
+  return join(newDir ?? dirname(file), basename + extension)
 }
 
 const srcFile = process.argv[2];
 
-if (srcFile == undefined || path.extname(srcFile) !== ASC_EXT) {
+if (srcFile == undefined || extname(srcFile) !== ASC_EXT) {
   console.log('Invocation error: source file arg required');
   process.exit(1);
 }
 
-const text = fs.readFileSync(srcFile).toString();
+const srcFilePath = join(__dirname, srcFile);
+const text = readFileSync(srcFilePath).toString();
 
 // console.log(text);
 // https://stackoverflow.com/questions/52086611/regex-for-matching-js-import-statements
@@ -29,7 +33,7 @@ const MODULE_PATH_GRP_IDX = 4;
 // console.log(regex.test(text));
 const matches = Array.from(text.matchAll(regex));
 if (matches.length) {
-  const sourceDir = path.dirname(srcFile);
+  const sourceDir = dirname(srcFile);
   const wasmFile = changeExtension(srcFile, WASM_EXT, BUILD_PATH);;
   const depFile = changeExtension(srcFile, DEP_EXT);
   const ostream = process.stdout;
@@ -37,7 +41,7 @@ if (matches.length) {
   for (const match of matches) {
     // for each imported file...
     const fileName = match[MODULE_PATH_GRP_IDX];
-    const depFilePath = path.join(sourceDir, `${fileName}${DEP_EXT}`)
+    const depFilePath = join(sourceDir, `${fileName}${DEP_EXT}`)
     depRule += ` ${depFilePath}`;
   }
   const wasmRule = `${wasmFile}: ${depFile}${EOL}`;

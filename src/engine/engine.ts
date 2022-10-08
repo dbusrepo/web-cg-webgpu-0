@@ -11,6 +11,8 @@ import {
   MILLI_IN_SEC,
 } from '../common';
 
+import { images, getImagesPaths } from '../assets/images/imagesList';
+
 // import loader from '@assemblyscript/loader';
 // import assert from 'assert';
 import { defaultConfig } from '../config/config';
@@ -23,9 +25,6 @@ import {
   WorkerInitData,
   WasmMemViews,
 } from './engineWorker';
-
-// test img loading... TODO
-// import myImgUrl from 'images/samplePNGImage.png';
 
 type EngineConfig = {
   canvas: OffscreenCanvas;
@@ -97,9 +96,7 @@ class Engine {
     this._imageData = this._ctx.createImageData(frameWidth, frameHeight);
 
     await this._initAssets();
-
     await this._initWorkers();
-
     // console.log(this._workersInitData);
 
     const wasmMemConfig: WasmMemConfigInput = {
@@ -157,9 +154,30 @@ class Engine {
   }
 
   private async _initImagesPaths() {
-    const imgUrl = (await import('../assets/images/samplePNGImage.png')).default;
-    const imgUrl2 = (await import('../assets/images/samplePNGImage2.png')).default;
-    this._imagesPaths = [imgUrl, imgUrl2];
+    // const imagesDir = '../assets/images/';
+    // const fileNames = Object.values(imagesList);
+    // console.log(`PATH: ${imagesDir}${fileNames[0]}`);
+    // // const imagesUrls = await Promise.all(
+    // //   Object.values(imagesList).map(
+    // //     async (fileName) => (await import(`${imagesDir}${fileName}`)).default,
+    // //   ),
+    // // );
+    // // this._imagesPaths = imagesUrls;
+    // // console.log(imagesUrls);
+    // const path = 'samplePNGImage.png';
+    // const imgUrl = (await import('../assets/images/samplePNGImage.png')).default;
+    // const imgUrl2 = (await import('../assets/images/samplePNGImage2.png')).default;
+    // this._imagesPaths = [imgUrl, imgUrl2];
+
+    // const imagesDir = '../assets/images/';
+    // const imagesUrls = await Promise.all(
+    //   Object.values(imagesList).map(
+    //     async (fileName) => console.log(fileName),
+    //   ),
+    // );
+
+    this._imagesPaths = await getImagesPaths();
+    console.log(this._imagesPaths);
   }
 
   private _initOffscreenCanvasContext(canvas: OffscreenCanvas): void {

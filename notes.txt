@@ -183,6 +183,8 @@ https://stackoverflow.com/questions/7130397/how-do-i-make-a-div-full-screen
 
 * webpack
 https://webpack.js.org/configuration/resolve/#resolvealias
+https://dev.to/typescripttv/6-ways-to-configure-webpack-5a33
+https://github.com/webpack/webpack-cli/issues/2458
 [...]
 
 * resources (images etc)

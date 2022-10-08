@@ -10,7 +10,7 @@ declare module '*.png' {
   export default content;
 }
 
-declare module '*.res' {
-  const content: string;
-  export default content;
-}
+// declare module '*.res' {
+//   const content: string;
+//   export default content;
+// }

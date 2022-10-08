@@ -76,7 +76,7 @@ $(ASC_BUILD_DIR)/%.wasm: $(ASC_SOURCE_DIR)/%.ts build_flags $(ASC_CONFIG_FILE)
 %.d: %.ts
 	$(info GEN $@)
 	@rm -f $@; \
-	node extract-imports.js $< > $@
+	node ./genDepList.mjs $< > $@
 
 # **************************************************
 # COMPILE WAT
