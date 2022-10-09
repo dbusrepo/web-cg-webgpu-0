@@ -10,7 +10,7 @@ const PTR_2_IMG_SIZE = Uint32Array.BYTES_PER_ELEMENT;
 const WIDTH_SIZE = Uint32Array.BYTES_PER_ELEMENT;
 const HEIGHT_SIZE = Uint32Array.BYTES_PER_ELEMENT;
 
-function getImageIndexSizeBytes(numImages: number) {
+function getImageIndexSize(numImages: number) {
   return (
     (PTR_2_IMG_SIZE + WIDTH_SIZE + HEIGHT_SIZE) *
     numImages
@@ -37,6 +37,6 @@ function writeImageIndex(
 }
 
 export {
-  getImageIndexSizeBytes,
+  getImageIndexSize,
   writeImageIndex,
 };

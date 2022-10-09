@@ -29,7 +29,7 @@ import {
 type EngineConfig = {
   canvas: OffscreenCanvas;
   sendStats: boolean;
-  usePalette: boolean;
+  usePalette: boolean; // TODO move to def config?
 };
 
 // init data from all workers
@@ -40,14 +40,6 @@ type WorkersInitData = {
   workerImagesOffsets: number[];
   imagesOffsets: number[];
   imagesSizes: [number, number][];
-};
-
-type WasmMemConfigInput = {
-  numPixels: number; // TODO rename?
-  imagesRegionSize: number;
-  startOffset: number;
-  workerHeapPages: number;
-  numWorkers: number;
 };
 
 class Engine {
@@ -76,10 +68,11 @@ class Engine {
   private _workers: Worker[];
   private _workersInitData: WorkersInitData;
 
+  private _wasmMem: WebAssembly.Memory;
   private _wasmMemConfig: WasmUtils.MemConfig;
   private _wasmMemRegionsSizes: WasmUtils.MemRegionsData;
   private _wasmMemRegionsOffsets: WasmUtils.MemRegionsData;
-  private _wasmMem: WebAssembly.Memory;
+  private _workerWasmMemConfig: WorkerWasmMemConfig;
 
   private _wasmMemViews: WasmMemViews;
 
@@ -92,42 +85,14 @@ class Engine {
 
     this._initOffscreenCanvasContext(canvas);
 
-    const { width: frameWidth, height: frameHeight } = canvas;
-    this._imageData = this._ctx.createImageData(frameWidth, frameHeight);
+    this._imageData = this._ctx.createImageData(canvas.width, canvas.height);
 
     await this._initAssets();
     await this._initWorkers();
     // console.log(this._workersInitData);
 
-    const wasmMemConfig: WasmMemConfigInput = {
-      numPixels: frameWidth * frameHeight,
-      imagesRegionSize: this._getWasmImagesRegionSize(),
-      startOffset: defaultConfig.wasmMemStartOffset,
-      workerHeapPages: defaultConfig.wasmWorkerHeapPages,
-      numWorkers: Engine.NUM_WORKERS,
-    };
 
-    // console.log('wasm mem config: ', wasmMemConfig);
-
-    this._buildWasmMemConfig(wasmMemConfig);
-
-    const { wasmMemStartOffset } = defaultConfig;
-
-    const wasmMemStartSize = WasmUtils.getMemStartSize(
-      wasmMemStartOffset,
-      this._wasmMemRegionsSizes,
-      this._wasmMemRegionsOffsets,
-    );
-
-    console.log(`wasm mem start: ${defaultConfig.wasmMemStartOffset}`);
-    console.log(`wasm mem size: ${wasmMemStartSize}`);
-
-    const wasmMemTotalStartSize = wasmMemStartOffset + wasmMemStartSize;
-    this.allocWasmMemory(wasmMemTotalStartSize);
-
-    this._initWasmMemViews(wasmMemStartSize);
-
-    await this.initWasmMemoryWorkers(wasmMemStartSize);
+    await this._initWasmMem();
   }
 
   // not used
@@ -141,12 +106,6 @@ class Engine {
 
   private _getBPP(): number {
     return this._config.usePalette ? BPP_PAL : BPP_RGBA;
-  }
-
-  private _getWasmImagesRegionSize(): number {
-    const numImages = this._imagesPaths.length;
-    const wasmImageIndexSize = WasmUtils.initImages.getImageIndexSizeBytes(numImages);
-    return this._workersInitData.totalImagesSize + wasmImageIndexSize;
   }
 
   private async _initAssets() {
@@ -188,9 +147,21 @@ class Engine {
     this._ctx = ctx;
   }
 
-  private _buildWasmMemConfig(wasmMemConfigInput: WasmMemConfigInput): void {
-    const { startOffset, workerHeapPages, numPixels, imagesRegionSize, numWorkers } =
-      wasmMemConfigInput;
+  private _buildWasmMemConfig(): void {
+
+    const getWasmImagesRegionSize = (): number => {
+      const numImages = this._imagesPaths.length;
+      const wasmImageIndexSize = WasmUtils.initImages.getImageIndexSize(numImages);
+      return this._workersInitData.totalImagesSize + wasmImageIndexSize;
+    };
+
+    const startOffset = defaultConfig.wasmMemStartOffset;
+    const numPixels = this._imageData.width * this._imageData.height;
+    const imagesRegionSize = getWasmImagesRegionSize();
+    const workerHeapPages = defaultConfig.wasmWorkerHeapPages;
+    const numWorkers = Engine.NUM_WORKERS;
+
+    // set wasm mem regions sizes
     const wasmMemConfig: WasmUtils.MemConfig = {
       startOffset,
       frameBufferRGBASize: numPixels * BPP_RGBA,
@@ -201,33 +172,55 @@ class Engine {
       numWorkers,
       workerHeapSize: PAGE_SIZE_BYTES * workerHeapPages,
       imagesRegionSize,
+      sharedHeapSize: defaultConfig.wasmSharedHeapSize,
     };
+
     this._wasmMemConfig = wasmMemConfig;
-    this._wasmMemRegionsSizes = WasmUtils.buildMemRegionSizesData(
+    const [sizes, offsets] = WasmUtils.getMemRegionsSizesAndOffsets(
       this._wasmMemConfig,
     );
-    this._wasmMemRegionsOffsets = WasmUtils.buildMemRegionsDataOffsets(
-      this._wasmMemConfig,
-      this._wasmMemRegionsSizes,
-    );
-    console.log(this._wasmMemRegionsSizes);
-    console.log(this._wasmMemRegionsOffsets);
+    this._wasmMemRegionsSizes = sizes;
+    this._wasmMemRegionsOffsets = offsets;
+    console.log('SIZES: ', this._wasmMemRegionsSizes);
+    console.log('OFFSETS: ', this._wasmMemRegionsOffsets);
   }
 
-  private _initWasmMemViews(wasmMemStartSize: number): void {
+  private async _initWasmMem(): Promise<void> {
+    this._buildWasmMemConfig();
 
+    console.log(`wasm mem start offset: ${this._wasmMemRegionsOffsets[WasmUtils.MemRegions.START_MEM]}`);
+    console.log(`wasm mem start size: ${this._wasmMemRegionsSizes[WasmUtils.MemRegions.START_MEM]}`);
+
+    this._allocWasmMemory();
+    this._initWasmMemViews();
+    this._initWorkerWasmMemConfig();
+    this._initWasmMemAssets();
+    await this._initWasmMemoryWorkers();
+  }
+
+  private _initWasmMemViews(): void {
     const memSizes = this._wasmMemRegionsSizes;
     const memOffsets = this._wasmMemRegionsOffsets;
     const workerIdx = Engine.NUM_WORKERS;
 
     this._wasmMemViews = WasmUtils.initViews.buildWasmMemViews(
       this._wasmMem,
-      defaultConfig.wasmMemStartOffset,
-      wasmMemStartSize,
       memOffsets,
       memSizes,
       this._workersInitData.numImages,
       workerIdx,
+    );
+  }
+
+  private _initWasmMemAssets(): void {
+    this._initWasmImagesIndex();
+  }
+
+  private _initWasmImagesIndex(): void {
+    WasmUtils.initImages.writeImageIndex(
+      this._wasmMemViews.imagesIndex,
+      this._workerWasmMemConfig.wasmImagesOffsets,
+      this._workerWasmMemConfig.wasmImagesSizes,
     );
   }
 
@@ -251,15 +244,10 @@ class Engine {
     return this._imagesPaths.slice(start, end);
   }
 
-  private _buildWorkerWasmMemoryConfig(
-    workerIdx: number,
-    wasmMemStartSize: number,
-  ): WorkerWasmMemConfig {
-    return {
-      wasmMemStartOffset: defaultConfig.wasmMemStartOffset,
-      wasmWorkerHeapSize: defaultConfig.wasmWorkerHeapPages * PAGE_SIZE_BYTES,
-      wasmMemStartSize,
+  private _initWorkerWasmMemConfig() {
+    this._workerWasmMemConfig = {
       wasmMem: this._wasmMem,
+      wasmWorkerHeapSize: defaultConfig.wasmWorkerHeapPages * PAGE_SIZE_BYTES,
       wasmMemRegionsSizes: this._wasmMemRegionsSizes,
       wasmMemRegionsOffsets: this._wasmMemRegionsOffsets,
       wasmNumImages: this._workersInitData.numImages,
@@ -272,14 +260,20 @@ class Engine {
     };
   }
 
-  private allocWasmMemory(wasmMemSize: number): void {
+  private _allocWasmMemory(): void {
+    const startSize = this._wasmMemRegionsSizes[WasmUtils.MemRegions.START_MEM];
+    const startOffset =
+      this._wasmMemRegionsOffsets[WasmUtils.MemRegions.START_MEM];
+    const wasmMemStartTotalSize = startOffset + startSize;
     console.log(
-      `wasm mem pages required: ${Math.ceil(wasmMemSize / PAGE_SIZE_BYTES)}`,
+      `wasm mem pages required: ${Math.ceil(
+        wasmMemStartTotalSize / PAGE_SIZE_BYTES,
+      )}`,
     );
     const { wasmMemStartPages: initial, wasmMemMaxPages: maximum } =
       defaultConfig;
     console.log(`wasm mem start pages: ${initial}`);
-    assert(initial * PAGE_SIZE_BYTES >= wasmMemSize);
+    assert(initial * PAGE_SIZE_BYTES >= wasmMemStartTotalSize);
     const memory = new WebAssembly.Memory({
       initial,
       maximum,
@@ -288,7 +282,7 @@ class Engine {
     this._wasmMem = memory;
   }
 
-  private async initWasmMemoryWorkers(wasmMemStartSize: number): Promise<void> {
+  private async _initWasmMemoryWorkers(): Promise<void> {
     let workerCount = Engine.NUM_WORKERS;
     const initStart = Date.now();
     console.log('Initializing wasm memory with workers...');
@@ -299,9 +293,8 @@ class Engine {
         worker.onmessage = ({ data: msg }) => {
           --workerCount;
           console.log(
-            `Worker id=${workerIdx} wasm mem ready, count=${workerCount}, time=${
-              Date.now() - initStart
-            }ms`,
+            `Worker id=${workerIdx} wasm mem ready, count=${workerCount}, 
+             time=${Date.now() - initStart}ms`,
           );
           if (!workerCount) {
             console.log(
@@ -316,10 +309,9 @@ class Engine {
           console.log(`Worker id=${workerIdx} error: ${error.message}\n`);
           reject(error);
         };
-        const workerConfig = this._buildWorkerWasmMemoryConfig(workerIdx, wasmMemStartSize);
         worker.postMessage({
           command: 'initWasm',
-          params: workerConfig,
+          params: this._workerWasmMemConfig,
         });
       }
     });
@@ -335,7 +327,7 @@ class Engine {
       workerImagesOffsets: new Array(Engine.NUM_WORKERS).fill(0),
       workerImagesSizes: new Array(Engine.NUM_WORKERS),
       imagesSizes: [],
-      imagesOffsets: [], 
+      imagesOffsets: [],
     };
 
     // offset used to fill the sizes array (with [w,h]) in worker order in updateWorkersData
@@ -354,8 +346,12 @@ class Engine {
       }
     };
 
-    const updateWorkersData = (workerIdx: number, workerData: WorkerInitData) => {
-      this._workersInitData.workerImagesSizes[workerIdx] = workerData.totalImagesSize;
+    const updateWorkersData = (
+      workerIdx: number,
+      workerData: WorkerInitData,
+    ) => {
+      this._workersInitData.workerImagesSizes[workerIdx] =
+        workerData.totalImagesSize;
       this._workersInitData.totalImagesSize += workerData.totalImagesSize;
       // update wasm mem image offsets for workers that follow workerIdx
       for (
@@ -375,7 +371,7 @@ class Engine {
         this._workersInitData.imagesSizes[j] = workerData.imagesSizes[i];
       }
       this._workersInitData.numImages += workerData.imagesSizes.length;
-        // this._workersInitData.imagesSizes.splice(
+      // this._workersInitData.imagesSizes.splice(
       //   workerSizesOffset[workerIdx],
       //   0,
       //   ...workerData.imagesSizes,
@@ -388,16 +384,14 @@ class Engine {
     };
 
     const workerPostInit = () => {
-      // some checks
-      assert(
-        this._workersInitData.numImages === this._imagesPaths.length,
-      );
+      // check all images buffers loaded
+      assert(this._workersInitData.numImages === this._imagesPaths.length);
       // calc images offsets
       const calcImagesOffsets = () => {
         const numImages = this._workersInitData.imagesSizes.length;
         const imagesOffsets = new Array<number>(numImages);
         let prevSize: number;
-        imagesOffsets[0] = WasmUtils.initImages.getImageIndexSizeBytes(numImages);
+        imagesOffsets[0] = WasmUtils.initImages.getImageIndexSize(numImages);
         this._workersInitData.imagesSizes.forEach(([w, h], idx) => {
           const imageSize = w * h * this._getBPP();
           if (idx > 0) {
@@ -410,7 +404,6 @@ class Engine {
 
       calcImagesOffsets();
     };
-
 
     let workerCount = Engine.NUM_WORKERS;
     const initStart = Date.now();
@@ -435,7 +428,9 @@ class Engine {
             }ms with data = ${JSON.stringify(initData)}`,
           );
           if (workerCount === 0) {
-            console.log(`Workers init done. After ${Date.now() - this._startTime}ms`);
+            console.log(
+              `Workers init done. After ${Date.now() - this._startTime}ms`,
+            );
             workerPostInit();
             resolve();
           }
@@ -504,7 +499,10 @@ class Engine {
       requestAnimationFrame(renderLoop);
     };
 
-    const calcAvgArrValue = (values: Float32Array | Float64Array, count: number) => {
+    const calcAvgArrValue = (
+      values: Float32Array | Float64Array,
+      count: number,
+    ) => {
       let acc = 0;
       const numIter = Math.min(count, values.length);
       for (let i = 0; i < numIter; i++) {
@@ -624,7 +622,6 @@ class Engine {
   //     `FPS: ${Math.round(this.avg_fps)}\nUPS: ${Math.round(this.avg_ups)}`,
   //   );
   // }
-
 }
 
 let engine: Engine;

@@ -1,3 +1,4 @@
+import assert from 'assert';
 import * as initViews from './wasmMemViews';
 import * as initImages from './wasmMemInitImages';
 
@@ -11,6 +12,7 @@ type MemConfig = {
   sleepArraySize: number;
   workerHeapSize: number;
   imagesRegionSize: number;
+  sharedHeapSize: number;
 };
 
 // all regions are bounded except (at least for now) for the last part, the
@@ -24,39 +26,20 @@ const enum MemRegions {
   IMAGES = 'IMAGES',
   WORKERS_HEAPS = 'WORKERS_HEAPS',
   HEAP = 'HEAP',
+  START_MEM = 'START_MEM', // for the size/offset of all previous mem regions
 }
 
 type MemRegionKeyType = keyof typeof MemRegions;
 
-// allocation order/layout seq
-const MEM_REGIONS_SEQ: MemRegionKeyType[] = [
-  MemRegions.FRAMEBUFFER_RGBA,
-  MemRegions.FRAMEBUFFER_PAL,
-  MemRegions.PALETTE,
-  MemRegions.SYNC_ARRAY,
-  MemRegions.SLEEP_ARRAY,
-  MemRegions.IMAGES,
-  MemRegions.WORKERS_HEAPS,
-  MemRegions.HEAP,
-];
 
 type MemRegionsData = {
   -readonly [key in MemRegionKeyType]: number;
 };
 
-const memRegionsAlignSizes: MemRegionsData = {
-  [MemRegions.FRAMEBUFFER_RGBA]: 4,
-  [MemRegions.FRAMEBUFFER_PAL]: 4,
-  [MemRegions.PALETTE]: 4,
-  [MemRegions.SYNC_ARRAY]: 4,
-  [MemRegions.SLEEP_ARRAY]: 4,
-  [MemRegions.IMAGES]: 4,
-  [MemRegions.WORKERS_HEAPS]: 4,
-  [MemRegions.HEAP]: 64,
-};
 
-function buildMemRegionSizesData(config: MemConfig): MemRegionsData {
+function getMemRegionsSizes(config: MemConfig): MemRegionsData {
   const {
+    startOffset,
     frameBufferRGBASize,
     frameBufferPalSize,
     numWorkers,
@@ -65,6 +48,7 @@ function buildMemRegionSizesData(config: MemConfig): MemRegionsData {
     syncArraySize,
     sleepArraySize,
     paletteSize,
+    sharedHeapSize,
   } = config;
 
   const sizes: MemRegionsData = {
@@ -75,73 +59,79 @@ function buildMemRegionSizesData(config: MemConfig): MemRegionsData {
     [MemRegions.SLEEP_ARRAY]: sleepArraySize,
     [MemRegions.IMAGES]: imagesRegionSize,
     [MemRegions.WORKERS_HEAPS]: numWorkers * workerHeapSize,
-    [MemRegions.HEAP]: 0, // TODO
+    [MemRegions.HEAP]: sharedHeapSize,
+    [MemRegions.START_MEM]: 0, // set later
   };
 
-  // TODO
-  sizes[MemRegions.HEAP] = 0; // force it to 0 'cause it is the last and it can expand
-
   // console.log(JSON.stringify(sizes));
-
   return sizes;
 }
 
-// function calcImagesRegionSize(images: Assets.WasmImage[]): number {
-//   const imagesIndexSize = Assets.WasmImage.OFFSET_SIZE * images.length;
-//   const imagesHeaderDataSize = images.reduce(
-//     (size, img) => (size += img.size),
-//     0,
-//   );
-//   return imagesIndexSize + imagesHeaderDataSize;
-// }
-
-// Calc the (static) offset of the start regions
-function buildMemRegionsDataOffsets(
+function getMemRegionsOffsets(
   config: MemConfig,
   sizes: Readonly<MemRegionsData>,
 ): MemRegionsData {
-  const { startOffset } = config;
 
-  const alignSizes = {} as MemRegionsData;
+  // lg of align req
+  const memRegLgAlign: MemRegionsData = {
+    [MemRegions.FRAMEBUFFER_RGBA]: 2,
+    [MemRegions.FRAMEBUFFER_PAL]: 2,
+    [MemRegions.PALETTE]: 2,
+    [MemRegions.SYNC_ARRAY]: 2,
+    [MemRegions.SLEEP_ARRAY]: 2,
+    [MemRegions.IMAGES]: 2,
+    [MemRegions.WORKERS_HEAPS]: 2,
+    [MemRegions.HEAP]: 6,
+    [MemRegions.START_MEM]: 0, // not used
+  };
 
-  for (const region of MEM_REGIONS_SEQ) {
-    alignSizes[region] = sizes[region];
-    if (sizes[region]) {
-      const alignSize = memRegionsAlignSizes[region] - 1;
-      alignSizes[region] += alignSize;
-    }
-  }
+  const memRegionsAllocSeq: MemRegionKeyType[] = [
+    MemRegions.FRAMEBUFFER_RGBA,
+    MemRegions.FRAMEBUFFER_PAL,
+    MemRegions.PALETTE,
+    MemRegions.SYNC_ARRAY,
+    MemRegions.SLEEP_ARRAY,
+    MemRegions.IMAGES,
+    MemRegions.WORKERS_HEAPS,
+    MemRegions.HEAP,
+  ];
 
   const offsets = {} as MemRegionsData;
+  let curOffset = config.startOffset;
 
-  let curOffset = startOffset;
-
-  for (const region of MEM_REGIONS_SEQ) {
-    const alignMask = memRegionsAlignSizes[region] - 1;
-    offsets[region] = (curOffset + alignMask) & ~alignMask;
-    curOffset += alignSizes[region];
+  for (const region of memRegionsAllocSeq) {
+    const alignMask = (1 << memRegLgAlign[region]) - 1;
+    const nextOffset = (curOffset + alignMask) & ~alignMask;
+    offsets[region] = nextOffset;
+    curOffset = nextOffset + sizes[region];
   }
 
-  // console.log(JSON.stringify(offsets));
-
-  return offsets;
+  return  offsets;
 }
 
-function getMemStartSize(
-  startOffset: number,
-  sizes: MemRegionsData,
-  offsets: MemRegionsData,
-): number {
-  return offsets[MemRegions.HEAP] + sizes[MemRegions.HEAP] - startOffset;
+// returns sizes and offsets
+function getMemRegionsSizesAndOffsets(
+  config: MemConfig,
+): [MemRegionsData, MemRegionsData] {
+  const regionsSizes = getMemRegionsSizes(config);
+  const regionsOffsets = getMemRegionsOffsets(config, regionsSizes);
+
+  const { startOffset } = config;
+  regionsOffsets[MemRegions.START_MEM] = startOffset;
+  const startSize =
+    regionsOffsets[MemRegions.HEAP] +
+    regionsSizes[MemRegions.HEAP] - // 0 if the heaps expands freely 
+    startOffset;
+  regionsSizes[MemRegions.START_MEM] = startSize;
+
+  return [regionsSizes, regionsOffsets];
 }
 
 export {
   MemConfig,
   MemRegions,
   MemRegionsData,
-  buildMemRegionSizesData,
-  buildMemRegionsDataOffsets,
-  getMemStartSize,
+  getMemRegionsSizesAndOffsets,
   initImages,
   initViews,
 };

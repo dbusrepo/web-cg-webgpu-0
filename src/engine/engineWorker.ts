@@ -21,8 +21,6 @@ type WorkerConfig = {
 
 type WorkerWasmMemConfig = {
   wasmMem: WebAssembly.Memory;
-  wasmMemStartOffset: number;
-  wasmMemStartSize: number;
   wasmMemRegionsOffsets: WasmUtils.MemRegionsData;
   wasmMemRegionsSizes: WasmUtils.MemRegionsData;
   wasmWorkerHeapSize: number;
@@ -45,7 +43,7 @@ class EngineWorker {
   private _assetBuffers: AssetsBuffers;
   // the images loaded by this worker, used in init
   private _images: BitImage[]; // RGBA, PAL_IDX ?
-  private _wasmMemConfig: WorkerWasmMemConfig;
+  private _workerWasmMemConfig: WorkerWasmMemConfig;
   // private _wasmInitInput: WasmInput;
   private _wasmMemViews: WasmMemViews;
   private _wasmModules: WasmModules;
@@ -101,7 +99,7 @@ class EngineWorker {
   }
 
   public async initWasm(config: WorkerWasmMemConfig): Promise<void> {
-    this._wasmMemConfig = config;
+    this._workerWasmMemConfig = config;
     this._initWasmMemViews();
     this._initWasmMem();
     await this.initWasmModules();
@@ -110,19 +108,15 @@ class EngineWorker {
   private _initWasmMemViews(): void {
     const {
       wasmMem: mem,
-      wasmMemStartOffset: startOffs,
-      wasmMemStartSize: startSize,
       wasmMemRegionsOffsets: memOffsets,
       wasmMemRegionsSizes: memSizes,
-    } = this._wasmMemConfig;
+    } = this._workerWasmMemConfig;
 
-    const { wasmNumImages: numImages } = this._wasmMemConfig;
+    const { wasmNumImages: numImages } = this._workerWasmMemConfig;
     const { workerIdx } = this._config;
 
     this._wasmMemViews = WasmUtils.initViews.buildWasmMemViews(
       mem,
-      startOffs,
-      startSize,
       memOffsets,
       memSizes,
       numImages,
@@ -132,25 +126,25 @@ class EngineWorker {
 
   private _initWasmMem() {
     console.log('Init wasm memory...');
-    if (this._config.workerIdx === 0) {
-      // worker 0 writes the images index
-      WasmUtils.initImages.writeImageIndex(
-        this._wasmMemViews.imagesIndex,
-        this._wasmMemConfig.wasmImagesOffsets,
-        this._wasmMemConfig.wasmImagesSizes,
-      );
-    }
+    // if (this._config.workerIdx === 0) {
+    //   // worker 0 writes the images index
+    //   WasmUtils.initImages.writeImageIndex(
+    //     this._wasmMemViews.imagesIndex,
+    //     this._wasmMemConfig.wasmImagesOffsets,
+    //     this._wasmMemConfig.wasmImagesSizes,
+    //   );
+    // }
 
     // write the loaded images to wasm mem
     const workerImagesOffset =
       this._wasmMemViews.imagesPixels.byteOffset +
-      this._wasmMemConfig.wasmWorkerImagesOffsets[this._config.workerIdx];
+      this._workerWasmMemConfig.wasmWorkerImagesOffsets[this._config.workerIdx];
 
     // get a uint8 view on worker images pixels
     const workerImagesPixels = new Uint8Array(
       this._wasmMemViews.imagesPixels.buffer,
       workerImagesOffset,
-      this._wasmMemConfig.wasmWorkerImagesSize[this._config.workerIdx],
+      this._workerWasmMemConfig.wasmWorkerImagesSize[this._config.workerIdx],
     );
 
     // copy loaded images pixels to wasm mem
@@ -166,7 +160,7 @@ class EngineWorker {
       wasmMem: memory,
       wasmMemRegionsOffsets: memOffsets,
       wasmWorkerHeapSize: workerHeapSize,
-    } = this._wasmMemConfig;
+    } = this._workerWasmMemConfig;
 
     const { frameWidth, frameHeight, numWorkers, workerIdx } = this._config;
 
@@ -185,7 +179,7 @@ class EngineWorker {
       syncArrayOffset: memOffsets[WasmUtils.MemRegions.SYNC_ARRAY],
       sleepArrayOffset: memOffsets[WasmUtils.MemRegions.SLEEP_ARRAY],
       imagesIndexOffset: memOffsets[WasmUtils.MemRegions.IMAGES],
-      numImages: this._wasmMemConfig.wasmImagesSizes.length,
+      numImages: this._workerWasmMemConfig.wasmImagesSizes.length,
       workerIdx,
       numWorkers,
       workersHeapOffset: memOffsets[WasmUtils.MemRegions.WORKERS_HEAPS],

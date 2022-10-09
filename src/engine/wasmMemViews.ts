@@ -12,17 +12,15 @@ type WasmMemViews = {
 
 function buildWasmMemViews(
   wasmMem: WebAssembly.Memory,
-  wasmMemStartOffset: number,
-  wasmMemStartSize: number,
   memOffsets: MemRegionsData,
   memSizes: MemRegionsData,
   numImages: number,
   workerIdx: number,
 ): WasmMemViews {
-
-  const wasmMemSize = wasmMemStartOffset + wasmMemStartSize;
-
-  const memUI8 = new Uint8Array(wasmMem.buffer, 0, wasmMemSize);
+  const startSize = memSizes[MemRegions.START_MEM];
+  const startOffset = memOffsets[MemRegions.START_MEM];
+  const wasmTotalStartSize = startOffset + startSize;
+  const memUI8 = new Uint8Array(wasmMem.buffer, 0, wasmTotalStartSize);
 
   const frameBufferRGBA = new Uint8ClampedArray(
     wasmMem.buffer,
@@ -46,7 +44,7 @@ function buildWasmMemViews(
 
   // Assets mem views
   // images data views
-  const imagesIndexSize = initImages.getImageIndexSizeBytes(numImages);
+  const imagesIndexSize = initImages.getImageIndexSize(numImages);
   const imagesIndex = new Uint32Array(
     wasmMem.buffer,
     memOffsets[MemRegions.IMAGES],

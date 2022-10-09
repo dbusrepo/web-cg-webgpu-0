@@ -5,6 +5,30 @@
 // const [w, h] = pngDecoder.readSize(imgBuffer);
 // console.log(w, h);
 
+// function calcImagesRegionSize(images: Assets.WasmImage[]): number {
+//   const imagesIndexSize = Assets.WasmImage.OFFSET_SIZE * images.length;
+//   const imagesHeaderDataSize = images.reduce(
+//     (size, img) => (size += img.size),
+//     0,
+//   );
+//   return imagesIndexSize + imagesHeaderDataSize;
+// }
+
+function getRegionsAlignSizes(
+  sizes: Readonly<MemRegionsData>,
+  memRegionsAllocSeq: MemRegionKeyType[],
+): MemRegionsData {
+  const alignSizes = {} as MemRegionsData;
+  for (const region of memRegionsAllocSeq) {
+    alignSizes[region] = sizes[region];
+    if (sizes[region]) {
+      const alignSize = MEM_REGIONS_ALIGN_SIZES[region] - 1;
+      alignSizes[region] += alignSize;
+    }
+  }
+  return alignSizes;
+}
+
 
 // const ASSETS_PATH = '../asset';
 // const IMAGES_PATH = `${ASSETS_PATH}/images`;
