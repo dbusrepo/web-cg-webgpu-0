@@ -1,6 +1,7 @@
 import assert from 'assert';
 import * as initViews from './wasmMemViews';
 import * as initImages from './wasmMemInitImages';
+import * as initStrings from './wasmMemInitStrings';
 
 type MemConfig = {
   startOffset: number;
@@ -11,8 +12,10 @@ type MemConfig = {
   paletteSize: number;
   sleepArraySize: number;
   workerHeapSize: number;
-  imagesRegionSize: number;
+  imagesSize: number;
   sharedHeapSize: number;
+  fontCharsSize: number;
+  stringsSize: number;
 };
 
 // all regions are bounded except (at least for now) for the last part, the
@@ -23,6 +26,8 @@ const enum MemRegions {
   PALETTE = 'PALETTE',
   SYNC_ARRAY = 'SYNC_ARRAY',
   SLEEP_ARRAY = 'SLEEP_ARRAY',
+  FONT_CHARS = 'FONT_CHARS',
+  STRINGS = 'STRINGS',
   IMAGES = 'IMAGES',
   WORKERS_HEAPS = 'WORKERS_HEAPS',
   HEAP = 'HEAP',
@@ -43,12 +48,14 @@ function getMemRegionsSizes(config: MemConfig): MemRegionsData {
     frameBufferRGBASize,
     frameBufferPalSize,
     numWorkers,
-    imagesRegionSize,
+    imagesSize,
     workerHeapSize,
     syncArraySize,
     sleepArraySize,
     paletteSize,
     sharedHeapSize,
+    fontCharsSize,
+    stringsSize,
   } = config;
 
   const sizes: MemRegionsData = {
@@ -57,7 +64,9 @@ function getMemRegionsSizes(config: MemConfig): MemRegionsData {
     [MemRegions.PALETTE]: paletteSize,
     [MemRegions.SYNC_ARRAY]: syncArraySize,
     [MemRegions.SLEEP_ARRAY]: sleepArraySize,
-    [MemRegions.IMAGES]: imagesRegionSize,
+    [MemRegions.FONT_CHARS]: fontCharsSize,
+    [MemRegions.STRINGS]: stringsSize,
+    [MemRegions.IMAGES]: imagesSize,
     [MemRegions.WORKERS_HEAPS]: numWorkers * workerHeapSize,
     [MemRegions.HEAP]: sharedHeapSize,
     [MemRegions.START_MEM]: 0, // set later
@@ -79,6 +88,8 @@ function getMemRegionsOffsets(
     [MemRegions.PALETTE]: 2,
     [MemRegions.SYNC_ARRAY]: 2,
     [MemRegions.SLEEP_ARRAY]: 2,
+    [MemRegions.FONT_CHARS]: 2,
+    [MemRegions.STRINGS]: 2,
     [MemRegions.IMAGES]: 2,
     [MemRegions.WORKERS_HEAPS]: 2,
     [MemRegions.HEAP]: 6,
@@ -133,5 +144,6 @@ export {
   MemRegionsData,
   getMemRegionsSizesAndOffsets,
   initImages,
+  initStrings,
   initViews,
 };

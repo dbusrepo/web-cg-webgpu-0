@@ -49,13 +49,16 @@ const warnMsg = '// Do not modify. This file is auto generated from strings.res 
 const stringsObjPrefix = `const strings = {`;
 const stringsObjSuffix = `};\n`;
 
-const stringByteArrPrefix = `const stringsArrayData = new Uint8Array([`;
-const stringByteArrSuffix = `]);\n`;
+const stringsByteArrPrefix = `const stringsArrayData = new Uint8Array([`;
+const stringsByteArrSuffix = `]);\n`;
+
+const stringsByteIndexPrefix = `const stringsArrayDataIndex = new Uint8Array([`;
+const stringsByteIndexSuffix = `]);\n`;
 
 const ascStringsIndexesObjPrefix = `const ascImportStrings = {`;
 const ascStringsIndexesObjSuffix= `};\n`;
 
-const suffix = 'export { strings, stringsArrayData, ascImportStrings };';
+const suffix = 'export { strings, stringsArrayData, stringsArrayDataIndex, ascImportStrings };';
 
 // https://stackoverflow.com/questions/14313183/javascript-regex-how-do-i-check-if-the-string-is-ascii-only
 function isASCII(str, extended) {
@@ -81,21 +84,32 @@ try {
 
   let objStringsObjBodyStr = '';
   let objStringArrBodyStr = '';
+  let objStringArrIndexBodyStr = '';
   let ascIndicesObjBodyStr = '';
+  let strOffset = 0;
   let ascIdx = 0;
   let ascImportBodyStr = '';
   let first = true;
+  const strKeys = {};
   lines.forEach(line => {
     if (line.trim() == '') return;
     const fields = line.split(FIELD_SEP);
     const [strKey, str] = fields;
+    if (strKeys[strKey]) {
+      console.log(`String key ${strKey} duplicated ! Aborting string preprocessing...`);
+      process.exit(1);
+    }
+    strKeys[strKey] = 1;
     if (!isASCII(str)) {
       console.log(`String ${str} is not ASCII ! Aborting string preprocessing...`);
       process.exit(1);
     }
     const newLine = first ? '':'\n';
-    objStringArrBodyStr += `${newLine}  ${asciiStr2byteArrStr(str)},`;
     objStringsObjBodyStr += `${newLine}  ${strKey}: '${str}',`;
+    const strByteArr = asciiStr2byteArrStr(str);
+    objStringArrBodyStr += `${newLine}  ${strByteArr},`;
+    objStringArrIndexBodyStr += `${newLine}  ${strOffset},`;
+    strOffset += strByteArr.length;
     ascIndicesObjBodyStr += `${newLine}  ${strKey}: ${ascIdx},`;
     ascIdx++;
     ascImportBodyStr += `export declare const ${strKey}: u32;\n`;
@@ -106,9 +120,12 @@ try {
 ${stringsObjPrefix}
 ${objStringsObjBodyStr}
 ${stringsObjSuffix}
-${stringByteArrPrefix}
+${stringsByteArrPrefix}
 ${objStringArrBodyStr}
-${stringByteArrSuffix}
+${stringsByteArrSuffix}
+${stringsByteIndexPrefix}
+${objStringArrIndexBodyStr}
+${stringsByteIndexSuffix}
 ${ascStringsIndexesObjPrefix}
 ${ascIndicesObjBodyStr}
 ${ascStringsIndexesObjSuffix}

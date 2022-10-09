@@ -12,6 +12,8 @@ import {
 } from '../common';
 
 import { images, getImagesPaths } from '../assets/images/imagesList';
+import { strings, stringsArrayData, stringsArrayDataIndex } from '../assets/strings/strings';
+import { FONT_SIZE, fontChars } from '../assets/strings/font';
 
 // import loader from '@assemblyscript/loader';
 // import assert from 'assert';
@@ -95,7 +97,7 @@ class Engine {
     await this._initWasmMem();
   }
 
-  // not used
+  // not used TODO remove?
   // private _addImageIndex2WorkersOffsets(): void {
   //   const wasmImageIndexSize = WasmMemUtils.getImageIndexSize(this._imagesUrls.length);
   //   // update also worker images offsets with index size
@@ -113,29 +115,8 @@ class Engine {
   }
 
   private async _initImagesPaths() {
-    // const imagesDir = '../assets/images/';
-    // const fileNames = Object.values(imagesList);
-    // console.log(`PATH: ${imagesDir}${fileNames[0]}`);
-    // // const imagesUrls = await Promise.all(
-    // //   Object.values(imagesList).map(
-    // //     async (fileName) => (await import(`${imagesDir}${fileName}`)).default,
-    // //   ),
-    // // );
-    // // this._imagesPaths = imagesUrls;
-    // // console.log(imagesUrls);
-    // const path = 'samplePNGImage.png';
-    // const imgUrl = (await import('../assets/images/samplePNGImage.png')).default;
-    // const imgUrl2 = (await import('../assets/images/samplePNGImage2.png')).default;
-    // this._imagesPaths = [imgUrl, imgUrl2];
-
-    // const imagesDir = '../assets/images/';
-    // const imagesUrls = await Promise.all(
-    //   Object.values(imagesList).map(
-    //     async (fileName) => console.log(fileName),
-    //   ),
-    // );
-
     this._imagesPaths = await getImagesPaths();
+    assert(this._imagesPaths.length === Object.keys(images).length);
     console.log(this._imagesPaths);
   }
 
@@ -148,11 +129,10 @@ class Engine {
   }
 
   private _buildWasmMemConfig(): void {
-
     const getWasmImagesRegionSize = (): number => {
       const numImages = this._imagesPaths.length;
-      const wasmImageIndexSize = WasmUtils.initImages.getImageIndexSize(numImages);
-      return this._workersInitData.totalImagesSize + wasmImageIndexSize;
+      const imagesIndexSize = WasmUtils.initImages.getImagesIndexSize(numImages);
+      return this._workersInitData.totalImagesSize + imagesIndexSize;
     };
 
     const startOffset = defaultConfig.wasmMemStartOffset;
@@ -160,6 +140,9 @@ class Engine {
     const imagesRegionSize = getWasmImagesRegionSize();
     const workerHeapPages = defaultConfig.wasmWorkerHeapPages;
     const numWorkers = Engine.NUM_WORKERS;
+    const stringsRegionSize =
+      WasmUtils.initStrings.getStringsIndexSize(stringsArrayDataIndex) +
+      stringsArrayData.length;
 
     // set wasm mem regions sizes
     const wasmMemConfig: WasmUtils.MemConfig = {
@@ -171,8 +154,10 @@ class Engine {
       sleepArraySize: (numWorkers + 1) * Int32Array.BYTES_PER_ELEMENT,
       numWorkers,
       workerHeapSize: PAGE_SIZE_BYTES * workerHeapPages,
-      imagesRegionSize,
+      imagesSize: imagesRegionSize,
       sharedHeapSize: defaultConfig.wasmSharedHeapSize,
+      fontCharsSize: fontChars.length * FONT_SIZE,
+      stringsSize: stringsRegionSize,
     };
 
     this._wasmMemConfig = wasmMemConfig;
@@ -181,15 +166,23 @@ class Engine {
     );
     this._wasmMemRegionsSizes = sizes;
     this._wasmMemRegionsOffsets = offsets;
-    console.log('SIZES: ', this._wasmMemRegionsSizes);
-    console.log('OFFSETS: ', this._wasmMemRegionsOffsets);
+    console.log('SIZES: ', JSON.stringify(this._wasmMemRegionsSizes));
+    console.log('OFFSETS: ', JSON.stringify(this._wasmMemRegionsOffsets));
   }
 
   private async _initWasmMem(): Promise<void> {
     this._buildWasmMemConfig();
 
-    console.log(`wasm mem start offset: ${this._wasmMemRegionsOffsets[WasmUtils.MemRegions.START_MEM]}`);
-    console.log(`wasm mem start size: ${this._wasmMemRegionsSizes[WasmUtils.MemRegions.START_MEM]}`);
+    console.log(
+      `wasm mem start offset: ${
+        this._wasmMemRegionsOffsets[WasmUtils.MemRegions.START_MEM]
+      }`,
+    );
+    console.log(
+      `wasm mem start size: ${
+        this._wasmMemRegionsSizes[WasmUtils.MemRegions.START_MEM]
+      }`,
+    );
 
     this._allocWasmMemory();
     this._initWasmMemViews();
@@ -213,11 +206,16 @@ class Engine {
   }
 
   private _initWasmMemAssets(): void {
+    this._initWasmStrings();
     this._initWasmImagesIndex();
   }
 
+  private _initWasmStrings() {
+
+  }
+
   private _initWasmImagesIndex(): void {
-    WasmUtils.initImages.writeImageIndex(
+    WasmUtils.initImages.writeImagesIndex(
       this._wasmMemViews.imagesIndex,
       this._workerWasmMemConfig.wasmImagesOffsets,
       this._workerWasmMemConfig.wasmImagesSizes,
@@ -253,7 +251,7 @@ class Engine {
       wasmNumImages: this._workersInitData.numImages,
       wasmImagesIndexOffset:
         this._wasmMemRegionsOffsets[WasmUtils.MemRegions.IMAGES],
-      wasmImagesIndexSize: WasmUtils.initImages.getImageIndexSize(
+      wasmImagesIndexSize: WasmUtils.initImages.getImagesIndexSize(
         this._workersInitData.numImages,
       ),
       wasmWorkerImagesOffsets: this._workersInitData.workerImagesOffsets,

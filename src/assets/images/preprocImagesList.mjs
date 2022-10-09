@@ -71,10 +71,16 @@ try {
   let ascIndicesObjBodyStr = '';
   let ascIdx = 0;
   let ascImportBodyStr = '';
+  const imgsKeys = {};
   lines.forEach(line => {
     if (line.trim() == '') return;
     const fields = line.split(FIELD_SEP);
     const [imgKey, imgFile] = fields;
+    if (imgsKeys[imgKey]) {
+      console.log(`Image key ${imgKey} duplicated ! Aborting image list preprocessing...`);
+      process.exit(1);
+    }
+    imgsKeys[imgKey] = 1;
     objImagesBodyStr += `${first ? '':'\n'}  ${imgKey}: '${imgFile}',`;
     const importStmt = ` import('./${imgFile}'),`;
     getImagesUrlsBodyStr += `${first ? '':'\n'}   ${importStmt}`;

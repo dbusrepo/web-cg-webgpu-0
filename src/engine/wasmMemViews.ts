@@ -44,7 +44,7 @@ function buildWasmMemViews(
 
   // Assets mem views
   // images data views
-  const imagesIndexSize = initImages.getImageIndexSize(numImages);
+  const imagesIndexSize = initImages.getImagesIndexSize(numImages);
   const imagesIndex = new Uint32Array(
     wasmMem.buffer,
     memOffsets[MemRegions.IMAGES],

@@ -1,34 +1,33 @@
 // IMAGES REGION LAYOUT: 
 
-// First there is an INDEX and then the IMAGES data (pixels)
-// INDEX LAYOUT: ptrs to images start, widths, heights (32bit each)
-
-// Note: all fields in the images index use 32 bits
+// INDEX with images ptrs and sizes, IMAGES data (pixels)
+// INDEX LAYOUT: offsets to images start, widths, heights (32bit each)
+// offsets to images wrt to image data start
 
 // field sizes
-const PTR_2_IMG_SIZE = Uint32Array.BYTES_PER_ELEMENT;
+const OFFS_IMG_SIZE = Uint32Array.BYTES_PER_ELEMENT;
 const WIDTH_SIZE = Uint32Array.BYTES_PER_ELEMENT;
 const HEIGHT_SIZE = Uint32Array.BYTES_PER_ELEMENT;
 
-function getImageIndexSize(numImages: number) {
+function getImagesIndexSize(numImages: number) {
   return (
-    (PTR_2_IMG_SIZE + WIDTH_SIZE + HEIGHT_SIZE) *
+    (OFFS_IMG_SIZE + WIDTH_SIZE + HEIGHT_SIZE) *
     numImages
   );
 }
 
-function writeImageIndex(
+function writeImagesIndex(
   imageIndex: Uint32Array,
   imagesOffsets: number[],
   imagesSizes: [number, number][],
 ) {
   const numImages = imagesOffsets.length;
-  const PTRS_2_IMGS_OFFS = 0;
-  const WIDTHS_OFFS = PTRS_2_IMGS_OFFS + numImages;
+  const PTR_2_IMGS_OFFS = 0;
+  const WIDTHS_OFFS = PTR_2_IMGS_OFFS + numImages;
   const HEIGHTS_OFFS = WIDTHS_OFFS + numImages;
   for (let i = 0; i < imagesSizes.length; ++i) {
     // Atomics.store(imageIndex, i, imagesOffsets[i]);
-    imageIndex[PTRS_2_IMGS_OFFS + i] = imagesOffsets[i];
+    imageIndex[PTR_2_IMGS_OFFS + i] = imagesOffsets[i];
     const [ width, height ] = imagesSizes[i];
     imageIndex[WIDTHS_OFFS + i] = width;
     imageIndex[HEIGHTS_OFFS + i] = height;
@@ -37,6 +36,6 @@ function writeImageIndex(
 }
 
 export {
-  getImageIndexSize,
-  writeImageIndex,
+  getImagesIndexSize,
+  writeImagesIndex,
 };

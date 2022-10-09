@@ -40,7 +40,6 @@ interface WasmModules {
 }
 
 async function loadWasm<T>(
-  name: string,
   wasm: wasmBuilderFunc<T>,
   wasmInit: WasmInput,
   ...otherImports: object[]
@@ -53,8 +52,9 @@ async function loadWasm<T>(
     {},
   );
   const instance = await wasm({
-    // [name]: {
-    importVars: { // in asc import these props from file importVars.ts
+    // for each of these obj props import their fields from asc file with the
+    // same name: importVars.ts, importImages.ts, ...
+    importVars: {
       ...wasmInit,
       ...otherImpObj,
     },
@@ -79,7 +79,6 @@ async function loadEngineWorkerExport(
   wasmInit: WasmInput,
 ): Promise<typeof engineWorkerExport> {
   const engineWorker = await loadWasm<typeof engineWorkerExport>(
-    'engineWorker',
     engineWorkerWasm,
     wasmInit,
   );

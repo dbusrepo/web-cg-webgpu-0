@@ -517,3 +517,26 @@ from darray:
 // @inline get arrayEnd(): PTR_T {
 //   return this._arrayEnd;
 // }
+
+
+// const imagesDir = '../assets/images/';
+// const fileNames = Object.values(imagesList);
+// console.log(`PATH: ${imagesDir}${fileNames[0]}`);
+// // const imagesUrls = await Promise.all(
+// //   Object.values(imagesList).map(
+// //     async (fileName) => (await import(`${imagesDir}${fileName}`)).default,
+// //   ),
+// // );
+// // this._imagesPaths = imagesUrls;
+// // console.log(imagesUrls);
+// const path = 'samplePNGImage.png';
+// const imgUrl = (await import('../assets/images/samplePNGImage.png')).default;
+// const imgUrl2 = (await import('../assets/images/samplePNGImage2.png')).default;
+// this._imagesPaths = [imgUrl, imgUrl2];
+
+// const imagesDir = '../assets/images/';
+// const imagesUrls = await Promise.all(
+//   Object.values(imagesList).map(
+//     async (fileName) => console.log(fileName),
+//   ),
+// );
