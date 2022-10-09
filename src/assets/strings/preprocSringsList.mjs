@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import {fileURLToPath} from 'url';
 
-// script to generate imagesList.ts (for js/ts) and the asc file importImages.ts
+// script to generate strings.ts (for js/ts) and the asc file importStrings.ts
 
 const FIELD_SEP = '=';
 
@@ -16,7 +16,7 @@ const outFileTs = process.argv[3];
 const outFileTsAsc = process.argv[4];
 
 const checkArgs = () => {
-  const invMsg = `Syntax: node ${path.basename(__filename)} <outFileTs> <outFileTsAsc>`;
+  const invMsg = `Syntax: node ${path.basename(__filename)} <srcFile> <outFileTs> <outFileTsAsc>`;
   if (srcFile == undefined) {
     console.log(`Invocation error: source file arg required.\n${invMsg}`);
     process.exit(1);
@@ -34,7 +34,7 @@ const checkArgs = () => {
 checkArgs();
 
 // example call from cli in the same dir of the script: 
-// $ node preprocImagesList.mjs images.res imagesList.ts <ascfile>.ts
+// $ node preprocSringsList .res .ts ascfile.ts
 // if from another dir use the rel path for the script and the other args
 const IN_FILE = srcFile; // path.join(__dirname, srcFile);
 const OUT_FILE = outFileTs; // path.join(__dirname, outFile);
@@ -44,56 +44,74 @@ const writeOpts = {
   encoding: 'utf8',
 };
 
-const warnMsg = '// Do not modify. This file is auto generated from images.res with make';
-const getImagesUrlsPrefix = `const getImagesPaths = async () => {
-  const paths = [`;
-const getImagesUrlsSuffix = `  ];
-  return (await Promise.all(paths)).map((imp) => imp.default);
-};\n`;
+const warnMsg = '// Do not modify. This file is auto generated from strings.res with make';
 
-const imagesObjPrefix = `const images = {`;
-const imagesObjSuffix = `};\n`;
+const stringsObjPrefix = `const strings = {`;
+const stringsObjSuffix = `};\n`;
 
-const ascImagesIndexesObjPrefix = `const ascImportImages = {`;
-const ascImagesIndexesObjSuffix = `};\n`;
+const stringByteArrPrefix = `const stringsArrayData = new Uint8Array([`;
+const stringByteArrSuffix = `]);\n`;
 
-const suffix = 'export { images, getImagesPaths, ascImportImages };';
+const ascStringsIndexesObjPrefix = `const ascImportStrings = {`;
+const ascStringsIndexesObjSuffix= `};\n`;
+
+const suffix = 'export { strings, stringsArrayData, ascImportStrings };';
+
+// https://stackoverflow.com/questions/14313183/javascript-regex-how-do-i-check-if-the-string-is-ascii-only
+function isASCII(str, extended) {
+  return (extended ? /^[\x00-\xFF]*$/ : /^[\x00-\x7F]*$/).test(str);
+}
+
+function asciiStr2byteArrStr(str) {
+  const charValues = [];
+  for (let i = 0; i < str.length; i++) {
+    let charValue = str.charCodeAt(i);
+    charValues.push(charValue);
+  }
+  charValues.push('0');
+  return charValues;
+}
 
 try {
   console.log(IN_FILE);
   const data = fs.readFileSync(IN_FILE, { encoding: 'utf8' });
 
-  let objImagesBodyStr = '';
-  let getImagesUrlsBodyStr = '';
   const lines = data.trimEnd().split(/\r?\n/); // trimeEnd removes the last newline
   console.log(lines);
-  let first = true;
+
+  let objStringsObjBodyStr = '';
+  let objStringArrBodyStr = '';
   let ascIndicesObjBodyStr = '';
   let ascIdx = 0;
   let ascImportBodyStr = '';
+  let first = true;
   lines.forEach(line => {
     if (line.trim() == '') return;
     const fields = line.split(FIELD_SEP);
-    const [imgKey, imgFile] = fields;
-    objImagesBodyStr += `${first ? '':'\n'}  ${imgKey}: '${imgFile}',`;
-    const importStmt = ` import('./${imgFile}'),`;
-    getImagesUrlsBodyStr += `${first ? '':'\n'}   ${importStmt}`;
-    ascIndicesObjBodyStr += `${first ? '':'\n'}  ${imgKey}: ${ascIdx},`;
+    const [strKey, str] = fields;
+    if (!isASCII(str)) {
+      console.log(`String ${str} is not ASCII ! Aborting string preprocessing...`);
+      process.exit(1);
+    }
+    const newLine = first ? '':'\n';
+    objStringArrBodyStr += `${newLine}  ${asciiStr2byteArrStr(str)},`;
+    objStringsObjBodyStr += `${newLine}  ${strKey}: '${str}',`;
+    ascIndicesObjBodyStr += `${newLine}  ${strKey}: ${ascIdx},`;
     ascIdx++;
-    ascImportBodyStr += `export declare const ${imgKey}: u32;\n`;
+    ascImportBodyStr += `export declare const ${strKey}: u32;\n`;
     first = false;
   });
-  console.log(objImagesBodyStr);
+  console.log(objStringsObjBodyStr);
   const fileStr = `${warnMsg}
-${getImagesUrlsPrefix}
-${getImagesUrlsBodyStr}
-${getImagesUrlsSuffix}
-${imagesObjPrefix}
-${objImagesBodyStr}
-${imagesObjSuffix}
-${ascImagesIndexesObjPrefix}
+${stringsObjPrefix}
+${objStringsObjBodyStr}
+${stringsObjSuffix}
+${stringByteArrPrefix}
+${objStringArrBodyStr}
+${stringByteArrSuffix}
+${ascStringsIndexesObjPrefix}
 ${ascIndicesObjBodyStr}
-${ascImagesIndexesObjSuffix}
+${ascStringsIndexesObjSuffix}
 ${suffix}
 `;
 

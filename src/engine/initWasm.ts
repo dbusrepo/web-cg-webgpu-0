@@ -2,7 +2,8 @@
 
 import engineWorkerWasm from './wasm/build/asc/engineWorker.wasm';
 import engineWorkerExport from './wasm/build/asc/engineWorker';
-import { ascImagesOffsetsImport } from '../assets/images/imagesList';
+import { ascImportImages } from '../assets/images/imagesList';
+import { ascImportStrings } from '../assets/strings/strings';
 
 // TODO
 type wasmBuilderFunc<T> = (
@@ -57,7 +58,10 @@ async function loadWasm<T>(
       ...otherImpObj,
     },
     importImages: {
-      ...ascImagesOffsetsImport,
+      ...ascImportImages,
+    },
+    importStrings: {
+      ...ascImportStrings,
     },
     env: {
       memory: wasmInit.memory,

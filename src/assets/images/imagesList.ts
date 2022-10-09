@@ -12,9 +12,9 @@ const images = {
   MYIMG: 'samplePNGImage2.png',
 };
 
-const ascImagesOffsetsImport = {
+const ascImportImages = {
   IMG1: 0,
   MYIMG: 1,
 };
 
-export { images, getImagesPaths, ascImagesOffsetsImport };
+export { images, getImagesPaths, ascImportImages };

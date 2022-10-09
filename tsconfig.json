@@ -119,9 +119,8 @@
     "./src/**/*.js"
   ],
   "exclude": [
-    "src/engine/wasm",
-    "src/assets/images/preprocImagesList.js",
-    "node_modules"
+    "node_modules",
+    "src/engine/wasm"
     // "./src/types"
   ],
   //  "files": [
