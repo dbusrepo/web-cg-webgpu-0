@@ -6,10 +6,10 @@ import { Vec3, vec3Alloc } from './vec3';
 // import { ObjectAllocator } from './objectAllocator';
 import { range } from './utils';
 import { clearBg } from './draw';
-import { bgColor, heapOffset, numWorkers, workerIdx, logi, logf,
-         frameWidth, frameHeight, frameBufferOffset, syncArrayOffset,
-         sleepArrayOffset } from './importVars';
-import { usePalette, imagesIndexOffset, numImages } from './importVars';
+import { bgColor, heapPtr, numWorkers, workerIdx, logi, logf,
+         frameWidth, frameHeight, frameBufferPtr, syncArrayPtr,
+         sleepArrayPtr } from './importVars';
+import { usePalette, imagesIndexPtr, imagesIndexSize, numImages } from './importVars';
 import { BitImage } from './bitImage';
 import { initImages } from './initImages';
 // import { DArray, newDArray, deleteDArray } from './darray';
@@ -19,8 +19,8 @@ import { test } from './test/test';
 import {PTR_T} from './memUtils';
 import { MYIMG, IMG1 } from './importImages';
 
-const syncLoc = syncArrayOffset + workerIdx * sizeof<i32>();
-const sleepLoc = sleepArrayOffset + workerIdx * sizeof<i32>();
+const syncLoc = syncArrayPtr + workerIdx * sizeof<i32>();
+const sleepLoc = sleepArrayPtr + workerIdx * sizeof<i32>();
 
 function init(): void {
   if (workerIdx == 0) {
@@ -36,6 +36,7 @@ function initWorkerMem(): void {
 function run(): void {
 
   logi(MYIMG);
+  // logi(imagesIndexSize);
 
   initWorkerMem();
   // test();
@@ -52,7 +53,7 @@ function run(): void {
   // }
 
   const images = initImages();
-  const image = images.at(1);
+  const image = images.at(0);
   const width = image.width;
   const height = image.height;
 
@@ -65,11 +66,11 @@ function run(): void {
   // logi(image.width);
   // logi(image.height);
   // for (let i = 0; i != frameHeight; ++i) {
-  //   let screenPtr: PTR_T = frameBufferOffset + i * frameWidth * 4;
+  //   let screenPtr: PTR_T = frameBufferPtr + i * frameWidth * 4;
   //   const pixels: PTR_T = image.pixels + i * image.width * 4;
   //   memory.copy(screenPtr, pixels, frameWidth * 4);
 
-  //   // screenPtr = frameBufferOffset + i * frameWidth * 4;
+  //   // screenPtr = frameBufferPtr + i * frameWidth * 4;
   //   // pixels = image.pixels + i * image.width * 4;
   //   // // logi(screenPtr);
   //   // for (let j = 0; j != frameWidth; ++j) {
@@ -94,13 +95,14 @@ function run(): void {
 
     // logi(image.height);
     for (let i = 0; i != frameHeight; ++i) {
-      let screenPtr: PTR_T = frameBufferOffset + i * frameWidth * 4;
+      let screenPtr: PTR_T = frameBufferPtr + i * frameWidth * 4;
       const pixels: PTR_T = image.pixels + i * image.width * 4;
       memory.copy(screenPtr, pixels, frameWidth * 4);
     }
 
     atomic.store<i32>(syncLoc, 0);
     atomic.notify(syncLoc);
+    break;
   }
 
 }

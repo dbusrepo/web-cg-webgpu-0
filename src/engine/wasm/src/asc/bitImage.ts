@@ -2,7 +2,7 @@ import { myAssert } from './myAssert';
 import { PTR_T, SIZE_T } from './memUtils';
 import { alloc, dealloc } from './memManager';
 import { ObjectAllocator, newObjectAllocator } from './objectAllocator';
-import { imagesIndexOffset, numImages } from './importVars';
+import { logi, imagesIndexPtr, imagesIndexSize, numImages } from './importVars';
 
 // index fields types
 type IMG_OFF_T = u32; // used for offsets to pixels
@@ -11,8 +11,9 @@ const IMG_OFF_SIZE = sizeof<IMG_OFF_T>();
 const IMG_WH_SIZE = sizeof<IMG_SIZE_T>();
 
 // index sections offsets
-const imgPtrPtrs: PTR_T = imagesIndexOffset;
-const imgWidths = imgPtrPtrs + <usize>numImages * IMG_OFF_SIZE;
+const imgPtrsPtr: PTR_T = imagesIndexPtr;
+const imageDataPtr: PTR_T = imgPtrsPtr + imagesIndexSize;
+const imgWidths = imgPtrsPtr + <usize>numImages * IMG_OFF_SIZE;
 const imgHeights = imgWidths + <usize>numImages * IMG_WH_SIZE;
 
 @final @unmanaged class BitImage {
@@ -25,7 +26,8 @@ const imgHeights = imgWidths + <usize>numImages * IMG_WH_SIZE;
   }
 
   @inline get pixels(): PTR_T {
-    return imgPtrPtrs + load<IMG_OFF_T>(imgPtrPtrs + <usize>this._imgIdx * IMG_OFF_SIZE);
+    // logi(load<IMG_OFF_T>(imgPtrsPtr + <usize>this._imgIdx * IMG_OFF_SIZE));
+    return imageDataPtr + load<IMG_OFF_T>(imgPtrsPtr + <usize>this._imgIdx * IMG_OFF_SIZE);
   }
 
   @inline get width(): SIZE_T {

@@ -253,6 +253,9 @@ class Engine {
       wasmNumImages: this._workersInitData.numImages,
       wasmImagesIndexOffset:
         this._wasmMemRegionsOffsets[WasmUtils.MemRegions.IMAGES],
+      wasmImagesIndexSize: WasmUtils.initImages.getImageIndexSize(
+        this._workersInitData.numImages,
+      ),
       wasmWorkerImagesOffsets: this._workersInitData.workerImagesOffsets,
       wasmImagesSizes: this._workersInitData.imagesSizes,
       wasmWorkerImagesSize: this._workersInitData.workerImagesSizes,
@@ -391,7 +394,8 @@ class Engine {
         const numImages = this._workersInitData.imagesSizes.length;
         const imagesOffsets = new Array<number>(numImages);
         let prevSize: number;
-        imagesOffsets[0] = WasmUtils.initImages.getImageIndexSize(numImages);
+        imagesOffsets[0] = 0; // start from images data and not from index
+        // (images region start) //WasmUtils.initImages.getImageIndexSize(numImages);
         this._workersInitData.imagesSizes.forEach(([w, h], idx) => {
           const imageSize = w * h * this._getBPP();
           if (idx > 0) {

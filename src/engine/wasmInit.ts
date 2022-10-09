@@ -18,20 +18,21 @@ interface WasmInput {
   memory: WebAssembly.Memory;
   frameWidth: number;
   frameHeight: number;
-  frameBufferOffset: number;
-  syncArrayOffset: number;
-  sleepArrayOffset: number;
-  workersHeapOffset: number;
+  frameBufferPtr: number;
+  syncArrayPtr: number;
+  sleepArrayPtr: number;
+  workersHeapPtr: number;
   workerHeapSize: number;
-  heapOffset: number;
+  heapPtr: number;
   workerIdx: number;
   numWorkers: number;
   logi: (v: number) => void;
   logf: (v: number) => void;
   bgColor: number;
-  imagesIndexOffset: number;
-  numImages: number;
   usePalette: number;
+  imagesIndexPtr: number;
+  imagesIndexSize: number;
+  numImages: number;
 }
 
 interface WasmModules {

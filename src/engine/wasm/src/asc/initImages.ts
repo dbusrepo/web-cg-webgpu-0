@@ -1,4 +1,4 @@
-import { usePalette, imagesIndexOffset, numImages } from './importVars';
+import { usePalette, imagesIndexPtr, numImages } from './importVars';
 import { BitImage } from './bitImage';
 import { logi } from './importVars';
 import { SArray, newSArray } from './sarray';

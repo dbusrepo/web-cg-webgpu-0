@@ -1,7 +1,7 @@
 import assert from 'assert';
 import { fileTypeFromBuffer } from 'file-type';
 import * as WasmUtils from './wasmMemUtils';
-import { WasmModules, WasmInput, loadWasmModules } from './initWasm';
+import { WasmModules, WasmInput, loadWasmModules } from './wasmInit';
 import { syncStore, randColor, sleep } from './utils';
 import * as loadUtils from './loadUtils';
 import { BitImage } from './assets/images/bitImage';
@@ -26,6 +26,7 @@ type WorkerWasmMemConfig = {
   wasmWorkerHeapSize: number;
   wasmNumImages: number;
   wasmImagesIndexOffset: number; // images region starts here
+  wasmImagesIndexSize: number;
   wasmWorkerImagesOffsets: number[]; // worker images offsets
   wasmWorkerImagesSize: number[]; // worker images total size
   wasmImagesSizes: [number, number][]; // [w, h] for each image
@@ -175,20 +176,21 @@ class EngineWorker {
       memory,
       frameWidth,
       frameHeight,
-      frameBufferOffset: memOffsets[WasmUtils.MemRegions.FRAMEBUFFER_RGBA],
-      syncArrayOffset: memOffsets[WasmUtils.MemRegions.SYNC_ARRAY],
-      sleepArrayOffset: memOffsets[WasmUtils.MemRegions.SLEEP_ARRAY],
-      imagesIndexOffset: memOffsets[WasmUtils.MemRegions.IMAGES],
+      frameBufferPtr: memOffsets[WasmUtils.MemRegions.FRAMEBUFFER_RGBA],
+      syncArrayPtr: memOffsets[WasmUtils.MemRegions.SYNC_ARRAY],
+      sleepArrayPtr: memOffsets[WasmUtils.MemRegions.SLEEP_ARRAY],
+      imagesIndexPtr: memOffsets[WasmUtils.MemRegions.IMAGES],
       numImages: this._workerWasmMemConfig.wasmImagesSizes.length,
       workerIdx,
       numWorkers,
-      workersHeapOffset: memOffsets[WasmUtils.MemRegions.WORKERS_HEAPS],
+      workersHeapPtr: memOffsets[WasmUtils.MemRegions.WORKERS_HEAPS],
       workerHeapSize,
-      heapOffset: memOffsets[WasmUtils.MemRegions.HEAP],
+      heapPtr: memOffsets[WasmUtils.MemRegions.HEAP],
       bgColor: randColor(),
       usePalette: this._config.usePalette ? 1 : 0,
       logi,
       logf,
+      imagesIndexSize: this._workerWasmMemConfig.wasmImagesIndexSize,
     };
 
     // this._wasmInitInput = wasmInput;

@@ -1,14 +1,14 @@
 import { myAssert } from './myAssert';
 import { LOCK_T, lock, unlock } from './mutex';
-import { logi, heapOffset } from './importVars';
+import { logi, heapPtr } from './importVars';
 import { PTR_SIZE, PTR_ALIGN_MASK, SIZE_T, MAX_ALLOC_SIZE, MEM_BLOCK_USAGE_BIT_MASK,
          PTR_T, NULL_PTR, getTypeSize, getTypeAlignMask } from './memUtils';
 
 const LOCK_SIZE = getTypeSize<LOCK_T>();
 const MUTEX_ALIGN_MASK = getTypeAlignMask<LOCK_T>();
 
-const HEAP_BASE: PTR_T = heapOffset;
-const MUTEX_PTR: PTR_T = (heapOffset + MUTEX_ALIGN_MASK) & ~MUTEX_ALIGN_MASK; // align to 4 bytes
+const HEAP_BASE: PTR_T = heapPtr;
+const MUTEX_PTR: PTR_T = (heapPtr + MUTEX_ALIGN_MASK) & ~MUTEX_ALIGN_MASK; // align to 4 bytes
 const ALLOC_PTR_PTR: PTR_T = (MUTEX_PTR + LOCK_SIZE + PTR_ALIGN_MASK) & ~PTR_ALIGN_MASK; // after the mutex, align to X bytes
 const FREE_PTR_PTR: PTR_T = ALLOC_PTR_PTR + PTR_SIZE; // after the offset pointer, the free list ptr
 const START_ALLOC_PTR: PTR_T = FREE_PTR_PTR  + PTR_SIZE; // after the free block ptr ptr, the alloc area

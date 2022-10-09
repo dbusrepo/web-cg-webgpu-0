@@ -1,13 +1,13 @@
 import { myAssert } from './myAssert';
 import { heapAlloc, heapDealloc } from './heapAlloc';
-import { logi, workerIdx, workersHeapOffset, workerHeapSize } from './importVars';
+import { logi, workerIdx, workersHeapPtr, workerHeapSize } from './importVars';
 import { MEM_BLOCK_USAGE_BIT_MASK, SIZE_T, MAX_ALLOC_SIZE, PTR_T, NULL_PTR, getTypeSize, getTypeAlignMask, } from './memUtils';
 
 // Mem mananger: worker (private) heap mem handling:
 // list of blocks
 // uses the shared heap (see heapAlloc) when no blocks are available
 
-const WORKER_HEAP_BASE: PTR_T = workersHeapOffset + workerIdx * workerHeapSize;
+const WORKER_HEAP_BASE: PTR_T = workersHeapPtr + workerIdx * workerHeapSize;
 const WORKER_HEAP_LIMIT: PTR_T = WORKER_HEAP_BASE + workerHeapSize;
 
 let freeBlockPtr = WORKER_HEAP_BASE;
@@ -246,7 +246,7 @@ function initMemManager(): void {
 
 // function print(): void {
 //   logi(workerIdx);
-//   logi(workersHeapOffset);
+//   logi(workersHeapPtr);
 //   logi(WORKER_HEAP_BASE);
 //   logi(WORKER_HEAP_LIMIT);
 // }
