@@ -12,8 +12,12 @@ import {
 } from '../common';
 
 import { images, getImagesPaths } from '../assets/images/imagesList';
-import { strings, stringsArrayData, stringsArrayDataIndex } from '../assets/strings/strings';
-import { FONT_SIZE, fontChars } from '../assets/strings/font';
+import {
+  strings,
+  stringsArrayData,
+  stringsArrayDataIndex,
+} from '../assets/strings/strings';
+import { FONT_SIZE, fontChars } from '../assets/fonts/font';
 
 // import loader from '@assemblyscript/loader';
 // import assert from 'assert';
@@ -93,7 +97,6 @@ class Engine {
     await this._initWorkers();
     // console.log(this._workersInitData);
 
-
     await this._initWasmMem();
   }
 
@@ -129,20 +132,14 @@ class Engine {
   }
 
   private _buildWasmMemConfig(): void {
-    const getWasmImagesRegionSize = (): number => {
-      const numImages = this._imagesPaths.length;
-      const imagesIndexSize = WasmUtils.initImages.getImagesIndexSize(numImages);
-      return this._workersInitData.totalImagesSize + imagesIndexSize;
-    };
-
     const startOffset = defaultConfig.wasmMemStartOffset;
     const numPixels = this._imageData.width * this._imageData.height;
-    const imagesRegionSize = getWasmImagesRegionSize();
+    const imagesIndexSize = WasmUtils.initImages.getImagesIndexSize();
+    const imagesRegionSize = this._workersInitData.totalImagesSize;
     const workerHeapPages = defaultConfig.wasmWorkerHeapPages;
     const numWorkers = Engine.NUM_WORKERS;
-    const stringsRegionSize =
-      WasmUtils.initStrings.getStringsIndexSize(stringsArrayDataIndex) +
-      stringsArrayData.length;
+    const stringsIndexSize = WasmUtils.initStrings.getStringsIndexSize();
+    const stringsRegionSize = stringsArrayData.length;
 
     // set wasm mem regions sizes
     const wasmMemConfig: WasmUtils.MemConfig = {
@@ -158,6 +155,8 @@ class Engine {
       sharedHeapSize: defaultConfig.wasmSharedHeapSize,
       fontCharsSize: fontChars.length * FONT_SIZE,
       stringsSize: stringsRegionSize,
+      imagesIndexSize,
+      stringsIndexSize,
     };
 
     this._wasmMemConfig = wasmMemConfig;
@@ -200,21 +199,30 @@ class Engine {
       this._wasmMem,
       memOffsets,
       memSizes,
-      this._workersInitData.numImages,
       workerIdx,
     );
   }
 
   private _initWasmMemAssets(): void {
+    this._initWasmFontChars();
     this._initWasmStrings();
-    this._initWasmImagesIndex();
+    this._initWasmImages();
+  }
+
+  private _initWasmFontChars() {
+    WasmUtils.initFontChars.writeFontCharsData(this._wasmMemViews.fontChars);
   }
 
   private _initWasmStrings() {
-
+    WasmUtils.initStrings.writeStringsData(
+      this._wasmMemViews.stringsIndex,
+      this._wasmMemViews.strings,
+    );
   }
 
-  private _initWasmImagesIndex(): void {
+  private _initWasmImages(): void {
+    // write only the index here, 
+    // in _initWasmMemoryWorkers the workers write the images they loaded
     WasmUtils.initImages.writeImagesIndex(
       this._wasmMemViews.imagesIndex,
       this._workerWasmMemConfig.wasmImagesOffsets,
@@ -248,12 +256,9 @@ class Engine {
       wasmWorkerHeapSize: defaultConfig.wasmWorkerHeapPages * PAGE_SIZE_BYTES,
       wasmMemRegionsSizes: this._wasmMemRegionsSizes,
       wasmMemRegionsOffsets: this._wasmMemRegionsOffsets,
-      wasmNumImages: this._workersInitData.numImages,
       wasmImagesIndexOffset:
         this._wasmMemRegionsOffsets[WasmUtils.MemRegions.IMAGES],
-      wasmImagesIndexSize: WasmUtils.initImages.getImagesIndexSize(
-        this._workersInitData.numImages,
-      ),
+      wasmImagesIndexSize: WasmUtils.initImages.getImagesIndexSize(),
       wasmWorkerImagesOffsets: this._workersInitData.workerImagesOffsets,
       wasmImagesSizes: this._workersInitData.imagesSizes,
       wasmWorkerImagesSize: this._workersInitData.workerImagesSizes,

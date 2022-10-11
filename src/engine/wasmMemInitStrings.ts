@@ -1,34 +1,25 @@
-// IMAGES REGION LAYOUT: 
+import { stringsArrayDataIndex, stringsArrayData } from '../assets/strings/strings';
 
-// INDEX with ptrs to strings, strings data
+// STRINGS REGION LAYOUT: 
+
+// INDEX with for each str an offset to that string starting from the string
+// data, strings data
 // Note: strings are null terminated
 
-const OFFS_2_STR_SIZE = Uint32Array.BYTES_PER_ELEMENT;
-
-function getStringsIndexSize(stringsArrayDataIndex: Uint8Array) {
-  return OFFS_2_STR_SIZE * stringsArrayDataIndex.length;
+// note: ptrs to strings in the index are 32bit long
+function getStringsIndexSize() {
+  return stringsArrayDataIndex.byteLength;
 }
 
-function writeStringsIndex(
-  imageIndex: Uint32Array,
-  imagesOffsets: number[],
-  imagesSizes: [number, number][],
+function writeStringsData(
+  stringsIndexView: Uint32Array,
+  stringsView: Uint8Array,
 ) {
-  const numImages = imagesOffsets.length;
-  const PTRS_2_IMGS_OFFS = 0;
-  const WIDTHS_OFFS = PTRS_2_IMGS_OFFS + numImages;
-  const HEIGHTS_OFFS = WIDTHS_OFFS + numImages;
-  for (let i = 0; i < imagesSizes.length; ++i) {
-    // Atomics.store(imageIndex, i, imagesOffsets[i]);
-    imageIndex[PTRS_2_IMGS_OFFS + i] = imagesOffsets[i];
-    const [ width, height ] = imagesSizes[i];
-    imageIndex[WIDTHS_OFFS + i] = width;
-    imageIndex[HEIGHTS_OFFS + i] = height;
-    // console.log('Image: ', i, width, height);
-  }
+  stringsIndexView.set(stringsArrayDataIndex);
+  stringsView.set(stringsArrayData);
 }
 
 export {
   getStringsIndexSize,
-  writeStringsIndex,
+  writeStringsData,
 };

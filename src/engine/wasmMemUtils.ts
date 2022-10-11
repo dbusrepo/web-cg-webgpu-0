@@ -2,6 +2,7 @@ import assert from 'assert';
 import * as initViews from './wasmMemViews';
 import * as initImages from './wasmMemInitImages';
 import * as initStrings from './wasmMemInitStrings';
+import * as initFontChars from './wasmMemInitFontChars';
 
 type MemConfig = {
   startOffset: number;
@@ -12,9 +13,11 @@ type MemConfig = {
   paletteSize: number;
   sleepArraySize: number;
   workerHeapSize: number;
+  imagesIndexSize: number;
   imagesSize: number;
   sharedHeapSize: number;
   fontCharsSize: number;
+  stringsIndexSize: number;
   stringsSize: number;
 };
 
@@ -27,7 +30,9 @@ const enum MemRegions {
   SYNC_ARRAY = 'SYNC_ARRAY',
   SLEEP_ARRAY = 'SLEEP_ARRAY',
   FONT_CHARS = 'FONT_CHARS',
+  STRINGS_INDEX = 'STRINGS_INDEX',
   STRINGS = 'STRINGS',
+  IMAGES_INDEX = 'IMAGES_INDEX',
   IMAGES = 'IMAGES',
   WORKERS_HEAPS = 'WORKERS_HEAPS',
   HEAP = 'HEAP',
@@ -36,18 +41,16 @@ const enum MemRegions {
 
 type MemRegionKeyType = keyof typeof MemRegions;
 
-
 type MemRegionsData = {
   -readonly [key in MemRegionKeyType]: number;
 };
 
-
 function getMemRegionsSizes(config: MemConfig): MemRegionsData {
   const {
-    startOffset,
     frameBufferRGBASize,
     frameBufferPalSize,
     numWorkers,
+    imagesIndexSize,
     imagesSize,
     workerHeapSize,
     syncArraySize,
@@ -55,6 +58,7 @@ function getMemRegionsSizes(config: MemConfig): MemRegionsData {
     paletteSize,
     sharedHeapSize,
     fontCharsSize,
+    stringsIndexSize,
     stringsSize,
   } = config;
 
@@ -65,11 +69,13 @@ function getMemRegionsSizes(config: MemConfig): MemRegionsData {
     [MemRegions.SYNC_ARRAY]: syncArraySize,
     [MemRegions.SLEEP_ARRAY]: sleepArraySize,
     [MemRegions.FONT_CHARS]: fontCharsSize,
+    [MemRegions.STRINGS_INDEX]: stringsIndexSize,
     [MemRegions.STRINGS]: stringsSize,
+    [MemRegions.IMAGES_INDEX]: imagesIndexSize,
     [MemRegions.IMAGES]: imagesSize,
     [MemRegions.WORKERS_HEAPS]: numWorkers * workerHeapSize,
     [MemRegions.HEAP]: sharedHeapSize,
-    [MemRegions.START_MEM]: 0, // set later
+    [MemRegions.START_MEM]: 0,
   };
 
   // console.log(JSON.stringify(sizes));
@@ -80,7 +86,7 @@ function getMemRegionsOffsets(
   config: MemConfig,
   sizes: Readonly<MemRegionsData>,
 ): MemRegionsData {
-
+  // for each new section add its alignment here
   // lg of align req
   const memRegLgAlign: MemRegionsData = {
     [MemRegions.FRAMEBUFFER_RGBA]: 2,
@@ -89,19 +95,26 @@ function getMemRegionsOffsets(
     [MemRegions.SYNC_ARRAY]: 2,
     [MemRegions.SLEEP_ARRAY]: 2,
     [MemRegions.FONT_CHARS]: 2,
+    [MemRegions.STRINGS_INDEX]: 2,
     [MemRegions.STRINGS]: 2,
+    [MemRegions.IMAGES_INDEX]: 2,
     [MemRegions.IMAGES]: 2,
     [MemRegions.WORKERS_HEAPS]: 2,
     [MemRegions.HEAP]: 6,
     [MemRegions.START_MEM]: 0, // not used
   };
 
+  // for each new section add it in the region alloc order here
   const memRegionsAllocSeq: MemRegionKeyType[] = [
     MemRegions.FRAMEBUFFER_RGBA,
     MemRegions.FRAMEBUFFER_PAL,
     MemRegions.PALETTE,
     MemRegions.SYNC_ARRAY,
     MemRegions.SLEEP_ARRAY,
+    MemRegions.FONT_CHARS,
+    MemRegions.STRINGS_INDEX,
+    MemRegions.STRINGS,
+    MemRegions.IMAGES_INDEX,
     MemRegions.IMAGES,
     MemRegions.WORKERS_HEAPS,
     MemRegions.HEAP,
@@ -117,7 +130,7 @@ function getMemRegionsOffsets(
     curOffset = nextOffset + sizes[region];
   }
 
-  return  offsets;
+  return offsets;
 }
 
 // returns sizes and offsets
@@ -131,7 +144,7 @@ function getMemRegionsSizesAndOffsets(
   regionsOffsets[MemRegions.START_MEM] = startOffset;
   const startSize =
     regionsOffsets[MemRegions.HEAP] +
-    regionsSizes[MemRegions.HEAP] - // 0 if the heaps expands freely 
+    regionsSizes[MemRegions.HEAP] - // 0 if the heaps expands freely
     startOffset;
   regionsSizes[MemRegions.START_MEM] = startSize;
 
@@ -143,7 +156,8 @@ export {
   MemRegions,
   MemRegionsData,
   getMemRegionsSizesAndOffsets,
-  initImages,
-  initStrings,
   initViews,
+  initFontChars,
+  initStrings,
+  initImages,
 };

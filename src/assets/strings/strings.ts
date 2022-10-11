@@ -11,7 +11,7 @@ const stringsArrayData = new Uint8Array([
   104,105,0,
 ]);
 
-const stringsArrayDataIndex = new Uint8Array([
+const stringsArrayDataIndex = new Uint32Array([
   0,
   4,
   10,

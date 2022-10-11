@@ -24,7 +24,6 @@ type WorkerWasmMemConfig = {
   wasmMemRegionsOffsets: WasmUtils.MemRegionsData;
   wasmMemRegionsSizes: WasmUtils.MemRegionsData;
   wasmWorkerHeapSize: number;
-  wasmNumImages: number;
   wasmImagesIndexOffset: number; // images region starts here
   wasmImagesIndexSize: number;
   wasmWorkerImagesOffsets: number[]; // worker images offsets
@@ -79,7 +78,6 @@ class EngineWorker {
     return imageBuffers;
   }
 
-
   async loadAssets() {
     await this._loadImages();
   }
@@ -113,42 +111,33 @@ class EngineWorker {
       wasmMemRegionsSizes: memSizes,
     } = this._workerWasmMemConfig;
 
-    const { wasmNumImages: numImages } = this._workerWasmMemConfig;
     const { workerIdx } = this._config;
 
     this._wasmMemViews = WasmUtils.initViews.buildWasmMemViews(
       mem,
       memOffsets,
       memSizes,
-      numImages,
       workerIdx,
     );
   }
 
   private _initWasmMem() {
     console.log('Init wasm memory...');
-    // if (this._config.workerIdx === 0) {
-    //   // worker 0 writes the images index
-    //   WasmUtils.initImages.writeImageIndex(
-    //     this._wasmMemViews.imagesIndex,
-    //     this._wasmMemConfig.wasmImagesOffsets,
-    //     this._wasmMemConfig.wasmImagesSizes,
-    //   );
-    // }
 
-    // write the loaded images to wasm mem
+    // write the loaded images pixels arr to wasm mem
+    // first get the offset to images loaded by this worker inside images region
     const workerImagesOffset =
       this._wasmMemViews.imagesPixels.byteOffset +
       this._workerWasmMemConfig.wasmWorkerImagesOffsets[this._config.workerIdx];
 
-    // get a uint8 view on worker images pixels
+    // then get a uint8 view
     const workerImagesPixels = new Uint8Array(
       this._wasmMemViews.imagesPixels.buffer,
       workerImagesOffset,
       this._workerWasmMemConfig.wasmWorkerImagesSize[this._config.workerIdx],
     );
 
-    // copy loaded images pixels to wasm mem
+    // copy the images loaded to wasm mem
     for (let i = 0, imgOffset = 0; i < this._images.length; ++i) {
       const { pixels } = this._images[i];
       workerImagesPixels.set(pixels, imgOffset);
@@ -159,6 +148,7 @@ class EngineWorker {
   private async initWasmModules(): Promise<void> {
     const {
       wasmMem: memory,
+      wasmMemRegionsSizes: memSizes,
       wasmMemRegionsOffsets: memOffsets,
       wasmWorkerHeapSize: workerHeapSize,
     } = this._workerWasmMemConfig;
@@ -172,14 +162,13 @@ class EngineWorker {
       console.log(`[wasm] Worker [${workerIdx}]: ${i}`);
     };
 
-    const wasmInput: WasmInput = {
+    const wasmImports: WasmInput = {
       memory,
       frameWidth,
       frameHeight,
       frameBufferPtr: memOffsets[WasmUtils.MemRegions.FRAMEBUFFER_RGBA],
       syncArrayPtr: memOffsets[WasmUtils.MemRegions.SYNC_ARRAY],
       sleepArrayPtr: memOffsets[WasmUtils.MemRegions.SLEEP_ARRAY],
-      imagesIndexPtr: memOffsets[WasmUtils.MemRegions.IMAGES],
       numImages: this._workerWasmMemConfig.wasmImagesSizes.length,
       workerIdx,
       numWorkers,
@@ -190,11 +179,20 @@ class EngineWorker {
       usePalette: this._config.usePalette ? 1 : 0,
       logi,
       logf,
-      imagesIndexSize: this._workerWasmMemConfig.wasmImagesIndexSize,
+      fontCharsPtr: memOffsets[WasmUtils.MemRegions.FONT_CHARS],
+      fontCharsSize: memSizes[WasmUtils.MemRegions.FONT_CHARS],
+      imagesIndexSize: memSizes[WasmUtils.MemRegions.IMAGES_INDEX],
+      imagesIndexPtr: memOffsets[WasmUtils.MemRegions.IMAGES_INDEX],
+      imagesDataPtr: memOffsets[WasmUtils.MemRegions.IMAGES],
+      imagesDataSize: memSizes[WasmUtils.MemRegions.IMAGES],
+      stringsIndexPtr: memOffsets[WasmUtils.MemRegions.STRINGS_INDEX],
+      stringsIndexSize: memSizes[WasmUtils.MemRegions.STRINGS_INDEX],
+      stringsDataPtr: memOffsets[WasmUtils.MemRegions.STRINGS],
+      stringsDataSize: memSizes[WasmUtils.MemRegions.STRINGS],
     };
 
     // this._wasmInitInput = wasmInput;
-    this._wasmModules = await loadWasmModules(wasmInput);
+    this._wasmModules = await loadWasmModules(wasmImports);
   }
 
   run(): void {

@@ -26,13 +26,22 @@ interface WasmInput {
   heapPtr: number;
   workerIdx: number;
   numWorkers: number;
-  logi: (v: number) => void;
-  logf: (v: number) => void;
   bgColor: number;
   usePalette: number;
+  numImages: number;
   imagesIndexPtr: number;
   imagesIndexSize: number;
-  numImages: number;
+  imagesDataPtr: number;
+  imagesDataSize: number;
+  fontCharsPtr: number;
+  fontCharsSize: number;
+  stringsIndexPtr: number;
+  stringsIndexSize: number;
+  stringsDataPtr: number;
+  stringsDataSize: number;
+
+  logi: (v: number) => void;
+  logf: (v: number) => void;
 }
 
 interface WasmModules {
@@ -41,7 +50,7 @@ interface WasmModules {
 
 async function loadWasm<T>(
   wasm: wasmBuilderFunc<T>,
-  wasmInit: WasmInput,
+  wasmInput: WasmInput,
   ...otherImports: object[]
 ): Promise<T> {
   const otherImpObj = otherImports.reduce(
@@ -55,7 +64,7 @@ async function loadWasm<T>(
     // for each of these obj props import their fields from asc file with the
     // same name: importVars.ts, importImages.ts, ...
     importVars: {
-      ...wasmInit,
+      ...wasmInput,
       ...otherImpObj,
     },
     importImages: {
@@ -65,7 +74,7 @@ async function loadWasm<T>(
       ...ascImportStrings,
     },
     env: {
-      memory: wasmInit.memory,
+      memory: wasmInput.memory,
       abort: (...args: any[]) => {
         console.log('abort!');
       },
@@ -85,8 +94,8 @@ async function loadEngineWorkerExport(
   return engineWorker;
 }
 
-async function loadWasmModules(wasmInit: WasmInput): Promise<WasmModules> {
-  const engineWorker = await loadEngineWorkerExport(wasmInit);
+async function loadWasmModules(wasmImports: WasmInput): Promise<WasmModules> {
+  const engineWorker = await loadEngineWorkerExport(wasmImports);
   // if (wasmInit.workerIdx === 0) {}
   // pre exec init (shared heap, ds, ...)
   engineWorker.init();

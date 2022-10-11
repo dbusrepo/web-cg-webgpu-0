@@ -1,3 +1,5 @@
+import { images } from '../assets/images/imagesList';
+
 // IMAGES REGION LAYOUT: 
 
 // INDEX with images ptrs and sizes, IMAGES data (pixels)
@@ -9,11 +11,9 @@ const OFFS_IMG_SIZE = Uint32Array.BYTES_PER_ELEMENT;
 const WIDTH_SIZE = Uint32Array.BYTES_PER_ELEMENT;
 const HEIGHT_SIZE = Uint32Array.BYTES_PER_ELEMENT;
 
-function getImagesIndexSize(numImages: number) {
-  return (
-    (OFFS_IMG_SIZE + WIDTH_SIZE + HEIGHT_SIZE) *
-    numImages
-  );
+function getImagesIndexSize() {
+  const numImages = Object.keys(images).length;
+  return (OFFS_IMG_SIZE + WIDTH_SIZE + HEIGHT_SIZE) * numImages;
 }
 
 function writeImagesIndex(

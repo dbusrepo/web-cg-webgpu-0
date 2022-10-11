@@ -52,7 +52,7 @@ const stringsObjSuffix = `};\n`;
 const stringsByteArrPrefix = `const stringsArrayData = new Uint8Array([`;
 const stringsByteArrSuffix = `]);\n`;
 
-const stringsByteIndexPrefix = `const stringsArrayDataIndex = new Uint8Array([`;
+const stringsByteIndexPrefix = `const stringsArrayDataIndex = new Uint32Array([`;
 const stringsByteIndexSuffix = `]);\n`;
 
 const ascStringsIndexesObjPrefix = `const ascImportStrings = {`;

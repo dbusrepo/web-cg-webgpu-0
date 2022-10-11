@@ -1,4 +1,4 @@
-import { MemRegions, MemRegionsData, initImages } from './wasmMemUtils';
+import { MemRegions, MemRegionsData } from './wasmMemUtils';
 import { syncStore } from './utils';
 
 type WasmMemViews = {
@@ -6,6 +6,9 @@ type WasmMemViews = {
   frameBufferRGBA: Uint8ClampedArray;
   syncArr: Int32Array;
   sleepArr: Int32Array;
+  fontChars: Uint8Array;
+  stringsIndex: Uint32Array;
+  strings: Uint8Array;
   imagesIndex: Uint32Array;
   imagesPixels: Uint8Array;
 };
@@ -14,7 +17,6 @@ function buildWasmMemViews(
   wasmMem: WebAssembly.Memory,
   memOffsets: MemRegionsData,
   memSizes: MemRegionsData,
-  numImages: number,
   workerIdx: number,
 ): WasmMemViews {
   const startSize = memSizes[MemRegions.START_MEM];
@@ -43,18 +45,35 @@ function buildWasmMemViews(
   syncStore(sleepArr, workerIdx, 0);
 
   // Assets mem views
-  // images data views
-  const imagesIndexSize = initImages.getImagesIndexSize(numImages);
+
+  const fontChars = new Uint8Array(
+    wasmMem.buffer,
+    memOffsets[MemRegions.FONT_CHARS],
+    memSizes[MemRegions.FONT_CHARS],
+  );
+
+  const stringsIndex = new Uint32Array(
+    wasmMem.buffer,
+    memOffsets[MemRegions.STRINGS_INDEX],
+    memSizes[MemRegions.STRINGS_INDEX] / Uint32Array.BYTES_PER_ELEMENT,
+  );
+
+  const strings = new Uint8Array(
+    wasmMem.buffer,
+    memOffsets[MemRegions.STRINGS],
+    memSizes[MemRegions.STRINGS],
+  );
+
   const imagesIndex = new Uint32Array(
     wasmMem.buffer,
-    memOffsets[MemRegions.IMAGES],
-    imagesIndexSize / Uint32Array.BYTES_PER_ELEMENT,
+    memOffsets[MemRegions.IMAGES_INDEX],
+    memSizes[MemRegions.IMAGES_INDEX] / Uint32Array.BYTES_PER_ELEMENT,
   );
 
   const imagesPixels = new Uint8Array(
     wasmMem.buffer,
-    memOffsets[MemRegions.IMAGES] + imagesIndexSize,
-    memSizes[MemRegions.IMAGES] - imagesIndexSize,
+    memOffsets[MemRegions.IMAGES],
+    memSizes[MemRegions.IMAGES],
   );
 
   const memViews: WasmMemViews = {
@@ -64,9 +83,12 @@ function buildWasmMemViews(
     sleepArr,
     imagesIndex,
     imagesPixels,
+    fontChars,
+    stringsIndex,
+    strings,
   };
 
   return memViews;
-};
+}
 
 export { WasmMemViews, buildWasmMemViews };
