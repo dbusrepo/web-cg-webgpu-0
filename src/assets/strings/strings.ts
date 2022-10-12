@@ -11,16 +11,10 @@ const stringsArrayData = new Uint8Array([
   104,105,0,
 ]);
 
-const stringsArrayDataIndex = new Uint32Array([
-  0,
-  4,
-  10,
-]);
-
 const ascImportStrings = {
   MSG1: 0,
-  SENT2: 1,
-  SENT3: 2,
+  SENT2: 4,
+  SENT3: 10,
 };
 
-export { strings, stringsArrayData, stringsArrayDataIndex, ascImportStrings };
+export { strings, stringsArrayData, ascImportStrings };

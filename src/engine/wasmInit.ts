@@ -35,8 +35,6 @@ interface WasmInput {
   imagesDataSize: number;
   fontCharsPtr: number;
   fontCharsSize: number;
-  stringsIndexPtr: number;
-  stringsIndexSize: number;
   stringsDataPtr: number;
   stringsDataSize: number;
 

@@ -9,7 +9,6 @@ import { clearBg } from './draw';
 import { bgColor, heapPtr, numWorkers, workerIdx, logi, logf,
          frameWidth, frameHeight, frameBufferPtr, syncArrayPtr,
          sleepArrayPtr } from './importVars';
-import { usePalette, imagesIndexPtr, imagesIndexSize, numImages } from './importVars';
 import { BitImage } from './bitImage';
 import { initImages } from './initImages';
 // import { DArray, newDArray, deleteDArray } from './darray';
@@ -18,6 +17,11 @@ import { SArray, newSArray } from './sarray';
 import { test } from './test/test';
 import {PTR_T} from './memUtils';
 import { MYIMG, IMG1 } from './importImages';
+
+import { usePalette, imagesIndexPtr, imagesIndexSize, imagesDataSize, imagesDataPtr, numImages } from './importVars';
+import { stringsDataPtr, stringsDataSize } from './importVars';
+import { fontCharsPtr, fontCharsSize } from './importVars';
+import * as strings from './importStrings';
 
 const syncLoc = syncArrayPtr + workerIdx * sizeof<i32>();
 const sleepLoc = sleepArrayPtr + workerIdx * sizeof<i32>();
@@ -35,10 +39,38 @@ function initWorkerMem(): void {
 
 function run(): void {
 
-  logi(MYIMG);
+  initWorkerMem();
+
+  logi(strings.MSG1);
+  logi(strings.SENT2);
+  logi(strings.SENT3);
+
+  // logi(load<u8>(fontCharsPtr + 65*8));
+
+  // logi(load<u8>(stringsDataPtr));
+  // logi(load<u8>(stringsDataPtr+1));
+  // logi(load<u8>(stringsDataPtr+2));
+  // logi(load<u8>(stringsDataPtr+3));
+  // logi(load<u8>(stringsDataPtr+4));
+
+  // logi(stringsIndexPtr);
+  // logi(stringsIndexSize);
+  // logi(stringsDataPtr);
+  // logi(stringsDataSize);
+
+  // logi(fontCharsPtr);
+  // logi(fontCharsSize);
+
+  // logi(usePalette);
+  // logi(imagesIndexPtr);
+  // logi(imagesIndexSize);
+  // logi(imagesDataPtr);
+  // logi(imagesDataSize);
+  // logi(numImages);
+
+  // logi(MYIMG);
   // logi(imagesIndexSize);
 
-  initWorkerMem();
   // test();
   // test images loading
   // logi(numImages);
@@ -54,12 +86,11 @@ function run(): void {
 
   const images = initImages();
   const image = images.at(0);
-  const width = image.width;
-  const height = image.height;
+  // const width = image.width;
+  // const height = image.height;
 
-
-  let screenPtr: PTR_T;
-  let pixels: PTR_T;
+  // let screenPtr: PTR_T;
+  // let pixels: PTR_T;
 
   // logi(imagesIndexOffset);
   // logi(image.pixels);

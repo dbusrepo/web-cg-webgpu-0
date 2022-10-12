@@ -15,7 +15,6 @@ import { images, getImagesPaths } from '../assets/images/imagesList';
 import {
   strings,
   stringsArrayData,
-  stringsArrayDataIndex,
 } from '../assets/strings/strings';
 import { FONT_SIZE, fontChars } from '../assets/fonts/font';
 
@@ -138,7 +137,6 @@ class Engine {
     const imagesRegionSize = this._workersInitData.totalImagesSize;
     const workerHeapPages = defaultConfig.wasmWorkerHeapPages;
     const numWorkers = Engine.NUM_WORKERS;
-    const stringsIndexSize = WasmUtils.initStrings.getStringsIndexSize();
     const stringsRegionSize = stringsArrayData.length;
 
     // set wasm mem regions sizes
@@ -151,12 +149,11 @@ class Engine {
       sleepArraySize: (numWorkers + 1) * Int32Array.BYTES_PER_ELEMENT,
       numWorkers,
       workerHeapSize: PAGE_SIZE_BYTES * workerHeapPages,
-      imagesSize: imagesRegionSize,
       sharedHeapSize: defaultConfig.wasmSharedHeapSize,
       fontCharsSize: fontChars.length * FONT_SIZE,
       stringsSize: stringsRegionSize,
       imagesIndexSize,
-      stringsIndexSize,
+      imagesSize: imagesRegionSize,
     };
 
     this._wasmMemConfig = wasmMemConfig;
@@ -215,7 +212,6 @@ class Engine {
 
   private _initWasmStrings() {
     WasmUtils.initStrings.writeStringsData(
-      this._wasmMemViews.stringsIndex,
       this._wasmMemViews.strings,
     );
   }

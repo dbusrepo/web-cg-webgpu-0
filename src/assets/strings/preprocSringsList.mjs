@@ -52,13 +52,13 @@ const stringsObjSuffix = `};\n`;
 const stringsByteArrPrefix = `const stringsArrayData = new Uint8Array([`;
 const stringsByteArrSuffix = `]);\n`;
 
-const stringsByteIndexPrefix = `const stringsArrayDataIndex = new Uint32Array([`;
-const stringsByteIndexSuffix = `]);\n`;
+// const stringsByteIndexPrefix = `const stringsArrayDataIndex = new Uint32Array([`;
+// const stringsByteIndexSuffix = `]);\n`;
 
 const ascStringsIndexesObjPrefix = `const ascImportStrings = {`;
 const ascStringsIndexesObjSuffix= `};\n`;
 
-const suffix = 'export { strings, stringsArrayData, stringsArrayDataIndex, ascImportStrings };';
+const suffix = 'export { strings, stringsArrayData, ascImportStrings };';
 
 // https://stackoverflow.com/questions/14313183/javascript-regex-how-do-i-check-if-the-string-is-ascii-only
 function isASCII(str, extended) {
@@ -85,7 +85,7 @@ try {
   let objStringsObjBodyStr = '';
   let objStringArrBodyStr = '';
   let objStringArrIndexBodyStr = '';
-  let ascIndicesObjBodyStr = '';
+  let ascStringsOffsObjBodyStr = '';
   let strOffset = 0;
   let ascIdx = 0;
   let ascImportBodyStr = '';
@@ -108,10 +108,10 @@ try {
     objStringsObjBodyStr += `${newLine}  ${strKey}: '${str}',`;
     const strByteArr = asciiStr2byteArrStr(str);
     objStringArrBodyStr += `${newLine}  ${strByteArr},`;
-    objStringArrIndexBodyStr += `${newLine}  ${strOffset},`;
+    // objStringArrIndexBodyStr += `${newLine}  ${strOffset},`;
+    ascStringsOffsObjBodyStr += `${newLine}  ${strKey}: ${strOffset},`;
+    // ascIdx++;
     strOffset += strByteArr.length;
-    ascIndicesObjBodyStr += `${newLine}  ${strKey}: ${ascIdx},`;
-    ascIdx++;
     ascImportBodyStr += `export declare const ${strKey}: u32;\n`;
     first = false;
   });
@@ -123,14 +123,15 @@ ${stringsObjSuffix}
 ${stringsByteArrPrefix}
 ${objStringArrBodyStr}
 ${stringsByteArrSuffix}
-${stringsByteIndexPrefix}
-${objStringArrIndexBodyStr}
-${stringsByteIndexSuffix}
 ${ascStringsIndexesObjPrefix}
-${ascIndicesObjBodyStr}
+${ascStringsOffsObjBodyStr}
 ${ascStringsIndexesObjSuffix}
 ${suffix}
 `;
+// strings index not generated
+// ${stringsByteIndexPrefix}
+// ${objStringArrIndexBodyStr}
+// ${stringsByteIndexSuffix}
 
   fs.writeFileSync(OUT_FILE, fileStr, writeOpts);
   fs.writeFileSync(OUT_FILE_ASC, ascImportBodyStr, writeOpts);

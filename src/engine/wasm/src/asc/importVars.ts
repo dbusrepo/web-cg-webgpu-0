@@ -16,4 +16,12 @@ export declare const usePalette: i32;
 
 export declare const imagesIndexPtr: usize;
 export declare const imagesIndexSize: usize;
+export declare const imagesDataSize: usize;
+export declare const imagesDataPtr: usize;
 export declare const numImages: u32;
+
+export declare const stringsDataPtr: usize;
+export declare const stringsDataSize: usize;
+
+export declare const fontCharsPtr: usize;
+export declare const fontCharsSize: usize;

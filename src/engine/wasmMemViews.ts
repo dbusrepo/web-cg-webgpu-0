@@ -7,7 +7,6 @@ type WasmMemViews = {
   syncArr: Int32Array;
   sleepArr: Int32Array;
   fontChars: Uint8Array;
-  stringsIndex: Uint32Array;
   strings: Uint8Array;
   imagesIndex: Uint32Array;
   imagesPixels: Uint8Array;
@@ -52,12 +51,6 @@ function buildWasmMemViews(
     memSizes[MemRegions.FONT_CHARS],
   );
 
-  const stringsIndex = new Uint32Array(
-    wasmMem.buffer,
-    memOffsets[MemRegions.STRINGS_INDEX],
-    memSizes[MemRegions.STRINGS_INDEX] / Uint32Array.BYTES_PER_ELEMENT,
-  );
-
   const strings = new Uint8Array(
     wasmMem.buffer,
     memOffsets[MemRegions.STRINGS],
@@ -84,7 +77,6 @@ function buildWasmMemViews(
     imagesIndex,
     imagesPixels,
     fontChars,
-    stringsIndex,
     strings,
   };
 

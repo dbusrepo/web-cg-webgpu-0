@@ -17,7 +17,6 @@ type MemConfig = {
   imagesSize: number;
   sharedHeapSize: number;
   fontCharsSize: number;
-  stringsIndexSize: number;
   stringsSize: number;
 };
 
@@ -30,7 +29,6 @@ const enum MemRegions {
   SYNC_ARRAY = 'SYNC_ARRAY',
   SLEEP_ARRAY = 'SLEEP_ARRAY',
   FONT_CHARS = 'FONT_CHARS',
-  STRINGS_INDEX = 'STRINGS_INDEX',
   STRINGS = 'STRINGS',
   IMAGES_INDEX = 'IMAGES_INDEX',
   IMAGES = 'IMAGES',
@@ -58,7 +56,6 @@ function getMemRegionsSizes(config: MemConfig): MemRegionsData {
     paletteSize,
     sharedHeapSize,
     fontCharsSize,
-    stringsIndexSize,
     stringsSize,
   } = config;
 
@@ -69,7 +66,6 @@ function getMemRegionsSizes(config: MemConfig): MemRegionsData {
     [MemRegions.SYNC_ARRAY]: syncArraySize,
     [MemRegions.SLEEP_ARRAY]: sleepArraySize,
     [MemRegions.FONT_CHARS]: fontCharsSize,
-    [MemRegions.STRINGS_INDEX]: stringsIndexSize,
     [MemRegions.STRINGS]: stringsSize,
     [MemRegions.IMAGES_INDEX]: imagesIndexSize,
     [MemRegions.IMAGES]: imagesSize,
@@ -95,7 +91,6 @@ function getMemRegionsOffsets(
     [MemRegions.SYNC_ARRAY]: 2,
     [MemRegions.SLEEP_ARRAY]: 2,
     [MemRegions.FONT_CHARS]: 2,
-    [MemRegions.STRINGS_INDEX]: 2,
     [MemRegions.STRINGS]: 2,
     [MemRegions.IMAGES_INDEX]: 2,
     [MemRegions.IMAGES]: 2,
@@ -112,13 +107,14 @@ function getMemRegionsOffsets(
     MemRegions.SYNC_ARRAY,
     MemRegions.SLEEP_ARRAY,
     MemRegions.FONT_CHARS,
-    MemRegions.STRINGS_INDEX,
     MemRegions.STRINGS,
     MemRegions.IMAGES_INDEX,
     MemRegions.IMAGES,
     MemRegions.WORKERS_HEAPS,
     MemRegions.HEAP,
   ];
+
+  // check seq in memRegionsAllocSeq and no duplicates ?
 
   const offsets = {} as MemRegionsData;
   let curOffset = config.startOffset;

@@ -169,7 +169,6 @@ class EngineWorker {
       frameBufferPtr: memOffsets[WasmUtils.MemRegions.FRAMEBUFFER_RGBA],
       syncArrayPtr: memOffsets[WasmUtils.MemRegions.SYNC_ARRAY],
       sleepArrayPtr: memOffsets[WasmUtils.MemRegions.SLEEP_ARRAY],
-      numImages: this._workerWasmMemConfig.wasmImagesSizes.length,
       workerIdx,
       numWorkers,
       workersHeapPtr: memOffsets[WasmUtils.MemRegions.WORKERS_HEAPS],
@@ -181,17 +180,16 @@ class EngineWorker {
       logf,
       fontCharsPtr: memOffsets[WasmUtils.MemRegions.FONT_CHARS],
       fontCharsSize: memSizes[WasmUtils.MemRegions.FONT_CHARS],
+      numImages: this._workerWasmMemConfig.wasmImagesSizes.length,
       imagesIndexSize: memSizes[WasmUtils.MemRegions.IMAGES_INDEX],
       imagesIndexPtr: memOffsets[WasmUtils.MemRegions.IMAGES_INDEX],
       imagesDataPtr: memOffsets[WasmUtils.MemRegions.IMAGES],
       imagesDataSize: memSizes[WasmUtils.MemRegions.IMAGES],
-      stringsIndexPtr: memOffsets[WasmUtils.MemRegions.STRINGS_INDEX],
-      stringsIndexSize: memSizes[WasmUtils.MemRegions.STRINGS_INDEX],
       stringsDataPtr: memOffsets[WasmUtils.MemRegions.STRINGS],
       stringsDataSize: memSizes[WasmUtils.MemRegions.STRINGS],
     };
 
-    // this._wasmInitInput = wasmInput;
+    // this._wasmInitInput = wasmInput; // save it ?
     this._wasmModules = await loadWasmModules(wasmImports);
   }
 

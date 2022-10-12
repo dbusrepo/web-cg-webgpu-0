@@ -2,7 +2,8 @@ import { myAssert } from './myAssert';
 import { PTR_T, SIZE_T } from './memUtils';
 import { alloc, dealloc } from './memManager';
 import { ObjectAllocator, newObjectAllocator } from './objectAllocator';
-import { logi, imagesIndexPtr, imagesIndexSize, numImages } from './importVars';
+import { logi } from './importVars';
+import { usePalette, imagesIndexPtr, imagesIndexSize, imagesDataSize, imagesDataPtr, numImages } from './importVars';
 
 // index fields types
 type IMG_OFF_T = u32; // used for offsets to pixels
@@ -10,11 +11,12 @@ type IMG_SIZE_T = u32; // used for widths and heights
 const IMG_OFF_SIZE = sizeof<IMG_OFF_T>();
 const IMG_WH_SIZE = sizeof<IMG_SIZE_T>();
 
-// index sections offsets
+// index sections: offsets, widths, heights
 const imgPtrsPtr: PTR_T = imagesIndexPtr;
-const imageDataPtr: PTR_T = imgPtrsPtr + imagesIndexSize;
 const imgWidths = imgPtrsPtr + <usize>numImages * IMG_OFF_SIZE;
 const imgHeights = imgWidths + <usize>numImages * IMG_WH_SIZE;
+
+const imageDataPtr: PTR_T = imagesDataPtr;
 
 @final @unmanaged class BitImage {
 
