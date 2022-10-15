@@ -16,7 +16,8 @@ import {
   strings,
   stringsArrayData,
 } from '../assets/strings/strings';
-import { FONT_SIZE, fontChars } from '../assets/fonts/font';
+
+import { FONT_Y_SIZE, fontChars } from '../assets/fonts/font';
 
 // import loader from '@assemblyscript/loader';
 // import assert from 'assert';
@@ -150,7 +151,7 @@ class Engine {
       numWorkers,
       workerHeapSize: PAGE_SIZE_BYTES * workerHeapPages,
       sharedHeapSize: defaultConfig.wasmSharedHeapSize,
-      fontCharsSize: fontChars.length * FONT_SIZE,
+      fontCharsSize: fontChars.length * FONT_Y_SIZE,
       stringsSize: stringsRegionSize,
       imagesIndexSize,
       imagesSize: imagesRegionSize,

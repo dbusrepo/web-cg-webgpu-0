@@ -23,5 +23,9 @@ export declare const numImages: u32;
 export declare const stringsDataPtr: usize;
 export declare const stringsDataSize: usize;
 
+export declare const FONT_X_SIZE: usize;
+export declare const FONT_Y_SIZE: usize;
+export declare const FONT_SPACING: usize;
+
 export declare const fontCharsPtr: usize;
 export declare const fontCharsSize: usize;

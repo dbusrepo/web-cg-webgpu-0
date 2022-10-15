@@ -1,3 +1,3 @@
-export declare const MSG1: u32;
-export declare const SENT2: u32;
-export declare const SENT3: u32;
+export declare const MSG1: usize;
+export declare const SENT2: usize;
+export declare const SENT3: usize;

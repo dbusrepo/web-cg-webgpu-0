@@ -112,7 +112,7 @@ try {
     ascStringsOffsObjBodyStr += `${newLine}  ${strKey}: ${strOffset},`;
     // ascIdx++;
     strOffset += strByteArr.length;
-    ascImportBodyStr += `export declare const ${strKey}: u32;\n`;
+    ascImportBodyStr += `export declare const ${strKey}: usize;\n`;
     first = false;
   });
   console.log(objStringsObjBodyStr);

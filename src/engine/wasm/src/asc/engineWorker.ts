@@ -5,7 +5,7 @@ import { initAllocators } from './initAllocators';
 import { Vec3, vec3Alloc } from './vec3';
 // import { ObjectAllocator } from './objectAllocator';
 import { range } from './utils';
-import { clearBg } from './draw';
+import * as draw from './draw';
 import { bgColor, heapPtr, numWorkers, workerIdx, logi, logf,
          frameWidth, frameHeight, frameBufferPtr, syncArrayPtr,
          sleepArrayPtr } from './importVars';
@@ -41,9 +41,10 @@ function run(): void {
 
   initWorkerMem();
 
-  logi(strings.MSG1);
-  logi(strings.SENT2);
-  logi(strings.SENT3);
+
+  // logi(strings.MSG1);
+  // logi(strings.SENT2);
+  // logi(strings.SENT3);
 
   // logi(load<u8>(fontCharsPtr + 65*8));
 
@@ -124,12 +125,14 @@ function run(): void {
     // const v = vec3Alloc.new();
     // clearBg(bgColor, s, e);
 
-    // logi(image.height);
-    for (let i = 0; i != frameHeight; ++i) {
-      let screenPtr: PTR_T = frameBufferPtr + i * frameWidth * 4;
-      const pixels: PTR_T = image.pixels + i * image.width * 4;
-      memory.copy(screenPtr, pixels, frameWidth * 4);
-    }
+    // // logi(image.height);
+    // for (let i = 0; i != frameHeight; ++i) {
+    //   let screenPtr: PTR_T = frameBufferPtr + i * frameWidth * 4;
+    //   const pixels: PTR_T = image.pixels + i * image.width * 4;
+    //   memory.copy(screenPtr, pixels, frameWidth * 4);
+    // }
+
+    draw.drawText(strings.MSG1, 200, 10, 0xFF_00_00_FF);
 
     atomic.store<i32>(syncLoc, 0);
     atomic.notify(syncLoc);

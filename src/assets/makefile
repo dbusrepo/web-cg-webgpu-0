@@ -17,7 +17,11 @@ STRINGS_OUT_TS_ASC := $(ASC_DIR)/importStrings.ts
 
 .PHONY: clean-images-out clean-strings-out
 
-all: $(IMAGES_OUT_TS) $(IMAGES_OUT_TS_ASC) $(STRINGS_OUT_TS) $(STRINGS_OUT_TS_ASC)
+all: images strings
+
+images: $(IMAGES_OUT_TS) $(IMAGES_OUT_TS_ASC)
+
+strings: $(STRINGS_OUT_TS) $(STRINGS_OUT_TS_ASC)
 
 $(IMAGES_OUT_TS) $(IMAGES_OUT_TS_ASC): $(IMAGES_IN) $(IMAGES_SCRIPT)
 	node $(IMAGES_SCRIPT) $(IMAGES_IN) $(IMAGES_OUT_TS) $(IMAGES_OUT_TS_ASC)

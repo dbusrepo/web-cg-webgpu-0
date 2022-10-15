@@ -1,5 +1,4 @@
 // based on characters from: https://github.com/dhepper/font8x8/blob/master/font8x8_basic.h
-const FONT_SIZE = 8;
 
 const fontChars = [
   [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00], // 00
@@ -132,4 +131,8 @@ const fontChars = [
   [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00], // 7F
 ];
 
-export { FONT_SIZE, fontChars };
+const FONT_X_SIZE = 8;
+const FONT_Y_SIZE = fontChars[0].length;
+const FONT_SPACING = 1;
+
+export { FONT_X_SIZE, FONT_Y_SIZE, FONT_SPACING, fontChars };

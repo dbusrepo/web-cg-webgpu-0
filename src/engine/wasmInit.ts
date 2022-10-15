@@ -38,6 +38,10 @@ interface WasmInput {
   stringsDataPtr: number;
   stringsDataSize: number;
 
+  FONT_X_SIZE: number;
+  FONT_Y_SIZE: number;
+  FONT_SPACING: number;
+
   logi: (v: number) => void;
   logf: (v: number) => void;
 }

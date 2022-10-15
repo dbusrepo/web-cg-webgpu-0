@@ -9,6 +9,7 @@ import { BitImageRGBA } from './assets/images/bitImageRGBA';
 import { PngDecoderRGBA } from './assets/images/vivaxy-png/PngDecoderRGBA';
 import { loadImagesInitData, loadImageRGBA } from './assets/images/utils';
 import { WorkerInitData, WorkerInitImagesData } from './workerInitTypes';
+import { FONT_X_SIZE, FONT_Y_SIZE, FONT_SPACING } from '../assets/fonts/font';
 
 type WorkerConfig = {
   workerIdx: number;
@@ -176,8 +177,6 @@ class EngineWorker {
       heapPtr: memOffsets[WasmUtils.MemRegions.HEAP],
       bgColor: randColor(),
       usePalette: this._config.usePalette ? 1 : 0,
-      logi,
-      logf,
       fontCharsPtr: memOffsets[WasmUtils.MemRegions.FONT_CHARS],
       fontCharsSize: memSizes[WasmUtils.MemRegions.FONT_CHARS],
       numImages: this._workerWasmMemConfig.wasmImagesSizes.length,
@@ -187,6 +186,12 @@ class EngineWorker {
       imagesDataSize: memSizes[WasmUtils.MemRegions.IMAGES],
       stringsDataPtr: memOffsets[WasmUtils.MemRegions.STRINGS],
       stringsDataSize: memSizes[WasmUtils.MemRegions.STRINGS],
+      FONT_X_SIZE,
+      FONT_Y_SIZE,
+      FONT_SPACING,
+
+      logi,
+      logf,
     };
 
     // this._wasmInitInput = wasmInput; // save it ?
