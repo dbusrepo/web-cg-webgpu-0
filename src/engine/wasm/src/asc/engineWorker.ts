@@ -20,7 +20,7 @@ import { MYIMG, IMG1 } from './importImages';
 
 import { usePalette, imagesIndexPtr, imagesIndexSize, imagesDataSize, imagesDataPtr, numImages } from './importVars';
 import { stringsDataPtr, stringsDataSize } from './importVars';
-import { fontCharsPtr, fontCharsSize } from './importVars';
+import { FONT_Y_SIZE, fontCharsPtr, fontCharsSize } from './importVars';
 import * as strings from './importStrings';
 import { workersMemCountersPtr, workersMemCountersSize } from './importVars';
 
@@ -127,8 +127,6 @@ function run(): void {
 
   // logi(<i32>process.hrtime())
 
-  logi(load<u32>(WORKER_MEM_COUNTER_PTR));
-
   while (true) {
     atomic.wait<i32>(syncLoc, 0);
     // const v = vec3Alloc.new();
@@ -144,11 +142,19 @@ function run(): void {
     }
 
     if (workerIdx == 0) {
-      draw.drawText(strings.SENT3, 10, 10, 0xFF_00_00_FF);
+      draw.drawText(strings.SENT2, 10, 10, 1, 0xFF_00_00_FF);
+      draw.drawText(strings.SENT2, 10, 18, 2, 0xFF_00_00_FF);
+      // let y = 20;
+      // for (let s = 1; s < 5; ) {
+      //   draw.drawText(strings.SENT2, 10, y, f32(s), 0xFF_00_00_FF);
+      //   y += FONT_Y_SIZE * s;
+      //   s++;
+      // }
     }
 
     atomic.store<i32>(syncLoc, 0);
     atomic.notify(syncLoc);
+    break;
   }
 
 }

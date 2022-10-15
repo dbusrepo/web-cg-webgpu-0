@@ -49,7 +49,7 @@ type WorkersInitData = {
 };
 
 class Engine {
-  private static readonly NUM_WORKERS = 2; // >= 1
+  private static readonly NUM_WORKERS = 1; // >= 1
 
   // TODO
   private static readonly RENDER_PERIOD =
@@ -593,7 +593,6 @@ class Engine {
             (tot, cnt) => tot + cnt,
             0,
           );
-          console.log(workersHeapMem);
           const stats: Partial<StatsValues> = {
             // TODO
             [StatsNames.FPS]: avgFps,

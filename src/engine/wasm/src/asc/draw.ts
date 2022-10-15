@@ -45,13 +45,16 @@ function clearBg(
 //     }
 // }
 
-function drawText(textOffs: usize, x: i32, y: i32, color: u32): void {
+function drawText(textOffs: usize, x: i32, y: i32, scale: f32, color: u32): void {
   myAssert(x >= 0 && x < frameWidth);
   myAssert(y >= 0 && y < frameHeight);
+  myAssert(scale > 0);
   myAssert(FONT_X_SIZE == 8);
   let rowPtr: usize = frameBufferPtr + x * PIX_OFFS + y * FRAME_ROW_LEN;
   let startNextRow: usize = frameBufferPtr + (y + 1) * FRAME_ROW_LEN;
-  for (let font_y = usize(0); font_y != FONT_Y_SIZE && rowPtr < LIMIT; font_y++) {
+  const step_y = f32(1) / scale;
+  let inc_y = f32(0);
+  for (let font_y = usize(0); font_y < FONT_Y_SIZE && rowPtr < LIMIT; ) {
     const bmpRowYPtr = fontCharsPtr + font_y;
     let pixPtr = rowPtr;
     let chPtr = stringsDataPtr + textOffs;
@@ -60,7 +63,9 @@ function drawText(textOffs: usize, x: i32, y: i32, color: u32): void {
     while (ch = load<u8>(chPtr++)) {
       const chBmpRowY = load<u8>(bmpRowYPtr + ch * FONT_Y_SIZE);
       let skipRow = false;
-      for (let font_x = usize(0), curBit: u8 = 0x80; font_x != FONT_X_SIZE; font_x++, curBit >>= 1) {
+      const step_x = f32(1) / scale;
+      let inc_x = f32(0);
+      for (let font_x = usize(0), curBit: u8 = 0x80; font_x < FONT_X_SIZE; ) {
         // if we go over the rightmost col skip FONT_Y_SIZE rows
         if (pixPtr >= nextRow) {
           const yDelta = FONT_Y_SIZE * FRAME_ROW_LEN;
@@ -76,6 +81,12 @@ function drawText(textOffs: usize, x: i32, y: i32, color: u32): void {
           store<u32>(pixPtr, color);
         }
         pixPtr += PIX_OFFS;
+        inc_x += step_x;
+        while (inc_x >= 1) {
+          inc_x -= 1;
+          font_x++;
+          curBit >>= 1;
+        }
       }
       if (skipRow) {
         break;
@@ -84,6 +95,11 @@ function drawText(textOffs: usize, x: i32, y: i32, color: u32): void {
     }
     rowPtr += FRAME_ROW_LEN;
     startNextRow += FRAME_ROW_LEN;
+    inc_y += step_y;
+    while (inc_y >= 1) {
+      inc_y -= 1;
+      font_y++;
+    }
   }
 }
 
