@@ -2,15 +2,18 @@ import { myAssert } from './myAssert';
 import { heapAlloc, heapDealloc } from './heapAlloc';
 import { logi, workerIdx, workersHeapPtr, workerHeapSize } from './importVars';
 import { MEM_BLOCK_USAGE_BIT_MASK, SIZE_T, MAX_ALLOC_SIZE, PTR_T, NULL_PTR, getTypeSize, getTypeAlignMask, } from './memUtils';
+import { workersMemCountersPtr } from './importVars';
 
 // Mem mananger: worker (private) heap mem handling:
 // list of blocks
 // uses the shared heap (see heapAlloc) when no blocks are available
 
+const WORKER_MEM_COUNTER_PTR: PTR_T = workersMemCountersPtr + workerIdx * Uint32Array.BYTES_PER_ELEMENT;
+
 const WORKER_HEAP_BASE: PTR_T = workersHeapPtr + workerIdx * workerHeapSize;
 const WORKER_HEAP_LIMIT: PTR_T = WORKER_HEAP_BASE + workerHeapSize;
 
-let freeBlockPtr = WORKER_HEAP_BASE;
+let freeBlockPtr: PTR_T;
 
 @unmanaged class Block {
   size: SIZE_T;
@@ -54,7 +57,8 @@ const HF_SIZE = H_SIZE + F_SIZE;
   return block.size & ~MEM_BLOCK_USAGE_BIT_MASK;
 }
 
-function searchFirstFit(reqSize: SIZE_T): PTR_T {
+function searchFreeList(reqSize: SIZE_T): PTR_T {
+  // use first fit
   if (freeBlockPtr == NULL_PTR) {
     return NULL_PTR;
   }
@@ -71,7 +75,7 @@ function searchFirstFit(reqSize: SIZE_T): PTR_T {
 }
 
 // remove node from the free list or subst it with newNode if newNode is not null
-function replaceNode(nodePtr: PTR_T, newNodePtr: PTR_T = NULL_PTR): void {
+function removeOrReplaceFromFreeList(nodePtr: PTR_T, newNodePtr: PTR_T = NULL_PTR): void {
   myAssert(nodePtr != NULL_PTR);
   const node = changetype<HeaderBlock>(nodePtr);
   const single = (node.next == nodePtr);
@@ -106,10 +110,12 @@ function alloc(reqSize: SIZE_T): PTR_T {
   myAssert(reqSize > 0);
   myAssert(reqSize <= MAX_ALLOC_SIZE);
   // return heapAlloc(reqSize); // TODO REMOVE
-  const headerPtr = searchFirstFit(reqSize);
+  const headerPtr = searchFreeList(reqSize);
   if (headerPtr == NULL_PTR) {
-    // compaction ? no...we alloc from the shared heap...
-    return heapAlloc(reqSize);
+    // if no empty blocks no compaction here but we alloc from the shared heap...
+    const sharedHeapAllocated = heapAlloc(reqSize);
+    // check allocatedHeapPtr ?
+    return sharedHeapAllocated;
   }
   myAssert(!isBlockUsed(headerPtr));
   const header = changetype<HeaderBlock>(headerPtr);
@@ -122,7 +128,7 @@ function alloc(reqSize: SIZE_T): PTR_T {
   if (exactFit || !splitBlock) {
     setBlockUsed(headerPtr);
     setBlockUsed(footerPtr);
-    replaceNode(headerPtr);
+    removeOrReplaceFromFreeList(headerPtr);
   } else {
     const usedHeaderPtr = headerPtr;
     const usedFooterPtr = headerPtr + H_SIZE + reqSize;
@@ -140,8 +146,9 @@ function alloc(reqSize: SIZE_T): PTR_T {
     setBlockSize(freeHeaderPtr, blockSize - usedSize);
     setBlockSize(freeFooterPtr, blockSize - usedSize);
     // const freeFooter = changetype<HeaderBlock>(freeFooterPtr);
-    replaceNode(headerPtr, freeHeaderPtr);
+    removeOrReplaceFromFreeList(headerPtr, freeHeaderPtr);
   }
+  incMemCounter(getBlockSize(headerPtr));
   return allocated;
 }
 
@@ -155,12 +162,14 @@ function dealloc(ptr: PTR_T): void {
   myAssert(isBlockUsed(headerPtr));
   let blockSize = getBlockSize(headerPtr);
   myAssert(blockSize > 0);
+  decMemCounter(blockSize);
   const footerPtr = headerPtr + blockSize - F_SIZE;
   myAssert(isBlockUsed(footerPtr));
   setBlockUnused(headerPtr);
   setBlockUnused(footerPtr);
 
   let header = changetype<HeaderBlock>(headerPtr);
+
   if (freeBlockPtr == NULL_PTR) {
     header.next = header.prev = headerPtr;
     freeBlockPtr = headerPtr;
@@ -184,7 +193,7 @@ function dealloc(ptr: PTR_T): void {
     // remove the coalesced block from the free list. This makes the current
     // block appear to be used, which sets up for coalescing with the right
     // block and/or for adding the coalesced block back to the free list
-    replaceNode(leftHeaderPtr);
+    removeOrReplaceFromFreeList(leftHeaderPtr);
     headerPtr = leftHeaderPtr;
     header = leftHeader;
   }
@@ -203,7 +212,7 @@ function dealloc(ptr: PTR_T): void {
     setBlockSize(rightFooterPtr, blockSize);
 
     // remove the right block from the free list
-    replaceNode(rightHeaderPtr);
+    removeOrReplaceFromFreeList(rightHeaderPtr);
   }
 
   // add the free (coalesced) block to the free list
@@ -221,27 +230,40 @@ function dealloc(ptr: PTR_T): void {
   // logi(getBlockSize(freeBlockPtr));
 }
 
+@inline function incMemCounter(value: u32): void {
+  const counter = load<i32>(WORKER_MEM_COUNTER_PTR);
+  store<u32>(WORKER_MEM_COUNTER_PTR, counter + value);
+}
+
+@inline function decMemCounter(value: u32): void {
+  const counter = load<i32>(WORKER_MEM_COUNTER_PTR);
+  store<u32>(WORKER_MEM_COUNTER_PTR, counter - value);
+}
+
+// pre: ptr != NULL_PTR
+@inline function assertPtrLowerBound(ptr: PTR_T): void {
+  myAssert(ptr >= WORKER_HEAP_BASE + H_SIZE);
+}
+
 function initMemManager(): void {
 
   // print();
 
   const headerPtr = WORKER_HEAP_BASE;
   setBlockUnused(headerPtr);
-  setBlockSize(headerPtr, workerHeapSize);
+  const startFreeSpace = workerHeapSize - HF_SIZE;
+  myAssert(WORKER_HEAP_LIMIT - WORKER_HEAP_BASE - HF_SIZE == startFreeSpace);
+  setBlockSize(headerPtr, startFreeSpace);
 
   const footerPtr = WORKER_HEAP_LIMIT - F_SIZE;
   setBlockUnused(footerPtr);
-  setBlockSize(footerPtr, workerHeapSize);
+  setBlockSize(footerPtr, startFreeSpace);
 
   // free list of blocks as a doubly linked cyclic list
   const header = changetype<HeaderBlock>(headerPtr);
   header.next = header.prev = headerPtr;
 
-}
-
-// pre: ptr != NULL_PTR
-@inline function assertPtrLowerBound(ptr: PTR_T): void {
-  myAssert(ptr >= WORKER_HEAP_BASE + H_SIZE);
+  freeBlockPtr = headerPtr;
 }
 
 // function print(): void {
@@ -251,4 +273,4 @@ function initMemManager(): void {
 //   logi(WORKER_HEAP_LIMIT);
 // }
 
-export { initMemManager, alloc, dealloc, assertPtrLowerBound };
+export { WORKER_MEM_COUNTER_PTR, initMemManager, alloc, dealloc, assertPtrLowerBound };

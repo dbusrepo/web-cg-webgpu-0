@@ -38,7 +38,6 @@ const CHAR_BIT = 8;
   return 1 << (numBits - clz(n));
 }
 
-export const MEM_BLOCK_USAGE_BIT_MASK = getUsageBitMask();
 
 @inline function getTypeSize<T>(): SIZE_T {
   return <SIZE_T>(isReference<T>() ? offsetof<T>() : sizeof<T>());
@@ -52,4 +51,6 @@ export const MEM_BLOCK_USAGE_BIT_MASK = getUsageBitMask();
   return <SIZE_T>((1 << alignof<PTR_T>()) - 1);
 }
 
-export { GET_PTR, ilog2, nextPowerOfTwo, isSizePowerTwo, getTypeSize, getValueTypeSize, getTypeAlignMask };
+const MEM_BLOCK_USAGE_BIT_MASK = getUsageBitMask();
+
+export { MEM_BLOCK_USAGE_BIT_MASK, GET_PTR, ilog2, nextPowerOfTwo, isSizePowerTwo, getTypeSize, getValueTypeSize, getTypeAlignMask };

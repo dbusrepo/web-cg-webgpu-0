@@ -1,5 +1,6 @@
 export declare function logi(i: i32): void;
 export declare function logf(i: f32): void;
+
 export declare const numWorkers: u32;
 export declare const workerIdx: u32;
 export declare const workersHeapPtr: usize;
@@ -29,6 +30,9 @@ export declare const stringsDataSize: usize;
 
 export declare const fontCharsPtr: usize;
 export declare const fontCharsSize: usize;
+
+export declare const workersMemCountersPtr: usize
+export declare const workersMemCountersSize: usize
 
 export declare const FONT_X_SIZE: usize;
 export declare const FONT_Y_SIZE: usize;

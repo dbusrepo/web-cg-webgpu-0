@@ -15,6 +15,7 @@ enum StatsNames {
   UPS = 'UPS',
   UFPS = 'UFPS',
   MEM = 'MEM',
+  WORKERS_HEAP_MEM = 'WORKERS_HEAP_MEM',
 }
 
 type StatsValues = {

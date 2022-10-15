@@ -10,6 +10,7 @@ type WasmMemViews = {
   strings: Uint8Array;
   imagesIndex: Uint32Array;
   imagesPixels: Uint8Array;
+  workersMemCounters: Uint32Array;
 };
 
 function buildWasmMemViews(
@@ -43,8 +44,6 @@ function buildWasmMemViews(
   );
   syncStore(sleepArr, workerIdx, 0);
 
-  // Assets mem views
-
   const fontChars = new Uint8Array(
     wasmMem.buffer,
     memOffsets[MemRegions.FONT_CHARS],
@@ -69,6 +68,12 @@ function buildWasmMemViews(
     memSizes[MemRegions.IMAGES],
   );
 
+  const workersMemCounters = new Uint32Array(
+    wasmMem.buffer,
+    memOffsets[MemRegions.WORKERS_MEM_COUNTERS],
+    memSizes[MemRegions.WORKERS_MEM_COUNTERS],
+  );
+
   const memViews: WasmMemViews = {
     memUI8,
     frameBufferRGBA,
@@ -78,6 +83,7 @@ function buildWasmMemViews(
     imagesPixels,
     fontChars,
     strings,
+    workersMemCounters,
   };
 
   return memViews;

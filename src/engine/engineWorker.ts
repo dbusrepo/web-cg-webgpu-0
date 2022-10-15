@@ -186,6 +186,9 @@ class EngineWorker {
       imagesDataSize: memSizes[WasmUtils.MemRegions.IMAGES],
       stringsDataPtr: memOffsets[WasmUtils.MemRegions.STRINGS],
       stringsDataSize: memSizes[WasmUtils.MemRegions.STRINGS],
+      workersMemCountersPtr: memOffsets[WasmUtils.MemRegions.WORKERS_MEM_COUNTERS],
+      workersMemCountersSize: memSizes[WasmUtils.MemRegions.WORKERS_MEM_COUNTERS],
+
       FONT_X_SIZE,
       FONT_Y_SIZE,
       FONT_SPACING,

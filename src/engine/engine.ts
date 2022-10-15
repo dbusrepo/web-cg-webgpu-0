@@ -49,7 +49,7 @@ type WorkersInitData = {
 };
 
 class Engine {
-  private static readonly NUM_WORKERS = 1; // >= 1
+  private static readonly NUM_WORKERS = 2; // >= 1
 
   // TODO
   private static readonly RENDER_PERIOD =
@@ -120,7 +120,7 @@ class Engine {
   private async _initImagesPaths() {
     this._imagesPaths = await getImagesPaths();
     assert(this._imagesPaths.length === Object.keys(images).length);
-    console.log(this._imagesPaths);
+    // console.log(this._imagesPaths);
   }
 
   private _initOffscreenCanvasContext(canvas: OffscreenCanvas): void {
@@ -155,6 +155,7 @@ class Engine {
       stringsSize: stringsRegionSize,
       imagesIndexSize,
       imagesSize: imagesRegionSize,
+      workersMemCountersSize: numWorkers * Uint32Array.BYTES_PER_ELEMENT,
     };
 
     this._wasmMemConfig = wasmMemConfig;
@@ -588,11 +589,17 @@ class Engine {
           const avgMaxFps = Math.round(
             1000 / calcAvgArrValue(renderTimeArr, frameCount),
           );
+          const workersHeapMem = this._wasmMemViews.workersMemCounters.reduce(
+            (tot, cnt) => tot + cnt,
+            0,
+          );
+          console.log(workersHeapMem);
           const stats: Partial<StatsValues> = {
             // TODO
             [StatsNames.FPS]: avgFps,
             [StatsNames.UPS]: avgUps,
             [StatsNames.UFPS]: avgMaxFps,
+            [StatsNames.WORKERS_HEAP_MEM]: workersHeapMem,
           };
           postMessage({
             command: 'updateStats',

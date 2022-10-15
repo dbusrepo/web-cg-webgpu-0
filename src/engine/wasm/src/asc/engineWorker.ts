@@ -1,6 +1,6 @@
 import { myAssert } from './myAssert';
 import { sharedHeapInit } from './heapAlloc';
-import { initMemManager, alloc, dealloc } from './memManager';
+import { WORKER_MEM_COUNTER_PTR, initMemManager, alloc, dealloc } from './memManager';
 import { initAllocators } from './initAllocators';
 import { Vec3, vec3Alloc } from './vec3';
 // import { ObjectAllocator } from './objectAllocator';
@@ -22,6 +22,7 @@ import { usePalette, imagesIndexPtr, imagesIndexSize, imagesDataSize, imagesData
 import { stringsDataPtr, stringsDataSize } from './importVars';
 import { fontCharsPtr, fontCharsSize } from './importVars';
 import * as strings from './importStrings';
+import { workersMemCountersPtr, workersMemCountersSize } from './importVars';
 
 const syncLoc = syncArrayPtr + workerIdx * sizeof<i32>();
 const sleepLoc = sleepArrayPtr + workerIdx * sizeof<i32>();
@@ -40,6 +41,11 @@ function initWorkerMem(): void {
 function run(): void {
 
   initWorkerMem();
+
+  // const p = alloc(32);
+  // const t = alloc(32);
+  // dealloc(p);
+  // logi(load<u32>(WORKER_MEM_COUNTER_PTR));
 
   // logi(strings.MSG1);
   // logi(strings.SENT2);
@@ -115,9 +121,13 @@ function run(): void {
   //   // }
   // }
 
-  // const r = range(workerIdx, numWorkers, frameHeight);
-  // const s = <u32>(r >>> 32);
-  // const e = <u32>r;
+  const r = range(workerIdx, numWorkers, frameHeight);
+  const s = <u32>(r >>> 32);
+  const e = <u32>r;
+
+  // logi(<i32>process.hrtime())
+
+  logi(load<u32>(WORKER_MEM_COUNTER_PTR));
 
   while (true) {
     atomic.wait<i32>(syncLoc, 0);
@@ -125,17 +135,20 @@ function run(): void {
     // clearBg(bgColor, s, e);
 
     // // logi(image.height);
-    // for (let i = 0; i != frameHeight; ++i) {
-    //   let screenPtr: PTR_T = frameBufferPtr + i * frameWidth * 4;
-    //   const pixels: PTR_T = image.pixels + i * image.width * 4;
-    //   memory.copy(screenPtr, pixels, frameWidth * 4);
-    // }
+    if (workerIdx == 1) {
+      for (let i = s; i != e; ++i) {
+        let screenPtr: PTR_T = frameBufferPtr + i * frameWidth * 4;
+        const pixels: PTR_T = image.pixels + i * image.width * 4;
+        memory.copy(screenPtr, pixels, frameWidth * 4);
+      }
+    }
 
-    draw.drawText(strings.MSG1, 10, 199, 0xFF_00_00_FF);
+    if (workerIdx == 0) {
+      draw.drawText(strings.SENT3, 10, 10, 0xFF_00_00_FF);
+    }
 
     atomic.store<i32>(syncLoc, 0);
     atomic.notify(syncLoc);
-    break;
   }
 
 }

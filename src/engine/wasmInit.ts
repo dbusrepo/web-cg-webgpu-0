@@ -37,6 +37,8 @@ interface WasmInput {
   fontCharsSize: number;
   stringsDataPtr: number;
   stringsDataSize: number;
+  workersMemCountersPtr: number;
+  workersMemCountersSize: number;
 
   FONT_X_SIZE: number;
   FONT_Y_SIZE: number;

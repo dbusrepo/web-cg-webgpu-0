@@ -18,10 +18,10 @@ type MemConfig = {
   sharedHeapSize: number;
   fontCharsSize: number;
   stringsSize: number;
+  workersMemCountersSize: number;
 };
 
-// all regions are bounded except (at least for now) for the last part, the
-// shared heap that can grow.
+// all regions have bounds except for the last part, the shared heap that can grow
 const enum MemRegions {
   FRAMEBUFFER_RGBA = 'FRAMEBUFFER_RGBA',
   FRAMEBUFFER_PAL = 'FRAMEBUFFER_PAL',
@@ -34,6 +34,9 @@ const enum MemRegions {
   IMAGES = 'IMAGES',
   WORKERS_HEAPS = 'WORKERS_HEAPS',
   HEAP = 'HEAP',
+
+  WORKERS_MEM_COUNTERS = 'WORKERS_MEM_COUNTERS',
+
   START_MEM = 'START_MEM', // for the size/offset of all previous mem regions
 }
 
@@ -57,6 +60,7 @@ function getMemRegionsSizes(config: MemConfig): MemRegionsData {
     sharedHeapSize,
     fontCharsSize,
     stringsSize,
+    workersMemCountersSize,
   } = config;
 
   const sizes: MemRegionsData = {
@@ -71,6 +75,7 @@ function getMemRegionsSizes(config: MemConfig): MemRegionsData {
     [MemRegions.IMAGES]: imagesSize,
     [MemRegions.WORKERS_HEAPS]: numWorkers * workerHeapSize,
     [MemRegions.HEAP]: sharedHeapSize,
+    [MemRegions.WORKERS_MEM_COUNTERS]: workersMemCountersSize,
     [MemRegions.START_MEM]: 0,
   };
 
@@ -96,7 +101,9 @@ function getMemRegionsOffsets(
     [MemRegions.IMAGES]: 2,
     [MemRegions.WORKERS_HEAPS]: 2,
     [MemRegions.HEAP]: 6,
-    [MemRegions.START_MEM]: 0, // not used
+    [MemRegions.WORKERS_MEM_COUNTERS]: 2,
+
+    [MemRegions.START_MEM]: 0,
   };
 
   // for each new section add it in the region alloc order here
@@ -106,6 +113,7 @@ function getMemRegionsOffsets(
     MemRegions.PALETTE,
     MemRegions.SYNC_ARRAY,
     MemRegions.SLEEP_ARRAY,
+    MemRegions.WORKERS_MEM_COUNTERS,
     MemRegions.FONT_CHARS,
     MemRegions.STRINGS,
     MemRegions.IMAGES_INDEX,
