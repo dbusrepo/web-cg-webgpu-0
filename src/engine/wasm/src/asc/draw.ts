@@ -5,6 +5,7 @@ import { stringsDataPtr, fontCharsPtr } from './importVars';
 
 const PIX_OFFS = 4;
 const FRAME_ROW_LEN = frameWidth * PIX_OFFS;
+const LIMIT = frameBufferPtr + frameHeight * FRAME_ROW_LEN;
 
 function clearBg(
   color: u32,
@@ -45,24 +46,44 @@ function clearBg(
 // }
 
 function drawText(textOffs: usize, x: i32, y: i32, color: u32): void {
+  myAssert(x >= 0 && x < frameWidth);
+  myAssert(y >= 0 && y < frameHeight);
   myAssert(FONT_X_SIZE == 8);
   let rowPtr: usize = frameBufferPtr + x * PIX_OFFS + y * FRAME_ROW_LEN;
-  for (let font_y = usize(0); font_y != FONT_Y_SIZE; font_y++) {
+  let startNextRow: usize = frameBufferPtr + (y + 1) * FRAME_ROW_LEN;
+  for (let font_y = usize(0); font_y != FONT_Y_SIZE && rowPtr < LIMIT; font_y++) {
     const bmpRowYPtr = fontCharsPtr + font_y;
     let pixPtr = rowPtr;
     let chPtr = stringsDataPtr + textOffs;
+    let nextRow = startNextRow;
     let ch: u8;
     while (ch = load<u8>(chPtr++)) {
       const chBmpRowY = load<u8>(bmpRowYPtr + ch * FONT_Y_SIZE);
+      let skipRow = false;
       for (let font_x = usize(0), curBit: u8 = 0x80; font_x != FONT_X_SIZE; font_x++, curBit >>= 1) {
+        // if we go over the rightmost col skip FONT_Y_SIZE rows
+        if (pixPtr >= nextRow) {
+          const yDelta = FONT_Y_SIZE * FRAME_ROW_LEN;
+          pixPtr = nextRow + yDelta;
+          if (pixPtr >= LIMIT) {
+            skipRow = true;
+            break;
+          }
+          nextRow += yDelta + FRAME_ROW_LEN; 
+        }
         if (chBmpRowY & curBit) {
+          myAssert(pixPtr < LIMIT);
           store<u32>(pixPtr, color);
         }
         pixPtr += PIX_OFFS;
       }
+      if (skipRow) {
+        break;
+      }
       pixPtr += FONT_SPACING * PIX_OFFS;
     }
     rowPtr += FRAME_ROW_LEN;
+    startNextRow += FRAME_ROW_LEN;
   }
 }
 

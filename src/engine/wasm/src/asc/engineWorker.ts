@@ -41,7 +41,6 @@ function run(): void {
 
   initWorkerMem();
 
-
   // logi(strings.MSG1);
   // logi(strings.SENT2);
   // logi(strings.SENT3);
@@ -87,6 +86,7 @@ function run(): void {
 
   const images = initImages();
   const image = images.at(0);
+
   // const width = image.width;
   // const height = image.height;
 
@@ -115,7 +115,6 @@ function run(): void {
   //   // }
   // }
 
-
   // const r = range(workerIdx, numWorkers, frameHeight);
   // const s = <u32>(r >>> 32);
   // const e = <u32>r;
@@ -132,7 +131,7 @@ function run(): void {
     //   memory.copy(screenPtr, pixels, frameWidth * 4);
     // }
 
-    draw.drawText(strings.MSG1, 200, 10, 0xFF_00_00_FF);
+    draw.drawText(strings.MSG1, 10, 199, 0xFF_00_00_FF);
 
     atomic.store<i32>(syncLoc, 0);
     atomic.notify(syncLoc);

@@ -133,6 +133,6 @@ const fontChars = [
 
 const FONT_X_SIZE = 8;
 const FONT_Y_SIZE = fontChars[0].length;
-const FONT_SPACING = 1;
+const FONT_SPACING = 0;
 
 export { FONT_X_SIZE, FONT_Y_SIZE, FONT_SPACING, fontChars };
