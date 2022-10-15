@@ -9,7 +9,6 @@ declare global {
   }
 }
 
-
 class MemoryStats {
   private _stats: Stats;
   private _panel: MemoryStatsPanel;

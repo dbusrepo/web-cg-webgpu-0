@@ -1,7 +1,6 @@
 import assert from 'assert';
 import { StatsPanel } from './statsPanel';
 
-
 class Stats {
   private _container: HTMLDivElement;
   private _panels = new Map<string, StatsPanel>();

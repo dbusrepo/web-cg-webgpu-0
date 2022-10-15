@@ -15,7 +15,7 @@ enum StatsNames {
   UPS = 'UPS',
   UFPS = 'UFPS',
   MEM = 'MEM',
-  WORKERS_HEAP_MEM = 'WORKERS_HEAP_MEM',
+  WASM_HEAP = 'WASM_HEAP', // heap mem allocated by wasm workers in the private heap + in the shared heap
 }
 
 type StatsValues = {

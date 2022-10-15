@@ -599,7 +599,7 @@ class Engine {
             [StatsNames.FPS]: avgFps,
             [StatsNames.UPS]: avgUps,
             [StatsNames.UFPS]: avgMaxFps,
-            [StatsNames.WORKERS_HEAP_MEM]: workersHeapMem,
+            [StatsNames.WASM_HEAP]: workersHeapMem,
           };
           postMessage({
             command: 'updateStats',
