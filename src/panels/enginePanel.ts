@@ -65,15 +65,12 @@ class EnginePanel extends Panel {
     let panel = this;
 
     const commands = {
-      // TODO field ?
-      ...(panel._stats && {
-        updateStats(values: StatsValues): void {
-          // console.log(values);
-          panel._stats!.update(values);
-        },
-      }),
-      log(data: object): void {
-        console.log(data);
+      updateStats(values: StatsValues): void {
+        // console.log(values);
+        panel._stats?.update(values);
+      },
+      event(msg: string): void {
+        console.log(msg);
       },
     };
 

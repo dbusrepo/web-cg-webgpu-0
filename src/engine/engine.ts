@@ -49,7 +49,7 @@ type WorkersInitData = {
 };
 
 class Engine {
-  private static readonly NUM_WORKERS = 1; // >= 1
+  private static readonly NUM_WORKERS = 2; // >= 1
 
   // TODO
   private static readonly RENDER_PERIOD =
@@ -559,6 +559,10 @@ class Engine {
       const elapsed = frameNow - frameThen;
       if (elapsed >= Engine.RENDER_PERIOD) {
         frameThen = frameNow - (elapsed % Engine.RENDER_PERIOD);
+        // postMessage({
+        //   command: 'event',
+        //   params: 'ciaoooo',
+        // });
         this.drawFrame();
         const renderTime = performance.now() - startRenderTime;
         renderTimeArr[frameCount % renderTimeArr.length] = renderTime;

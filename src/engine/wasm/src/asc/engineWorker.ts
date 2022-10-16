@@ -154,7 +154,6 @@ function run(): void {
 
     atomic.store<i32>(syncLoc, 0);
     atomic.notify(syncLoc);
-    break;
   }
 
 }
