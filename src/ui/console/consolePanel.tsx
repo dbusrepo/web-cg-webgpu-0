@@ -1,4 +1,5 @@
 import assert from 'assert';
+import { h, JSX } from 'preact';
 import React from 'react';
 import { ConsoleHistoryPanel, ConsoleEntry } from './consoleHistoryPanel';
 
@@ -222,7 +223,7 @@ class ConsolePanel extends React.Component<
     return pos === 0 || (pos && pos <= this.props.prompt.length);
   }
 
-  private onInputKeyDown(event: KeyboardEvent) {
+  private onInputKeyDown(event: JSX.TargetedKeyboardEvent<HTMLInputElement>) {
     assert(this.inputRef);
     // see note here about the use of preventDefault in onKeydown
     // vs onKeyChange with a react input element
@@ -308,7 +309,7 @@ class ConsolePanel extends React.Component<
     }
   }
 
-  private onInputKeyUp(event: KeyboardEvent) {
+  private onInputKeyUp(event: JSX.TargetedKeyboardEvent<HTMLInputElement>) {
     switch (event.key) {
       case 'Control':
         this.ctrlDown = false;
@@ -415,10 +416,10 @@ class ConsolePanel extends React.Component<
           }}
           // defaultValue={this.props.prompt}
           onFocus={this.clearInput.bind(this)}
-          onKeyDown={this.onInputKeyDown.bind(this)}
           onChange={this.onInputKeyChange.bind(this)}
-          onKeyUp={this.onInputKeyUp.bind(this)}
           onClick={this.onInputClick.bind(this)}
+          onKeyDown={this.onInputKeyDown.bind(this)}
+          onKeyUp={this.onInputKeyUp.bind(this)}
         />
       </label>
     );

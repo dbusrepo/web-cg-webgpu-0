@@ -1,4 +1,5 @@
 // import assert from 'assert';
+// import * as preact from 'preact';
 import { h, JSX } from 'preact';
 import React, { useState, useEffect } from 'react';
 import { EventLogHistoryPanel, EventLogEntry } from './eventLogHistoryPanel';
@@ -32,7 +33,7 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
   let listContRef: HTMLElement;
   let inputRef: HTMLInputElement;
 
-  const onWheel = (e: WheelEvent) => {
+  const onWheel = (e: JSX.TargetedWheelEvent<HTMLDivElement>) => {
     // if the user is scrolling up with the mouse wheel disable auto scroll to
     // the last item
     if (e.deltaY < 0) {
@@ -157,7 +158,7 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
 
   let ctrlDown = false; // TODO ok?
 
-  const onInputKeyDown = (event: KeyboardEvent) => {
+  const onInputKeyDown = (event: JSX.TargetedKeyboardEvent<HTMLInputElement>) => {
     // see note here about the use of preventDefault in onKeydown
     // vs onKeyChange with a react input element
     // stackoverflow.com/q/57807522 // TODO
@@ -242,7 +243,7 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
     }
   };
 
-  const onInputKeyUp = (event: KeyboardEvent) => {
+  const onInputKeyUp = (event: JSX.TargetedKeyboardEvent<HTMLInputElement>) => {
     switch (event.key) {
       case 'Control':
         ctrlDown = false;
@@ -281,13 +282,13 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
       <input
         className="event-log-input"
         style={inputStyle}
-        onKeyDown={onInputKeyDown}
         onChange={onInputKeyChange}
-        onKeyUp={onInputKeyUp}
         onClick={onInputClick}
         ref={(el) => {
           inputRef = el!;
         }}
+        onKeyDown={onInputKeyDown}
+        onKeyUp={onInputKeyUp}
         // onKeyDown={}
         // onKeyUp={this.onKeyUp.bind(this)}
         // onChange={this.onStmtInputChange.bind(this)}
