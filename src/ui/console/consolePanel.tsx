@@ -331,7 +331,7 @@ class ConsolePanel extends React.Component<
     const inputEl = event.target as HTMLInputElement;
     const { prompt } = this.props;
     const { selectionStart: pos } = inputEl;
-    if (pos === 0 || (pos && pos < this.props.prompt.length)) {
+    if (pos === 0 || (pos && pos < prompt.length)) {
       const tpos = inputEl.value.length; // ...to the end of the input
       inputEl.setSelectionRange(tpos, tpos);
     }
