@@ -4,7 +4,7 @@ import { GET_PTR, ilog2, nextPowerOfTwo, isSizePowerTwo, PTR_T, NULL_PTR, getTyp
 import { Pointer } from '../Pointer';
 import { Vec3, vec3Alloc, newVec3 } from '../vec3';
 import { logi, logf } from '../importVars';
-import {alloc} from '../memManager';
+import {alloc} from '../workerHeapManager';
 import { Ref, newRef } from '../ref';
 
 function refTest(): void {

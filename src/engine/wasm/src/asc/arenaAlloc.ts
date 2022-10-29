@@ -1,5 +1,5 @@
 import { myAssert } from './myAssert';
-import { alloc, dealloc, assertPtrLowerBound } from './memManager';
+import { alloc, dealloc, assertPtrLowerBound } from './workerHeapManager';
 import { PTR_SIZE, PTR_ALIGN_MASK, SIZE_T, MAX_ALLOC_SIZE, 
          PTR_T, NULL_PTR, getTypeSize, getTypeAlignMask } from './memUtils';
 import { logi } from './importVars';

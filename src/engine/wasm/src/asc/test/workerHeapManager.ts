@@ -1,8 +1,8 @@
 import { myAssert } from '../myAssert';
-import { alloc, dealloc } from '../memManager';
+import { alloc, dealloc } from '../workerHeapManager';
 import { logi } from '../importVars';
 
-function memManagerTest(): void {
+function workerHeapManagerTest(): void {
   logi(-3);
   let ptr = alloc(30);
   logi(<u32>ptr);
@@ -12,4 +12,4 @@ function memManagerTest(): void {
   logi(-3);
 }
 
-export { memManagerTest };
+export { workerHeapManagerTest };

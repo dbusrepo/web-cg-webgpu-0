@@ -88,7 +88,7 @@ async function loadWasm<T>(
   return instance.instance.exports;
 }
 
-async function loadEngineWorkerExport(
+async function loadEngineWorkerWasm(
   wasmInit: WasmInput,
 ): Promise<typeof engineWorkerExport> {
   const engineWorker = await loadWasm<typeof engineWorkerExport>(
@@ -99,7 +99,7 @@ async function loadEngineWorkerExport(
 }
 
 async function loadWasmModules(wasmImports: WasmInput): Promise<WasmModules> {
-  const engineWorker = await loadEngineWorkerExport(wasmImports);
+  const engineWorker = await loadEngineWorkerWasm(wasmImports);
   // if (wasmInit.workerIdx === 0) {}
   // pre exec init (shared heap, ds, ...)
   engineWorker.init();

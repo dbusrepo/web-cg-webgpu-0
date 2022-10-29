@@ -147,10 +147,10 @@ function heapDealloc(ptr: PTR_T): void {
   unlock(MUTEX_PTR);
 }
 
-function sharedHeapInit(): void {
+function initSharedHeap(): void {
   // logi(START_ALLOC_PTR);
   store<PTR_T>(ALLOC_PTR_PTR, START_ALLOC_PTR);
   store<PTR_T>(FREE_PTR_PTR, NULL_PTR);
 }
 
-export { sharedHeapInit, heapAlloc, heapDealloc };
+export { initSharedHeap, heapAlloc, heapDealloc };

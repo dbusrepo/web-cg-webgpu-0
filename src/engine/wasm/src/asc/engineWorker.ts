@@ -1,6 +1,6 @@
 import { myAssert } from './myAssert';
-import { sharedHeapInit } from './heapAlloc';
-import { WORKER_MEM_COUNTER_PTR, initMemManager, alloc, dealloc } from './memManager';
+import { initSharedHeap } from './heapAlloc';
+import { WORKER_MEM_COUNTER_PTR, initMemManager, alloc, dealloc } from './workerHeapManager';
 import { initAllocators } from './initAllocators';
 import { Vec3, vec3Alloc } from './vec3';
 // import { ObjectAllocator } from './objectAllocator';
@@ -29,7 +29,7 @@ const sleepLoc = sleepArrayPtr + workerIdx * sizeof<i32>();
 
 function init(): void {
   if (workerIdx == 0) {
-    sharedHeapInit();
+    initSharedHeap();
   }
 }
 

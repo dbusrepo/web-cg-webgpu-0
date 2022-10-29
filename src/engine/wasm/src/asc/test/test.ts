@@ -1,4 +1,4 @@
-import { memManagerTest } from './memManager';
+import { workerHeapManagerTest } from './workerHeapManager';
 import { arenaAllocTest } from './arenaAlloc';
 import { sarrayTest } from './sarray';
 import { darrayTest } from './darray';
