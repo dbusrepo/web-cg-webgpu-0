@@ -246,18 +246,19 @@ similarly if we want to add to this proj another remote from a specifi proj:
 
 git remote add ray-casting-origin https://github.com/dbusrepo/web-ray-casting.git
 
-show local-remote tracking branches for origin and another remote
-(base-graphics for ex.):
 $ git remote show origin
 $ git remote show <other_remote_name>
+show the upstream branches for each branch:
 $ git branch -vv
+
+to push from for base-main in ray-casting proj to origin-graphics-web/main:
+$ git config push.default upstream
+$ git branch --set-upstream-to=origin-graphics-web/main
 
 note: to rename a remote:
 ex. rename base-graphics remote to origin-base-graphics:
 $ git remote rename base-graphics origin-base-graphics
 
-$ git config push.default upstream
-$ git branch --set-upstream-to=origin-graphics-web/main
 
 
 
