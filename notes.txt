@@ -267,6 +267,7 @@ add new project derived from base:
 git init
 git remote add origin https://github.com/dbusrepo/Line-drawing-wasm.git  <- project origin
 git remote add origin-graphics-base-wasm https://github.com/dbusrepo/Graphics-base-wasm.git
+gfe
 gco origin-graphics-base-wasm/main
 gcob main  <- main branch new project
 git push -u origin main <- link to to origin main
