@@ -259,8 +259,24 @@ note: to rename a remote:
 ex. rename base-graphics remote to origin-base-graphics:
 $ git remote rename base-graphics origin-base-graphics
 
+# change remote url:
+git remote set-url origin-graphics-web https://github.com/dbusrepo/Graphics-base-wasm.git
 
+add new project derived from base:
 
+git init
+git remote add origin https://github.com/dbusrepo/Line-drawing-wasm.git  <- project origin
+git remote add origin-graphics-base-wasm https://github.com/dbusrepo/Graphics-base-wasm.git
+gco origin-graphics-base-wasm/main
+gcob main  <- main branch new project
+git push -u origin main <- link to to origin main
+gcob base-main <- base-main branch to track base project main
+git push -u origin-graphics-base-wasm base-main:main <- link it to base proj main branch
+git config push.default upstream <- to allow pushing to a branch with a different name
+check status with:
+git branch -vv
+git remote show origin
+$ git remote show origin-graphics-base-wasm
 
 https://stackoverflow.com/questions/9683279/make-the-current-commit-the-only-initial-commit-in-a-git-repository/13102849#13102849
 
