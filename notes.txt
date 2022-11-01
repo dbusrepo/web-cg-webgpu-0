@@ -264,6 +264,9 @@ git remote set-url origin-graphics-web https://github.com/dbusrepo/Graphics-base
 
 add new project derived from base:
 
+git config user.name dbusrepo
+git config user.email dbusrepo@gmail.com
+
 git init
 git remote add origin https://github.com/dbusrepo/Line-drawing-wasm.git  <- project origin
 git remote add origin-graphics-base-wasm https://github.com/dbusrepo/Graphics-base-wasm.git
