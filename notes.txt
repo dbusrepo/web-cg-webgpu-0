@@ -271,13 +271,17 @@ gfe
 gco origin-graphics-base-wasm/main
 gcob main  <- main branch new project
 git push -u origin main <- link to to origin main
-gcob base-main <- base-main branch to track base project main
-git push -u origin-graphics-base-wasm base-main:main <- link it to base proj main branch
+gcob base-main <- local base-main branch to track base project main
 git config push.default upstream <- to allow pushing to a branch with a different name
+now to set the link to the main branch of the base proj:
+git branch -u origin-graphics-base-wasm/main <- set the link with this or if aligned:
+(git push -u origin-graphics-base-wasm base-main:main <- link it to base proj main branch)
+
 check status with:
+gbr, ...
 git branch -vv
 git remote show origin
-$ git remote show origin-graphics-base-wasm
+git remote show origin-graphics-base-wasm
 
 https://stackoverflow.com/questions/9683279/make-the-current-commit-the-only-initial-commit-in-a-git-repository/13102849#13102849
 
