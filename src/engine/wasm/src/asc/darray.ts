@@ -23,11 +23,11 @@ import { logi } from './importVars';
     if (!isSizePowerTwo(objSize)) {
       objSize = nextPowerOfTwo(objSize);
     }
-    const alignMask: SIZE_T = max(<SIZE_T>(1) << objAlignLg2, objSize) - 1;
-    const objSizeAlign = alignMask + 1;
-    myAssert(isSizePowerTwo(objSizeAlign));
+    const objSizeAlign = max(<SIZE_T>(1) << objAlignLg2, objSize);
+    const alignMask =  objSizeAlign - 1;
+    // myAssert(isSizePowerTwo(objSizeAlign));
     const numBytesData = capacity * objSizeAlign;
-    const allocSize = numBytesData + <SIZE_T>this._alignMask;
+    const allocSize = numBytesData + alignMask;
     this._array = alloc(allocSize);
     this._dataStart = (this._array + alignMask) & ~alignMask;
     this._dataEnd = this._dataStart + numBytesData;
@@ -71,8 +71,8 @@ import { logi } from './importVars';
     if (this._next >= this._dataEnd) {
       myAssert(this._next == this._dataEnd);
       const newCapacity = 2 * this._capacity;
-      const newNumBytesData = newCapacity * (1 << this._objSizeLg2); 
-      const newAllocSize = newNumBytesData + <SIZE_T>this._alignMask;
+      const newNumBytesData = newCapacity << this._objSizeLg2; 
+      const newAllocSize = newNumBytesData + this._alignMask;
       const newArray = alloc(newAllocSize);
       const newDataStart = (newArray + this._alignMask) & ~this._alignMask;
       const newArrayEnd = newDataStart + newNumBytesData;
@@ -88,25 +88,27 @@ import { logi } from './importVars';
     }
   }
 
+  private get objSize(): SIZE_T {
+    return 1 << this._objSizeLg2;
+  }
+
+  // add a new uninitialized element at the end and returns a pointer to it
+  private alloc(): PTR_T {
+    this.checkMem();
+    const ptr = this._next;
+    this._next += this.objSize;
+    return ptr;
+  }
+
   push(value: T): void {
     const ptr = this.alloc();
     new Pointer<T>(ptr).value = value;
   }
 
-  // like push but add a new uninitialized element and returns a pointer to it
-  alloc(): PTR_T {
-    this.checkMem();
-    const ptr = this._next;
-    this._next += (1 << this._objSizeLg2);
-    return ptr;
-  }
-
-  // TODO
   pop(): void {
     myAssert(this.length > 0);
-    this._next -= (1 << this._objSizeLg2);
+    this._next -= this.objSize;
   }
-
 }
 
 let arrayArena: ArenaAlloc;
