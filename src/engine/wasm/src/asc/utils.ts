@@ -1,3 +1,14 @@
+import { PTR_T, SIZE_T, getTypeSize } from './memUtils';
+
+// used with imported arrays with workers data
+function getWorkerOffset<T>(arr: PTR_T, workerIdx: SIZE_T): PTR_T {
+  return arr + workerIdx * getTypeSize<T>();
+}
+
+function sleep(loc: usize, timeoutMs: i64): void {
+  // TODO problem: timeout not working/ignored ?
+  atomic.wait<i32>(loc, 0, max(1, timeoutMs));
+}
 
 function gcd(m: i32, n: i32): i32 {
   let tmp: i32;
@@ -29,4 +40,4 @@ function range(workerIdx: u32, numWorkers: u32, numTasks: u32): u64 {
   return (start as u64) << 32 | end;
 }
 
-export { gcd, lcm, range };
+export { getWorkerOffset, sleep, gcd, lcm, range };

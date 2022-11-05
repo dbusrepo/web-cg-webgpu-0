@@ -8,9 +8,9 @@ const FRAME_ROW_LEN = frameWidth * PIX_OFFS;
 const LIMIT = frameBufferPtr + frameHeight * FRAME_ROW_LEN;
 
 function clearBg(
-  color: u32,
   start: u32,
   end: u32,
+  color: u32,
 ): void {
 
   const startOff: usize = frameBufferPtr + start * FRAME_ROW_LEN;

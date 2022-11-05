@@ -203,12 +203,10 @@ class EngineWorker {
 
   run(): void {
     console.log(`Worker ${this._config.workerIdx} running!`);
-
     try {
       this._wasmModules.engineWorker.run();
     } catch (e) {
       console.log(e);
-      // TODO post msg ?
     }
   }
 }

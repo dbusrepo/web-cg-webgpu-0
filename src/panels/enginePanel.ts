@@ -42,20 +42,16 @@ class EnginePanel extends Panel {
     this._stats = new Stats(this.panel);
     const fpsPanel = new StatsPanel(StatsNames.FPS, '#0ff', '#022');
     const upsPanel = new StatsPanel(StatsNames.UPS, '#0f0', '#020');
-    const workerHeapMem = new StatsPanel(StatsNames.WASM_HEAP, '#0b0', '#030');
-    // const unlockedFpsPanel = new StatsPanel( // TODO
-    //   EngineStatsNames.UFPS,
-    //   '#f50',
-    //   '#110',
-    // );
+    const unlockedFpsPanel = new StatsPanel(StatsNames.UFPS, '#f50', '#110');
+    const wasmHeapMem = new StatsPanel(StatsNames.WASM_HEAP, '#0b0', '#030');
     // this.mem_panel = new StatsPanel('MEM', '#ff0', '#330');
 
     this._stats.addPanel(fpsPanel);
     this._stats.addPanel(upsPanel);
-    this._stats.addPanel(workerHeapMem);
+    this._stats.addPanel(wasmHeapMem);
+    this._stats.addPanel(unlockedFpsPanel);
     // add mem stats panel
-    const memPanel = new MemoryStats(this._stats);
-    // this._stats.addPanel(unlockedFpsPanel);
+    // const memPanel = new MemoryStats(this._stats);
     this.setShowStats(this.showStats);
   }
 

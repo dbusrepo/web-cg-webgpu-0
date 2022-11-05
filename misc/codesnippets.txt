@@ -540,3 +540,32 @@ from darray:
 //     async (fileName) => console.log(fileName),
 //   ),
 // );
+
+while (true) {
+  atomic.wait<i32>(syncLoc, 0);
+  // const v = vec3Alloc.new();
+  // clearBg(bgColor, s, e);
+
+  // // logi(image.height);
+  if (workerIdx == 1) {
+    for (let i = s; i != e; ++i) {
+      let screenPtr: PTR_T = frameBufferPtr + i * frameWidth * 4;
+      const pixels: PTR_T = image.pixels + i * image.width * 4;
+      memory.copy(screenPtr, pixels, frameWidth * 4);
+    }
+  }
+
+  if (workerIdx == 0) {
+    draw.drawText(strings.SENT2, 10, 10, 1, 0xFF_00_00_FF);
+    draw.drawText(strings.SENT2, 10, 18, 2, 0xFF_00_00_FF);
+    // let y = 20;
+    // for (let s = 1; s < 5; ) {
+    //   draw.drawText(strings.SENT2, 10, y, f32(s), 0xFF_00_00_FF);
+    //   y += FONT_Y_SIZE * s;
+    //   s++;
+    // }
+  }
+
+  atomic.store<i32>(syncLoc, 0);
+  atomic.notify(syncLoc);
+}

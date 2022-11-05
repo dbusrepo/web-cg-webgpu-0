@@ -38,7 +38,6 @@ const CHAR_BIT = 8;
   return 1 << (numBits - clz(n));
 }
 
-
 @inline function getTypeSize<T>(): SIZE_T {
   return <SIZE_T>(isReference<T>() ? offsetof<T>() : sizeof<T>());
 }

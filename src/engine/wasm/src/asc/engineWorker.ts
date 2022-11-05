@@ -4,7 +4,7 @@ import { WORKER_MEM_COUNTER_PTR, initMemManager, alloc, dealloc } from './worker
 import { initAllocators } from './initAllocators';
 import { Vec3, vec3Alloc } from './vec3';
 // import { ObjectAllocator } from './objectAllocator';
-import { range } from './utils';
+import * as utils from './utils';
 import * as draw from './draw';
 import { bgColor, heapPtr, numWorkers, workerIdx, logi, logf,
          frameWidth, frameHeight, frameBufferPtr, syncArrayPtr,
@@ -15,7 +15,7 @@ import { initImages } from './initImages';
 import { Pointer } from './pointer';
 import { SArray, newSArray } from './sarray';
 import { test } from './test/test';
-import {PTR_T} from './memUtils';
+import { PTR_T } from './memUtils';
 import { MYIMG, IMG1 } from './importImages';
 
 import { usePalette, imagesIndexPtr, imagesIndexSize, imagesDataSize, imagesDataPtr, numImages } from './importVars';
@@ -24,8 +24,8 @@ import { FONT_Y_SIZE, fontCharsPtr, fontCharsSize } from './importVars';
 import * as strings from './importStrings';
 import { workersMemCountersPtr, workersMemCountersSize } from './importVars';
 
-const syncLoc = syncArrayPtr + workerIdx * sizeof<i32>();
-const sleepLoc = sleepArrayPtr + workerIdx * sizeof<i32>();
+const syncLoc = utils.getWorkerOffset<i32>(syncArrayPtr, workerIdx);
+const sleepLoc = utils.getWorkerOffset<i32>(sleepArrayPtr, workerIdx);
 
 function init(): void {
   if (workerIdx == 0) {
@@ -121,36 +121,41 @@ function run(): void {
   //   // }
   // }
 
-  const r = range(workerIdx, numWorkers, frameHeight);
-  const s = <u32>(r >>> 32);
+  const r = utils.range(workerIdx, numWorkers, frameHeight);
+  const s = <u32>(r >> 32);
   const e = <u32>r;
 
   // logi(<i32>process.hrtime())
 
+  // logi(sleepLoc);
+  // logi(load<u32>(sleepLoc));
+
   while (true) {
     atomic.wait<i32>(syncLoc, 0);
     // const v = vec3Alloc.new();
-    // clearBg(bgColor, s, e);
+    // draw.clearBg(s, e, 0xff_00_00_00); // ABGR
+    draw.clearBg(s, e, bgColor); // ABGR
+    // logi(0);
 
-    // // logi(image.height);
-    if (workerIdx == 1) {
-      for (let i = s; i != e; ++i) {
-        let screenPtr: PTR_T = frameBufferPtr + i * frameWidth * 4;
-        const pixels: PTR_T = image.pixels + i * image.width * 4;
-        memory.copy(screenPtr, pixels, frameWidth * 4);
-      }
-    }
+    // // // logi(image.height);
+    // if (workerIdx == 1) {
+    //   for (let i = s; i != e; ++i) {
+    //     let screenPtr: PTR_T = frameBufferPtr + i * frameWidth * 4;
+    //     const pixels: PTR_T = image.pixels + i * image.width * 4;
+    //     memory.copy(screenPtr, pixels, frameWidth * 4);
+    //   }
+    // }
 
-    if (workerIdx == 0) {
-      draw.drawText(strings.SENT2, 10, 10, 1, 0xFF_00_00_FF);
-      draw.drawText(strings.SENT2, 10, 18, 2, 0xFF_00_00_FF);
-      // let y = 20;
-      // for (let s = 1; s < 5; ) {
-      //   draw.drawText(strings.SENT2, 10, y, f32(s), 0xFF_00_00_FF);
-      //   y += FONT_Y_SIZE * s;
-      //   s++;
-      // }
-    }
+    // if (workerIdx == 0) {
+    //   draw.drawText(strings.SENT2, 10, 10, 1, 0xFF_00_00_FF);
+    //   draw.drawText(strings.SENT2, 10, 18, 2, 0xFF_00_00_FF);
+    //   // let y = 20;
+    //   // for (let s = 1; s < 5; ) {
+    //   //   draw.drawText(strings.SENT2, 10, y, f32(s), 0xFF_00_00_FF);
+    //   //   y += FONT_Y_SIZE * s;
+    //   //   s++;
+    //   // }
+    // }
 
     atomic.store<i32>(syncLoc, 0);
     atomic.notify(syncLoc);

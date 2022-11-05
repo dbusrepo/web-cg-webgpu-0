@@ -22,7 +22,7 @@ import { FONT_Y_SIZE, fontChars } from '../assets/fonts/font';
 // import loader from '@assemblyscript/loader';
 // import assert from 'assert';
 import { defaultConfig } from '../config/config';
-import { range, syncStore, syncWait, syncNotify } from './utils';
+import * as utils from './utils';
 
 // import * as loadUtils from '../utils/loadFiles'; // TODO
 import {
@@ -49,20 +49,22 @@ type WorkersInitData = {
 };
 
 class Engine {
-  private static readonly NUM_WORKERS = 2; // >= 1
+  private static readonly NUM_WORKERS = 1; // >= 1
+  private static readonly MAIN_WORKER_IDX = this.NUM_WORKERS;
 
-  // TODO
   private static readonly RENDER_PERIOD =
     MILLI_IN_SEC / defaultConfig.targetFPS;
+
   private static readonly UPDATE_PERIOD =
     (defaultConfig.multiplier * MILLI_IN_SEC) / defaultConfig.targetUPS;
+
+  private static readonly STATS_PERIOD = MILLI_IN_SEC;
+
   private static readonly UPDATE_TIME_MAX = Engine.UPDATE_PERIOD * 8;
 
-  private static readonly UPD_TIME_ARR_LENGTH = 4;
+  private static readonly STATS_ARR_LENGTH = 8;
+  private static readonly TIME_LAST_FRAME_ARR_LENGTH = 4;
   private static readonly FRAME_TIME_ARR_LENGTH = 8;
-
-  private static readonly FPS_ARR_LENGTH = 8;
-  private static readonly STATS_PERIOD = MILLI_IN_SEC;
 
   private _config: EngineConfig;
   private _ctx: OffscreenCanvasRenderingContext2D;
@@ -84,19 +86,13 @@ class Engine {
 
   public async init(config: EngineConfig): Promise<void> {
     this._startTime = Date.now();
-
     this._config = config;
-
     const { canvas } = config;
-
     this._initOffscreenCanvasContext(canvas);
-
     this._imageData = this._ctx.createImageData(canvas.width, canvas.height);
-
     await this._initAssets();
     await this._initWorkers();
     // console.log(this._workersInitData);
-
     await this._initWasmMem();
   }
 
@@ -192,13 +188,12 @@ class Engine {
   private _initWasmMemViews(): void {
     const memSizes = this._wasmMemRegionsSizes;
     const memOffsets = this._wasmMemRegionsOffsets;
-    const workerIdx = Engine.NUM_WORKERS;
 
     this._wasmMemViews = WasmUtils.initViews.buildWasmMemViews(
       this._wasmMem,
       memOffsets,
       memSizes,
-      workerIdx,
+      Engine.MAIN_WORKER_IDX,
     );
   }
 
@@ -213,13 +208,11 @@ class Engine {
   }
 
   private _initWasmStrings() {
-    WasmUtils.initStrings.writeStringsData(
-      this._wasmMemViews.strings,
-    );
+    WasmUtils.initStrings.writeStringsData(this._wasmMemViews.strings);
   }
 
   private _initWasmImages(): void {
-    // write only the index here, 
+    // write only the index here,
     // in _initWasmMemoryWorkers the workers write the images they loaded
     WasmUtils.initImages.writeImagesIndex(
       this._wasmMemViews.imagesIndex,
@@ -240,7 +233,7 @@ class Engine {
   }
 
   private _images2LoadWorker(workerIdx: number): string[] {
-    const [start, end] = range(
+    const [start, end] = utils.range(
       workerIdx,
       Engine.NUM_WORKERS,
       this._imagesPaths.length,
@@ -455,22 +448,27 @@ class Engine {
   }
 
   public run(): void {
-    let initTime: number; // TODO not used for now...
-    let renderTimeArr: Float64Array;
-    let lastUpdateTime: number;
+    let lastFrameStartTime: number;
     // let last_render_t: number;
-    let timeAcc: number;
+    let updTimeAcc: number;
     let elapsedTime: number;
     let frameThen: number;
-    let frameCount: number;
-    let updateCount: number;
-    let updateTimeArr: Float64Array;
-    let updateTimeCount: number;
+    let timeSinceLastFrame: number;
+    let frameStartTime: number;
+
+    let frameCounter: number;
+    let renderCounter: number;
+    let updateCounter: number;
+    let statsCounter: number;
+
     let lastStatsTime: number;
     let statsTimeAcc: number;
+
+    let renderFrameTimeArr: Float64Array;
+    let timeSinceLastFrameArr: Float64Array;
     let fpsArr: Float32Array;
     let upsArr: Float32Array;
-    let fpsCount: number;
+
     let resync: boolean;
     let isRunning: boolean;
     let isPaused: boolean;
@@ -483,127 +481,121 @@ class Engine {
       });
     };
 
-    const init = (curTimeMs: number) => {
-      initTime = curTimeMs;
-      lastUpdateTime = lastStatsTime = curTimeMs;
-      renderTimeArr = new Float64Array(Engine.FRAME_TIME_ARR_LENGTH);
-      timeAcc = 0;
+    const getTimeMs = () => performance.now();
+
+    const mainLoopInit = () => {
+      lastFrameStartTime = lastStatsTime = getTimeMs();
+      renderFrameTimeArr = new Float64Array(Engine.FRAME_TIME_ARR_LENGTH);
+      updTimeAcc = 0;
       elapsedTime = 0;
-      updateTimeArr = new Float64Array(Engine.UPD_TIME_ARR_LENGTH);
-      updateTimeCount = 0;
+      timeSinceLastFrameArr = new Float64Array(Engine.TIME_LAST_FRAME_ARR_LENGTH);
+      frameCounter = 0;
       statsTimeAcc = 0;
-      fpsArr = new Float32Array(Engine.FPS_ARR_LENGTH);
-      upsArr = new Float32Array(Engine.FPS_ARR_LENGTH);
-      fpsCount = 0;
+      fpsArr = new Float32Array(Engine.STATS_ARR_LENGTH);
+      upsArr = new Float32Array(Engine.STATS_ARR_LENGTH);
+      statsCounter = 0;
       resync = false;
-      frameCount = updateCount = 0;
+      renderCounter = updateCounter = 0;
       frameThen = performance.now();
       isRunning = true;
       isPaused = false;
       runWorkers();
-      requestAnimationFrame(renderLoop);
+      requestAnimationFrame(mainLoop);
     };
 
-    const calcAvgArrValue = (
-      values: Float32Array | Float64Array,
-      count: number,
-    ) => {
-      let acc = 0;
-      const numIter = Math.min(count, values.length);
-      for (let i = 0; i < numIter; i++) {
-        acc += values[i];
-      }
-      return acc / numIter;
-    };
-
-    const renderLoop = (curTimeMs: number) => {
-      requestAnimationFrame(renderLoop);
-      const startRenderTime = performance.now();
-      let timeFromLastUpdate = curTimeMs - lastUpdateTime;
-      const loopStartTime = (lastUpdateTime = curTimeMs);
+    const updateFrameTime = () => {
+      lastFrameStartTime = frameStartTime;
       // if (is_paused) return; // TODO
-      updateStats(timeFromLastUpdate, loopStartTime);
       // handle timer anomalies
-      timeFromLastUpdate = Math.min(timeFromLastUpdate, Engine.UPDATE_TIME_MAX);
-      timeFromLastUpdate = Math.max(timeFromLastUpdate, 0);
-      updateTimeArr[updateTimeCount++ % updateTimeArr.length] =
-        timeFromLastUpdate;
-      timeFromLastUpdate = calcAvgArrValue(updateTimeArr, updateTimeCount);
-      timeAcc += timeFromLastUpdate;
+      timeSinceLastFrame = Math.min(timeSinceLastFrame, Engine.UPDATE_TIME_MAX);
+      timeSinceLastFrame = Math.max(timeSinceLastFrame, 0);
+      timeSinceLastFrameArr[frameCounter++ % timeSinceLastFrameArr.length] =
+        timeSinceLastFrame;
+      timeSinceLastFrame = utils.calcAvgArrValue(
+        timeSinceLastFrameArr,
+        frameCounter,
+      );
+      updTimeAcc += timeSinceLastFrame;
       // spiral of death protection
-      if (timeAcc > Engine.UPDATE_TIME_MAX) {
+      if (updTimeAcc > Engine.UPDATE_TIME_MAX) {
         resync = true;
       }
       // timer resync if requested
       if (resync) {
-        timeAcc = 0; // TODO
+        updTimeAcc = 0; // TODO
         // delta_time = App.UPD_PERIOD;
       }
+    };
+
+    const mainLoop = () => {
+      requestAnimationFrame(mainLoop);
+      frameStartTime = getTimeMs();
+      timeSinceLastFrame = frameStartTime - lastFrameStartTime;
+      updateStats();
       update();
-      render(startRenderTime);
+      render();
     };
 
     const update = () => {
-      while (timeAcc >= Engine.UPDATE_PERIOD) {
+      updateFrameTime();
+      while (updTimeAcc >= Engine.UPDATE_PERIOD) {
         // TODO see multiplier in update_period def
         // update state with UPD_PERIOD
         // this.scene.update(STEP, t / MULTIPLIER);
         // gameUpdate(STEP, t / MULTIPLIER);
-        timeAcc -= Engine.UPDATE_PERIOD;
-        updateCount++;
+        updTimeAcc -= Engine.UPDATE_PERIOD;
+        updateCounter++;
       }
     };
 
-    const render = (startRenderTime: number) => {
+    const render = () => {
       const frameNow = performance.now();
       const elapsed = frameNow - frameThen;
       if (elapsed >= Engine.RENDER_PERIOD) {
         frameThen = frameNow - (elapsed % Engine.RENDER_PERIOD);
-        // postMessage({
-        //   command: 'event',
-        //   params: 'ciaoooo',
-        // });
         this.drawFrame();
-        const renderTime = performance.now() - startRenderTime;
-        renderTimeArr[frameCount % renderTimeArr.length] = renderTime;
-        frameCount++;
+        renderFrameTimeArr[renderCounter++ % renderFrameTimeArr.length] =
+          performance.now() - frameStartTime;
       }
     };
 
-    const updateStats = (
-      timeFromLastUpdate: number,
-      loopStartTime: number,
-    ): void => {
-      statsTimeAcc += timeFromLastUpdate;
+    const updateStats = () => {
+      statsTimeAcc += timeSinceLastFrame;
       if (statsTimeAcc >= Engine.STATS_PERIOD) {
         statsTimeAcc = 0;
         // const tspent = (tnow - start_time) / App.MILLI_IN_SEC;
-        const elapsed = loopStartTime - lastStatsTime;
-        lastStatsTime = loopStartTime;
+        const elapsed = frameStartTime - lastStatsTime;
+        lastStatsTime = frameStartTime;
         elapsedTime += elapsed;
-        const fps = (frameCount * MILLI_IN_SEC) / elapsedTime;
-        const ups = (updateCount * MILLI_IN_SEC) / elapsedTime;
+        const fps = (renderCounter * MILLI_IN_SEC) / elapsedTime;
+        const ups = (updateCounter * MILLI_IN_SEC) / elapsedTime;
         // console.log(`${fps} - ${ups}`);
-        const fpsIdx = fpsCount++ % Engine.FPS_ARR_LENGTH;
-        fpsArr[fpsIdx] = fps;
-        upsArr[fpsIdx] = ups;
+        const statsIdx = statsCounter++ % fpsArr.length;
+        fpsArr[statsIdx] = fps;
+        upsArr[statsIdx] = ups;
         if (this._config.sendStats) {
-          const avgFps = Math.round(calcAvgArrValue(fpsArr, fpsCount));
-          const avgUps = Math.round(calcAvgArrValue(upsArr, fpsCount));
-          const avgMaxFps = Math.round(
-            1000 / calcAvgArrValue(renderTimeArr, frameCount),
+          const avgFps = Math.round(
+            utils.calcAvgArrValue(fpsArr, statsCounter),
+          );
+          const avgUps = Math.round(
+            utils.calcAvgArrValue(upsArr, statsCounter),
+          );
+          const avgUnlockedFps = Math.round(
+            MILLI_IN_SEC /
+              utils.calcAvgArrValue(renderFrameTimeArr, renderCounter),
           );
           const workersHeapMem = this._wasmMemViews.workersMemCounters.reduce(
             (tot, cnt) => tot + cnt,
             0,
           );
           const stats: Partial<StatsValues> = {
-            // TODO
             [StatsNames.FPS]: avgFps,
             [StatsNames.UPS]: avgUps,
-            [StatsNames.UFPS]: avgMaxFps,
+            [StatsNames.UFPS]: avgUnlockedFps,
             [StatsNames.WASM_HEAP]: workersHeapMem,
           };
+          // console.log(avgUnlockedFps);
+          // console.log(renderFrameTimeArr);
           postMessage({
             command: 'updateStats',
             params: stats,
@@ -612,21 +604,22 @@ class Engine {
       }
     };
 
-    requestAnimationFrame(init);
+    requestAnimationFrame(mainLoopInit);
   }
 
   private _syncWorkers(): void {
     for (let i = 0; i < Engine.NUM_WORKERS; ++i) {
-      syncStore(this._wasmMemViews.syncArr, i, 1);
-      syncNotify(this._wasmMemViews.syncArr, i);
+      utils.syncStore(this._wasmMemViews.syncArr, i, 1);
+      utils.syncNotify(this._wasmMemViews.syncArr, i);
     }
     for (let i = 0; i < Engine.NUM_WORKERS; ++i) {
-      syncWait(this._wasmMemViews.syncArr, i, 1);
+      utils.syncWait(this._wasmMemViews.syncArr, i, 1);
     }
   }
 
   private drawFrame(): void {
     this._syncWorkers();
+    // utils.sleep(this._wasmMemViews.sleepArr, Engine.MAIN_WORKER_IDX, 16);
     this._imageData.data.set(this._wasmMemViews.frameBufferRGBA);
     this._ctx.putImageData(this._imageData, 0, 0);
   }

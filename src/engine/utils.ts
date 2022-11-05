@@ -30,6 +30,18 @@ function randColor(): number {
   return color;
 }
 
+const calcAvgArrValue = (
+  values: Float32Array | Float64Array,
+  count: number,
+) => {
+  let acc = 0;
+  const numIter = Math.min(count, values.length);
+  for (let i = 0; i < numIter; i++) {
+    acc += values[i];
+  }
+  return acc / numIter;
+};
+
 function sleep(sleepArr: Int32Array, idx: number, timeoutMs: number): void {
   Atomics.wait(sleepArr, idx, 0, Math.max(1, timeoutMs | 0));
 }
@@ -46,4 +58,13 @@ function syncNotify(syncArr: Int32Array, idx: number): void {
   Atomics.notify(syncArr, idx);
 }
 
-export { range, Range, randColor, syncStore, syncWait, syncNotify, sleep };
+export {
+  calcAvgArrValue,
+  range,
+  Range,
+  randColor,
+  syncStore,
+  syncWait,
+  syncNotify,
+  sleep,
+};
