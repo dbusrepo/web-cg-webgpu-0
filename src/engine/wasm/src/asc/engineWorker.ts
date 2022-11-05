@@ -132,10 +132,13 @@ function run(): void {
 
   while (true) {
     atomic.wait<i32>(syncLoc, 0);
+    // utils.sleep(sleepLoc, 16);
+
     // const v = vec3Alloc.new();
     // draw.clearBg(s, e, 0xff_00_00_00); // ABGR
     draw.clearBg(s, e, bgColor); // ABGR
     // logi(0);
+
 
     // // // logi(image.height);
     // if (workerIdx == 1) {

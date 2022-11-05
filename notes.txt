@@ -293,3 +293,6 @@ misc stuff:
 https://stackoverflow.com/questions/44939304/eslint-should-be-listed-in-the-projects-dependencies-not-devdependencies
 
 https://stackoverflow.com/questions/59435971/eslint-partial-is-not-defined-in-typescript
+
+note about timeout in wasm vs js: nano vs milli
+https://github.com/WebAssembly/threads/issues/175
