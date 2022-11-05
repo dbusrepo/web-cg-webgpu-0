@@ -21,17 +21,17 @@ import { logi } from './importVars';
   }
 
   @inline get deref(): T {
-    myAssert(this.ptr != NULL_PTR);
+    myAssert(!this.isNull);
     return this._ptr.value;
   }
 
   @inline set deref(v: T) {
-    myAssert(this.ptr != NULL_PTR);
+    myAssert(!this.isNull);
     this._ptr.value = v;
   }
 
   @inline get isNull(): boolean {
-    return this._ptr.offset == NULL_PTR;
+    return this.ptr == NULL_PTR;
   }
 }
 
