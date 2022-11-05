@@ -11,12 +11,18 @@ import { logi } from './importVars';
 // obj size is rounded to a power of two
 
 @final @unmanaged class Header {
-  _arrayPtr: PTR_T; // address returned by alloc (used for dealloc only)
-  _objSizeLg2: SIZE_T; // lg2 of the size (includes padding for the alignment)
-  _length: SIZE_T; // to do some checks
+  _arrayPtr: PTR_T = NULL_PTR; // address returned by alloc (used for dealloc only)
+  _objSizeLg2: SIZE_T = 0; // lg2 of the array elements size (includes padding for the alignment)
+  _length: SIZE_T = 0; // to do some checks
 }
 
 const HEADER_SIZE = getTypeSize<Header>();
+
+@inline function getHeader<T>(arr: SArray<T>): Header {
+  const dataPtr = changetype<PTR_T>(arr);
+  const header = changetype<Header>(dataPtr - HEADER_SIZE);
+  return header;
+};
 
 @final @unmanaged class SArray<T> {
 
@@ -26,28 +32,23 @@ const HEADER_SIZE = getTypeSize<Header>();
   // }
 
   private idx2Ptr(idx: SIZE_T): PTR_T {
-    const dataPtr = changetype<PTR_T>(this);
-    const header = changetype<Header>(dataPtr - HEADER_SIZE);
+    const header = getHeader(this);
     myAssert(idx < header._length);
     const offset = idx << header._objSizeLg2;
-    const addr = dataPtr + offset;
-    return addr;
+    const ptr = changetype<PTR_T>(this) + offset;
+    return ptr;
   }
 
-  @inline length(): i32 {
-    const dataPtr = changetype<PTR_T>(this);
-    const header = changetype<Header>(dataPtr - HEADER_SIZE);
-    return <i32>( header._length );
+  @inline length(): SIZE_T {
+    return getHeader(this)._length;
   }
 
   @inline dataPtr(): PTR_T {
-    const dataPtr = changetype<PTR_T>(this);
-    return dataPtr;
+    return changetype<PTR_T>(this);
   }
 
   ptrAt(idx: SIZE_T): PTR_T {
-    const ptr = this.idx2Ptr(idx);
-    return ptr;
+    return this.idx2Ptr(idx);
   }
 
   at(idx: SIZE_T): T {
@@ -78,23 +79,23 @@ function newSArray<T>(length: SIZE_T, objAlignLg2: SIZE_T = alignof<T>()): SArra
   if (!isSizePowerTwo(objSize)) {
     objSize = nextPowerOfTwo(objSize);
   }
-  const alignMask: SIZE_T = max(<SIZE_T>(1) << objAlignLg2, objSize) - 1;
-  const objSizeAlign = alignMask + 1;
-  myAssert(isSizePowerTwo(objSizeAlign));
+  const objSizeAlign = max(<SIZE_T>(1) << objAlignLg2, objSize);
+  const alignMask =  objSizeAlign - 1;
+  // myAssert(isSizePowerTwo(objSizeAlign));
   const dataSize: SIZE_T = length * objSizeAlign + alignMask;
   const arraySize = HEADER_SIZE + dataSize;
   const arrayPtr = alloc(arraySize);
   const dataPtr = (arrayPtr + HEADER_SIZE + alignMask) & ~alignMask;
-  const header = changetype<Header>(dataPtr - HEADER_SIZE); // potentially disaligned but ok
+  const sarray = changetype<SArray<T>>(dataPtr);
+  const header = getHeader(sarray);
   header._arrayPtr = arrayPtr;
   header._objSizeLg2 = ilog2(objSizeAlign);
   header._length = length;
-  return changetype<SArray<T>>(dataPtr);
+  return sarray;
 }
 
 function deleteSArray<T>(arr: SArray<T>): void {
-  const dataPtr = changetype<PTR_T>(arr);
-  const header = changetype<Header>(dataPtr - HEADER_SIZE);
+  const header = getHeader(arr);
   dealloc(header._arrayPtr);
 }
 
