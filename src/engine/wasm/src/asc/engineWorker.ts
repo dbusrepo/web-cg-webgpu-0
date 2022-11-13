@@ -23,6 +23,7 @@ import { stringsDataPtr, stringsDataSize } from './importVars';
 import { FONT_Y_SIZE, fontCharsPtr, fontCharsSize } from './importVars';
 import * as strings from './importStrings';
 import { workersMemCountersPtr, workersMemCountersSize } from './importVars';
+import { inputKeysPtr } from './importVars';
 
 const syncLoc = utils.getWorkerOffset<i32>(syncArrayPtr, workerIdx);
 const sleepLoc = utils.getWorkerOffset<i32>(sleepArrayPtr, workerIdx);
@@ -159,6 +160,8 @@ function run(): void {
     //   //   s++;
     //   // }
     // }
+
+    // logi(load<u8>(inputKeysPtr));
 
     atomic.store<i32>(syncLoc, 0);
     atomic.notify(syncLoc);

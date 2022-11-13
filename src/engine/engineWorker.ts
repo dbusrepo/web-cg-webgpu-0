@@ -186,8 +186,12 @@ class EngineWorker {
       imagesDataSize: memSizes[WasmUtils.MemRegions.IMAGES],
       stringsDataPtr: memOffsets[WasmUtils.MemRegions.STRINGS],
       stringsDataSize: memSizes[WasmUtils.MemRegions.STRINGS],
-      workersMemCountersPtr: memOffsets[WasmUtils.MemRegions.WORKERS_MEM_COUNTERS],
-      workersMemCountersSize: memSizes[WasmUtils.MemRegions.WORKERS_MEM_COUNTERS],
+      workersMemCountersPtr:
+        memOffsets[WasmUtils.MemRegions.WORKERS_MEM_COUNTERS],
+      workersMemCountersSize:
+        memSizes[WasmUtils.MemRegions.WORKERS_MEM_COUNTERS],
+      inputKeysPtr: memOffsets[WasmUtils.MemRegions.INPUT_KEYS],
+      inputKeysSize: memSizes[WasmUtils.MemRegions.INPUT_KEYS],
 
       FONT_X_SIZE,
       FONT_Y_SIZE,

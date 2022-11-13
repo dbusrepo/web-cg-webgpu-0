@@ -24,6 +24,8 @@ import { FONT_Y_SIZE, fontChars } from '../assets/fonts/font';
 import { defaultConfig } from '../config/config';
 import * as utils from './utils';
 
+import { InputManager, KeyCode } from './input/inputManager'; 
+
 // import * as loadUtils from '../utils/loadFiles'; // TODO
 import {
   WorkerConfig,
@@ -84,6 +86,8 @@ class Engine {
 
   private _wasmMemViews: WasmMemViews;
 
+  private _inputManager: InputManager;
+
   public async init(config: EngineConfig): Promise<void> {
     this._startTime = Date.now();
     this._config = config;
@@ -94,6 +98,31 @@ class Engine {
     await this._initWorkers();
     // console.log(this._workersInitData);
     await this._initWasmMem();
+    this._initInputManager();
+  }
+
+  private _initInputManager() {
+    this._inputManager = new InputManager();
+    this._inputManager.init();
+    const onkey = (key: KeyCode, down: boolean) => {
+      // console.log('key ', key, ' state: ', down);
+      // map key to index
+      const idx = 0;
+      this._wasmMemViews.inputKeys[idx] = down ? 1 : 0;
+    };
+    this._inputManager.addKeyDownHandler(
+      'KeyA',
+      onkey.bind(null, 'KeyA', true),
+    );
+    this._inputManager.addKeyUpHandler('KeyA', onkey.bind(null, 'KeyA', false));
+  }
+
+  public onKeyDown(key: KeyCode) {
+    this._inputManager.onKeyDown(key);
+  }
+
+  public onKeyUp(key: KeyCode) {
+    this._inputManager.onKeyUp(key);
   }
 
   // not used TODO remove?
@@ -152,6 +181,7 @@ class Engine {
       imagesIndexSize,
       imagesSize: imagesRegionSize,
       workersMemCountersSize: numWorkers * Uint32Array.BYTES_PER_ELEMENT,
+      inputKeysSize: 4 * Uint8Array.BYTES_PER_ELEMENT,
     };
 
     this._wasmMemConfig = wasmMemConfig;
@@ -639,14 +669,20 @@ const commands = {
     await engine.init(config);
     engine.run();
   },
+  keydown(key: KeyCode) {
+    engine.onKeyDown(key);
+  },
+  keyup(key: KeyCode) {
+    engine.onKeyUp(key);
+  },
 };
 
-self.addEventListener('message', async ({ data: { command, params } }) => {
+self.onmessage = ({ data: { command, params } }) => {
   if (commands.hasOwnProperty(command)) {
     try {
       commands[command as keyof typeof commands](params);
     } catch (err) {}
   }
-});
+};
 
 export { EngineConfig, Engine };

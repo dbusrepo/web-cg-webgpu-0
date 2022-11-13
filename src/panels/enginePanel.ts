@@ -65,29 +65,48 @@ class EnginePanel extends Panel {
   initEngineWorker(): void {
     this._engineWorker = buildEngineWorker();
 
-    let panel = this;
+    let enginePanel = this;
 
     const commands = {
-      updateStats(values: StatsValues): void {
+      updateStats(values: StatsValues) {
         // console.log(values);
-        panel._stats?.update(values);
-        panel._fpsSpan?.update(values.UFPS);
+        enginePanel._stats?.update(values);
+        enginePanel._fpsSpan?.update(values.UFPS);
       },
-      event(msg: string): void {
+      event(msg: string) {
         console.log(msg);
+      },
+      register_keydown_handler(key: string) {
+        enginePanel.canvasContainer.addEventListener('keydown', (event) => {
+          if (event.code !== key) {
+            return;
+          }
+          enginePanel._engineWorker.postMessage({
+            command: 'keydown',
+            params: key,
+          });
+        });
+      },
+      register_keyup_handler(key: string) {
+        enginePanel.canvasContainer.addEventListener('keyup', (event) => {
+          if (event.code !== key) {
+            return;
+          }
+          enginePanel._engineWorker.postMessage({
+            command: 'keyup',
+            params: key,
+          });
+        });
       },
     };
 
-    this._engineWorker.addEventListener(
-      'message',
-      async ({ data: { command, params } }) => {
-        if (commands.hasOwnProperty(command)) {
-          try {
-            commands[command as keyof typeof commands]!(params);
-          } catch (err) {}
-        }
-      },
-    );
+    this._engineWorker.onmessage = ({ data: { command, params } }) => {
+      if (commands.hasOwnProperty(command)) {
+        try {
+          commands[command as keyof typeof commands]!(params);
+        } catch (err) {}
+      }
+    };
   }
 
   protected initMenuGui(): void {

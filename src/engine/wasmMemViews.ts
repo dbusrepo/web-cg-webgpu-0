@@ -11,6 +11,7 @@ type WasmMemViews = {
   imagesIndex: Uint32Array;
   imagesPixels: Uint8Array;
   workersMemCounters: Uint32Array;
+  inputKeys: Uint8Array;
 };
 
 function buildWasmMemViews(
@@ -74,6 +75,12 @@ function buildWasmMemViews(
     memSizes[MemRegions.WORKERS_MEM_COUNTERS],
   );
 
+  const inputKeys = new Uint8Array(
+    wasmMem.buffer,
+    memOffsets[MemRegions.INPUT_KEYS],
+    memSizes[MemRegions.INPUT_KEYS],
+  );
+
   const memViews: WasmMemViews = {
     memUI8,
     frameBufferRGBA,
@@ -84,6 +91,7 @@ function buildWasmMemViews(
     fontChars,
     strings,
     workersMemCounters,
+    inputKeys,
   };
 
   return memViews;

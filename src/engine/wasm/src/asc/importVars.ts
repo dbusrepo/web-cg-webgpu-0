@@ -34,6 +34,9 @@ export declare const fontCharsSize: usize;
 export declare const workersMemCountersPtr: usize
 export declare const workersMemCountersSize: usize
 
+export declare const inputKeysPtr: usize
+export declare const inputKeysSize: usize
+
 export declare const FONT_X_SIZE: usize;
 export declare const FONT_Y_SIZE: usize;
 export declare const FONT_SPACING: usize;

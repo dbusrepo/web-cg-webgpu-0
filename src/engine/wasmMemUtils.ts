@@ -19,9 +19,11 @@ type MemConfig = {
   fontCharsSize: number;
   stringsSize: number;
   workersMemCountersSize: number;
+  inputKeysSize: number;
 };
 
 // all regions have bounds except for the last part, the shared heap that can grow
+// enum for mem regions keys used to index their sizes/offsets
 const enum MemRegions {
   FRAMEBUFFER_RGBA = 'FRAMEBUFFER_RGBA',
   FRAMEBUFFER_PAL = 'FRAMEBUFFER_PAL',
@@ -35,8 +37,8 @@ const enum MemRegions {
   WORKERS_HEAPS = 'WORKERS_HEAPS',
   HEAP = 'HEAP',
 
+  INPUT_KEYS = 'INPUT_KEYS',
   WORKERS_MEM_COUNTERS = 'WORKERS_MEM_COUNTERS',
-
   START_MEM = 'START_MEM', // for the size/offset of all previous mem regions
 }
 
@@ -61,6 +63,7 @@ function getMemRegionsSizes(config: MemConfig): MemRegionsData {
     fontCharsSize,
     stringsSize,
     workersMemCountersSize,
+    inputKeysSize,
   } = config;
 
   const sizes: MemRegionsData = {
@@ -76,6 +79,7 @@ function getMemRegionsSizes(config: MemConfig): MemRegionsData {
     [MemRegions.WORKERS_HEAPS]: numWorkers * workerHeapSize,
     [MemRegions.HEAP]: sharedHeapSize,
     [MemRegions.WORKERS_MEM_COUNTERS]: workersMemCountersSize,
+    [MemRegions.INPUT_KEYS]: inputKeysSize,
     [MemRegions.START_MEM]: 0,
   };
 
@@ -102,6 +106,7 @@ function getMemRegionsOffsets(
     [MemRegions.WORKERS_HEAPS]: 2,
     [MemRegions.HEAP]: 6,
     [MemRegions.WORKERS_MEM_COUNTERS]: 2,
+    [MemRegions.INPUT_KEYS]: 4,
 
     [MemRegions.START_MEM]: 0,
   };
@@ -111,6 +116,7 @@ function getMemRegionsOffsets(
     MemRegions.FRAMEBUFFER_RGBA,
     MemRegions.FRAMEBUFFER_PAL,
     MemRegions.PALETTE,
+    MemRegions.INPUT_KEYS,
     MemRegions.SYNC_ARRAY,
     MemRegions.SLEEP_ARRAY,
     MemRegions.WORKERS_MEM_COUNTERS,
