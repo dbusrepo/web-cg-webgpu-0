@@ -710,7 +710,7 @@ abstract class Panel {
     return this._viewMode === ViewMode.WIN;
   }
 
-  get menuGuiContainer(): HTMLDivElement {
+  get canvasContainer(): HTMLDivElement {
     return this._canvasContainer;
   }
 

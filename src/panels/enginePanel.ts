@@ -10,6 +10,7 @@ import {
 } from './EnginePanelMenuGui';
 import { StatsNames, StatsValues } from '../common';
 import { EngineConfig } from '../engine/engine';
+import { FpsSpan } from '../ui/fpsSpan';
 
 const buildEngineWorker = () =>
   new Worker(new URL('../engine/engine.ts', import.meta.url));
@@ -17,6 +18,7 @@ const buildEngineWorker = () =>
 class EnginePanel extends Panel {
   private _engineWorker: Worker;
   private _stats?: Stats;
+  private _fpsSpan?: FpsSpan;
 
   // constructor(mainBoard: HTMLDivElement, parentNode: HTMLDivElement) {
   //   super(mainBoard, parentNode);
@@ -27,6 +29,7 @@ class EnginePanel extends Panel {
       ...config,
     });
     this.initStats();
+    this.initFpsSpan();
     return this;
   }
 
@@ -55,6 +58,10 @@ class EnginePanel extends Panel {
     this.setShowStats(this.showStats);
   }
 
+  private initFpsSpan() {
+    this._fpsSpan = new FpsSpan(this.canvasContainer);
+  }
+
   initEngineWorker(): void {
     this._engineWorker = buildEngineWorker();
 
@@ -64,6 +71,7 @@ class EnginePanel extends Panel {
       updateStats(values: StatsValues): void {
         // console.log(values);
         panel._stats?.update(values);
+        panel._fpsSpan?.update(values.UFPS);
       },
       event(msg: string): void {
         console.log(msg);

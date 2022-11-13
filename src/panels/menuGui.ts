@@ -40,7 +40,7 @@ class MenuGui {
   }
 
   private setOnTop(): void {
-    const parent = this._panel.menuGuiContainer;
+    const parent = this._panel.canvasContainer;
     this.gui.domElement.style.zIndex = String(Number(parent.style.zIndex) + 1);
   }
 
