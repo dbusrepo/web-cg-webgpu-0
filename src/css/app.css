@@ -142,14 +142,15 @@ html, body {
 
 .fpsSpan {
   position: absolute;
-  bottom: 0;
+  top: 0;
   left: 0;
   font-size: x-large;
   color: white;
   background-color: #0000009c;
-  /* text-shadow: 1px 1px 2px black; */
+  text-shadow: 1px 1px 2px black;
   /* width: fit-content; */
   /* padding: 8px; */
+  padding: 1px;
   /* margin: 8px; */
   font-variant-numeric: tabular-nums;
 }
