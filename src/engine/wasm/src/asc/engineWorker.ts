@@ -25,8 +25,8 @@ import * as strings from './importStrings';
 import { workersMemCountersPtr, workersMemCountersSize } from './importVars';
 import { inputKeysPtr } from './importVars';
 
-const syncLoc = utils.getWorkerOffset<i32>(syncArrayPtr, workerIdx);
-const sleepLoc = utils.getWorkerOffset<i32>(sleepArrayPtr, workerIdx);
+const syncLoc = utils.getArrElPtr<i32>(syncArrayPtr, workerIdx);
+const sleepLoc = utils.getArrElPtr<i32>(sleepArrayPtr, workerIdx);
 
 function init(): void {
   if (workerIdx == 0) {

@@ -2,9 +2,8 @@ import { PTR_T, SIZE_T, getTypeSize } from './memUtils';
 
 const NANO_IN_MS: i64 = 1000000;
 
-// used with imported arrays with workers data
-function getWorkerOffset<T>(arr: PTR_T, workerIdx: SIZE_T): PTR_T {
-  return arr + workerIdx * getTypeSize<T>();
+@inline function getArrElPtr<T>(base: PTR_T, idx: SIZE_T): PTR_T {
+  return base + idx * getTypeSize<T>();
 }
 
 @inline function sleep(loc: usize, timeoutMs: i64): void {
@@ -42,4 +41,4 @@ function range(workerIdx: u32, numWorkers: u32, numTasks: u32): u64 {
   return (start as u64) << 32 | end;
 }
 
-export { getWorkerOffset, sleep, gcd, lcm, range };
+export { getArrElPtr, sleep, gcd, lcm, range };
