@@ -5,6 +5,7 @@ import { ArenaAlloc, newArena } from './arenaAlloc';
 import { Pointer } from './pointer';
 import { logi } from './importVars';
 
+// @ts-ignore: decorator
 @final @unmanaged class DArray<T> {
   private _array: PTR_T = 0; // physical array start
   private _dataStart: PTR_T = 0;  // where data start

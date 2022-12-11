@@ -7,6 +7,7 @@ import { logi } from './importVars';
 // The arena allocs blocks of objects. Free objects are linked in a free list
 // Pointers in the free list are stored at the beg of the object mem
 
+// @ts-ignore: decorator
 @final @unmanaged class ArenaAlloc {
 
   private _blockPtr: PTR_T; // block ptr

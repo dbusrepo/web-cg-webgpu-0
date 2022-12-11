@@ -18,6 +18,7 @@ const imgHeights = imgWidths + <usize>numImages * IMG_WH_SIZE;
 
 const imageDataPtr: PTR_T = imagesDataPtr;
 
+// @ts-ignore: decorator
 @final @unmanaged class BitImage {
 
   private _imgIdx: u32 = 0;
@@ -44,8 +45,7 @@ const imageDataPtr: PTR_T = imagesDataPtr;
 let bitImageAlloc = changetype<ObjectAllocator<BitImage>>(0);
 
 function initBitImageAllocator(): void {
-  const BITIMAGES_PER_BLOCK = 128;
-  bitImageAlloc = newObjectAllocator<BitImage>(BITIMAGES_PER_BLOCK);
+  bitImageAlloc = newObjectAllocator<BitImage>(128);
 }
 
 export { BitImage, initBitImageAllocator, bitImageAlloc };

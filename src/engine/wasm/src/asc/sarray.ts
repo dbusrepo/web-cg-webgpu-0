@@ -10,6 +10,7 @@ import { logi } from './importVars';
 //                               |<- the SArray starts here
 // obj size is rounded to a power of two
 
+// @ts-ignore: decorator
 @final @unmanaged class Header {
   _arrayPtr: PTR_T = NULL_PTR; // address returned by alloc (used for dealloc only)
   _objSizeLg2: SIZE_T = 0; // lg2 of the array elements size (includes padding for the alignment)
@@ -18,12 +19,14 @@ import { logi } from './importVars';
 
 const HEADER_SIZE = getTypeSize<Header>();
 
+// @ts-ignore: decorator
 @inline function getHeader<T>(arr: SArray<T>): Header {
   const dataPtr = changetype<PTR_T>(arr);
   const header = changetype<Header>(dataPtr - HEADER_SIZE);
   return header;
 };
 
+// @ts-ignore: decorator
 @final @unmanaged class SArray<T> {
 
   // @inline private getHeader(): Header {
@@ -60,7 +63,6 @@ const HEADER_SIZE = getTypeSize<Header>();
     const ptr = this.idx2Ptr(idx);
     new Pointer<T>(ptr).value = value;
   }
-
 
   // @inline @operator("[]") get(idx: u32): T {
   //   return this.at(idx);

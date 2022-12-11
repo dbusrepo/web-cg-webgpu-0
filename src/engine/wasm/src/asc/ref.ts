@@ -4,6 +4,7 @@ import { ArenaAlloc, newArena } from './arenaAlloc';
 import { GET_PTR, ilog2, nextPowerOfTwo, isSizePowerTwo, PTR_T, NULL_PTR, getTypeSize, getTypeAlignMask, SIZE_T } from './memUtils';
 import { logi } from './importVars';
 
+// @ts-ignore: decorator
 @final @unmanaged class Ref<T> {
   private _ptr: Pointer<T>;
 
@@ -15,7 +16,7 @@ import { logi } from './importVars';
     return this._ptr.offset;
   }
 
-  @inline set ptr(ptr: PTR_T) {
+  set ptr(ptr: PTR_T) {
     this._ptr = new Pointer<T>(ptr);
   }
 
@@ -24,7 +25,7 @@ import { logi } from './importVars';
     return this._ptr.value;
   }
 
-  @inline set deref(v: T) {
+  set deref(v: T) {
     myAssert(!this.isNull);
     this._ptr.value = v;
   }
@@ -34,8 +35,7 @@ import { logi } from './importVars';
   }
 }
 
-
-let refArena!: ArenaAlloc;
+let refArena = changetype<ArenaAlloc>(0);
 
 function initRefAllocator(): void {
   const NUM_REFS_PER_BLOCK: u32 = 128;
