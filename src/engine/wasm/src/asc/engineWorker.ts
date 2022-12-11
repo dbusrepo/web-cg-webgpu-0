@@ -24,6 +24,7 @@ import { FONT_Y_SIZE, fontCharsPtr, fontCharsSize } from './importVars';
 import * as strings from './importStrings';
 import { workersMemCountersPtr, workersMemCountersSize } from './importVars';
 import { inputKeysPtr } from './importVars';
+import { Wall } from './caster/wall';
 
 const syncLoc = utils.getArrElPtr<i32>(syncArrayPtr, workerIdx);
 const sleepLoc = utils.getArrElPtr<i32>(sleepArrayPtr, workerIdx);

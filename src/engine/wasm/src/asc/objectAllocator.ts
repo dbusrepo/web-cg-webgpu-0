@@ -21,7 +21,7 @@ import { logi } from './importVars';
   }
 }
 
-let objectAllocatorsArena: ArenaAlloc;
+let objectAllocatorsArena = changetype<ArenaAlloc>(0);
 
 function initObjectAllocatorsArena(): void {
   const NUM_OBJ_ALLOC_PER_BLOCK = 64;

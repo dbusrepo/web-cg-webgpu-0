@@ -35,7 +35,7 @@ import { logi } from './importVars';
 }
 
 
-let refArena: ArenaAlloc;
+let refArena!: ArenaAlloc;
 
 function initRefAllocator(): void {
   const NUM_REFS_PER_BLOCK: u32 = 128;

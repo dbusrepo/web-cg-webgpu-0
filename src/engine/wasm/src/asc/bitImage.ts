@@ -41,7 +41,7 @@ const imageDataPtr: PTR_T = imagesDataPtr;
   }
 }
 
-let bitImageAlloc: ObjectAllocator<BitImage>;
+let bitImageAlloc = changetype<ObjectAllocator<BitImage>>(0);
 
 function initBitImageAllocator(): void {
   const BITIMAGES_PER_BLOCK = 128;

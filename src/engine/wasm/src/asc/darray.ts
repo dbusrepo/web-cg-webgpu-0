@@ -111,7 +111,7 @@ import { logi } from './importVars';
   }
 }
 
-let arrayArena: ArenaAlloc;
+let arrayArena = changetype<ArenaAlloc>(0);
 
 function initDArrayAllocator(): void {
   const ARR_BLOCK_SIZE = 128;
@@ -120,9 +120,9 @@ function initDArrayAllocator(): void {
 }
 
 function newDArray<T>(initialCapacity: SIZE_T, alignLg2: SIZE_T = alignof<T>()): DArray<T> {
-  const darray = changetype<DArray<T>>(arrayArena.alloc());
-  darray.init(initialCapacity, alignLg2);
-  return darray;
+  const arr = changetype<DArray<T>>(arrayArena.alloc());
+  arr.init(initialCapacity, alignLg2);
+  return arr;
 }
 
 function deleteDArray<T>(arr: DArray<T>): void {

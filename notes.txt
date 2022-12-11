@@ -296,3 +296,14 @@ https://stackoverflow.com/questions/59435971/eslint-partial-is-not-defined-in-ty
 
 note about timeout in wasm vs js: nano vs milli
 https://github.com/WebAssembly/threads/issues/175
+
+Note: when building wasm files with make from src/engine/wasm dir, the specific
+version of asc the version related to the current node version you are using,
+which can differ from the version used by the scripts run with npm run start (in
+that case the version is the one specified in the package.json). So to check:
+$ asc --version
+$ which asc
+$ nvm use <node version>
+$ npm install -g assemblyscript
+to remove an older version select the older node version and then:
+$ npm ninstall -g assemblyscript
