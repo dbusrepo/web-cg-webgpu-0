@@ -4,7 +4,6 @@ import { ArenaAlloc, newArena } from './arenaAlloc';
 import { GET_PTR, ilog2, nextPowerOfTwo, isSizePowerTwo, PTR_T, NULL_PTR, getTypeSize, getTypeAlignMask, SIZE_T } from './memUtils';
 import { logi } from './importVars';
 
-// Used with arrays usually, alone is a sort of ptr to ptr
 @final @unmanaged class Ref<T> {
   private _ptr: Pointer<T>;
 

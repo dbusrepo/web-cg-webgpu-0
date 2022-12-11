@@ -28,7 +28,7 @@ const text = readFileSync(srcFilePath).toString();
 // console.log(text);
 // https://stackoverflow.com/questions/52086611/regex-for-matching-js-import-statements
 // https://regex101.com/r/FEN5ks/1
-const regex = /import(?:(?:(?:[ \n\t]+([^ *\n\t\{\},]+)[ \n\t]*(?:,|[ \n\t]+))?([ \n\t]*\{(?:[ \n\t]*[^ \n\t"'\{\}]+[ \n\t]*,?)+\})?[ \n\t]*)|[ \n\t]*\*[ \n\t]*as[ \n\t]+([^ \n\t\{\}]+)[ \n\t]+)from[ \n\t]*(?:['"])(?:.\/)?([^'"\n]+)(['"])/gm;
+const regex = /^import(?:(?:(?:[ \n\t]+([^ *\n\t\{\},]+)[ \n\t]*(?:,|[ \n\t]+))?([ \n\t]*\{(?:[ \n\t]*[^ \n\t"'\{\}]+[ \n\t]*,?)+\})?[ \n\t]*)|[ \n\t]*\*[ \n\t]*as[ \n\t]+([^ \n\t\{\}]+)[ \n\t]+)from[ \n\t]*(?:['"])(?:.\/)?([^'"\n]+)(['"])/gm;
 const MODULE_PATH_GRP_IDX = 4;
 // console.log(regex.test(text));
 const matches = Array.from(text.matchAll(regex));
@@ -41,7 +41,8 @@ if (matches.length) {
   for (const match of matches) {
     // for each imported file...
     const fileName = match[MODULE_PATH_GRP_IDX];
-    const depFilePath = join(sourceDir, `${fileName}${DEP_EXT}`)
+    const depFilePath = join(sourceDir, `${fileName}${DEP_EXT}`);
+    // console.log('depFilePath: ', depFilePath);
     depRule += ` ${depFilePath}`;
   }
   const wasmRule = `${wasmFile}: ${depFile}${EOL}`;

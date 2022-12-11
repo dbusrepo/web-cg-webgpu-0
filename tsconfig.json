@@ -126,10 +126,10 @@
     "./src/**/*.js"
   ],
   "exclude": [
-    "node_modules",
     "src/engine/wasm",
+    "node_modules"
     // "./src/types"
-  ],
+  ]
   //  "files": [
     //    "./src/main.ts",
     //    "./src/files.d.ts"
