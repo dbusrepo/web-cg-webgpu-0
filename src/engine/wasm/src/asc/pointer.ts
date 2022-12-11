@@ -1,4 +1,4 @@
-import { GET_PTR, ilog2, nextPowerOfTwo, isSizePowerTwo, PTR_T, NULL_PTR, getTypeSize, getTypeAlignMask, SIZE_T } from './memUtils';
+import { GET_PTR, ilog2, PTR_T, NULL_PTR, getTypeSize, getTypeAlignMask, SIZE_T } from './memUtils';
 
 // @ts-ignore: decorator
 @final @unmanaged class Pointer<T> {

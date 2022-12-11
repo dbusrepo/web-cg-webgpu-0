@@ -1,7 +1,7 @@
 import { myAssert } from './myAssert';
 import { Pointer } from './pointer';
 import { ArenaAlloc, newArena } from './arenaAlloc';
-import { GET_PTR, ilog2, nextPowerOfTwo, isSizePowerTwo, PTR_T, NULL_PTR, getTypeSize, getTypeAlignMask, SIZE_T } from './memUtils';
+import { PTR_T, NULL_PTR, getTypeSize } from './memUtils';
 import { logi } from './importVars';
 
 // @ts-ignore: decorator

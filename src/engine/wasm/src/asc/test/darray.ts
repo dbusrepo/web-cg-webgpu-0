@@ -1,6 +1,6 @@
 import { myAssert } from '../myAssert';
 import { DArray, newDArray, deleteDArray } from '../darray';
-import { GET_PTR, ilog2, nextPowerOfTwo, isSizePowerTwo, PTR_T, NULL_PTR, getTypeSize, getTypeAlignMask, SIZE_T } from '../memUtils';
+// import { GET_PTR, ilog2 } from '../memUtils';
 import { Pointer } from '../Pointer';
 // import { Vec3, vec3Alloc, newVec3 } from '../vec3';
 import { logi, logf } from '../importVars';

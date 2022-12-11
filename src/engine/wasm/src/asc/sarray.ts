@@ -1,7 +1,7 @@
 import { myAssert } from './myAssert';
 import { alloc, dealloc } from './workerHeapManager';
 import { ArenaAlloc, newArena } from './arenaAlloc';
-import { ilog2, nextPowerOfTwo, isSizePowerTwo, PTR_T, NULL_PTR, getTypeSize, getTypeAlignMask, SIZE_T } from './memUtils';
+import { ilog2, nextPowerOfTwo, isPowerOfTwo, PTR_T, NULL_PTR, getTypeSize, getTypeAlignMask, SIZE_T } from './memUtils';
 import { Pointer } from './pointer';
 import { logi } from './importVars';
 
@@ -78,12 +78,10 @@ function newSArray<T>(length: SIZE_T, objAlignLg2: SIZE_T = alignof<T>()): SArra
   myAssert(length > 0);
   let objSize = getTypeSize<T>();
   myAssert(objSize > 0);
-  if (!isSizePowerTwo(objSize)) {
-    objSize = nextPowerOfTwo(objSize);
-  }
+  objSize = nextPowerOfTwo(objSize);
   const objSizeAlign = max(<SIZE_T>(1) << objAlignLg2, objSize);
   const alignMask =  objSizeAlign - 1;
-  // myAssert(isSizePowerTwo(objSizeAlign));
+  // myAssert(isPowerOfTwo(objSizeAlign));
   const dataSize: SIZE_T = length * objSizeAlign + alignMask;
   const arraySize = HEADER_SIZE + dataSize;
   const arrayPtr = alloc(arraySize);
