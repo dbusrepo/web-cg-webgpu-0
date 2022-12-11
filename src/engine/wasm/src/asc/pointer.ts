@@ -1,8 +1,9 @@
 import { GET_PTR, ilog2, nextPowerOfTwo, isSizePowerTwo, PTR_T, NULL_PTR, getTypeSize, getTypeAlignMask, SIZE_T } from './memUtils';
 
+// @ts-ignore: decorator
 @final @unmanaged class Pointer<T> {
 
-  @inline constructor(offset: PTR_T = NULL_PTR) {
+  constructor(offset: PTR_T = NULL_PTR) {
     return changetype<Pointer<T>>(offset);
   }
 
@@ -18,7 +19,7 @@ import { GET_PTR, ilog2, nextPowerOfTwo, isSizePowerTwo, PTR_T, NULL_PTR, getTyp
     }
   }
 
-  @inline set value(value: T) {
+  set value(value: T) {
     if (isReference<T>()) {
       if (isManaged<T>()) ERROR("Unsafe unmanaged set of a managed object");
       if (isNullable<T>()) {
