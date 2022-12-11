@@ -16,6 +16,7 @@ const START_ALLOC_PTR: PTR_T = FREE_PTR_PTR  + PTR_SIZE; // after the free block
 // each block has a header with the size stored before the data, the rest
 // is 'shared' with the data but used only when the block is unused/in the free
 // list
+// @ts-ignore: decorator
 @final @unmanaged class Block {
   size: SIZE_T; // header before data
   next: PTR_T; // 'shared' with data
@@ -24,21 +25,25 @@ const START_ALLOC_PTR: PTR_T = FREE_PTR_PTR  + PTR_SIZE; // after the free block
 const HEADER_SIZE = getTypeSize<SIZE_T>(); // only size field for the header...
 const BLOCK_SIZE = getTypeSize<Block>();
 
+// @ts-ignore: decorator
 @inline function setBlockUsed(blockPtr: PTR_T): void {
   const block = changetype<Block>(blockPtr);
   block.size |= MEM_BLOCK_USAGE_BIT_MASK;
 }
 
+// @ts-ignore: decorator
 @inline function setBlockUnused(blockPtr: PTR_T): void {
   const block = changetype<Block>(blockPtr);
   block.size &= ~MEM_BLOCK_USAGE_BIT_MASK;
 }
 
+// @ts-ignore: decorator
 @inline function isBlockUsed(blockPtr: PTR_T): boolean {
   const block = changetype<Block>(blockPtr);
   return (block.size & MEM_BLOCK_USAGE_BIT_MASK) !== 0;
 }
 
+// @ts-ignore: decorator
 @inline function setBlockSize(blockPtr: PTR_T, size: SIZE_T): void {
   const block = changetype<Block>(blockPtr);
   const usageBit = block.size & MEM_BLOCK_USAGE_BIT_MASK;
@@ -46,15 +51,18 @@ const BLOCK_SIZE = getTypeSize<Block>();
   block.size = usageBit | size;
 }
 
+// @ts-ignore: decorator
 @inline function getBlockSize(blockPtr: PTR_T): SIZE_T {
   const block = changetype<Block>(blockPtr);
   return block.size & ~MEM_BLOCK_USAGE_BIT_MASK;
 }
 
+// @ts-ignore: decorator
 @inline function atomicGetAllocPtr(): PTR_T {
   return atomic.load<PTR_T>(ALLOC_PTR_PTR);
 }
 
+// @ts-ignore: decorator
 @inline function heapAllocSetOffset(curOffset: PTR_T, newOffset: PTR_T): PTR_T {
   return atomic.cmpxchg<PTR_T>(ALLOC_PTR_PTR, curOffset, newOffset);
 }

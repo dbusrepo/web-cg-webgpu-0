@@ -30,6 +30,7 @@ const CHAR_BIT = 8;
   return n != 0 && ((n & (n - 1)) == 0);
 }
 
+// @ts-ignore: decorator
 @inline function ilog2(n: SIZE_T): SIZE_T {
   return getValueSize(n) * CHAR_BIT - clz(n) - 1;
 }

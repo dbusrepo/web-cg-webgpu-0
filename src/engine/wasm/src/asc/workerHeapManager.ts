@@ -15,6 +15,7 @@ const WORKER_HEAP_LIMIT: PTR_T = WORKER_HEAP_BASE + workerHeapSize;
 
 let freeBlockPtr: PTR_T;
 
+// @ts-ignore: decorator
 @unmanaged class Block {
   size: SIZE_T;
 }
@@ -23,28 +24,34 @@ const H_SIZE = getTypeSize<HeaderBlock>();
 const F_SIZE = getTypeSize<FooterBlock>();
 const HF_SIZE = H_SIZE + F_SIZE;
 
+// @ts-ignore: decorator
 @final @unmanaged class HeaderBlock extends Block {
   next: PTR_T;
   prev: PTR_T;
 }
 
+// @ts-ignore: decorator
 @final @unmanaged class FooterBlock extends Block {}
 
+// @ts-ignore: decorator
 @inline function setBlockUsed(blockPtr: PTR_T): void {
   const block = changetype<Block>(blockPtr);
   block.size |= MEM_BLOCK_USAGE_BIT_MASK;
 }
 
+// @ts-ignore: decorator
 @inline function setBlockUnused(blockPtr: PTR_T): void {
   const block = changetype<Block>(blockPtr);
   block.size &= ~MEM_BLOCK_USAGE_BIT_MASK;
 }
 
+// @ts-ignore: decorator
 @inline function isBlockUsed(blockPtr: PTR_T): boolean {
   const block = changetype<Block>(blockPtr);
   return (block.size & MEM_BLOCK_USAGE_BIT_MASK) !== 0;
 }
 
+// @ts-ignore: decorator
 @inline function setBlockSize(blockPtr: PTR_T, size: SIZE_T): void {
   const block = changetype<Block>(blockPtr);
   const usageBit = block.size & MEM_BLOCK_USAGE_BIT_MASK;
@@ -52,6 +59,7 @@ const HF_SIZE = H_SIZE + F_SIZE;
   block.size = usageBit | size;
 }
 
+// @ts-ignore: decorator
 @inline function getBlockSize(blockPtr: PTR_T): SIZE_T {
   const block = changetype<Block>(blockPtr);
   return block.size & ~MEM_BLOCK_USAGE_BIT_MASK;
@@ -230,17 +238,20 @@ function dealloc(ptr: PTR_T): void {
   // logi(getBlockSize(freeBlockPtr));
 }
 
+// @ts-ignore: decorator
 @inline function incMemCounter(value: u32): void {
   const counter = load<i32>(WORKER_MEM_COUNTER_PTR);
   store<u32>(WORKER_MEM_COUNTER_PTR, counter + value);
 }
 
+// @ts-ignore: decorator
 @inline function decMemCounter(value: u32): void {
   const counter = load<i32>(WORKER_MEM_COUNTER_PTR);
   store<u32>(WORKER_MEM_COUNTER_PTR, counter - value);
 }
 
 // pre: ptr != NULL_PTR
+// @ts-ignore: decorator
 @inline function assertPtrLowerBound(ptr: PTR_T): void {
   myAssert(ptr >= WORKER_HEAP_BASE + H_SIZE);
 }
