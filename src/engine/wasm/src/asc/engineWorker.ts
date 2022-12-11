@@ -2,7 +2,6 @@ import { myAssert } from './myAssert';
 import { initSharedHeap } from './heapAlloc';
 import { WORKER_MEM_COUNTER_PTR, initMemManager, alloc, dealloc } from './workerHeapManager';
 import { initAllocators } from './initAllocators';
-import { Vec3, vec3Alloc } from './vec3';
 // import { ObjectAllocator } from './objectAllocator';
 import * as utils from './utils';
 import * as draw from './draw';
@@ -136,7 +135,6 @@ function run(): void {
     atomic.wait<i32>(syncLoc, 0);
     // utils.sleep(sleepLoc, 16);
 
-    // const v = vec3Alloc.new();
     // draw.clearBg(s, e, 0xff_00_00_00); // ABGR
     draw.clearBg(s, e, bgColor); // ABGR
     // logi(0);
