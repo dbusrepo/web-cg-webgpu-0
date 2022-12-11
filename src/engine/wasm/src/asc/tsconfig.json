@@ -1,7 +1,10 @@
 {
   "extends": "assemblyscript/std/assembly.json",
+  "compilerOptions": {
+    "strictPropertyInitialization": false
+    // "experimentalDecorators": true
+  },
   "include": [
     "./**/*.ts"
   ]
 }
-
