@@ -15,14 +15,30 @@ class EnginePanelMenuGui extends MenuGui {
   }
 
   addStatsOptions() {
-    // const key = this.config.MENU_OPTIONS.STATS;
-    // this.menuOptions[key] = this.panel.showStats;
-    // this.gui
-    //   .add(this.menuOptions, key)
-    //   .name(this.config.MENU_OPTIONS.STATS)
-    //   .onChange((visible: boolean) => {
-    //     this.panel.setShowStats(visible);
-    //   });
+    this._gui.Register({
+      type: 'folder',
+      label: 'Stats',
+      open: false,
+    });
+
+    /* VISIBLE CHECKBOX */
+    const key = this.config.MENU_OPTIONS.STATS;
+    this.options[key] = this.panel.showStats;
+    this._gui.Register(
+      {
+        type: 'checkbox',
+        label: 'visible',
+        object: this.options,
+        property: key,
+        initial: this.options[key],
+        onChange: (visible) => {
+          this.panel.setShowStats(visible);
+        },
+      },
+      {
+        folder: 'Stats',
+      },
+    );
   }
 
   get panel() {

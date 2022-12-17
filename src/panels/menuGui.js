@@ -1,10 +1,9 @@
 // import assert from 'assert';
 import { guify as Guify } from '../ui/guify/src/guify.js';
-import { Panel } from './panel';
+// import { Panel } from './panel';
 // import { PanelConfig } from '../config/config';
 
 class MenuGui {
-
   init(panel, menuConfig) {
     this._panel = panel;
     this._config = menuConfig;
@@ -14,13 +13,22 @@ class MenuGui {
       title: panel.title,
       theme: 'dark', // dark, light, yorha, or theme object
       align: 'right', // left, right
-      width: 150,
+      width: 250,
       barMode: 'offset', // none, overlay, above, offset
       // panelMode: 'inner',
       opacity: 1.0, // 0.95,
-      root: panel.panel,
+      root: panel.panelContainerEl,
       open: false,
     });
+
+
+    // this._gui.Register({
+    //   type: 'button',
+    //   label: 'Button',
+    //   action: () => {
+    //     console.log('Clicked');
+    //   },
+    // });
 
     // let someNumber = 0;
     // ( this._gui as any ).Register({
@@ -37,7 +45,7 @@ class MenuGui {
     // this._gui.domElement.id = this._config.DOM_ID;
     // this._gui.close();
     // this.getDom().classList.add(this._config.CSS_CLASS);
-    // this.initOptions();
+    this.initOptions();
     // this.initPanel();
   }
 
@@ -61,16 +69,16 @@ class MenuGui {
   //   this._panel.panel.removeChild(this.getDom());
   // }
 
-  // private initOptions() {
-  //   this._menuOptions = {};
-  //   this.addPanelOptions();
-  //   this.addConsoleFolderOptions();
-  //   this.addEventLogFolderOptions();
-  //   if (!this._panel.isFullScreen) {
-  //     this.addOptFullWin();
-  //   }
-  //   this.addFullscreenOption();
-  // }
+  initOptions() {
+    this._menuOptions = {};
+    this.addPanelOptions();
+    // this.addConsoleFolderOptions();
+    // this.addEventLogFolderOptions();
+    // if (!this._panel.isFullScreen) {
+    //   this.addOptFullWin();
+    // }
+    // this.addFullscreenOption();
+  }
 
   addPanelOptions() {} // overidden...
 
@@ -229,24 +237,24 @@ class MenuGui {
   //     });
   // }
 
-  show() {
-    // this._gui.show();
-  }
+  // show() {
+  //   // this._gui.show();
+  // }
 
-  hide() {
-    // this._gui.hide();
-  }
+  // hide() {
+  //   // this._gui.hide();
+  // }
 
-  destroy() {
-    // this._gui.close();
-    // this.removeMenuFromPanel();
-    // this._gui.destroy();
-  }
+  // destroy() {
+  //   // this._gui.close();
+  //   // this.removeMenuFromPanel();
+  //   // this._gui.destroy();
+  // }
 
   reset() {
     // we use this to update options when switching to/from fullscreen
-    this.destroy();
-    // this.init(this._panel, this._config);
+    // this.destroy();
+    // // this.init(this._panel, this._config);
   }
 
   get config() {
@@ -261,10 +269,9 @@ class MenuGui {
     return this._panel;
   }
 
-  get menuOptions() {
+  get options() {
     return this._menuOptions;
   }
-
 }
 
 export { MenuGui };

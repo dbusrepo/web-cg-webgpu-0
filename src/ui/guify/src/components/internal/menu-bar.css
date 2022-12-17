@@ -29,7 +29,6 @@
     cursor: pointer;
     font-family: inherit;
     height: 100%;
-    position: absolute;
     top: 0;
     color: var(--color-text-primary);
     background-color: var(--color-component-background);
@@ -48,8 +47,8 @@
     border: 0;
 }
 
-.guify-bar-button:hover,
-.guify-bar-button:focus {
+/* .guify-bar-button:focus, */
+.guify-bar-button:hover {
     color: var(--color-text-hover);
     background-color: var(--color-component-foreground);
 }
@@ -57,4 +56,12 @@
 .guify-bar-button:active {
     color: var(--color-text-active) !important;
     background-color: var(--color-component-active) !important;
+}
+
+.full-button {
+    position: relative;
+}
+
+.controls {
+    position: absolute;
 }

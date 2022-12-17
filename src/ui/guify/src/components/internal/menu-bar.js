@@ -5,6 +5,9 @@ import screenfull from "screenfull";
 
 import "./menu-bar.css";
 
+// const addFullButton = (parent, text, ) => {
+// };
+
 export class MenuBar extends ComponentBase {
     constructor(root, opts, theme) {
         super(root, opts, theme, false);
@@ -24,10 +27,10 @@ export class MenuBar extends ComponentBase {
 
         // Make the menu collapse button
         let menuButton = this.element.appendChild(document.createElement("button"));
+        menuButton.classList.add("controls");
         menuButton.classList.add("guify-bar-button");
         menuButton.innerHTML = "Controls";
         css(menuButton, {
-            position: 'absolute',
             left: opts.align == "left" ? "0" : "unset",
             right: opts.align == "left" ? "unset" : "0",
         });
@@ -35,30 +38,33 @@ export class MenuBar extends ComponentBase {
             this.emit("ontogglepanel");
         };
 
-        // Make the fullscreen button
-        if (screenfull.isEnabled) {
-            let fullscreenButton = this.element.appendChild(document.createElement("button"));
-            fullscreenButton.classList.add("guify-bar-button");
-            fullscreenButton.innerHTML = "「 F 」";
-            fullscreenButton.setAttribute("aria-label", "Toggle Fullscreen");
-            css(fullscreenButton, {
-                left: opts.align == "left" ? "unset" : "0", // Place on opposite side from menuButton
-                right: opts.align == "left" ? "0" : "unset",
-            });
-            // fullscreenButton = this.element.appendChild(document.createElement("button"));
-            // fullscreenButton.classList.add("guify-bar-button");
-            // fullscreenButton.innerHTML = "「 W 」";
-            // fullscreenButton.setAttribute("aria-label", "Toggle Fullscreen");
-            // css(fullscreenButton, {
-            //     left: opts.align == "left" ? "unset" : "0", // Place on opposite side from menuButton
-            //     right: opts.align == "left" ? "0" : "unset",
-            // });
+        const fullscreenButton = this.element.appendChild(document.createElement("button"));
+        fullscreenButton.classList.add("full-button");
+        fullscreenButton.classList.add("guify-bar-button");
+        fullscreenButton.innerHTML = "「 FS 」";
+        fullscreenButton.setAttribute("aria-label", "Toggle Fullscreen");
+        // fullscreenButton.disabled = true;
+        css(fullscreenButton, {
+            left: opts.align == "left" ? "unset" : "0",
+            right: opts.align == "left" ? "0" : "unset",
+        });
+        // fullscreenButton.onclick = () => {
+        //     this.emit("onfullscreenrequested");
+        // };
 
-            // fullscreenButton.onclick = () => {
-            //     this.emit("onfullscreenrequested");
-            // };
-        }
-
+        const fullwinButton = this.element.appendChild(document.createElement("button"));
+        fullwinButton.classList.add("full-button");
+        fullwinButton.classList.add("guify-bar-button");
+        fullwinButton.innerHTML = "「 FW 」";
+        fullwinButton.setAttribute("aria-label", "Toggle Fullwin");
+        // fullwinButton.disabled = true;
+        css(fullwinButton, {
+            left: opts.align == "left" ? "unset" : "0",
+            right: opts.align == "left" ? "0" : "unset",
+        });
+        // fullwinButton.onclick = () => {
+        //     this.emit("onfullscreenrequested");
+        // };
     }
 
     SetVisible(show) {

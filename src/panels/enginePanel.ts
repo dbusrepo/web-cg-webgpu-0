@@ -36,7 +36,7 @@ class EnginePanel extends Panel {
       return;
     }
     this.showStats = this.config.statsConfig.show;
-    this._stats = new Stats(this.panel);
+    this._stats = new Stats(this.panelEl);
     const fpsPanel = new StatsPanel(StatsNames.FPS, '#0ff', '#022');
     const upsPanel = new StatsPanel(StatsNames.UPS, '#0f0', '#020');
     const unlockedFpsPanel = new StatsPanel(StatsNames.UFPS, '#f50', '#110');
@@ -66,7 +66,7 @@ class EnginePanel extends Panel {
         console.log(msg);
       },
       register_keydown_handler(key: string) {
-        enginePanel.canvasContainer.addEventListener('keydown', (event) => {
+        enginePanel.canvasContainerEl.addEventListener('keydown', (event) => {
           if (event.code !== key) {
             return;
           }
@@ -77,7 +77,7 @@ class EnginePanel extends Panel {
         });
       },
       register_keyup_handler(key: string) {
-        enginePanel.canvasContainer.addEventListener('keyup', (event) => {
+        enginePanel.canvasContainerEl.addEventListener('keyup', (event) => {
           if (event.code !== key) {
             return;
           }
@@ -113,21 +113,21 @@ class EnginePanel extends Panel {
   protected setFullStyle(): void {
     super.setFullStyle();
     if (this._stats) {
-      this._stats.setParentNode(this.panel);
+      this._stats.setParentNode(this.panelEl);
     }
   }
 
   protected setWinStyle(): void {
     super.setWinStyle();
     if (this._stats) {
-      this._stats.setParentNode(this.board);
+      this._stats.setParentNode(this.boardEl);
     }
   }
 
   protected initPreRun(): void {}
 
   private runEngineWorker(): void {
-    const offCanvas = this.canvas.transferControlToOffscreen();
+    const offCanvas = this.canvasEl.transferControlToOffscreen();
     const engineConfig: EngineConfig = {
       canvas: offCanvas,
       sendStats: !!this._stats,
