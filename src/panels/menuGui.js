@@ -14,12 +14,12 @@ class MenuGui {
       title: 'Test App',
       theme: 'dark', // dark, light, yorha, or theme object
       align: 'right', // left, right
-      width: 300,
+      width: 150,
       barMode: 'offset', // none, overlay, above, offset
       // panelMode: 'inner',
-      opacity: 0.95,
+      opacity: 1.0, // 0.95,
       root: panel.panel,
-      open: true,
+      open: false,
     });
 
     // let someNumber = 0;
