@@ -1,9 +1,9 @@
 import { PanelConfig, panelConfig } from './panelConfig';
+import { StatsConfig, statsConfig } from './statsConfig';
 import {
   EnginePanelMenuConfig,
   enginePanelMenuConfig,
 } from './enginePanelMenuConfig';
-import { StatsConfig, statsConfig } from './statsConfig';
 
 const enginePanelConfig = {
   ...panelConfig,
