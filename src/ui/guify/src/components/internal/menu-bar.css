@@ -38,7 +38,6 @@
     -ms-user-select: none;
     user-select: none;
     margin: 0;
-
 }
 
 /* Hide default accessibility outlines since we're providing our own visual feedback */

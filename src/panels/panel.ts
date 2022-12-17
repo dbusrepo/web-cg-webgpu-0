@@ -730,8 +730,8 @@ abstract class Panel {
     return this._viewMode === ViewMode.FULL_SCREEN;
   }
 
-  get name(): string {
-    return this.config.name;
+  get title(): string {
+    return this.config.title;
   }
 
   get config(): PanelConfig {

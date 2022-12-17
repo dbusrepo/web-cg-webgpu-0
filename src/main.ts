@@ -23,15 +23,15 @@ class Main {
     this.panels = [];
     const enginePanel = this.buildEnginePanel('3D View', board, row0);
     // const enginePanel = null;
-    // const aPanel = this.buildViewPanel('Panel', board, row0);
-    // this.panels.push(aPanel);
+    const aPanel = this.buildViewPanel('View', board, row0);
+    this.panels.push(aPanel);
     this.panels.push(enginePanel);
     // board.style.display = 'none';
     // this.panels.push(this.buildViewPanel('Panel 2', board, row1));
   }
 
   private buildEnginePanel(
-    name: string,
+    title: string,
     board: HTMLDivElement,
     parentNode: HTMLDivElement,
   ): EnginePanel {
@@ -40,7 +40,7 @@ class Main {
     const panelConfig: EnginePanelConfig = {
       ...enginePanelConfig,
       startViewMode: StartViewMode.WIN,
-      name,
+      title,
       focusOnStart: true,
       statsConfig: {
         ...enginePanelConfig.statsConfig,
@@ -52,7 +52,7 @@ class Main {
   }
 
   private buildViewPanel(
-    name: string,
+    title: string,
     board: HTMLDivElement,
     parentNode: HTMLDivElement,
   ): ViewPanel {
@@ -60,7 +60,7 @@ class Main {
     const panelConfig: ViewPanelConfig = {
       ...viewPanelConfig,
       startViewMode: StartViewMode.WIN,
-      name,
+      title,
     };
     return new ViewPanel(board, parentNode).init(panelConfig);
   }

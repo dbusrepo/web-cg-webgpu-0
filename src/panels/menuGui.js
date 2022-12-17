@@ -11,7 +11,7 @@ class MenuGui {
 
     // Create the GUI
     this._gui = new Guify({
-      title: 'Test App',
+      title: panel.title,
       theme: 'dark', // dark, light, yorha, or theme object
       align: 'right', // left, right
       width: 150,

@@ -7,7 +7,7 @@ import {
 
 const enginePanelConfig = {
   ...panelConfig,
-  name: '3D Panel',
+  title: '3D Panel',
   menuConfig: enginePanelMenuConfig as EnginePanelMenuConfig,
   statsConfig,
 };

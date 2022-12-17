@@ -8,7 +8,7 @@ const enum StartViewMode {
 }
 
 const panelConfig = {
-  name: 'Panel',
+  title: 'Panel',
 
   canvasWidth: 320,
   canvasHeight: 200,
