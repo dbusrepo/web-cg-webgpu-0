@@ -127,6 +127,7 @@
   ],
   "exclude": [
     "src/engine/wasm",
+    "src/ui/guify",
     "node_modules"
     // "./src/types"
   ]

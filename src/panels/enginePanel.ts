@@ -1,16 +1,12 @@
 import assert from 'assert';
-import { EnginePanelConfig } from '../config/config';
+import { EnginePanelConfig, EnginePanelMenuConfig } from '../config/config';
 import { Stats } from '../ui/stats/stats';
 import { StatsPanel } from '../ui/stats/statsPanel';
-import { MemoryStats } from '../ui/stats/memoryStats';
+// import { MemoryStats } from '../ui/stats/memoryStats';
 import { Panel } from './panel';
-import {
-  EnginePanelMenuGui,
-  EnginePanelMenuConfig,
-} from './EnginePanelMenuGui';
+import { EnginePanelMenuGui } from './enginePanelMenuGui';
 import { StatsNames, StatsValues } from '../common';
 import { EngineConfig } from '../engine/engine';
-import { FpsSpan } from '../ui/fpsSpan';
 
 const buildEngineWorker = () =>
   new Worker(new URL('../engine/engine.ts', import.meta.url));
@@ -18,7 +14,6 @@ const buildEngineWorker = () =>
 class EnginePanel extends Panel {
   private _engineWorker: Worker;
   private _stats?: Stats;
-  private _fpsSpan?: FpsSpan;
 
   // constructor(mainBoard: HTMLDivElement, parentNode: HTMLDivElement) {
   //   super(mainBoard, parentNode);
@@ -29,7 +24,6 @@ class EnginePanel extends Panel {
       ...config,
     });
     this.initStats();
-    this.initFpsSpan();
     return this;
   }
 
@@ -42,7 +36,7 @@ class EnginePanel extends Panel {
       return;
     }
     this.showStats = this.config.statsConfig.show;
-    this._stats = new Stats(this.panel);
+    this._stats = new Stats(this.panelEl);
     const fpsPanel = new StatsPanel(StatsNames.FPS, '#0ff', '#022');
     const upsPanel = new StatsPanel(StatsNames.UPS, '#0f0', '#020');
     const unlockedFpsPanel = new StatsPanel(StatsNames.UFPS, '#f50', '#110');
@@ -58,10 +52,6 @@ class EnginePanel extends Panel {
     this.setShowStats(this.showStats);
   }
 
-  private initFpsSpan() {
-    this._fpsSpan = new FpsSpan(this.canvasContainer);
-  }
-
   initEngineWorker(): void {
     this._engineWorker = buildEngineWorker();
 
@@ -71,13 +61,12 @@ class EnginePanel extends Panel {
       updateStats(values: StatsValues) {
         // console.log(values);
         enginePanel._stats?.update(values);
-        enginePanel._fpsSpan?.update(values.UFPS);
       },
       event(msg: string) {
         console.log(msg);
       },
       register_keydown_handler(key: string) {
-        enginePanel.canvasContainer.addEventListener('keydown', (event) => {
+        enginePanel.canvasContainerEl.addEventListener('keydown', (event) => {
           if (event.code !== key) {
             return;
           }
@@ -88,7 +77,7 @@ class EnginePanel extends Panel {
         });
       },
       register_keyup_handler(key: string) {
-        enginePanel.canvasContainer.addEventListener('keyup', (event) => {
+        enginePanel.canvasContainerEl.addEventListener('keyup', (event) => {
           if (event.code !== key) {
             return;
           }
@@ -124,21 +113,21 @@ class EnginePanel extends Panel {
   protected setFullStyle(): void {
     super.setFullStyle();
     if (this._stats) {
-      this._stats.setParentNode(this.panel);
+      this._stats.setParentNode(this.panelEl);
     }
   }
 
   protected setWinStyle(): void {
     super.setWinStyle();
     if (this._stats) {
-      this._stats.setParentNode(this.board);
+      this._stats.setParentNode(this.boardEl);
     }
   }
 
   protected initPreRun(): void {}
 
   private runEngineWorker(): void {
-    const offCanvas = this.canvas.transferControlToOffscreen();
+    const offCanvas = this.canvasEl.transferControlToOffscreen();
     const engineConfig: EngineConfig = {
       canvas: offCanvas,
       sendStats: !!this._stats,

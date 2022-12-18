@@ -1,12 +1,12 @@
-import { GUIParams } from 'dat.gui';
 
 const menuConfig = {
-  guiParams: {
-    autoPlace: false,
-    width: 200, // TODO
-    closed: true,
-    hideable: false,
-  } as GUIParams,
+  // guiParams: {
+  //   autoPlace: false,
+  //   width: 200, // TODO
+  //   closed: true,
+  //   hideable: false,
+  // } as GUIParams,
+
   DOM_ID: 'gui',
   CSS_CLASS: 'gui',
   MENU_LABEL: 'Menu',

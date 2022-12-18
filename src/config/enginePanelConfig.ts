@@ -1,13 +1,13 @@
 import { PanelConfig, panelConfig } from './panelConfig';
+import { StatsConfig, statsConfig } from './statsConfig';
 import {
   EnginePanelMenuConfig,
   enginePanelMenuConfig,
 } from './enginePanelMenuConfig';
-import { StatsConfig, statsConfig } from './statsConfig';
 
 const enginePanelConfig = {
   ...panelConfig,
-  name: '3D Panel',
+  title: '3D Panel',
   menuConfig: enginePanelMenuConfig as EnginePanelMenuConfig,
   statsConfig,
 };

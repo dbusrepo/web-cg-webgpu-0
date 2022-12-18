@@ -3,7 +3,7 @@ import { EnginePanel } from '../panels/enginePanel';
 
 const viewPanelConfig = {
   ...panelConfig,
-  name: 'View Panel',
+  title: 'View Panel',
 };
 
 type ViewPanelConfig = typeof viewPanelConfig & PanelConfig;

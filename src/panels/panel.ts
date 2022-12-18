@@ -175,7 +175,7 @@ abstract class Panel {
       return;
     }
     if (enable) {
-      await screenfull.request(this.panel, { navigationUI: 'hide' });
+      await screenfull.request(this.panelEl, { navigationUI: 'hide' });
       this.enableFullScreenMode();
       this._menuGui?.reset();
     } else {
@@ -703,23 +703,31 @@ abstract class Panel {
   }
 
   protected destroy() {
-    this._menuGui?.destroy();
+    // this._menuGui?.destroy();
   }
 
   get isWinMode(): boolean {
     return this._viewMode === ViewMode.WIN;
   }
 
-  get canvasContainer(): HTMLDivElement {
+  get canvasContainerEl(): HTMLDivElement {
     return this._canvasContainer;
   }
 
-  get panel(): HTMLDivElement {
+  get panelContainerEl(): HTMLDivElement {
+    return this._panelContainer;
+  }
+
+  get panelEl(): HTMLDivElement {
     return this._panel;
   }
 
-  get board(): HTMLDivElement {
+  get boardEl(): HTMLDivElement {
     return this._board;
+  }
+
+  get canvasEl(): HTMLCanvasElement {
+    return this._canvas;
   }
 
   get isFullWin(): boolean {
@@ -730,8 +738,8 @@ abstract class Panel {
     return this._viewMode === ViewMode.FULL_SCREEN;
   }
 
-  get name(): string {
-    return this.config.name;
+  get title(): string {
+    return this.config.title;
   }
 
   get config(): PanelConfig {
@@ -740,10 +748,6 @@ abstract class Panel {
 
   get console(): Console | null {
     return this._console ?? null;
-  }
-
-  get canvas(): HTMLCanvasElement {
-    return this._canvas;
   }
 
   get menuGui(): MenuGui | null {
