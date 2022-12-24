@@ -18,4 +18,5 @@ type EnginePanelConfig = typeof enginePanelConfig &
     menuConfig: EnginePanelMenuConfig;
   };
 
-export { EnginePanelConfig, EnginePanelMenuConfig, enginePanelConfig };
+export { EnginePanelConfig, enginePanelConfig };
+export type { EnginePanelMenuConfig } from './enginePanelMenuConfig';

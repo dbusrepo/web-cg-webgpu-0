@@ -1,10 +1,6 @@
-import { StartViewMode, PanelConfig, panelConfig } from './panelConfig';
-import {
-  EnginePanelMenuConfig,
-  EnginePanelConfig,
-  enginePanelConfig,
-} from './enginePanelConfig';
-import { ViewPanelConfig, viewPanelConfig } from './viewPanelConfig';
+import { StartViewMode, panelConfig } from './panelConfig';
+import { EnginePanelMenuConfig, enginePanelConfig } from './enginePanelConfig';
+import { viewPanelConfig } from './viewPanelConfig';
 import { EventLogConfig } from './eventLogConfig';
 import { ConsoleConfig } from './consoleConfig';
 
@@ -13,7 +9,7 @@ const defaultConfig = {
   wasmMemStartPages: 64,
   wasmWorkerHeapPages: 1,
 
-  // 0 -> it can expand freely after the previous mem regions 
+  // 0 -> it can expand freely after the previous mem regions
   // TODO case != 0 not supported for now
   wasmSharedHeapSize: 0,
 
@@ -30,14 +26,11 @@ const defaultConfig = {
 
 type Config = typeof defaultConfig;
 
-export {
-  Config,
-  StartViewMode,
-  PanelConfig,
-  EnginePanelMenuConfig,
-  EnginePanelConfig,
-  ViewPanelConfig,
-  EventLogConfig,
-  ConsoleConfig,
-  defaultConfig,
-};
+export { Config, StartViewMode, defaultConfig };
+
+export type { PanelConfig } from './panelConfig';
+export type { EnginePanelConfig } from './enginePanelConfig';
+export type { ViewPanelConfig } from './viewPanelConfig';
+export type { EventLogConfig } from './eventLogConfig';
+export type { ConsoleConfig } from './consoleConfig';
+export type { EnginePanelMenuConfig } from './enginePanelMenuConfig';

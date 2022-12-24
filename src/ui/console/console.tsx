@@ -3,11 +3,7 @@ import React from 'react';
 
 import { ConsoleConfig } from '../../config/config';
 import { ConsoleEntry } from './consoleHistoryPanel';
-import {
-  ConsolePanel,
-  ConsolePanelProps,
-  OnConsoleEventHandler,
-} from './consolePanel';
+import { ConsolePanel, ConsolePanelProps } from './consolePanel';
 
 type ConsoleStmtKey = string; // TODO the first token of each entry is the key ?
 
@@ -196,9 +192,5 @@ class Console {
   // }
 }
 
-export {
-  Console,
-  OnConsoleEventHandler,
-  ConsoleHandlersObjInit,
-  ConsoleHandlerFunObj,
-};
+export { Console, ConsoleHandlersObjInit, ConsoleHandlerFunObj };
+export type { OnConsoleEventHandler } from './consolePanel';
