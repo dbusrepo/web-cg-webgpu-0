@@ -48,9 +48,9 @@ export class MenuBar extends ComponentBase {
             left: opts.align == "left" ? "unset" : "0",
             right: opts.align == "left" ? "0" : "unset",
         });
-        // fullscreenButton.onclick = () => {
-        //     this.emit("onfullscreenrequested");
-        // };
+        fullscreenButton.onclick = () => {
+            this.emit("onfullscreenrequested");
+        };
 
         const fullwinButton = this.element.appendChild(document.createElement("button"));
         fullwinButton.classList.add("full-button");
@@ -62,9 +62,9 @@ export class MenuBar extends ComponentBase {
             left: opts.align == "left" ? "unset" : "0",
             right: opts.align == "left" ? "0" : "unset",
         });
-        // fullwinButton.onclick = () => {
-        //     this.emit("onfullscreenrequested");
-        // };
+        fullwinButton.onclick = () => {
+            this.emit("onfullwinreenrequested");
+        };
     }
 
     SetVisible(show) {

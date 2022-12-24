@@ -106,7 +106,12 @@ export default class GUI {
                 this.panel.ToggleVisible();
             });
             this.bar.addListener("onfullscreenrequested", () => {
-                this.ToggleFullscreen();
+                console.log('fullscreen requested');
+                // this.ToggleFullscreen();
+            });
+            this.bar.addListener("onfullwinreenrequested", () => {
+                console.log('fullwin requested');
+                // this.ToggleFullscreen();
             });
         }
 

@@ -1,15 +1,26 @@
-// import assert from 'assert';
-import { guify as Guify } from '../ui/guify/src/guify.js';
-// import { Panel } from './panel';
-// import { PanelConfig } from '../config/config';
+import assert from 'assert';
+import GUI from '../ui/guify/src/gui';
+// import GUI from '../ui/guify/src/gui';
+import { Panel } from './panel';
+import { PanelConfig } from '../config/config';
+
+type MenuConfig = PanelConfig['menuConfig'];
+
+type MenuOptions = {
+  [k: string]: any;
+};
 
 class MenuGui {
-  init(panel, menuConfig) {
+  private _config: MenuConfig;
+  private _panel: Panel;
+  private _menuOptions: MenuOptions;
+  private _gui: GUI;
+
+  init(panel: Panel, menuConfig: MenuConfig): void {
     this._panel = panel;
     this._config = menuConfig;
 
-    // Create the GUI
-    this._gui = new Guify({
+    this._gui = new GUI({
       title: panel.title,
       theme: 'dark', // dark, light, yorha, or theme object
       align: 'right', // left, right
@@ -19,8 +30,7 @@ class MenuGui {
       opacity: 1.0, // 0.95,
       root: panel.panelContainerEl,
       open: false,
-    });
-
+    }); // as unknown as typeof Guify;
 
     // this._gui.Register({
     //   type: 'button',
@@ -257,21 +267,21 @@ class MenuGui {
     // // this.init(this._panel, this._config);
   }
 
-  get config() {
+  protected get config(): MenuConfig {
     return this._config;
   }
 
-  get gui() {
-    return this._gui;
-  }
-
-  get panel() {
+  protected get panel(): Panel {
     return this._panel;
   }
 
-  get options() {
+  protected get menuOptions(): MenuOptions {
     return this._menuOptions;
   }
+
+  // protected get gui(): GUI {
+  //   return this._gui;
+  // }
 }
 
 export { MenuGui };
