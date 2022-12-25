@@ -10,6 +10,7 @@ import { PngDecoderRGBA } from './assets/images/vivaxy-png/PngDecoderRGBA';
 import { loadImagesInitData, loadImageRGBA } from './assets/images/utils';
 import { WorkerInitImagesData } from './workerInitTypes';
 import { FONT_X_SIZE, FONT_Y_SIZE, FONT_SPACING } from '../assets/fonts/font';
+import type { WorkerInitData } from './workerInitTypes';
 
 type WorkerConfig = {
   workerIdx: number;
