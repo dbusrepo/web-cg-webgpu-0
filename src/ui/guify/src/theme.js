@@ -18,7 +18,7 @@ export default class Theme {
      * Takes the values from the theme object and applies them as CSS variables to the page.
      */
     Apply() {
-        console.log(this);
+        // console.log(this);
 
         let root = document.documentElement;
         root.style.setProperty("--color-menu-bar-background", this.colors.menuBarBackground);

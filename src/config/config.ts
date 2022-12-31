@@ -1,8 +1,6 @@
 import { StartViewMode, panelConfig } from './panelConfig';
-import { EnginePanelMenuConfig, enginePanelConfig } from './enginePanelConfig';
+import { enginePanelConfig } from './enginePanelConfig';
 import { viewPanelConfig } from './viewPanelConfig';
-import { EventLogConfig } from './eventLogConfig';
-import { ConsoleConfig } from './consoleConfig';
 
 const defaultConfig = {
   wasmMemStartOffset: 0,
@@ -18,7 +16,6 @@ const defaultConfig = {
   targetFPS: 60,
   targetUPS: 80,
   multiplier: 1, // TODO
-  showStats: true,
   panelConfig,
   enginePanelConfig,
   viewPanelConfig,

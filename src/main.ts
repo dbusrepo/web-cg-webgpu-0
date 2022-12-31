@@ -1,6 +1,11 @@
 import assert from 'assert';
 import './css/app.css';
-import { StartViewMode, EnginePanelConfig, ViewPanelConfig, defaultConfig } from './config/config';
+import {
+  StartViewMode,
+  EnginePanelConfig,
+  ViewPanelConfig,
+  defaultConfig,
+} from './config/config';
 import { Panel } from './panels/panel';
 import { EnginePanel } from './panels/enginePanel';
 import { ViewPanel } from './panels/viewPanel';
@@ -23,9 +28,9 @@ class Main {
     this.panels = [];
     const enginePanel = this.buildEnginePanel('3D View', board, row0);
     // const enginePanel = null;
+    this.panels.push(enginePanel);
     const aPanel = this.buildViewPanel('View', board, row0);
     this.panels.push(aPanel);
-    this.panels.push(enginePanel);
     // board.style.display = 'none';
     // this.panels.push(this.buildViewPanel('Panel 2', board, row1));
   }
@@ -39,12 +44,13 @@ class Main {
     parentNode.style.zIndex = '1'; // TODO
     const panelConfig: EnginePanelConfig = {
       ...enginePanelConfig,
+      // startViewMode: StartViewMode.FULL_WIN,
       startViewMode: StartViewMode.WIN,
       title,
       focusOnStart: true,
       statsConfig: {
         ...enginePanelConfig.statsConfig,
-        enable: true,
+        enable: false,
         // isVisible: false,
       },
     };

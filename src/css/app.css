@@ -31,6 +31,7 @@ html, body {
   display: flex;
   flex-direction: column;
   background-color: #8C92AC !important;
+  /* background: linear-gradient(#8C92AC, #8C92AC); */
   /* background: rgb(208,214,233); */
   /* background: radial-gradient(circle, rgba(208,214,233,1) 0%, rgba(105,111,140,1) 100%); */
   width: 100%;
@@ -77,7 +78,7 @@ html, body {
 
 .panel {
   position: relative;
-  overflow: hidden;
+  /* overflow: hidden; */
   margin: 0;
   padding: 0;
   border: 2px solid #625D5D;
@@ -95,7 +96,7 @@ html, body {
   /* padding: 0; */
 }
 
-.panel-full {
+.panel-container-win-full {
   position: absolute;
   object-fit: contain;
   width: 100%;
@@ -105,8 +106,26 @@ html, body {
   /* padding: 0; */
 }
 
+.panel-full {
+  /* position: absolute; */
+  /* bottom: 0; */
+  position: relative;
+  /* position: fixed; */
+  object-fit: contain;
+  width: 100%;
+  /* height: 100%; */
+  border: none;
+  /* z-index: 999; */
+  /* padding: 0; */
+
+  /* display: flex; */
+  /* flex-direction: column; */
+  /* min-height: 100%; */
+}
+
 .canvas-container {
   position: relative;
+  overflow: hidden;
   /* width: 100%; */
   margin: 0;
   padding: 0;
@@ -120,6 +139,7 @@ html, body {
 
 .canvas-container-full {
   width: auto;
+  /* position: relative; */
   /* height: auto; */
 }
 
@@ -135,24 +155,26 @@ html, body {
 }
 
 .canvas-full {
-  position: absolute;
+  /* position: absolute; */
   top: 0;
   width: 100%;
   height: 100%;
 }
 
 /* dat gui menu */
-#gui {
-  /* z-index: 999999; */
-  position: absolute;
-  top: 0;
-  right: 0;
-  margin: 0 !important;
-  /* overflow: hidden; */
-}
+/* #gui { */
+/*   /1* z-index: 999999; *1/ */
+/*   position: absolute; */
+/*   top: 0; */
+/*   right: 0; */
+/*   margin: 0 !important; */
+/*   /1* overflow: hidden; *1/ */
+/* } */
 
 .event-log-bottom-panel {
   position: relative;
+  /* bottom: 0; */
+  /* position: relative; */
   /* z-index: 10; */
   /* overflow: scroll; */
   width: 100%;
@@ -166,9 +188,13 @@ html, body {
   /* position: static; */
 }
 
-.event-log-bottom-panel-full-win {
-  position: absolute;
-  bottom: 0;
+.event-log-bottom-panel-full {
+  /* position: absolute; */
+  /* bottom: 0; */
+
+  /* display: flex; */
+  /* flex-direction: column; */
+  /* min-height: 100%; */
 }
 
 .event-log-main-panel {
@@ -181,18 +207,25 @@ html, body {
 }
 
 .event-log-label {
-  position: absolute;
+  /* position: absolute; */
+  position: relative;
   width: 100%;
   height: 100%;
   top: 0;
   left: 0;
   box-sizing: border-box;
   font-family: Menlo, monospace;
+
+  /* force to fill up the remaining height in the parent div */
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
 }
 
 /* panel with dl list */
 .event-log-history {
-  position: absolute;
+  /* position: absolute; */
+  position: relative;
   overflow-y: auto;
   cursor: grab;
   top: 0;
@@ -206,6 +239,7 @@ html, body {
 
 .event-log-input {
   position: absolute;
+  /* position: relative; */
   width: 100%;
   left: 0;
   bottom: 0;

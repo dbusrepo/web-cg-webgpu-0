@@ -1,7 +1,8 @@
 @import "./components/variables.css";
 
 .guify-container {
-    /* position: absolute; */
+    position: absolute;
+    /* position: relative; */
     left: 0;
     width: 100%;
     height: 100%;
@@ -23,6 +24,7 @@
 }
 
 .guify-container-above {
+    /* height: calc(100% + var(--size-menu-bar-height)); */
     height: calc(100% + var(--size-menu-bar-height));
     bottom: 0;
 }
@@ -33,5 +35,9 @@
     left: 0;
     top: 0;
     width: 100%;
+    height: 100%;
+}
+
+.guify-container-full {
     height: 100%;
 }

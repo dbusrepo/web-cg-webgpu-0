@@ -21,27 +21,34 @@ class MenuGui {
     this._config = menuConfig;
 
     this._gui = new GUI({
+      root: panel.menuGuiContainer,
+      // root: panel.panelEl,
       title: panel.title,
       theme: 'dark', // dark, light, yorha, or theme object
       align: 'right', // left, right
       width: 250,
-      barMode: 'offset', // none, overlay, above, offset
+      barMode: panel.menuGuiBarMode, // none, overlay, above, offset, full
       // panelMode: 'inner',
       opacity: 1.0, // 0.95,
-      root: panel.panelContainerEl,
       open: false,
+      toggleFullScreen: () => {
+        this._panel.setFullScreen(!this._panel.isFullScreen);
+      },
+      toggleFullWin: () => {
+        this._panel.setFullWin(!this._panel.isFullWin);
+      },
     }); // as unknown as typeof Guify;
 
-    // this._gui.Register({
-    //   type: 'button',
-    //   label: 'Button',
-    //   action: () => {
-    //     console.log('Clicked');
-    //   },
-    // });
+    this._gui.Register({
+      type: 'button',
+      label: 'Button',
+      action: () => {
+        console.log('Clicked');
+      },
+    });
 
     // let someNumber = 0;
-    // ( this._gui as any ).Register({
+    // this._gui.Register({
     //   type: 'range',
     //   label: 'Range',
     //   min: 0, max: 10,
@@ -82,7 +89,7 @@ class MenuGui {
   initOptions() {
     this._menuOptions = {};
     this.addPanelOptions();
-    // this.addConsoleFolderOptions();
+    // this.initConsoleOptions();
     // this.addEventLogFolderOptions();
     // if (!this._panel.isFullScreen) {
     //   this.addOptFullWin();
@@ -92,7 +99,7 @@ class MenuGui {
 
   addPanelOptions() {} // overidden...
 
-  // private addConsoleFolderOptions(): void {
+  // private initConsoleOptions(): void {
   //   if (!this._panel.console) {
   //     return;
   //   }
@@ -236,6 +243,7 @@ class MenuGui {
   //     });
   // }
 
+  // TODO remove
   // private addFullscreenOption(): void {
   //   const option = this._config.MENU_OPTIONS.FULLSCREEN;
   //   this._menuOptions[option] = this._panel.isFullScreen;
@@ -261,12 +269,6 @@ class MenuGui {
   //   // this._gui.destroy();
   // }
 
-  reset() {
-    // we use this to update options when switching to/from fullscreen
-    // this.destroy();
-    // // this.init(this._panel, this._config);
-  }
-
   protected get config(): MenuConfig {
     return this._config;
   }
@@ -279,9 +281,13 @@ class MenuGui {
     return this._menuOptions;
   }
 
-  // protected get gui(): GUI {
-  //   return this._gui;
-  // }
+  protected get gui(): GUI {
+    return this._gui;
+  }
+
+  removefromDom() {
+    this._gui.removefromDom();
+  }
 }
 
 export { MenuGui };

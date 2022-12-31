@@ -124,8 +124,6 @@ class EnginePanel extends Panel {
     }
   }
 
-  protected initPreRun(): void {}
-
   private runEngineWorker(): void {
     const offCanvas = this.canvasEl.transferControlToOffscreen();
     const engineConfig: EngineConfig = {

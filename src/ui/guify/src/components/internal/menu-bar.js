@@ -1,7 +1,7 @@
 import ComponentBase from "../component-base.js";
 
 import css from "dom-css";
-import screenfull from "screenfull";
+// import screenfull from "screenfull";
 
 import "./menu-bar.css";
 
@@ -69,6 +69,10 @@ export class MenuBar extends ComponentBase {
 
     SetVisible(show) {
         this.element.style.display = show ? "block" : "none";
+    }
+
+    getEl() {
+        return this.element;
     }
 
 }

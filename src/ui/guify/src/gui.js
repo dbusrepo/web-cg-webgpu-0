@@ -9,7 +9,7 @@ import { ComponentManager } from "./component-manager";
 import { MenuBar } from "./components/internal/menu-bar";
 import { Panel } from "./components/internal/panel";
 import { ToastArea } from "./components/internal/toast-area";
-import screenfull from "screenfull";
+// import screenfull from "screenfull";
 
 export default class GUI {
     constructor(opts) {
@@ -26,6 +26,8 @@ export default class GUI {
         opts.panelOverflowBehavior = opts.panelOverflowBehavior || "scroll";
         opts.pollRateMS = opts.pollRateMS || 100;
         opts.open = opts.open || false;
+        opts.toggleFullScreen = opts.toggleFullScreen || (() => {});
+        opts.toggleFullWin = opts.toggleFullWin || (() => {});
 
         // Set theme from opts
         let themeName = opts.theme || "dark";
@@ -35,11 +37,11 @@ export default class GUI {
         this._ConstructElements();
         this._LoadStyles();
 
-        if (screenfull.isEnabled) {
-            screenfull.on("change", () => {
-                this.opts.root.classList.toggle("guify-fullscreen", screenfull.isFullscreen);
-            });
-        }
+        // if (screenfull.isEnabled) {
+        //     screenfull.on("change", () => {
+        //         this.opts.root.classList.toggle("guify-fullscreen", screenfull.isFullscreen);
+        //     });
+        // }
 
         this.componentManager = new ComponentManager(this.theme);
 
@@ -89,11 +91,13 @@ export default class GUI {
             // Acts like "above", but adds top margin to the root to offset the title bar.
             this.container.classList.add("guify-container-above");
             // Add top margin to the root to offset for the menu bar.
-            console.log(window.getComputedStyle(this.opts.root).getPropertyValue("margin-top"));
             let topMargin = window.getComputedStyle(this.opts.root).getPropertyValue("margin-top") || "0px";
+            // console.log('top margin: ' + topMargin);
             css(this.opts.root, {
                 marginTop: `calc(${topMargin} + var(--size-menu-bar-height))`,
             });
+        } else if (this.hasRoot && this.opts.barMode == "full") {
+            this.container.classList.add(".guify-container-full");
         }
 
         // Insert the container into the root as the first element
@@ -106,12 +110,12 @@ export default class GUI {
                 this.panel.ToggleVisible();
             });
             this.bar.addListener("onfullscreenrequested", () => {
-                console.log('fullscreen requested');
-                // this.ToggleFullscreen();
+                // console.log('fullscreen requested');
+                this.toggleFullScreen();
             });
             this.bar.addListener("onfullwinreenrequested", () => {
-                console.log('fullwin requested');
-                // this.ToggleFullscreen();
+                // console.log('fullwin requested');
+                this.toggleFullWin();
             });
         }
 
@@ -253,22 +257,33 @@ export default class GUI {
         this.toaster.CreateToast(message, stayMS, transitionMS);
     }
 
-
-    ToggleFullscreen() {
-        let isFullscreen = screenfull.isFullscreen;
-        if (isFullscreen) {
-            screenfull.exit();
-        } else {
-            console.log("Request fullscreen");
-            screenfull.request(this.opts.root);
-        }
+    toggleFullScreen() {
+        this.opts.toggleFullScreen();
     }
+
+    toggleFullWin() {
+        this.opts.toggleFullWin();
+    }
+
+    // ToggleFullscreen() {
+    //     let isFullscreen = screenfull.isFullscreen;
+    //     if (isFullscreen) {
+    //         screenfull.exit();
+    //     } else {
+    //         console.log("Request fullscreen");
+    //         screenfull.request(this.opts.root);
+    //     }
+    // }
 
     // Just for debugging.
     _SetAllEnabled(enabled) {
         this.loadedComponents.forEach((item) => {
             item.SetEnabled(enabled);
         });
+    }
+
+    removefromDom() {
+        this.container.parentNode?.removeChild(this.container);
     }
 
 }

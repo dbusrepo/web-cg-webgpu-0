@@ -15,8 +15,7 @@ const resetClassName = (node: HTMLElement) => {
   node.className = ''; // empty the list
 };
 
-// fullscreen api can only be initiated only initiated by a user gesture, so we
-// have StartViewMode vs ViewMode
+// fullscreen api can only be initiated by a user gesture
 const enum ViewMode {
   WIN = 'win',
   FULL_WIN = 'fullwin',
@@ -32,6 +31,7 @@ abstract class Panel {
   private _parentNode: HTMLDivElement;
 
   private _panelContainer: HTMLDivElement;
+  private _panelContainerWinFull: HTMLDivElement;
   private _panel: HTMLDivElement;
 
   private _onPanelFocus: (event: FocusEvent) => void;
@@ -84,6 +84,9 @@ abstract class Panel {
   private initPanel(): void {
     this._panelContainer = document.createElement('div');
     this._panelContainer.classList.add('panel-container');
+    this._panelContainerWinFull = document.createElement('div');
+    this._panelContainerWinFull.classList.add('panel-container-win-full');
+    this._board.appendChild(this._panelContainerWinFull); // TODO in init
     this._panel = document.createElement('div');
     this._panel.tabIndex = -1; // TODO call this before focus() !
     // this._panelContainer.appendChild(this._panel); // done before run
@@ -94,14 +97,28 @@ abstract class Panel {
   private setPanelWinStyle(): void {
     resetClassName(this._panel);
     this._panel.classList.add('panel', 'panel-win');
+    this._panelContainer.style.marginTop = '0';
+    this._panel.style.marginTop = '0';
+    this._panel.style.width = `auto`;
+    this._panel.style.height = `auto`;
     if (!(this.isInit() || this._preViewMode === ViewMode.WIN)) {
       this.showAllPanels();
     }
   }
 
   private setPanelFullStyle(): void {
+    assert(
+      this.isFullScreen ||
+        this._panel.parentNode === this._panelContainerWinFull,
+    );
     resetClassName(this._panel);
     this._panel.classList.add('panel', 'panel-full');
+    const menuBarHeight = 25; // see guify guify theme.js
+    this._panel.style.marginTop = `${menuBarHeight}px`;
+    const panelFullHeight = this.isFullScreen
+      ? screen.height
+      : this._panelContainerWinFull.offsetHeight;
+    this._panel.style.height = `${panelFullHeight - 25}px`;
     this.hideOtherPanels();
   }
 
@@ -114,17 +131,19 @@ abstract class Panel {
     // if a previous panel is already in full win, return false....
     for (const panel of Panel.getPanelList()) {
       if (panel === this) {
-        break;
+        return true;
       }
       if (panel.isFullWin) {
         return false;
       }
     }
-    return true;
+    return false;
   }
 
   private initFullWinMode(): void {
+    // console.log('start view mode: ' + this._config.startViewMode);
     if (this._config.startViewMode === StartViewMode.FULL_WIN) {
+      // console.log('Can start in fw: ' + this.canStartInFullWin());
       if (this.canStartInFullWin()) {
         this.setFullWin(true);
       } else {
@@ -145,7 +164,7 @@ abstract class Panel {
       this.toWinStyle();
     }
     if (!this.isInit()) {
-      this.getFocus();
+      this.focus();
     }
   }
 
@@ -175,9 +194,9 @@ abstract class Panel {
       return;
     }
     if (enable) {
-      await screenfull.request(this.panelEl, { navigationUI: 'hide' });
       this.enableFullScreenMode();
-      this._menuGui?.reset();
+      this.resetMenuGui();
+      await screenfull.request(this._panelContainer, { navigationUI: 'hide' });
     } else {
       await screenfull.exit();
       this.resetModeAfterFullScreen();
@@ -204,7 +223,7 @@ abstract class Panel {
       this.toFullWinStyle();
     }
     if (!this.isInit()) {
-      this.getFocus();
+      this.focus();
     }
   }
 
@@ -279,10 +298,12 @@ abstract class Panel {
 
   private setCanvasFullStyle(): void {
     assert(!this.isWinMode);
+    // update canvas
     resetClassName(this._canvas);
     this._canvas.classList.add('canvas', 'canvas-full');
-    this._canvas.style.width = '100%'; // TODO remove? already set by css...
+    this._canvas.style.width = '100%';
     this._canvas.style.height = '100%';
+    // update canvas container
     resetClassName(this._canvasContainer);
     this._canvasContainer.classList.add(
       'canvas-container',
@@ -393,10 +414,10 @@ abstract class Panel {
     // called after transitionEnd, see console panel impl
     // this.add_key_listener();
     this.isConsoleOpen = false;
-    this.getFocus(); // give focus to panel
+    this.focus(); // give focus to panel
   }
 
-  getFocus(): void {
+  focus(): void {
     // console.trace();
     this._panel.focus(); // onFocus called
   }
@@ -406,7 +427,9 @@ abstract class Panel {
       panel._panelContainer.style.display = 'block';
       // force all panels to win mode
       panel.setViewMode(ViewMode.WIN);
-      panel.toWinStyle();
+      if (panel !== this) {
+        panel.toWinStyle();
+      }
     }
   }
 
@@ -448,7 +471,7 @@ abstract class Panel {
       this.appendPanelTo(this._panelContainer);
     }
     this.setWinStyle();
-    this._menuGui?.reset();
+    this.resetMenuGui();
     assert(this.isPanelInsideParentContainer());
   }
 
@@ -483,16 +506,23 @@ abstract class Panel {
     return this._preViewMode === undefined;
   }
 
+  protected resetMenuGui(): void {
+    this._menuGui?.removefromDom();
+    this.initMenuGui();
+  }
+
   private toFullWinStyle(): void {
     assert(this.isFullWin);
     if (this.isInit() || this._preViewMode === ViewMode.WIN) {
       assert(this.isInit() || this.isPanelInsideParentContainer());
-      this.appendPanelTo(this._board);
+      this.appendPanelTo(this._panelContainerWinFull);
       this.setEventLogVisibility(this.isEventLogVisible);
       this.setFullStyle();
+      this.resetMenuGui();
     }
-    this._menuGui?.reset();
-    assert(this._panel.parentNode === this._board);
+    // this._menuGui?.reset();
+    // assert(this._panel.parentNode === this._board);
+    assert(this._panel.parentNode === this._panelContainerWinFull);
   }
 
   protected setFullStyle(): void {
@@ -526,7 +556,7 @@ abstract class Panel {
     resetClassName(this._eventLogBottomPanel);
     this._eventLogBottomPanel.classList.add(
       'event-log-bottom-panel',
-      'event-log-bottom-panel-full-win',
+      'event-log-bottom-panel-full',
     );
     this.updateEventLogBottomPanelHeightPercFullMode(); // TODO not nec
   }
@@ -688,17 +718,14 @@ abstract class Panel {
       }
     }
     if (panel === this && this._config.focusOnStart) {
-      this.getFocus();
+      this.focus();
     }
   }
-
-  protected initPreRun(): void {}
 
   run(): void {
     this.initWinMode();
     this.initFullWinMode();
-    this.initPreRun(); // before menu gui !
-    this.initMenuGui(); // should be called as last
+    // this.initMenuGui(); // TODO should be called as last
     this.initFocus();
   }
 
@@ -712,6 +739,10 @@ abstract class Panel {
 
   get canvasContainerEl(): HTMLDivElement {
     return this._canvasContainer;
+  }
+
+  get panelContainerFullWinEl(): HTMLDivElement {
+    return this._panelContainerWinFull;
   }
 
   get panelContainerEl(): HTMLDivElement {
@@ -728,6 +759,20 @@ abstract class Panel {
 
   get canvasEl(): HTMLCanvasElement {
     return this._canvas;
+  }
+
+  get menuGuiContainer(): HTMLDivElement {
+    return this.isFullWin
+      ? this.panelContainerFullWinEl
+      : this.panelContainerEl;
+  }
+
+  get menuGuiBarMode(): string {
+    return this.isWin ? 'offset' : 'full';
+  }
+
+  get isWin(): boolean {
+    return !(this.isFullWin || this.isFullScreen);
   }
 
   get isFullWin(): boolean {

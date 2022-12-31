@@ -2,5 +2,6 @@
 declare class GUI {
   constructor(args: object)
   Register(args: object)
+  removefromDom();
 }
 export = GUI;

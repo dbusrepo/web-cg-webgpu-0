@@ -1,4 +1,3 @@
-
 const menuConfig = {
   // guiParams: {
   //   autoPlace: false,
@@ -21,24 +20,22 @@ const menuConfig = {
   LINE_HEIGHT_STEP: 1,
 
   MENU_OPTIONS: {
-    CONSOLE: 'console',
-    EVENTS: 'events',
-    FULLWIN: 'fullwin',
-    FULLSCREEN: 'fullscreen',
-  },
-  CONSOLE_OPTIONS: {
-    FONT_SIZE: 'fontSize',
-    LINE_HEIGHT: 'lineHeight',
-  },
-  EVENT_LOG_OPTIONS: {
-    POSITION: 'where',
-    FONT_SIZE: 'fontSize',
-    LINE_HEIGHT: 'lineHeight',
-    VISIBLE: 'visible',
-  },
-  EVENT_LOG_POSITION_VALUES: {
-    BOTTOM: 'below',
-    PANEL: 'canvas',
+    CONSOLE_OPTIONS: {
+      CONSOLE: 'console',
+      FONT_SIZE: 'fontSize',
+      LINE_HEIGHT: 'lineHeight',
+    },
+    EVENT_LOG_OPTIONS: {
+      EVENTS: 'events',
+      POSITION: 'where',
+      FONT_SIZE: 'fontSize',
+      LINE_HEIGHT: 'lineHeight',
+      VISIBLE: 'visible',
+    },
+    EVENT_LOG_POSITION_VALUES: {
+      BOTTOM: 'below',
+      PANEL: 'canvas',
+    },
   },
 };
 
