@@ -81,7 +81,7 @@ html, body {
   /* overflow: hidden; */
   margin: 0;
   padding: 0;
-  border: 2px solid #625D5D;
+  border: 1px solid #232323;
   border-top: none;
   outline: none;
   /* width: 100%; */
@@ -177,10 +177,10 @@ html, body {
   /* position: relative; */
   /* z-index: 10; */
   /* overflow: scroll; */
+  border-top: 1px solid #232323;
   width: 100%;
   box-sizing: border-box;
   background: linear-gradient(#000033, #3030cc);
-  border-top: 2px solid #625D5D;
 }
 
 .event-log-bottom-panel-win {

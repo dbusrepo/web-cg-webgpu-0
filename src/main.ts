@@ -26,13 +26,14 @@ class Main {
     board.appendChild(row0);
     board.appendChild(row1);
     this.panels = [];
-    const enginePanel = this.buildEnginePanel('3D View', board, row0);
     // const enginePanel = null;
+    const enginePanel = this.buildEnginePanel('3D View', board, row0);
     this.panels.push(enginePanel);
-    // const aPanel = this.buildViewPanel('View', board, row0);
-    // this.panels.push(aPanel);
+    const aPanel = this.buildViewPanel('View', board, row0);
+    this.panels.push(aPanel);
     // board.style.display = 'none';
-    // this.panels.push(this.buildViewPanel('Panel 2', board, row1));
+    // const aPanel2 = this.buildViewPanel('View', board, row1);
+    // this.panels.push(aPanel2);
   }
 
   private buildEnginePanel(

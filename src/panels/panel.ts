@@ -425,6 +425,7 @@ abstract class Panel {
 
   private showAllPanels(): void {
     for (const panel of Panel.getPanelList()) {
+      panel._panelContainerWinFull.style.display = 'block';
       panel._panelContainer.style.display = 'block';
       // force all panels to win mode
       panel.setViewMode(ViewMode.WIN);
@@ -437,6 +438,7 @@ abstract class Panel {
   private hideOtherPanels(): void {
     for (const panel of Panel.getPanelList()) {
       if (panel !== this) {
+        panel._panelContainerWinFull.style.display = 'none';
         panel._panelContainer.style.display = 'none';
       }
     }

@@ -14,6 +14,8 @@ const panelConfig = {
   canvasHeight: 200,
   canvasDisplayWidthWinMode: 640,
   canvasDisplayHeightWinMode: 480,
+  // canvasDisplayWidthWinMode: 512,
+  // canvasDisplayHeightWinMode: 384,
   // canvasDisplayWidthWinMode: 320,
   // canvasDisplayHeightWinMode: 200,
 

@@ -55,7 +55,7 @@ class EventLog {
     }
 
     // we render here
-    this.log('', this._config.welcomeMsg); // show panel background imm
+    this.log('', this._config.helloMsg); // show panel background imm
 
     // let counter = 0;
     // setInterval(() => {

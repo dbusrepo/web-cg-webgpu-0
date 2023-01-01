@@ -1,5 +1,5 @@
 const eventLogConfig = {
-  welcomeMsg: 'Welcome User !',
+  helloMsg: 'Hello User !',
   isVisible: true,
   showBelowCanvas: true,
 
