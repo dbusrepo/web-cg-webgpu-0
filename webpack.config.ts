@@ -75,26 +75,26 @@ const config: webpack.Configuration = {
   },
   module: {
     rules: [
-      // {
-      //   test: /\.tsx?$/,
-      //   exclude: /node_modules/,
-      //   loader: 'ts-loader',
-      // },
-      // {
-      //   test: /\.?js$/,
-      //   exclude: /node_modules/,
-      //   use: {
-      //     loader: 'babel-loader',
-      //     options: {
-      //       presets: ['@babel/preset-env', '@babel/preset-react'],
-      //     },
-      //   },
-      // },
       {
-        test: /\.([jt]sx?)?$/,
-        use: "swc-loader",
+        test: /\.tsx?$/,
         exclude: /node_modules/,
+        loader: 'ts-loader',
       },
+      {
+        test: /\.?js$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env', '@babel/preset-react'],
+          },
+        },
+      },
+      // {
+      //   test: /\.([jt]sx?)?$/,
+      //   use: "swc-loader",
+      //   exclude: /node_modules/,
+      // },
       {
         test: /\.css$/,
         exclude: /node_modules/,

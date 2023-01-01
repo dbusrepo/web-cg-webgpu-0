@@ -4,8 +4,8 @@
       "jsc": {
         "parser": {
           "syntax": "typescript",
-          "tsx": true,
-          "decorators": false,
+          "tsx": false,
+          "decorators": true,
           "dynamicImport": true
         },
       }
