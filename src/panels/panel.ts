@@ -31,11 +31,11 @@ abstract class Panel {
   private _parentNode: HTMLDivElement;
 
   private _panelContainer: HTMLDivElement;
-  private _panelContainerWinFull: HTMLDivElement;
   private _panel: HTMLDivElement;
 
-  private _onPanelFocus: (event: FocusEvent) => void;
-  private _onPanelKeyDown: (e: KeyboardEvent) => void;
+  private _panelContainerWinFull: HTMLDivElement;
+  // eslint-disable-next-line max-len
+  private _panelContainerWinFullHeight: number; // cached to avoid fs -> fw errors
 
   private _canvasContainer: HTMLDivElement;
   private _canvas: HTMLCanvasElement;
@@ -87,6 +87,8 @@ abstract class Panel {
     this._panelContainerWinFull = document.createElement('div');
     this._panelContainerWinFull.classList.add('panel-container-win-full');
     this._board.appendChild(this._panelContainerWinFull); // TODO in init
+    this._panelContainerWinFullHeight =
+      this._panelContainerWinFull.offsetHeight;
     this._panel = document.createElement('div');
     this._panel.tabIndex = -1; // TODO call this before focus() !
     // this._panelContainer.appendChild(this._panel); // done before run
@@ -117,7 +119,7 @@ abstract class Panel {
     this._panel.style.marginTop = `${menuBarHeight}px`;
     const panelFullHeight = this.isFullScreen
       ? screen.height
-      : this._panelContainerWinFull.offsetHeight;
+      : this._panelContainerWinFullHeight;
     this._panel.style.height = `${panelFullHeight - 25}px`;
     this.hideOtherPanels();
   }
@@ -155,7 +157,6 @@ abstract class Panel {
 
   // toggle win - fullwin
   public setFullWin(enable: boolean): void {
-    assert(!this.isFullScreen);
     if (enable) {
       this.setViewMode(ViewMode.FULL_WIN);
       this.toFullWinStyle();
@@ -172,9 +173,8 @@ abstract class Panel {
   private initFullScreenMode(): void {
     if (screenfull.isEnabled) {
       screenfull.on('change', () => {
-        // handled here only the case when the user presses ESC to exit from FS
-        // which is not detected 'cauz Escape is not detected as a keydown
-        // event...
+        // handle here the case when the user presses ESC to exit from FS mode
+        // because the Escape key is not detected as a keydown event...
         if (this.isFullScreen && !screenfull.isFullscreen) {
           this.resetModeAfterFullScreen();
         }
@@ -195,19 +195,25 @@ abstract class Panel {
     }
     if (enable) {
       this.enableFullScreenMode();
-      this.resetMenuGui();
       await screenfull.request(this._panelContainer, { navigationUI: 'hide' });
     } else {
+      assert(screenfull.isFullscreen);
       await screenfull.exit();
       this.resetModeAfterFullScreen();
     }
   }
 
   private enableFullScreenMode(): void {
-    this.setViewMode(ViewMode.FULL_SCREEN);
-    if (this._preViewMode === ViewMode.WIN) {
-      this.setFullStyle();
+    // if in full win go to win mode first and then to fullscreen
+    if (this._viewMode === ViewMode.FULL_WIN) {
+      this.setFullWin(false);
+      // eslint-disable-next-line max-len
+      // to have preViewMode set to fullwin with setViewMode(ViewMode.FULL_SCREEN)
+      this._viewMode = ViewMode.FULL_WIN;
     }
+    this.setViewMode(ViewMode.FULL_SCREEN);
+    this.resetMenuGui();
+    this.setFullStyle();
   }
 
   private resetModeAfterFullScreen() {
@@ -216,27 +222,23 @@ abstract class Panel {
         (this._preViewMode === ViewMode.WIN ||
           this._preViewMode === ViewMode.FULL_WIN),
     );
-    this.setViewMode(this._preViewMode);
-    if (this.isWinMode) {
-      this.toWinStyle();
-    } else {
-      this.toFullWinStyle();
-    }
-    if (!this.isInit()) {
-      this.focus();
+    const fromFullWin = this._preViewMode === ViewMode.FULL_WIN;
+    this.setFullWin(false);
+    if (fromFullWin) {
+      this.setFullWin(true);
     }
   }
 
   private addListeners(): void {
     this.initKeyHandlers();
-    this._onPanelFocus = (event: FocusEvent) => {
+    const onPanelFocus = (event: FocusEvent) => {
       this._canvasContainer.focus();
     };
-    this._panel.addEventListener('focus', this._onPanelFocus);
+    this._panel.addEventListener('focus', onPanelFocus);
   }
 
   protected initKeyHandlers(): void {
-    this._onPanelKeyDown = (e: KeyboardEvent) => {
+    const onPanelKeyDown = (e: KeyboardEvent) => {
       // console.log('panel onKeyDown')
       // switch (e.key) {
       //   case Panel.FULL_WIN_KEY:
@@ -265,7 +267,7 @@ abstract class Panel {
       // }
     };
     // last arg true to capture events from top
-    this._panel.addEventListener('keydown', this._onPanelKeyDown, true);
+    this._panel.addEventListener('keydown', onPanelKeyDown, true);
   }
 
   private initCanvas(): void {
@@ -418,7 +420,6 @@ abstract class Panel {
   }
 
   focus(): void {
-    // console.trace();
     this._panel.focus(); // onFocus called
   }
 
@@ -520,8 +521,6 @@ abstract class Panel {
       this.setFullStyle();
       this.resetMenuGui();
     }
-    // this._menuGui?.reset();
-    // assert(this._panel.parentNode === this._board);
     assert(this._panel.parentNode === this._panelContainerWinFull);
   }
 
@@ -665,6 +664,19 @@ abstract class Panel {
     }%`;
   }
 
+  toggleFullscreen(): void {
+    this.setFullScreen(!this.isFullScreen);
+  }
+
+  toggleFullWin(): void {
+    if (!this.isFullScreen) {
+      this.setFullWin(!this.isFullWin);
+    } else {
+      this._preViewMode = ViewMode.FULL_WIN;
+      this.setFullScreen(false);
+    }
+  }
+
   setEventLogVisibility(visible: boolean): void {
     this.isEventLogVisible = visible;
     if (this.isEventLogBelowCanvas) {
@@ -780,6 +792,7 @@ abstract class Panel {
   }
 
   get isFullScreen(): boolean {
+    // screenfull.isEnabled
     return this._viewMode === ViewMode.FULL_SCREEN;
   }
 

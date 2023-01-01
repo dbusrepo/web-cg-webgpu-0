@@ -29,8 +29,8 @@ class Main {
     const enginePanel = this.buildEnginePanel('3D View', board, row0);
     // const enginePanel = null;
     this.panels.push(enginePanel);
-    const aPanel = this.buildViewPanel('View', board, row0);
-    this.panels.push(aPanel);
+    // const aPanel = this.buildViewPanel('View', board, row0);
+    // this.panels.push(aPanel);
     // board.style.display = 'none';
     // this.panels.push(this.buildViewPanel('Panel 2', board, row1));
   }

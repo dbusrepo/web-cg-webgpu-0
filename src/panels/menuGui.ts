@@ -32,10 +32,10 @@ class MenuGui {
       opacity: 1.0, // 0.95,
       open: false,
       toggleFullScreen: () => {
-        this._panel.setFullScreen(!this._panel.isFullScreen);
+        this._panel.toggleFullscreen();
       },
       toggleFullWin: () => {
-        this._panel.setFullWin(!this._panel.isFullWin);
+        this._panel.toggleFullWin();
       },
     }); // as unknown as typeof Guify;
 

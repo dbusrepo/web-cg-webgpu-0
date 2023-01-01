@@ -14,7 +14,7 @@ const consoleConfig = {
   // console height in win and full mode resp
   percHeightWin: 0.35, // 35%
   percHeightFull: 0.3,
-  prompt: '> ',
+  prompt: '$ ',
 };
 
 type ConsoleConfig = typeof consoleConfig & {
