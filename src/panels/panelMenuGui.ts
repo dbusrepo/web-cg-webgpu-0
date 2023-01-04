@@ -2,21 +2,19 @@ import assert from 'assert';
 import GUI from '../ui/guify/src/gui';
 // import GUI from '../ui/guify/src/gui';
 import { Panel } from './panel';
-import { PanelConfig } from '../config/config';
+import { PanelMenuConfig } from '../config/mainConfig';
 
-type MenuConfig = PanelConfig['menuConfig'];
-
-type MenuOptions = {
-  [k: string]: any;
+type PanelMenuOptions = {
+  // [k: string]: any;
 };
 
-class MenuGui {
-  private _config: MenuConfig;
+class PanelMenuGui {
+  private _config: PanelMenuConfig;
   private _panel: Panel;
-  private _menuOptions: MenuOptions;
-  private _gui: GUI;
+  private _menuOptions: PanelMenuOptions;
+  protected _gui: GUI;
 
-  init(panel: Panel, menuConfig: MenuConfig): void {
+  init(panel: Panel, menuConfig: PanelMenuConfig): void {
     this._panel = panel;
     this._config = menuConfig;
 
@@ -269,20 +267,16 @@ class MenuGui {
   //   // this._gui.destroy();
   // }
 
-  protected get config(): MenuConfig {
+  protected get config(): PanelMenuConfig {
     return this._config;
+  }
+
+  protected get menuOptions(): PanelMenuOptions {
+    return this._menuOptions;
   }
 
   protected get panel(): Panel {
     return this._panel;
-  }
-
-  protected get menuOptions(): MenuOptions {
-    return this._menuOptions;
-  }
-
-  protected get gui(): GUI {
-    return this._gui;
   }
 
   removefromDom() {
@@ -290,4 +284,4 @@ class MenuGui {
   }
 }
 
-export { MenuGui };
+export { PanelMenuOptions, PanelMenuGui };

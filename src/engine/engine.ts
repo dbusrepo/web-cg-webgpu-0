@@ -12,19 +12,16 @@ import {
 } from '../common';
 
 import { images, getImagesPaths } from '../assets/images/imagesList';
-import {
-  strings,
-  stringsArrayData,
-} from '../assets/strings/strings';
+import { strings, stringsArrayData } from '../assets/strings/strings';
 
 import { FONT_Y_SIZE, fontChars } from '../assets/fonts/font';
 
 // import loader from '@assemblyscript/loader';
 // import assert from 'assert';
-import { defaultConfig } from '../config/config';
+import { mainConfig } from '../config/mainConfig';
 import * as utils from './utils';
 
-import { InputManager, KeyCode } from './input/inputManager'; 
+import { InputManager, KeyCode } from './input/inputManager';
 
 // import * as loadUtils from '../utils/loadFiles'; // TODO
 import {
@@ -54,11 +51,10 @@ class Engine {
   private static readonly NUM_WORKERS = 1; // >= 1
   private static readonly MAIN_WORKER_IDX = this.NUM_WORKERS;
 
-  private static readonly RENDER_PERIOD =
-    MILLI_IN_SEC / defaultConfig.targetFPS;
+  private static readonly RENDER_PERIOD = MILLI_IN_SEC / mainConfig.targetFPS;
 
   private static readonly UPDATE_PERIOD =
-    (defaultConfig.multiplier * MILLI_IN_SEC) / defaultConfig.targetUPS;
+    (mainConfig.multiplier * MILLI_IN_SEC) / mainConfig.targetUPS;
 
   private static readonly STATS_PERIOD = MILLI_IN_SEC;
 
@@ -157,11 +153,11 @@ class Engine {
   }
 
   private _buildWasmMemConfig(): void {
-    const startOffset = defaultConfig.wasmMemStartOffset;
+    const startOffset = mainConfig.wasmMemStartOffset;
     const numPixels = this._imageData.width * this._imageData.height;
     const imagesIndexSize = WasmUtils.initImages.getImagesIndexSize();
     const imagesRegionSize = this._workersInitData.totalImagesSize;
-    const workerHeapPages = defaultConfig.wasmWorkerHeapPages;
+    const workerHeapPages = mainConfig.wasmWorkerHeapPages;
     const numWorkers = Engine.NUM_WORKERS;
     const stringsRegionSize = stringsArrayData.length;
 
@@ -175,7 +171,7 @@ class Engine {
       sleepArraySize: (numWorkers + 1) * Int32Array.BYTES_PER_ELEMENT,
       numWorkers,
       workerHeapSize: PAGE_SIZE_BYTES * workerHeapPages,
-      sharedHeapSize: defaultConfig.wasmSharedHeapSize,
+      sharedHeapSize: mainConfig.wasmSharedHeapSize,
       fontCharsSize: fontChars.length * FONT_Y_SIZE,
       stringsSize: stringsRegionSize,
       imagesIndexSize,
@@ -274,7 +270,7 @@ class Engine {
   private _initWorkerWasmMemConfig() {
     this._workerWasmMemConfig = {
       wasmMem: this._wasmMem,
-      wasmWorkerHeapSize: defaultConfig.wasmWorkerHeapPages * PAGE_SIZE_BYTES,
+      wasmWorkerHeapSize: mainConfig.wasmWorkerHeapPages * PAGE_SIZE_BYTES,
       wasmMemRegionsSizes: this._wasmMemRegionsSizes,
       wasmMemRegionsOffsets: this._wasmMemRegionsOffsets,
       wasmImagesIndexOffset:
@@ -298,7 +294,7 @@ class Engine {
       )}`,
     );
     const { wasmMemStartPages: initial, wasmMemMaxPages: maximum } =
-      defaultConfig;
+      mainConfig;
     console.log(`wasm mem start pages: ${initial}`);
     assert(initial * PAGE_SIZE_BYTES >= wasmMemStartTotalSize);
     const memory = new WebAssembly.Memory({

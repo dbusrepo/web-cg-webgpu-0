@@ -5,9 +5,9 @@ import {
   PanelConfig,
   EventLogConfig,
   ConsoleConfig,
-} from '../config/config';
+} from '../config/mainConfig';
 import { Console, ConsoleHandlersObjInit } from '../ui/console/console';
-import { MenuGui } from './menuGui';
+import { PanelMenuGui } from './panelMenuGui';
 import { EventLog } from '../ui/eventLog/eventLog';
 
 // TODO move?
@@ -60,7 +60,7 @@ abstract class Panel {
 
   private _console?: Console;
 
-  protected _menuGui?: MenuGui;
+  protected _menuGui?: PanelMenuGui;
   // used with console cmd handler. not used for now.
 
   protected _viewMode: ViewMode;
@@ -716,10 +716,10 @@ abstract class Panel {
   }
 
   protected initMenuGui(): void {
-    if (!this.config.enableMenuGui) {
+    if (!this.config.menuConfig.enable) {
       return;
     }
-    this._menuGui = new MenuGui();
+    this._menuGui = new PanelMenuGui();
     this._menuGui.init(this, { ...this.config.menuConfig });
   }
 
@@ -739,13 +739,10 @@ abstract class Panel {
   run(): void {
     this.initWinMode();
     this.initFullWinMode();
-    // this.initMenuGui(); // TODO should be called as last
     this.initFocus();
   }
 
-  protected destroy() {
-    // this._menuGui?.destroy();
-  }
+  protected destroy() {}
 
   get isWinMode(): boolean {
     return this._viewMode === ViewMode.WIN;
@@ -810,11 +807,11 @@ abstract class Panel {
     return this._console ?? null;
   }
 
-  get menuGui(): MenuGui | null {
+  get menuGui(): PanelMenuGui | null {
     return this._menuGui ?? null;
   }
 
-  protected set menuGui(menuGui: MenuGui | null) {
+  protected set menuGui(menuGui: PanelMenuGui | null) {
     this._menuGui = menuGui ?? undefined;
   }
 

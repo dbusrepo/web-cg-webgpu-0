@@ -1,5 +1,5 @@
 // import assert from 'assert';
-import { ViewPanelConfig } from '../config/config';
+import { ViewPanelConfig } from '../config/mainConfig';
 import { Panel } from './panel';
 // import { Console, ConsoleHandlersObjInit } from '../ui/console/console';
 
@@ -55,7 +55,6 @@ class ViewPanel extends Panel {
   }
 
   protected destroy() {
-    // TODO
     super.destroy();
   }
 }

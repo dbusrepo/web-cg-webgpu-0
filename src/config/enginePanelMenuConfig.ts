@@ -1,10 +1,12 @@
-import { menuConfig } from './menuConfig';
+import { panelMenuConfig } from './panelMenuConfig';
 
 const enginePanelMenuConfig = {
-  ...menuConfig,
+  ...panelMenuConfig,
   MENU_OPTIONS: {
-    ...menuConfig.MENU_OPTIONS,
-    STATS: 'Stats',
+    ...panelMenuConfig.MENU_OPTIONS,
+    stats: {
+      label: 'Stats',
+    },
   },
 };
 

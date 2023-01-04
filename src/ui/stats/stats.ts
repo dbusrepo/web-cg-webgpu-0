@@ -1,11 +1,11 @@
-import assert from 'assert';
+// import assert from 'assert';
 import { StatsPanel } from './statsPanel';
 
 class Stats {
   private _container: HTMLDivElement;
   private _panels = new Map<string, StatsPanel>();
 
-  constructor(parentNode: HTMLDivElement) {
+  constructor() {
     this._container = document.createElement('div');
     this._container.classList.add('stats-container');
     // this.schedule_mem_measure(); // TODO move ? remove?

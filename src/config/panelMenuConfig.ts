@@ -1,4 +1,6 @@
-const menuConfig = {
+const panelMenuConfig = {
+  enable: true,
+
   // guiParams: {
   //   autoPlace: false,
   //   width: 200, // TODO
@@ -39,4 +41,6 @@ const menuConfig = {
   },
 };
 
-export { menuConfig };
+type PanelMenuConfig = typeof panelMenuConfig;
+
+export { panelMenuConfig, PanelMenuConfig };

@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { EnginePanelConfig, EnginePanelMenuConfig } from '../config/config';
+import { EnginePanelConfig, EnginePanelMenuConfig } from '../config/mainConfig';
 import { Stats } from '../ui/stats/stats';
 import { StatsPanel } from '../ui/stats/statsPanel';
 // import { MemoryStats } from '../ui/stats/memoryStats';
@@ -15,41 +15,12 @@ class EnginePanel extends Panel {
   private _engineWorker: Worker;
   private _stats?: Stats;
 
-  // constructor(mainBoard: HTMLDivElement, parentNode: HTMLDivElement) {
-  //   super(mainBoard, parentNode);
-  // }
-
   init(config: EnginePanelConfig): EnginePanel {
     super.init({
       ...config,
     });
     this.initStats();
     return this;
-  }
-
-  get config(): EnginePanelConfig {
-    return super.config as EnginePanelConfig;
-  }
-
-  private initStats() {
-    if (!this.isStatsEnabled) {
-      return;
-    }
-    this.showStats = this.config.statsConfig.show;
-    this._stats = new Stats(this.panelEl);
-    const fpsPanel = new StatsPanel(StatsNames.FPS, '#0ff', '#022');
-    const upsPanel = new StatsPanel(StatsNames.UPS, '#0f0', '#020');
-    const unlockedFpsPanel = new StatsPanel(StatsNames.UFPS, '#f50', '#110');
-    const wasmHeapMem = new StatsPanel(StatsNames.WASM_HEAP, '#0b0', '#030');
-    // this.mem_panel = new StatsPanel('MEM', '#ff0', '#330');
-
-    this._stats.addPanel(fpsPanel);
-    this._stats.addPanel(upsPanel);
-    this._stats.addPanel(wasmHeapMem);
-    this._stats.addPanel(unlockedFpsPanel);
-    // add mem stats panel
-    // const memPanel = new MemoryStats(this._stats);
-    this.setShowStats(this.showStats);
   }
 
   initEngineWorker(): void {
@@ -98,8 +69,31 @@ class EnginePanel extends Panel {
     };
   }
 
+  get config(): EnginePanelConfig {
+    return super.config as EnginePanelConfig;
+  }
+
+  private initStats() {
+    if (!this.isStatsEnable) {
+      this.config.statsConfig.show = false;
+      return;
+    }
+    this._stats = new Stats();
+    const fpsPanel = new StatsPanel(StatsNames.FPS, '#0ff', '#022');
+    const upsPanel = new StatsPanel(StatsNames.UPS, '#0f0', '#020');
+    const unlockedFpsPanel = new StatsPanel(StatsNames.UFPS, '#f50', '#110');
+    const wasmHeapMem = new StatsPanel(StatsNames.WASM_HEAP, '#0b0', '#030');
+    // this.mem_panel = new StatsPanel('MEM', '#ff0', '#330');
+    this._stats.addPanel(fpsPanel);
+    this._stats.addPanel(upsPanel);
+    this._stats.addPanel(wasmHeapMem);
+    this._stats.addPanel(unlockedFpsPanel);
+    // add mem stats panel
+    // const memPanel = new MemoryStats(this._stats);
+  }
+
   protected initMenuGui(): void {
-    if (!this.config.enableMenuGui) {
+    if (!this.config.menuConfig.enable) {
       return;
     }
     const menuGui = new EnginePanelMenuGui();
@@ -114,6 +108,7 @@ class EnginePanel extends Panel {
     super.setFullStyle();
     if (this._stats) {
       this._stats.setParentNode(this.panelEl);
+      this.setShowStats(this.showStats);
     }
   }
 
@@ -121,6 +116,7 @@ class EnginePanel extends Panel {
     super.setWinStyle();
     if (this._stats) {
       this._stats.setParentNode(this.boardEl);
+      this.setShowStats(this.showStats);
     }
   }
 
@@ -140,44 +136,32 @@ class EnginePanel extends Panel {
     );
   }
 
+  public setShowStats(show: boolean): void {
+    assert(this._stats);
+    this.config.statsConfig.show = show;
+    if (show) {
+      this._stats.show();
+    } else {
+      this._stats.hide();
+    }
+  }
+
+  public get isStatsEnable(): boolean {
+    return this.config.statsConfig.enable;
+  }
+
+  public get showStats(): boolean {
+    return this.config.statsConfig.show;
+  }
+
+  protected destroy() {
+    super.destroy();
+  }
+
   run() {
     super.run();
     this.initEngineWorker();
     this.runEngineWorker();
-  }
-
-  public setShowStats(show: boolean): void {
-    assert(this._stats);
-    this.showStats = show;
-    if (show) {
-      this._stats!.show();
-    } else {
-      this._stats!.hide();
-    }
-  }
-
-  // protected destroy() {
-  //   super.destroy();
-  // }
-
-  // get stats(): Stats | null {
-  //   return this._stats ?? null;
-  // }
-
-  // set stats(stats: Stats | null) {
-  //   this._stats = stats ?? undefined;
-  // }
-
-  get isStatsEnabled(): boolean {
-    return this.config.statsConfig.enable;
-  }
-
-  get showStats(): boolean {
-    return this.config.statsConfig.show;
-  }
-
-  set showStats(value: boolean) {
-    this.config.statsConfig.show = value;
   }
 }
 

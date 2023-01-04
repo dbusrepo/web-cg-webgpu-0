@@ -1,11 +1,11 @@
-import assert from 'assert';
+// import assert from 'assert';
 import './css/app.css';
 import {
   StartViewMode,
   EnginePanelConfig,
   ViewPanelConfig,
-  defaultConfig,
-} from './config/config';
+  mainConfig,
+} from './config/mainConfig';
 import { Panel } from './panels/panel';
 import { EnginePanel } from './panels/enginePanel';
 import { ViewPanel } from './panels/viewPanel';
@@ -41,7 +41,7 @@ class Main {
     board: HTMLDivElement,
     parentNode: HTMLDivElement,
   ): EnginePanel {
-    const { enginePanelConfig } = defaultConfig;
+    const { enginePanelConfig } = mainConfig;
     parentNode.style.zIndex = '1'; // TODO
     const panelConfig: EnginePanelConfig = {
       ...enginePanelConfig,
@@ -51,7 +51,7 @@ class Main {
       focusOnStart: true,
       statsConfig: {
         ...enginePanelConfig.statsConfig,
-        enable: false,
+        // enable: false,
         // isVisible: false,
       },
     };
@@ -63,7 +63,7 @@ class Main {
     board: HTMLDivElement,
     parentNode: HTMLDivElement,
   ): ViewPanel {
-    const { viewPanelConfig } = defaultConfig;
+    const { viewPanelConfig } = mainConfig;
     const panelConfig: ViewPanelConfig = {
       ...viewPanelConfig,
       startViewMode: StartViewMode.WIN,

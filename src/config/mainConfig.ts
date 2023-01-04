@@ -2,7 +2,7 @@ import { StartViewMode, panelConfig } from './panelConfig';
 import { enginePanelConfig } from './enginePanelConfig';
 import { viewPanelConfig } from './viewPanelConfig';
 
-const defaultConfig = {
+const mainConfig = {
   wasmMemStartOffset: 0,
   wasmMemStartPages: 64,
   wasmWorkerHeapPages: 1,
@@ -16,14 +16,15 @@ const defaultConfig = {
   targetFPS: 60,
   targetUPS: 80,
   multiplier: 1, // TODO
+
   panelConfig,
   enginePanelConfig,
   viewPanelConfig,
 };
 
-type Config = typeof defaultConfig;
+type Config = typeof mainConfig;
 
-export { Config, StartViewMode, defaultConfig };
+export { Config, StartViewMode, mainConfig };
 
 export type { PanelConfig } from './panelConfig';
 export type { EnginePanelConfig } from './enginePanelConfig';
@@ -31,3 +32,4 @@ export type { ViewPanelConfig } from './viewPanelConfig';
 export type { EventLogConfig } from './eventLogConfig';
 export type { ConsoleConfig } from './consoleConfig';
 export type { EnginePanelMenuConfig } from './enginePanelMenuConfig';
+export type { PanelMenuConfig } from './panelMenuConfig';
