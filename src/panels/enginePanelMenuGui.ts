@@ -1,9 +1,14 @@
-import { EnginePanelMenuConfig } from '../config/mainConfig';
+import {
+  EnginePanelMenuConfig,
+  enginePanelConfig,
+} from '../config/enginePanelConfig';
 import { PanelMenuOptions, PanelMenuGui } from './panelMenuGui';
 import { EnginePanel } from './enginePanel';
 
+const STATS_OPT_KEY = Symbol(enginePanelConfig.menuConfig.options.stats.key);
+
 type EnginePanelMenuOptions = {
-  // [k: string]: any;
+  [STATS_OPT_KEY]: boolean;
 } & PanelMenuOptions;
 
 class EnginePanelMenuGui extends PanelMenuGui {
@@ -19,34 +24,38 @@ class EnginePanelMenuGui extends PanelMenuGui {
   }
 
   addStatsOptions() {
-    const { label } = this.config.MENU_OPTIONS.stats;
+    const { label } = enginePanelConfig.menuConfig.options.stats;
 
-    // this._gui.Register({
-    //   type: 'folder',
-    //   label: 'Stats',
-    //   open: false,
-    // });
+    const folder = label;
 
-    // this.options[key] = this.panel.showStats;
-    // this._gui.Register(
-    //   {
-    //     type: 'checkbox',
-    //     label,
-    //     object: this.options,
-    //     property: key,
-    //     initial: this.options[key],
-    //     onChange: (visible) => {
-    //       this.panel.setShowStats(visible);
-    //     },
-    //   },
-    //   {
-    //     folder: 'Stats',
-    //   },
-    // );
+    this._gui.Register({
+      type: 'folder',
+      label: folder,
+      open: false,
+    });
+
+    const initial = this.panel.showStats;
+    this.menuOptions[STATS_OPT_KEY] = initial;
+
+    this._gui.Register(
+      {
+        type: 'checkbox',
+        label,
+        object: this.menuOptions,
+        property: STATS_OPT_KEY,
+        initial,
+        onChange: (visible: boolean) => {
+          this.panel.setShowStats(visible);
+        },
+      },
+      {
+        folder,
+      },
+    );
   }
 
   get menuOptions(): EnginePanelMenuOptions {
-    return super.panel as EnginePanel;
+    return super.menuOptions as EnginePanelMenuOptions;
   }
 
   get panel(): EnginePanel {

@@ -2,7 +2,7 @@ import React from 'react';
 import { h, render as preactRender, JSX } from 'preact';
 import { EventLogPanel, EventLogPanelProps } from './eventLogPanel';
 import { Event, EventLogEntry } from './eventLogHistoryPanel';
-import { EventLogConfig } from '../../config/config';
+import { EventLogConfig } from '../../config/mainConfig';
 
 type EventKey = string;
 

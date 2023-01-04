@@ -2,9 +2,10 @@ import { panelMenuConfig } from './panelMenuConfig';
 
 const enginePanelMenuConfig = {
   ...panelMenuConfig,
-  MENU_OPTIONS: {
+  options: {
     ...panelMenuConfig.MENU_OPTIONS,
     stats: {
+      key: 'stats',
       label: 'Stats',
     },
   },
