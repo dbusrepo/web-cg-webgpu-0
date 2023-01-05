@@ -62,7 +62,7 @@ class Engine {
 
   private static readonly STATS_ARR_LENGTH = 8;
   private static readonly TIME_LAST_FRAME_ARR_LENGTH = 4;
-  private static readonly FRAME_TIME_ARR_LENGTH = 8;
+  private static readonly FRAME_TIMES_ARR_LENGTH = 10;
 
   private _config: EngineConfig;
   private _ctx: OffscreenCanvasRenderingContext2D;
@@ -511,10 +511,12 @@ class Engine {
 
     const mainLoopInit = () => {
       lastFrameStartTime = lastStatsTime = getTimeMs();
-      renderFrameTimeArr = new Float64Array(Engine.FRAME_TIME_ARR_LENGTH);
+      renderFrameTimeArr = new Float64Array(Engine.FRAME_TIMES_ARR_LENGTH);
       updTimeAcc = 0;
       elapsedTime = 0;
-      timeSinceLastFrameArr = new Float64Array(Engine.TIME_LAST_FRAME_ARR_LENGTH);
+      timeSinceLastFrameArr = new Float64Array(
+        Engine.TIME_LAST_FRAME_ARR_LENGTH,
+      );
       frameCounter = 0;
       statsTimeAcc = 0;
       fpsArr = new Float32Array(Engine.STATS_ARR_LENGTH);

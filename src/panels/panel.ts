@@ -104,7 +104,7 @@ abstract class Panel {
     this._panel.style.width = `auto`;
     this._panel.style.height = `auto`;
     if (!(this.isInit() || this._preViewMode === ViewMode.WIN)) {
-      this.showAllPanels();
+      this.setAllPanelsToWinMode();
     }
   }
 
@@ -423,7 +423,7 @@ abstract class Panel {
     this._panel.focus(); // onFocus called
   }
 
-  private showAllPanels(): void {
+  protected setAllPanelsToWinMode(): void {
     for (const panel of Panel.getPanelList()) {
       panel._panelContainerWinFull.style.display = 'block';
       panel._panelContainer.style.display = 'block';
@@ -438,10 +438,14 @@ abstract class Panel {
   private hideOtherPanels(): void {
     for (const panel of Panel.getPanelList()) {
       if (panel !== this) {
-        panel._panelContainerWinFull.style.display = 'none';
-        panel._panelContainer.style.display = 'none';
+        panel.hide();
       }
     }
+  }
+
+  protected hide(): void {
+    this._panelContainerWinFull.style.display = 'none';
+    this._panelContainer.style.display = 'none';
   }
 
   // used to check some event log invariants
@@ -468,7 +472,7 @@ abstract class Panel {
     element.appendChild(this._panel);
   }
 
-  private toWinStyle(): void {
+  protected toWinStyle(): void {
     assert(this.isWinMode);
     if (!this.isPanelInsideParentContainer()) {
       this.appendPanelTo(this._panelContainer);

@@ -136,6 +136,20 @@ class EnginePanel extends Panel {
     );
   }
 
+  protected toWinStyle(): void {
+    super.toWinStyle();
+    if (this._stats) {
+      this.setShowStats(true);
+    }
+  }
+
+  protected hide(): void {
+    super.hide();
+    if (this._stats) {
+      this.setShowStats(false);
+    }
+  }
+
   public setShowStats(show: boolean): void {
     assert(this._stats);
     this.config.statsConfig.show = show;
