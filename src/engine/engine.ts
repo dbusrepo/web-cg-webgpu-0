@@ -21,6 +21,10 @@ import { FONT_Y_SIZE, fontChars } from '../assets/fonts/font';
 import { mainConfig } from '../config/mainConfig';
 import * as utils from './utils';
 
+import Commands from './engineCommands';
+import WorkerCommands from './engineWorkerCommands';
+import PanelCommands from '../panels/enginePanelCommands';
+
 import { InputManager, KeyCode } from './input/inputManager';
 
 // import * as loadUtils from '../utils/loadFiles'; // TODO
@@ -293,8 +297,7 @@ class Engine {
         wasmMemStartTotalSize / PAGE_SIZE_BYTES,
       )}`,
     );
-    const { wasmMemStartPages: initial, wasmMemMaxPages: maximum } =
-      mainConfig;
+    const { wasmMemStartPages: initial, wasmMemMaxPages: maximum } = mainConfig;
     console.log(`wasm mem start pages: ${initial}`);
     assert(initial * PAGE_SIZE_BYTES >= wasmMemStartTotalSize);
     const memory = new WebAssembly.Memory({
@@ -313,7 +316,7 @@ class Engine {
     return new Promise((resolve, reject) => {
       for (let workerIdx = 0; workerIdx < Engine.NUM_WORKERS; ++workerIdx) {
         const worker = this._workers[workerIdx];
-        worker.onmessage = ({ data: msg }) => {
+        worker.onmessage = () => {
           --workerCount;
           console.log(
             `Worker id=${workerIdx} wasm mem ready, count=${workerCount}, 
@@ -333,7 +336,7 @@ class Engine {
           reject(error);
         };
         worker.postMessage({
-          command: 'initWasm',
+          command: WorkerCommands.INIT_WASM,
           params: this._workerWasmMemConfig,
         });
       }
@@ -466,7 +469,7 @@ class Engine {
         const workerConfig = this._buildWorkerConfig(workerIdx);
         updateWorkersNumImagesOffset(workerIdx, workerConfig);
         worker.postMessage({
-          command: 'init',
+          command: WorkerCommands.INIT,
           params: workerConfig,
         });
       }
@@ -612,20 +615,20 @@ class Engine {
             MILLI_IN_SEC /
               utils.calcAvgArrValue(renderFrameTimeArr, renderCounter),
           );
-          const workersHeapMem = this._wasmMemViews.workersMemCounters.reduce(
-            (tot, cnt) => tot + cnt,
-            0,
-          );
+          // const workersHeapMem = this._wasmMemViews.workersMemCounters.reduce(
+          //   (tot, cnt) => tot + cnt,
+          //   0,
+          // );
           const stats: Partial<StatsValues> = {
             [StatsNames.FPS]: avgFps,
             [StatsNames.UPS]: avgUps,
             [StatsNames.UFPS]: avgUnlockedFps,
-            [StatsNames.WASM_HEAP]: workersHeapMem,
+            // [StatsNames.WASM_HEAP]: workersHeapMem,
           };
           // console.log(avgUnlockedFps);
           // console.log(renderFrameTimeArr);
           postMessage({
-            command: 'updateStats',
+            command: PanelCommands.UPDATESTATS,
             params: stats,
           });
         }
@@ -662,15 +665,15 @@ class Engine {
 let engine: Engine;
 
 const commands = {
-  async run(config: EngineConfig): Promise<void> {
+  [Commands.RUN]: async (config: EngineConfig): Promise<void> => {
     engine = new Engine();
     await engine.init(config);
     engine.run();
   },
-  keydown(key: KeyCode) {
+  [Commands.KEYDOWN]: (key: KeyCode) => {
     engine.onKeyDown(key);
   },
-  keyup(key: KeyCode) {
+  [Commands.KEYUP]: (key: KeyCode) => {
     engine.onKeyUp(key);
   },
 };

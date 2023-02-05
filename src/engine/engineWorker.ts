@@ -11,6 +11,7 @@ import { loadImagesInitData, loadImageRGBA } from './assets/images/utils';
 import { WorkerInitImagesData } from './workerInitTypes';
 import { FONT_X_SIZE, FONT_Y_SIZE, FONT_SPACING } from '../assets/fonts/font';
 import type { WorkerInitData } from './workerInitTypes';
+import Commands from './engineWorkerCommands';
 
 type WorkerConfig = {
   workerIdx: number;
@@ -219,12 +220,12 @@ class EngineWorker {
 let worker: EngineWorker;
 
 const commands = {
-  async init(config: WorkerConfig): Promise<void> {
+  [Commands.INIT]: async (config: WorkerConfig): Promise<void> => {
     worker = new EngineWorker();
     const initData = await worker.init(config);
     postMessage(initData);
   },
-  async initWasm(config: WorkerWasmMemConfig): Promise<void> {
+  [Commands.INIT_WASM]: async (config: WorkerWasmMemConfig): Promise<void> => {
     assert(worker);
     await worker.loadAssets();
     await worker.initWasm(config);

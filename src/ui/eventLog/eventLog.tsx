@@ -72,7 +72,7 @@ class EventLog {
     // }, 1000);
     // }, 1000);
 
-    for (let i = 0; i < 2; ++i) {
+    for (let i = 0; i < 20; ++i) {
       const val = i; // Math.round(Math.random() * 1000);
       this.log('event ' + val, 'Hello ' + val);
     }

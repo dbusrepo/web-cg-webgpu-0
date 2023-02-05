@@ -1,3 +1,5 @@
+import Commands from '../../panels/enginePanelCommands';
+
 type KeyCode = string;
 
 type KeyHandler = () => void;
@@ -16,7 +18,7 @@ class InputManager {
     this._keyDownHandlers[key] = this._keyDownHandlers[key] ?? [];
     this._keyDownHandlers[key].push(keyHandler);
     postMessage({
-      command: 'register_keydown_handler',
+      command: Commands.REGISTER_KEYDOWN_HANDLER,
       params: key,
     });
   }
@@ -25,7 +27,7 @@ class InputManager {
     this._keyUpHandlers[key] = this._keyUpHandlers[key] ?? [];
     this._keyUpHandlers[key].push(keyHandler);
     postMessage({
-      command: 'register_keyup_handler',
+      command: Commands.REGISTER_KEYUP_HANDLER,
       params: key,
     });
   }

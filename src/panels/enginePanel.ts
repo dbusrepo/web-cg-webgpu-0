@@ -7,6 +7,7 @@ import { Panel } from './panel';
 import { EnginePanelMenuGui } from './enginePanelMenuGui';
 import { StatsNames, StatsValues } from '../common';
 import { EngineConfig } from '../engine/engine';
+import Commands from './enginePanelCommands';
 
 const buildEngineWorker = () =>
   new Worker(new URL('../engine/engine.ts', import.meta.url));
@@ -29,14 +30,13 @@ class EnginePanel extends Panel {
     let enginePanel = this;
 
     const commands = {
-      updateStats(values: StatsValues) {
-        // console.log(values);
+      [Commands.UPDATESTATS]: (values: StatsValues) => {
         enginePanel._stats?.update(values);
       },
-      event(msg: string) {
+      [Commands.EVENT]: (msg: string) => {
         console.log(msg);
       },
-      register_keydown_handler(key: string) {
+      [Commands.REGISTER_KEYDOWN_HANDLER]: (key: string) => {
         enginePanel.canvasContainerEl.addEventListener('keydown', (event) => {
           if (event.code !== key) {
             return;
@@ -47,7 +47,7 @@ class EnginePanel extends Panel {
           });
         });
       },
-      register_keyup_handler(key: string) {
+      [Commands.REGISTER_KEYUP_HANDLER]: (key: string) => {
         enginePanel.canvasContainerEl.addEventListener('keyup', (event) => {
           if (event.code !== key) {
             return;
@@ -82,11 +82,11 @@ class EnginePanel extends Panel {
     const fpsPanel = new StatsPanel(StatsNames.FPS, '#0ff', '#022');
     const upsPanel = new StatsPanel(StatsNames.UPS, '#0f0', '#020');
     const unlockedFpsPanel = new StatsPanel(StatsNames.UFPS, '#f50', '#110');
-    const wasmHeapMem = new StatsPanel(StatsNames.WASM_HEAP, '#0b0', '#030');
+    // const wasmHeapMem = new StatsPanel(StatsNames.WASM_HEAP, '#0b0', '#030');
     // this.mem_panel = new StatsPanel('MEM', '#ff0', '#330');
     this._stats.addPanel(fpsPanel);
     this._stats.addPanel(upsPanel);
-    this._stats.addPanel(wasmHeapMem);
+    // this._stats.addPanel(wasmHeapMem);
     this._stats.addPanel(unlockedFpsPanel);
     // add mem stats panel
     // const memPanel = new MemoryStats(this._stats);
