@@ -350,7 +350,6 @@ abstract class Panel {
     }
     const consoleConfig: ConsoleConfig = {
       ...this._config.consoleConfig,
-      welcome: 'Hello User',
       caseSensitive: true,
       autoComplete: true,
       onOpening: () => {

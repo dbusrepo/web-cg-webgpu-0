@@ -635,6 +635,14 @@ class Engine {
       }
     };
 
+    // setInterval(() => {
+    //   // console.log('sending...');
+    //   postMessage({
+    //     command: PanelCommands.EVENT,
+    //     params: Math.floor(Math.random() * 100),
+    //   });
+    // }, 2000);
+
     requestAnimationFrame(mainLoopInit);
   }
 

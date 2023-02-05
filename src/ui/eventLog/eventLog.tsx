@@ -56,6 +56,7 @@ class EventLog {
 
     // we render here
     this.log('', this._config.helloMsg); // show panel background imm
+    this.log('', 'micio micio bau bau'); // show panel background imm
 
     // let counter = 0;
     // setInterval(() => {
@@ -72,9 +73,10 @@ class EventLog {
     // }, 1000);
     // }, 1000);
 
-    for (let i = 0; i < 20; ++i) {
+    for (let i = 0; i < 10; ++i) {
       const val = i; // Math.round(Math.random() * 1000);
       this.log('event ' + val, 'Hello ' + val);
+      // this.log('', 'Hello ' + val);
     }
   }
 

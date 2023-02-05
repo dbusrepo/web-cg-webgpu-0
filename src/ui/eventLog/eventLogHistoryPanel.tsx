@@ -13,26 +13,45 @@ type EventHistoryProps = {
   getPanelRef: () => HTMLElement; // parent panel ref
   autoScrollNewItems: boolean;
   scrollTopTo: number | null;
+  search: string;
 };
 
 function EventLogHistoryPanel(props: EventHistoryProps): JSX.Element {
-  const { logs, getPanelRef, autoScrollNewItems, scrollTopTo } = props;
+  const { logs, getPanelRef, autoScrollNewItems, scrollTopTo, search } = props;
   const els: JSX.Element[] = [];
 
   let lastMsgRef: HTMLElement | null = null;
   let listRef: HTMLElement;
 
+  const re = new RegExp(`(${search})`, 'g');
+
+  const genBody = (str: string) =>
+    !search
+      ? str
+      : str
+          .split(re)
+          .map((item) =>
+            item === search ? (
+              <span style={{ textDecoration: 'underline' }}>{item}</span>
+            ) : (
+              item
+            ),
+          );
+
   logs.forEach((log, idx) => {
-    log.event && els.push(<dt className="event-log-type">{log.event}</dt>);
-    log.message &&
+    if (log.event) {
+      els.push(<dt className="event-log-msg">{genBody(log.event)}</dt>);
+    }
+    if (log.message) {
       els.push(
         <dd
           ref={idx === logs.length - 1 ? (e) => (lastMsgRef = e!) : undefined}
           className="event-log-msg"
         >
-          {log.message}
+          {genBody(log.message)}
         </dd>,
       );
+    }
   });
 
   useEffect(() => {

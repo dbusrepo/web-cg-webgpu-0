@@ -15,6 +15,21 @@ type EventLogPanelProps = {
   prompt: string;
 };
 
+const condApplyFilter = (search: string) => (search || '').length > 1;
+
+const searchFilter = (
+  history: EventLogEntry[],
+  searchTerm: string,
+): EventLogEntry[] => {
+  const match = (str: string, query: string) =>
+    str.toLowerCase().indexOf(query.toLowerCase()) !== -1;
+  return condApplyFilter(searchTerm)
+    ? history.filter(
+        (el) => match(el.event, searchTerm) || match(el.message, searchTerm),
+      )
+    : history;
+};
+
 function EventLogPanel(props: EventLogPanelProps): JSX.Element {
   const {
     history,
@@ -30,8 +45,11 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
   const [isGrabbing, setIsGrabbing] = useState(false);
   const [grabPos, setGrabPos] = useState({ top: 0, y: 0 });
   const [input, setInput] = useState(prompt);
+
   let listContRef: HTMLElement;
   let inputRef: HTMLInputElement;
+
+  // console.log('search:', input.substring(prompt.length));
 
   const onWheel = (e: JSX.TargetedWheelEvent<HTMLDivElement>) => {
     // if the user is scrolling up with the mouse wheel disable auto scroll to
@@ -225,7 +243,7 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
     }
   };
 
-  const onInputKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const onInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inValue = (event.target as HTMLInputElement).value;
     const line = prompt + inValue.substring(prompt.length);
     inputRef.value = line;
@@ -262,6 +280,8 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
 
   const logListStyle = buildHistoryStyle(parentContainer, lineHeight);
 
+  const searchTerm = input.substring(prompt.length);
+
   return (
     /* eslint-disable-next-line jsx-a11y/label-has-associated-control */
     <label className="event-log-label" style={labelStyle}>
@@ -273,7 +293,12 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
         ref={(el) => (listContRef = el!)}
       >
         <EventLogHistoryPanel
-          logs={history}
+          logs={
+            condApplyFilter(searchTerm)
+              ? searchFilter(history, searchTerm)
+              : history
+          }
+          search={condApplyFilter(searchTerm) ? searchTerm : ''}
           getPanelRef={() => listContRef}
           scrollTopTo={forceScrollTo}
           autoScrollNewItems={autoScrollNewItems}
@@ -282,7 +307,7 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
       <input
         className="event-log-input"
         style={inputStyle}
-        onChange={onInputKeyChange}
+        onChange={onInputChange}
         onClick={onInputClick}
         ref={(el) => {
           inputRef = el!;

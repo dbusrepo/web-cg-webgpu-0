@@ -34,7 +34,8 @@ class EnginePanel extends Panel {
         enginePanel._stats?.update(values);
       },
       [Commands.EVENT]: (msg: string) => {
-        console.log(msg);
+        // console.log(msg);
+        enginePanel.eventLog?.log('event ' + msg, 'Hello ' + msg);
       },
       [Commands.REGISTER_KEYDOWN_HANDLER]: (key: string) => {
         enginePanel.canvasContainerEl.addEventListener('keydown', (event) => {
