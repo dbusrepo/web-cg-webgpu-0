@@ -23,11 +23,10 @@ const searchFilter = (
 ): EventLogEntry[] => {
   const match = (str: string, query: string) =>
     str.toLowerCase().indexOf(query.toLowerCase()) !== -1;
-  return condApplyFilter(searchTerm)
-    ? history.filter(
-        (el) => match(el.event, searchTerm) || match(el.message, searchTerm),
-      )
-    : history;
+  const res = history.filter(
+    (el) => match(el.event, searchTerm) || match(el.message, searchTerm),
+  );
+  return res;
 };
 
 function EventLogPanel(props: EventLogPanelProps): JSX.Element {
@@ -298,7 +297,7 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
               ? searchFilter(history, searchTerm)
               : history
           }
-          search={condApplyFilter(searchTerm) ? searchTerm : ''}
+          searchTerm={condApplyFilter(searchTerm) ? searchTerm : ''}
           getPanelRef={() => listContRef}
           scrollTopTo={forceScrollTo}
           autoScrollNewItems={autoScrollNewItems}

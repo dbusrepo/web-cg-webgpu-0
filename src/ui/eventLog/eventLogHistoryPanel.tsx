@@ -13,25 +13,26 @@ type EventHistoryProps = {
   getPanelRef: () => HTMLElement; // parent panel ref
   autoScrollNewItems: boolean;
   scrollTopTo: number | null;
-  search: string;
+  searchTerm: string;
 };
 
 function EventLogHistoryPanel(props: EventHistoryProps): JSX.Element {
-  const { logs, getPanelRef, autoScrollNewItems, scrollTopTo, search } = props;
+  const { logs, getPanelRef, autoScrollNewItems, scrollTopTo, searchTerm } =
+    props;
   const els: JSX.Element[] = [];
 
   let lastMsgRef: HTMLElement | null = null;
   let listRef: HTMLElement;
 
-  const re = new RegExp(`(${search})`, 'g');
+  const re = new RegExp(`(${searchTerm})`, 'ig');
 
   const genBody = (str: string) =>
-    !search
+    !searchTerm
       ? str
       : str
           .split(re)
           .map((item) =>
-            item === search ? (
+            item.toLowerCase() === searchTerm.toLowerCase()? (
               <span style={{ textDecoration: 'underline' }}>{item}</span>
             ) : (
               item
