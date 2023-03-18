@@ -1,22 +1,44 @@
-import assert from 'assert';
+// import assert from 'assert';
+import {Pane as TweakPane} from 'tweakpane';
 import GUI from '../ui/guify/src/gui';
-// import GUI from '../ui/guify/src/gui';
 import { Panel } from './panel';
 import { PanelMenuConfig } from '../config/mainConfig';
 
+// TODO
 type PanelMenuOptions = {
   // [k: string]: any;
 };
 
+// top panel with guify
+// control pane with tweakpane
 class PanelMenuGui {
   private _config: PanelMenuConfig;
   private _panel: Panel;
   private _menuOptions: PanelMenuOptions;
   protected _gui: GUI;
+  protected _tweakPane: TweakPane;
 
   init(panel: Panel, menuConfig: PanelMenuConfig): void {
     this._panel = panel;
     this._config = menuConfig;
+
+    const tweakPane = new TweakPane({
+      container: panel.canvasContainerEl,
+      expanded: menuConfig.controlsPaneOpen,
+    });
+
+    tweakPane.element.style.position = 'absolute';
+    tweakPane.element.style.borderRadius = '0px';
+    tweakPane.element.style.top = '0px';
+    tweakPane.element.style.right = '0px';
+    tweakPane.element.style.overflow = 'scroll';
+    // tweakPane.controller_.view.buttonElement.disabled = true;
+    // tweakPane.controller_.view.buttonElement.style.display = 'none';
+
+    if (tweakPane.element.clientHeight > panel.canvasContainerEl.clientHeight) {
+      // to make overflow scroll work
+      tweakPane.element.style.height = panel.canvasContainerEl.clientHeight + 'px';
+    }
 
     this._gui = new GUI({
       root: panel.menuGuiContainer,
@@ -35,6 +57,10 @@ class PanelMenuGui {
       toggleFullWin: () => {
         this._panel.toggleFullWin();
       },
+      customFun: () => {
+        tweakPane.expanded = !tweakPane.expanded;
+        menuConfig.controlsPaneOpen = tweakPane.expanded;
+      }
     }); // as unknown as typeof Guify;
 
     this._gui.Register({
@@ -44,6 +70,8 @@ class PanelMenuGui {
         console.log('Clicked');
       },
     });
+
+    this._tweakPane = tweakPane;
 
     // let someNumber = 0;
     // this._gui.Register({
@@ -95,7 +123,17 @@ class PanelMenuGui {
     // this.addFullscreenOption();
   }
 
-  addPanelOptions() {} // overidden...
+  protected addPanelOptions() {
+    // Add inputs
+    const PARAMS = {
+      level: 0,
+      name: 'Sketch',
+      active: true,
+    };
+    this._tweakPane.addInput(PARAMS, 'level');
+    this._tweakPane.addInput(PARAMS, 'name');
+    this._tweakPane.addInput(PARAMS, 'active');
+  }
 
   // private initConsoleOptions(): void {
   //   if (!this._panel.console) {
@@ -281,6 +319,7 @@ class PanelMenuGui {
 
   removefromDom() {
     this._gui.removefromDom();
+    this._tweakPane.dispose();
   }
 }
 

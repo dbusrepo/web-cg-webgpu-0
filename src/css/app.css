@@ -11,10 +11,10 @@ html, body {
   /* text-align: center; <- to align horiz */
   /* using flex: */
   /* to center canvas horizontally do: */
-  /* display: flex; */ 
-  /* justify-content: center; /1* center horizontally *1/ */ 
+  /* display: flex; */
+  /* justify-content: center; /1* center horizontally *1/ */
   /* or this: */
-  /* align-items: center; /1* center vertically *1/ */ 
+  /* align-items: center; /1* center vertically *1/ */
   display: flex;
   flex-direction: column;
   /* background-color: #ccc; */

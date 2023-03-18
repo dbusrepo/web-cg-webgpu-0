@@ -1,5 +1,6 @@
 const panelMenuConfig = {
   enable: true,
+  controlsPaneOpen: false,
 
   // guiParams: {
   //   autoPlace: false,

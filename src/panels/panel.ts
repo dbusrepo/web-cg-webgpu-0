@@ -722,8 +722,10 @@ abstract class Panel {
     if (!this.config.menuConfig.enable) {
       return;
     }
-    this._menuGui = new PanelMenuGui();
-    this._menuGui.init(this, { ...this.config.menuConfig });
+    if (!this._menuGui) {
+      this._menuGui = new PanelMenuGui();
+    }
+    this._menuGui.init(this, this.config.menuConfig);
   }
 
   private initFocus(): void {

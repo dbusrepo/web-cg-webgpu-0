@@ -97,12 +97,13 @@ class EnginePanel extends Panel {
     if (!this.config.menuConfig.enable) {
       return;
     }
-    const menuGui = new EnginePanelMenuGui();
-    const menuGuiConfig: EnginePanelMenuConfig = {
-      ...this.config.menuConfig,
-    };
-    menuGui.init(this, menuGuiConfig);
-    this._menuGui = menuGui;
+    // const menuGuiConfig: EnginePanelMenuConfig = {
+    //   ...this.config.menuConfig,
+    // };
+    if (!this._menuGui) {
+      this._menuGui = new EnginePanelMenuGui();
+    }
+    this._menuGui.init(this, this.config.menuConfig);
   }
 
   protected setFullStyle(): void {

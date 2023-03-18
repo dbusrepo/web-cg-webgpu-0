@@ -37,21 +37,22 @@ class EnginePanelMenuGui extends PanelMenuGui {
     const initial = this.panel.showStats;
     this.menuOptions[STATS_OPT_KEY] = initial;
 
-    this._gui.Register(
-      {
-        type: 'checkbox',
-        label,
-        object: this.menuOptions,
-        property: STATS_OPT_KEY,
-        initial,
-        onChange: (visible: boolean) => {
-          this.panel.setShowStats(visible);
-        },
-      },
-      {
-        folder,
-      },
-    );
+    // TODO: old dat gui code
+    // this._gui.Register(
+    //   {
+    //     type: 'checkbox',
+    //     label,
+    //     object: this.menuOptions,
+    //     property: STATS_OPT_KEY,
+    //     initial,
+    //     onChange: (visible: boolean) => {
+    //       this.panel.setShowStats(visible);
+    //     },
+    //   },
+    //   {
+    //     folder,
+    //   },
+    // );
   }
 
   get menuOptions(): EnginePanelMenuOptions {
