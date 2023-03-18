@@ -15,7 +15,8 @@ type EventLogPanelProps = {
   prompt: string;
 };
 
-const condApplyFilter = (search: string) => (search || '').length > 1;
+const MIN_LENGTH_SEARCH = 0;
+const condApplyFilter = (search: string) => (search || '').length > MIN_LENGTH_SEARCH;
 
 const searchFilter = (
   history: EventLogEntry[],
