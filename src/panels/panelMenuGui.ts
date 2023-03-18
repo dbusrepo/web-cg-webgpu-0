@@ -57,9 +57,10 @@ class PanelMenuGui {
       toggleFullWin: () => {
         this._panel.toggleFullWin();
       },
-      customFun: () => {
+      toggleControls: () => {
         tweakPane.expanded = !tweakPane.expanded;
         menuConfig.controlsPaneOpen = tweakPane.expanded;
+        this._panel.focus();
       }
     }); // as unknown as typeof Guify;
 

@@ -28,7 +28,6 @@ export default class GUI {
         opts.open = opts.open || false;
         opts.toggleFullScreen = opts.toggleFullScreen || (() => {});
         opts.toggleFullWin = opts.toggleFullWin || (() => {});
-        // opts.customFun = () => { console.log('HEY'); };
 
         // Set theme from opts
         let themeName = opts.theme || "dark";
@@ -108,7 +107,7 @@ export default class GUI {
         if(this.opts.barMode !== "none") {
             this.bar = new MenuBar(this.container, this.opts, this.theme);
             this.bar.addListener("ontogglepanel", () => {
-                this.opts.customFun();
+                this.opts.toggleControls();
                 // this.panel.ToggleVisible();
             });
             this.bar.addListener("onfullscreenrequested", () => {
