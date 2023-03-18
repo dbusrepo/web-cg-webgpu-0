@@ -173,6 +173,7 @@ html, body {
 
 .event-log-bottom-panel {
   position: relative;
+  padding-top: 1px;
   /* bottom: 0; */
   /* position: relative; */
   /* z-index: 10; */
