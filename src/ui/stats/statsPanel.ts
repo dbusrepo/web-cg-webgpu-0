@@ -2,12 +2,11 @@ import assert from 'assert';
 
 const PR = Math.round(window.devicePixelRatio || 1);
 
-const CSS_WIDTH = 80;
-const CSS_HEIGHT = 48;
+const CSS_WIDTH = 80 * 1.3;
+const CSS_HEIGHT = 48 * 1.3;
 
-const WIDTH = CSS_WIDTH * PR;
-const HEIGHT = CSS_HEIGHT * PR;
-
+const WIDTH = 80 * PR;
+const HEIGHT = 48 * PR;
 const CSS_GRAPH_WIDTH = 74;
 const CSS_GRAPH_HEIGHT = 30;
 
@@ -129,8 +128,8 @@ class StatsPanel {
         ' ' +
         this.title +
         ' (' +
-        Math.round(this._min) +
-        '-' +
+        // Math.round(this._min) +
+        // '-' +
         Math.round(this._max) +
         ')';
 
