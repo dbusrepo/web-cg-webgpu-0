@@ -177,7 +177,7 @@ class EngineWorker {
       workersHeapPtr: memOffsets[WasmUtils.MemRegions.WORKERS_HEAPS],
       workerHeapSize,
       heapPtr: memOffsets[WasmUtils.MemRegions.HEAP],
-      bgColor: randColor(),
+      bgColor: 0xff_00_00_00, // randColor(),
       usePalette: this._config.usePalette ? 1 : 0,
       fontCharsPtr: memOffsets[WasmUtils.MemRegions.FONT_CHARS],
       fontCharsSize: memSizes[WasmUtils.MemRegions.FONT_CHARS],
