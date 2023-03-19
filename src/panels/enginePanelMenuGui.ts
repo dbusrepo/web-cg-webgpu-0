@@ -23,21 +23,20 @@ class EnginePanelMenuGui extends PanelMenuGui {
     }
   }
 
+  // TODO
   addStatsOptions() {
-    const { label } = enginePanelConfig.menuConfig.options.stats;
+    // const { label } = enginePanelConfig.menuConfig.options.stats;
 
-    const folder = label;
+    // const initial = this.panel.showStats;
+    // this.menuOptions[STATS_OPT_KEY] = initial;
 
-    this._gui.Register({
-      type: 'folder',
-      label: folder,
-      open: false,
-    });
+    // const folder = label;
+    // this._gui.Register({
+    //   type: 'folder',
+    //   label: folder,
+    //   open: false,
+    // });
 
-    const initial = this.panel.showStats;
-    this.menuOptions[STATS_OPT_KEY] = initial;
-
-    // TODO: old dat gui code
     // this._gui.Register(
     //   {
     //     type: 'checkbox',

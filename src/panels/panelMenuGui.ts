@@ -16,30 +16,13 @@ class PanelMenuGui {
   private _panel: Panel;
   private _menuOptions: PanelMenuOptions;
   protected _gui: GUI;
-  protected _tweakPane: TweakPane;
+  protected _controlsPane: TweakPane;
 
   init(panel: Panel, menuConfig: PanelMenuConfig): void {
     this._panel = panel;
     this._config = menuConfig;
 
-    const tweakPane = new TweakPane({
-      container: panel.canvasContainerEl,
-      expanded: menuConfig.controlsPaneOpen,
-    });
-
-    tweakPane.element.style.position = 'absolute';
-    tweakPane.element.style.borderRadius = '0px';
-    tweakPane.element.style.top = '0px';
-    tweakPane.element.style.right = '0px';
-    tweakPane.element.style.overflow = 'scroll';
-    tweakPane.element.style.zIndex = '999999';
-    // tweakPane.controller_.view.buttonElement.disabled = true;
-    // tweakPane.controller_.view.buttonElement.style.display = 'none';
-
-    if (tweakPane.element.clientHeight > panel.canvasContainerEl.clientHeight) {
-      // to make overflow scroll work
-      tweakPane.element.style.height = panel.canvasContainerEl.clientHeight + 'px';
-    }
+    this.initControlsPane(panel, menuConfig);
 
     this._gui = new GUI({
       root: panel.menuGuiContainer,
@@ -59,39 +42,36 @@ class PanelMenuGui {
         this._panel.toggleFullWin();
       },
       toggleControls: () => {
-        tweakPane.expanded = !tweakPane.expanded;
-        menuConfig.controlsPaneOpen = tweakPane.expanded;
+        this._controlsPane.expanded = !this._controlsPane.expanded;
+        menuConfig.controlsPaneOpen = this._controlsPane.expanded;
         this._panel.focus();
       }
     }); // as unknown as typeof Guify;
+  }
 
-    this._gui.Register({
-      type: 'button',
-      label: 'Button',
-      action: () => {
-        console.log('Clicked');
-      },
+  initControlsPane(panel: Panel, menuConfig: PanelMenuConfig): void {
+    const controlsPane = new TweakPane({
+      container: panel.canvasContainerEl,
+      expanded: menuConfig.controlsPaneOpen,
     });
 
-    this._tweakPane = tweakPane;
+    controlsPane.element.style.position = 'absolute';
+    controlsPane.element.style.borderRadius = '0px';
+    controlsPane.element.style.top = '0px';
+    controlsPane.element.style.right = '0px';
+    controlsPane.element.style.overflow = 'scroll';
+    controlsPane.element.style.zIndex = '999999';
+    // tweakPane.controller_.view.buttonElement.disabled = true;
+    // tweakPane.controller_.view.buttonElement.style.display = 'none';
 
-    // let someNumber = 0;
-    // this._gui.Register({
-    //   type: 'range',
-    //   label: 'Range',
-    //   min: 0, max: 10,
-    //   precision: 10,
-    //   // object: this, property: "someNumber",
-    //   onChange: (data: any) => {
-    //     console.log(someNumber);
-    //   }
-    // });
+    if (controlsPane.element.clientHeight > panel.canvasContainerEl.clientHeight) {
+      // to make overflow scroll work
+      controlsPane.element.style.height = panel.canvasContainerEl.clientHeight + 'px';
+    }
 
-    // this._gui.domElement.id = this._config.DOM_ID;
-    // this._gui.close();
-    // this.getDom().classList.add(this._config.CSS_CLASS);
+    this._controlsPane = controlsPane;
+
     this.initOptions();
-    // this.initPanel();
   }
 
   // private getDom(): HTMLElement {
@@ -126,15 +106,15 @@ class PanelMenuGui {
   }
 
   protected addPanelOptions() {
-    // Add inputs
+    // TODO set params from config
     const PARAMS = {
       level: 0,
       name: 'Sketch',
       active: true,
     };
-    this._tweakPane.addInput(PARAMS, 'level');
-    this._tweakPane.addInput(PARAMS, 'name');
-    this._tweakPane.addInput(PARAMS, 'active');
+    this._controlsPane.addInput(PARAMS, 'level');
+    this._controlsPane.addInput(PARAMS, 'name');
+    this._controlsPane.addInput(PARAMS, 'active');
   }
 
   // private initConsoleOptions(): void {
@@ -321,7 +301,7 @@ class PanelMenuGui {
 
   removefromDom() {
     this._gui.removefromDom();
-    this._tweakPane.dispose();
+    this._controlsPane.dispose();
   }
 }
 
