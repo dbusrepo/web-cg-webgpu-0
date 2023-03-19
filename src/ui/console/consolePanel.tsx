@@ -130,7 +130,6 @@ class ConsolePanel extends React.Component<
       (l) => l.substring(this.props.prompt.length).trim());
     this.histLines.push(this.props.prompt); // add new entry val
     this.histSearchIdx = this.histLines.length - 1;
-    console.log('histlines: ', this.histLines);
 
     // console.log('is grabbing: ' + this.state.isGrabbing);
     // console.log(this.state.grabPos);
@@ -335,7 +334,6 @@ class ConsolePanel extends React.Component<
     assert(this.histSearchIdx >= 0 && this.histSearchIdx < this.histLines.length);
     this.histLines[this.histSearchIdx] = line;
     inputEl.value = line;
-    console.log(this.histLines);
   }
 
   private onInputClick(event: React.ChangeEvent<HTMLInputElement>) {
