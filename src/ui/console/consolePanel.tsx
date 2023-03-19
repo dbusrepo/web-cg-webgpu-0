@@ -52,7 +52,9 @@ class ConsolePanel extends React.Component<
   private onMouseDown: (event: MouseEvent) => void;
   private onMouseMove: (event: MouseEvent) => void;
   private onMouseUp: () => void;
-  private _isClosed: boolean;
+  private isClosed: boolean;
+  private histLines: string[];
+  private histSearchIdx: number;
 
   constructor(props: ConsolePanelProps) {
     super(props);
@@ -68,7 +70,7 @@ class ConsolePanel extends React.Component<
       isGrabbing: false,
       grabPos: { top: 0, y: 0 },
     };
-    this._isClosed = !props.isOpen;
+    this.isClosed = !props.isOpen;
     this.mainEl = null;
   }
 
@@ -76,11 +78,11 @@ class ConsolePanel extends React.Component<
     this.inputRef?.focus();
 
     this.onKeyDown = (event: KeyboardEvent) => {
-      // console.log('console onKeyDown');
       const { key } = event;
       if (key === this.props.hotkey) {
         event.preventDefault();
         this.setOpen(!this.state.open);
+        return;
       }
     };
 
@@ -123,6 +125,12 @@ class ConsolePanel extends React.Component<
     prevState: ConsolePanelState,
   ) {
     // console.log('update');
+
+    this.histLines = this.props.history.map((e) => e.stmt).filter(
+      (l) => l.substring(this.props.prompt.length).trim());
+    this.histLines.push(this.props.prompt); // add new entry val
+    this.histSearchIdx = this.histLines.length - 1;
+    console.log('histlines: ', this.histLines);
 
     // console.log('is grabbing: ' + this.state.isGrabbing);
     // console.log(this.state.grabPos);
@@ -200,7 +208,7 @@ class ConsolePanel extends React.Component<
 
   public setOpen(open: boolean): void {
     if (open) {
-      this._isClosed = false;
+      this.isClosed = false;
     }
 
     this.setState({ open }, () => {
@@ -260,9 +268,9 @@ class ConsolePanel extends React.Component<
         break;
       case 'ArrowLeft': // block cursor when moving left in the prompt prefix
         {
-          const inputEl = event.target as HTMLInputElement;
+          // const inputEl = event.target as HTMLInputElement;
           // inputEl.focus();
-          const { selectionStart } = inputEl;
+          const { selectionStart } = this.inputRef;
           if (this.isCursorOnPrompt(selectionStart)) {
             event.preventDefault();
           }
@@ -271,8 +279,7 @@ class ConsolePanel extends React.Component<
       // avoid backspace when just after the prompt the user press bs
       case 'Backspace':
         {
-          const inputEl = event.target as HTMLInputElement;
-          const { selectionStart } = inputEl;
+          const { selectionStart } = this.inputRef;
           if (this.isCursorOnPrompt(selectionStart)) {
             event.preventDefault();
           }
@@ -284,7 +291,7 @@ class ConsolePanel extends React.Component<
       case 'a': // C-a should go after the prompt prefix...
         if (this.ctrlDown) {
           event.preventDefault();
-          const inputEl = event.target as HTMLInputElement;
+          const inputEl = this.inputRef;
           const { prompt } = this.props;
           inputEl.setSelectionRange(prompt.length, prompt.length);
         }
@@ -292,7 +299,7 @@ class ConsolePanel extends React.Component<
       case 'u': // C-u delete text before the cursor (prompt excluded)
         if (this.ctrlDown) {
           event.preventDefault();
-          const inputEl = event.target as HTMLInputElement;
+          const inputEl = this.inputRef;
           const { selectionStart } = inputEl;
           const { prompt } = this.props;
           inputEl.value =
@@ -320,16 +327,21 @@ class ConsolePanel extends React.Component<
   }
 
   private onInputKeyChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const inputEl = event.target as HTMLInputElement;
+    event.preventDefault();
+    const inputEl = this.inputRef; //event.target as HTMLInputElement;
     const { prompt } = this.props;
-    const line = inputEl.value;
-    inputEl.value = this.props.prompt + line.substring(prompt.length);
+    const input = inputEl.value;
+    const line = this.props.prompt + input.substring(prompt.length);
+    assert(this.histSearchIdx >= 0 && this.histSearchIdx < this.histLines.length);
+    this.histLines[this.histSearchIdx] = line;
+    inputEl.value = line;
+    console.log(this.histLines);
   }
 
   private onInputClick(event: React.ChangeEvent<HTMLInputElement>) {
     // if the user clicks on prompt string reset cursor pos...
     event.preventDefault();
-    const inputEl = event.target as HTMLInputElement;
+    const inputEl = this.inputRef; // event.target as HTMLInputElement;
     const { prompt } = this.props;
     const { selectionStart: pos } = inputEl;
     if (pos === 0 || (pos && pos < prompt.length)) {
@@ -340,7 +352,15 @@ class ConsolePanel extends React.Component<
 
   // TODO
   private historySearch(direction: 'forward' | 'backward'): void {
-    // console.log('historySearch', direction);
+    // console.log('historySearch: ', direction, this.histSearchIdx, this.histLines);
+    const dir = direction === 'forward' ? 1 : -1;
+    if (this.histLines.length) {
+      assert(this.histSearchIdx >= 0 && this.histSearchIdx < this.histLines.length);
+      const numLines = this.histLines.length;
+      const nextHistIdx = (this.histSearchIdx + dir + numLines) % numLines;
+      this.inputRef.value = this.histLines[nextHistIdx];
+      this.histSearchIdx = nextHistIdx;
+    }
   }
 
   // called when the label is opening/closing.
@@ -350,7 +370,7 @@ class ConsolePanel extends React.Component<
       this.inputRef.focus();
       this.props.onOpened();
     } else {
-      this._isClosed = true;
+      this.isClosed = true;
       this.props.onClosed();
       // this.mainEl!.style.visibility = 'hidden'; // TODO: necessary?
     }
@@ -365,7 +385,7 @@ class ConsolePanel extends React.Component<
       this.props.percHeight * this.props.container.clientHeight;
 
     const labelStyle = ConsolePanel.buildLabelStyleObj(
-      this._isClosed,
+      this.isClosed,
       this.props,
       this.state,
       `${labelHeight}px`,
@@ -409,6 +429,7 @@ class ConsolePanel extends React.Component<
         </div>
 
         <input
+          spellcheck={false}
           className="console-input"
           style={inputStyle}
           ref={(el) => {
