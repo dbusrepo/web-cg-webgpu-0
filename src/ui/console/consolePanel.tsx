@@ -126,8 +126,13 @@ class ConsolePanel extends React.Component<
   ) {
     // console.log('update');
 
-    this.histLines = this.props.history.map((e) => e.stmt).filter(
-      (l) => l.substring(this.props.prompt.length).trim());
+    this.histLines = [
+      ...new Set(
+        this.props.history
+          .map((e) => e.stmt)
+          .filter((l) => l.substring(this.props.prompt.length).trim()),
+      ),
+    ];
     this.histLines.push(this.props.prompt); // add new entry val
     this.histSearchIdx = this.histLines.length - 1;
 
@@ -331,7 +336,9 @@ class ConsolePanel extends React.Component<
     const { prompt } = this.props;
     const input = inputEl.value;
     const line = this.props.prompt + input.substring(prompt.length);
-    assert(this.histSearchIdx >= 0 && this.histSearchIdx < this.histLines.length);
+    assert(
+      this.histSearchIdx >= 0 && this.histSearchIdx < this.histLines.length,
+    );
     this.histLines[this.histSearchIdx] = line;
     inputEl.value = line;
   }
@@ -353,7 +360,9 @@ class ConsolePanel extends React.Component<
     // console.log('historySearch: ', direction, this.histSearchIdx, this.histLines);
     const dir = direction === 'forward' ? 1 : -1;
     if (this.histLines.length) {
-      assert(this.histSearchIdx >= 0 && this.histSearchIdx < this.histLines.length);
+      assert(
+        this.histSearchIdx >= 0 && this.histSearchIdx < this.histLines.length,
+      );
       const numLines = this.histLines.length;
       const nextHistIdx = (this.histSearchIdx + dir + numLines) % numLines;
       this.inputRef.value = this.histLines[nextHistIdx];
