@@ -32,6 +32,7 @@ class PanelMenuGui {
     tweakPane.element.style.top = '0px';
     tweakPane.element.style.right = '0px';
     tweakPane.element.style.overflow = 'scroll';
+    tweakPane.element.style.zIndex = '999999';
     // tweakPane.controller_.view.buttonElement.disabled = true;
     // tweakPane.controller_.view.buttonElement.style.display = 'none';
 
