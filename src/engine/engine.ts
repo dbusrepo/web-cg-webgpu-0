@@ -52,8 +52,8 @@ type WorkersInitData = {
 };
 
 class Engine {
-  private static readonly NUM_WORKERS = 1; // >= 1
-  private static readonly MAIN_WORKER_IDX = this.NUM_WORKERS;
+  private static readonly NUM_AUX_WORKERS = 1;
+  private static readonly MAIN_WORKER_IDX = this.NUM_AUX_WORKERS;
 
   private static readonly RENDER_PERIOD = MILLI_IN_SEC / mainConfig.targetFPS;
 
@@ -73,6 +73,8 @@ class Engine {
   private _imageData: ImageData;
   private _startTime: number;
 
+  private _inputManager: InputManager;
+
   private _imagesPaths: string[];
 
   private _workers: Worker[];
@@ -86,19 +88,18 @@ class Engine {
 
   private _wasmMemViews: WasmMemViews;
 
-  private _inputManager: InputManager;
-
   public async init(config: EngineConfig): Promise<void> {
     this._startTime = Date.now();
     this._config = config;
     const { canvas } = config;
     this._initOffscreenCanvasContext(canvas);
     this._imageData = this._ctx.createImageData(canvas.width, canvas.height);
-    await this._initAssets();
-    await this._initWorkers();
-    // console.log(this._workersInitData);
-    await this._initWasmMem();
     this._initInputManager();
+    // this._init
+    await this._initAssets();
+    // await this._initWorkers();
+    // console.log(this._workersInitData);
+    // await this._initWasmMem();
   }
 
   private _initInputManager() {
@@ -139,13 +140,8 @@ class Engine {
   }
 
   private async _initAssets() {
-    await this._initImagesPaths();
-  }
-
-  private async _initImagesPaths() {
     this._imagesPaths = await getImagesPaths();
     assert(this._imagesPaths.length === Object.keys(images).length);
-    // console.log(this._imagesPaths);
   }
 
   private _initOffscreenCanvasContext(canvas: OffscreenCanvas): void {
@@ -162,7 +158,7 @@ class Engine {
     const imagesIndexSize = WasmUtils.initImages.getImagesIndexSize();
     const imagesRegionSize = this._workersInitData.totalImagesSize;
     const workerHeapPages = mainConfig.wasmWorkerHeapPages;
-    const numWorkers = Engine.NUM_WORKERS;
+    const numWorkers = Engine.NUM_AUX_WORKERS;
     const stringsRegionSize = stringsArrayData.length;
 
     // set wasm mem regions sizes
@@ -215,6 +211,27 @@ class Engine {
     await this._initWasmMemoryWorkers();
   }
 
+  private _allocWasmMemory(): void {
+    const startSize = this._wasmMemRegionsSizes[WasmUtils.MemRegions.START_MEM];
+    const startOffset =
+      this._wasmMemRegionsOffsets[WasmUtils.MemRegions.START_MEM];
+    const wasmMemStartTotalSize = startOffset + startSize;
+    console.log(
+      `wasm mem pages required: ${Math.ceil(
+        wasmMemStartTotalSize / PAGE_SIZE_BYTES,
+      )}`,
+    );
+    const { wasmMemStartPages: initial, wasmMemMaxPages: maximum } = mainConfig;
+    console.log(`wasm mem start pages: ${initial}`);
+    assert(initial * PAGE_SIZE_BYTES >= wasmMemStartTotalSize);
+    const memory = new WebAssembly.Memory({
+      initial,
+      maximum,
+      shared: true,
+    });
+    this._wasmMem = memory;
+  }
+
   private _initWasmMemViews(): void {
     const memSizes = this._wasmMemRegionsSizes;
     const memOffsets = this._wasmMemRegionsOffsets;
@@ -254,7 +271,7 @@ class Engine {
   private _buildWorkerConfig(workerIdx: number): WorkerConfig {
     return {
       workerIdx,
-      numWorkers: Engine.NUM_WORKERS,
+      numWorkers: Engine.NUM_AUX_WORKERS,
       frameWidth: this._config.canvas.width,
       frameHeight: this._config.canvas.height,
       imageUrls: this._images2LoadWorker(workerIdx),
@@ -265,7 +282,7 @@ class Engine {
   private _images2LoadWorker(workerIdx: number): string[] {
     const [start, end] = utils.range(
       workerIdx,
-      Engine.NUM_WORKERS,
+      Engine.NUM_AUX_WORKERS,
       this._imagesPaths.length,
     );
     return this._imagesPaths.slice(start, end);
@@ -287,34 +304,13 @@ class Engine {
     };
   }
 
-  private _allocWasmMemory(): void {
-    const startSize = this._wasmMemRegionsSizes[WasmUtils.MemRegions.START_MEM];
-    const startOffset =
-      this._wasmMemRegionsOffsets[WasmUtils.MemRegions.START_MEM];
-    const wasmMemStartTotalSize = startOffset + startSize;
-    console.log(
-      `wasm mem pages required: ${Math.ceil(
-        wasmMemStartTotalSize / PAGE_SIZE_BYTES,
-      )}`,
-    );
-    const { wasmMemStartPages: initial, wasmMemMaxPages: maximum } = mainConfig;
-    console.log(`wasm mem start pages: ${initial}`);
-    assert(initial * PAGE_SIZE_BYTES >= wasmMemStartTotalSize);
-    const memory = new WebAssembly.Memory({
-      initial,
-      maximum,
-      shared: true,
-    });
-    this._wasmMem = memory;
-  }
-
   private async _initWasmMemoryWorkers(): Promise<void> {
-    let workerCount = Engine.NUM_WORKERS;
+    let workerCount = Engine.NUM_AUX_WORKERS;
     const initStart = Date.now();
     console.log('Initializing wasm memory with workers...');
     // this._addImageIndex2WorkersOffsets();
     return new Promise((resolve, reject) => {
-      for (let workerIdx = 0; workerIdx < Engine.NUM_WORKERS; ++workerIdx) {
+      for (let workerIdx = 0; workerIdx < Engine.NUM_AUX_WORKERS; ++workerIdx) {
         const worker = this._workers[workerIdx];
         worker.onmessage = () => {
           --workerCount;
@@ -343,21 +339,21 @@ class Engine {
     });
   }
 
-  private async _initWorkers(): Promise<void> {
-    assert(Engine.NUM_WORKERS >= 1);
+  private async _initWorkers() {
+    assert(Engine.NUM_AUX_WORKERS >= 0);
 
     this._workers = [];
     this._workersInitData = {
       numImages: 0, // updated later
       totalImagesSize: 0,
-      workerImagesOffsets: new Array(Engine.NUM_WORKERS).fill(0),
-      workerImagesSizes: new Array(Engine.NUM_WORKERS),
+      workerImagesOffsets: new Array(Engine.NUM_AUX_WORKERS).fill(0),
+      workerImagesSizes: new Array(Engine.NUM_AUX_WORKERS),
       imagesSizes: [],
       imagesOffsets: [],
     };
 
     // offset used to fill the sizes array (with [w,h]) in worker order in updateWorkersData
-    const workerSizesOffsets: number[] = new Array(Engine.NUM_WORKERS).fill(0);
+    const workerSizesOffsets: number[] = new Array(Engine.NUM_AUX_WORKERS).fill(0);
 
     const updateWorkersNumImagesOffset = (
       workerIdx: number,
@@ -365,7 +361,7 @@ class Engine {
     ) => {
       for (
         let nextWorker = workerIdx + 1;
-        nextWorker < Engine.NUM_WORKERS;
+        nextWorker < Engine.NUM_AUX_WORKERS;
         nextWorker++
       ) {
         workerSizesOffsets[nextWorker] += workerConfig.imageUrls.length;
@@ -382,7 +378,7 @@ class Engine {
       // update wasm mem image offsets for workers that follow workerIdx
       for (
         let nextWorker = workerIdx + 1;
-        nextWorker < Engine.NUM_WORKERS;
+        nextWorker < Engine.NUM_AUX_WORKERS;
         nextWorker++
       ) {
         this._workersInitData.workerImagesOffsets[nextWorker] +=
@@ -432,12 +428,12 @@ class Engine {
       calcImagesOffsets();
     };
 
-    let workerCount = Engine.NUM_WORKERS;
-    const initStart = Date.now();
+    let auxWorkerCnt = Engine.NUM_AUX_WORKERS;
+    console.log('Initializing auxiliary workers...');
+    const tStart = Date.now();
 
-    console.log('Initializing workers...');
-    return new Promise((resolve, reject) => {
-      for (let workerIdx = 0; workerIdx < Engine.NUM_WORKERS; ++workerIdx) {
+    return new Promise<void>((resolve, reject) => {
+      for (let workerIdx = 0; workerIdx < Engine.NUM_AUX_WORKERS; ++workerIdx) {
         const worker = new Worker(
           new URL('./engineWorker.ts', import.meta.url),
           {
@@ -448,13 +444,13 @@ class Engine {
         this._workers.push(worker);
         worker.onmessage = ({ data: initData }) => {
           updateWorkersData(workerIdx, initData);
-          --workerCount;
+          --auxWorkerCnt;
           console.log(
-            `Worker id=${workerIdx} init, count=${workerCount}, time=${
-              Date.now() - initStart
+            `Worker id=${workerIdx} init, count=${auxWorkerCnt}, time=${
+              Date.now() - tStart
             }ms with data = ${JSON.stringify(initData)}`,
           );
-          if (workerCount === 0) {
+          if (auxWorkerCnt === 0) {
             console.log(
               `Workers init done. After ${Date.now() - this._startTime}ms`,
             );
@@ -462,6 +458,7 @@ class Engine {
             resolve();
           }
         };
+
         worker.onerror = (error) => {
           console.log(`Worker id=${workerIdx} error: ${error.message}\n`);
           reject(error);
@@ -646,18 +643,14 @@ class Engine {
     requestAnimationFrame(mainLoopInit);
   }
 
-  private _syncWorkers(): void {
-    for (let i = 0; i < Engine.NUM_WORKERS; ++i) {
+  private drawFrame(): void {
+    for (let i = 0; i < Engine.NUM_AUX_WORKERS; ++i) {
       utils.syncStore(this._wasmMemViews.syncArr, i, 1);
       utils.syncNotify(this._wasmMemViews.syncArr, i);
     }
-    for (let i = 0; i < Engine.NUM_WORKERS; ++i) {
+    for (let i = 0; i < Engine.NUM_AUX_WORKERS; ++i) {
       utils.syncWait(this._wasmMemViews.syncArr, i, 1);
     }
-  }
-
-  private drawFrame(): void {
-    this._syncWorkers();
     // utils.sleep(this._wasmMemViews.sleepArr, Engine.MAIN_WORKER_IDX, 16);
     this._imageData.data.set(this._wasmMemViews.frameBufferRGBA);
     this._ctx.putImageData(this._imageData, 0, 0);
@@ -676,7 +669,7 @@ const commands = {
   [Commands.RUN]: async (config: EngineConfig): Promise<void> => {
     engine = new Engine();
     await engine.init(config);
-    engine.run();
+    // engine.run();
   },
   [Commands.KEYDOWN]: (key: KeyCode) => {
     engine.onKeyDown(key);

@@ -135,7 +135,7 @@ function run(): void {
     // utils.sleep(sleepLoc, 16);
 
     // draw.clearBg(s, e, 0xff_00_00_00); // ABGR
-    draw.clearBg(s, e, bgColor); // ABGR
+    draw.clearBg(s, e, workerIdx === 0 ? bgColor : 0xff_ff_00_00); // ABGR
     // logi(0);
 
 
