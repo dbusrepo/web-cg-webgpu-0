@@ -1,6 +1,7 @@
-import { images } from '../assets/images/imagesList';
+import { images as sourceImgs } from '../assets/images/imagesList';
+import { BitImage } from './assets/images/bitImage';
 
-// IMAGES REGION LAYOUT: 
+// IMAGES REGION LAYOUT:
 
 // INDEX with images ptrs and sizes, IMAGES data (pixels)
 // INDEX LAYOUT: offsets to images start, widths, heights (32bit each)
@@ -12,30 +13,33 @@ const WIDTH_SIZE = Uint32Array.BYTES_PER_ELEMENT;
 const HEIGHT_SIZE = Uint32Array.BYTES_PER_ELEMENT;
 
 function getImagesIndexSize() {
-  const numImages = Object.keys(images).length;
+  const numImages = Object.keys(sourceImgs).length;
   return (OFFS_IMG_SIZE + WIDTH_SIZE + HEIGHT_SIZE) * numImages;
 }
 
-function writeImagesIndex(
-  imageIndex: Uint32Array,
-  imagesOffsets: number[],
-  imagesSizes: [number, number][],
+function writeImages(
+  images: BitImage[],
+  wasmImagesPixels: Uint8Array,
+  wasmImagesIndex: Uint32Array,
 ) {
-  const numImages = imagesOffsets.length;
+  const numImages = images.length;
   const PTR_2_IMGS_OFFS = 0;
   const WIDTHS_OFFS = PTR_2_IMGS_OFFS + numImages;
   const HEIGHTS_OFFS = WIDTHS_OFFS + numImages;
-  for (let i = 0; i < imagesSizes.length; ++i) {
+  let imgOffset = 0;
+  for (let i = 0; i < images.length; ++i) {
     // Atomics.store(imageIndex, i, imagesOffsets[i]);
-    imageIndex[PTR_2_IMGS_OFFS + i] = imagesOffsets[i];
-    const [ width, height ] = imagesSizes[i];
-    imageIndex[WIDTHS_OFFS + i] = width;
-    imageIndex[HEIGHTS_OFFS + i] = height;
-    // console.log('Image: ', i, width, height);
+    const { width } = images[i];
+    const { height } = images[i];
+    wasmImagesIndex[WIDTHS_OFFS + i] = width;
+    wasmImagesIndex[HEIGHTS_OFFS + i] = height;
+    wasmImagesIndex[PTR_2_IMGS_OFFS + i] = imgOffset;
+    wasmImagesPixels.set(images[i].pixels, imgOffset);
+    imgOffset += images[i].pixels.length;
   }
 }
 
-export {
-  getImagesIndexSize,
-  writeImagesIndex,
-};
+
+
+
+export { getImagesIndexSize, writeImages };

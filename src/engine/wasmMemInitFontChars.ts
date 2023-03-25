@@ -1,9 +1,7 @@
-import assert from "assert";
-import { FONT_X_SIZE, fontChars } from "../assets/fonts/font";
+import assert from 'assert';
+import { FONT_X_SIZE, fontChars } from '../assets/fonts/font';
 
-function writeFontCharsData(
-  fontCharsView: Uint8Array,
-) {
+function writeFontCharsData(fontCharsView: Uint8Array) {
   assert(FONT_X_SIZE === 8);
   let offset = 0;
   for (let ch of fontChars) {
@@ -13,6 +11,4 @@ function writeFontCharsData(
   }
 }
 
-export {
-  writeFontCharsData,
-};
+export { writeFontCharsData };

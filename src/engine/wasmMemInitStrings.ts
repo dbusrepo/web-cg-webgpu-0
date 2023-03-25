@@ -1,6 +1,6 @@
 import { stringsArrayData } from '../assets/strings/strings';
 
-// STRINGS REGION LAYOUT: 
+// STRINGS REGION LAYOUT:
 
 // INDEX with for each str an offset to that string starting from the string
 // data, strings data
@@ -12,13 +12,9 @@ import { stringsArrayData } from '../assets/strings/strings';
 //   return stringsArrayDataIndex.byteLength;
 // }
 
-function writeStringsData(
-  stringsView: Uint8Array,
-) {
+function writeStringsData(stringsView: Uint8Array) {
   // stringsIndexView.set(stringsArrayDataIndex);
   stringsView.set(stringsArrayData);
 }
 
-export {
-  writeStringsData,
-};
+export { writeStringsData };

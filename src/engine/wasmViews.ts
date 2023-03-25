@@ -1,7 +1,6 @@
 import { MemRegions, MemRegionsData } from './wasmMemUtils';
-import { syncStore } from './utils';
 
-type WasmMemViews = {
+type WasmViews = {
   memUI8: Uint8Array;
   frameBufferRGBA: Uint8ClampedArray;
   syncArr: Int32Array;
@@ -18,8 +17,7 @@ function buildWasmMemViews(
   wasmMem: WebAssembly.Memory,
   memOffsets: MemRegionsData,
   memSizes: MemRegionsData,
-  workerIdx: number,
-): WasmMemViews {
+): WasmViews {
   const startSize = memSizes[MemRegions.START_MEM];
   const startOffset = memOffsets[MemRegions.START_MEM];
   const wasmTotalStartSize = startOffset + startSize;
@@ -36,14 +34,12 @@ function buildWasmMemViews(
     memOffsets[MemRegions.SYNC_ARRAY],
     memSizes[MemRegions.SYNC_ARRAY] / Int32Array.BYTES_PER_ELEMENT,
   );
-  syncStore(syncArr, workerIdx, 0);
 
   const sleepArr = new Int32Array(
     wasmMem.buffer,
     memOffsets[MemRegions.SLEEP_ARRAY],
     memSizes[MemRegions.SLEEP_ARRAY] / Int32Array.BYTES_PER_ELEMENT,
   );
-  syncStore(sleepArr, workerIdx, 0);
 
   const fontChars = new Uint8Array(
     wasmMem.buffer,
@@ -81,7 +77,7 @@ function buildWasmMemViews(
     memSizes[MemRegions.INPUT_KEYS],
   );
 
-  const memViews: WasmMemViews = {
+  const memViews: WasmViews = {
     memUI8,
     frameBufferRGBA,
     syncArr,
@@ -97,4 +93,4 @@ function buildWasmMemViews(
   return memViews;
 }
 
-export { WasmMemViews, buildWasmMemViews };
+export { WasmViews, buildWasmMemViews };

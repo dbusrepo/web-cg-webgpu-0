@@ -8,11 +8,10 @@ import { ImageInfo } from '../imageDecoder';
 const BPP = 4;
 
 class PngDecoderRGBA implements PngDecoder {
-
   readInfo(input: ArrayBuffer): ImageInfo {
     // this.checkType(input);
     const imgInfo = decodeImageInfo(input);
-    const depth =  imgInfo[2];
+    const depth = imgInfo[2];
     assert(depth === 8);
     return {
       width: imgInfo[0],
@@ -32,11 +31,11 @@ class PngDecoderRGBA implements PngDecoder {
     switch (metadata.colorType) {
       case COLOR_TYPES.TRUE_COLOR_WITH_ALPHA:
       case COLOR_TYPES.TRUE_COLOR: // alpha = 255 in sourcePixels
-      {
-        // console.log(metdata.colorType);
-        pixels.set(sourcePixels);
-      }
-      break;
+        {
+          // console.log(metdata.colorType);
+          pixels.set(sourcePixels);
+        }
+        break;
       // TODO other color types ?
       default:
         throw new Error(
@@ -64,7 +63,6 @@ class PngDecoderRGBA implements PngDecoder {
   //     throw new Error(
   //       `PngDecoderRGBA readSizes: color type ${colorType} not supported`,
   //     );
-
 }
 
 export { PngDecoderRGBA };

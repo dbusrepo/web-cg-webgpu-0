@@ -1,5 +1,5 @@
-import assert from 'assert';
-import * as initViews from './wasmMemViews';
+// import assert from 'assert';
+import * as views from './wasmViews';
 import * as initImages from './wasmMemInitImages';
 import * as initStrings from './wasmMemInitStrings';
 import * as initFontChars from './wasmMemInitFontChars';
@@ -166,7 +166,7 @@ export {
   MemRegions,
   MemRegionsData,
   getMemRegionsSizesAndOffsets,
-  initViews,
+  views,
   initFontChars,
   initStrings,
   initImages,
