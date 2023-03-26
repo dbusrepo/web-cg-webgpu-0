@@ -17,7 +17,6 @@ import { mainConfig } from '../config/mainConfig';
 import * as utils from './utils';
 
 import Commands from './engineCommands';
-import WorkerCommands from './engineWorkerCommands';
 import PanelCommands from '../panels/enginePanelCommands';
 
 import { InputManager, KeyCode } from './input/inputManager';
@@ -35,7 +34,7 @@ import { EngineImpl, EngineImplConfig } from './engineImpl';
 type EngineConfig = {
   canvas: OffscreenCanvas;
   sendStats: boolean;
-  usePalette: boolean; // TODO move to def config?
+  // usePalette: boolean; // TODO move to def config?
 };
 
 class Engine {
@@ -56,13 +55,9 @@ class Engine {
   private static readonly FRAME_TIMES_ARR_LENGTH = 10;
 
   private _cfg: EngineConfig;
-  private _startTime: number;
-
   private _inputManager: InputManager;
-
-  private _workers: Worker[]; // TODO mv
-
   private _engineImpl: EngineImpl;
+  private _startTime: number;
 
   public async init(config: EngineConfig): Promise<void> {
     this._startTime = Date.now();
@@ -70,7 +65,6 @@ class Engine {
     this._initInputManager();
     this._engineImpl = new EngineImpl();
     const engImplCfg: EngineImplConfig = {
-      numWorkers: 1 + Engine.NUM_AUX_WORKERS,
       canvas: this._cfg.canvas,
     };
     await this._engineImpl.init(engImplCfg);

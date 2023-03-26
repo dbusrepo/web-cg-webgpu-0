@@ -15,6 +15,8 @@ const mainConfig = {
   targetUPS: 80,
   multiplier: 1,
 
+  numWorkers: 2,
+
   panelConfig,
   enginePanelConfig,
   viewPanelConfig,

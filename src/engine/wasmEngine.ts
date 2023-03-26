@@ -1,14 +1,16 @@
 import assert from 'assert';
 import * as WasmUtils from './wasmMemUtils';
-import { WasmExecutor, WasmExecConfig } from './wasmExecutor';
+import { WasmRun, WasmRunConfig } from './wasmRun';
+import WasmWorkerCommands from './wasmWorkerCommands';
+import { WasmWorkerConfig } from './wasmWorker';
 import { FONT_Y_SIZE, fontChars } from '../assets/fonts/font';
 import { stringsArrayData } from '../assets/strings/strings';
 import { BitImage } from './assets/images/bitImage';
 import {
-  BPP_PAL,
+  // BPP_PAL,
   BPP_RGBA,
-  PAL_ENTRY_SIZE,
-  PALETTE_SIZE,
+  // PAL_ENTRY_SIZE,
+  // PALETTE_SIZE,
   PAGE_SIZE_BYTES,
 } from '../common';
 import { mainConfig } from '../config/mainConfig';
@@ -17,7 +19,7 @@ import { WasmConfig } from './wasmConfig';
 type WasmViews = WasmUtils.views.WasmViews;
 
 type WasmEngineConfig = {
-  numWorkers: number;
+  numAuxWorkers: number;
   canvas: OffscreenCanvas;
   imagesTotalSize: number;
   images: BitImage[];
@@ -25,24 +27,29 @@ type WasmEngineConfig = {
 
 class WasmEngine {
   private _cfg: WasmEngineConfig;
+  private _wasmRunCfg: WasmRunConfig;
+  private _wasmCfg: WasmConfig;
   private _wasmMem: WebAssembly.Memory;
   private _wasmMemConfig: WasmUtils.MemConfig;
   private _wasmRegionsSizes: WasmUtils.MemRegionsData;
   private _wasmRegionsOffsets: WasmUtils.MemRegionsData;
-  private _wasmExecutor: WasmExecutor;
   private _wasmViews: WasmViews;
+  private _wasmRun: WasmRun;
+  private _workers: Worker[]; // TODO mv
 
   public async init(cfg: WasmEngineConfig) {
     this._cfg = cfg;
     await this._initWasm();
-    await this._initWasmExecutor();
   }
 
   private async _initWasm(): Promise<void> {
     this._initWasmMemConfig();
     this._allocWasmMem();
-    await this._initWasmExecutor();
+    await this._initWasmRun();
     this._initWasmAssets();
+    if (this._cfg.numAuxWorkers >= 1) {
+      await this._launchWasmWorkers();
+    }
   }
 
   private _allocWasmMem(): void {
@@ -72,7 +79,7 @@ class WasmEngine {
     const imagesIndexSize = WasmUtils.initImages.getImagesIndexSize();
     const imagesRegionSize = this._cfg.imagesTotalSize;
     const workerHeapPages = mainConfig.wasmWorkerHeapPages;
-    const { numWorkers } = this._cfg;
+    const numWorkers = this._getNumWorkers();
     const stringsRegionSize = stringsArrayData.length;
 
     // set wasm mem regions sizes
@@ -138,11 +145,15 @@ class WasmEngine {
     );
   }
 
-  private async _initWasmExecutor() {
-    this._wasmExecutor = new WasmExecutor();
-    const wasmExecCfg: WasmExecConfig = {
-      workerIdx: 0, // TODO
-      numWorkers: 1, // TODO
+  private _getNumWorkers(): number {
+    return this._cfg.numAuxWorkers + 1; // #auxiliary workers + main
+  }
+
+  private async _initWasmRun() {
+    this._wasmRun = new WasmRun();
+    const wasmRunCfg: WasmRunConfig = {
+      workerIdx: 0,
+      numWorkers: this._getNumWorkers(),
       frameWidth: this._cfg.canvas.width,
       frameHeight: this._cfg.canvas.height,
     };
@@ -153,12 +164,72 @@ class WasmEngine {
       wasmWorkerHeapSize: mainConfig.wasmWorkerHeapPages * PAGE_SIZE_BYTES,
       wasmNumImages: this._cfg.images.length,
     };
-    this._wasmExecutor.init(wasmExecCfg, wasmCfg);
-    this._wasmViews = this._wasmExecutor.wasmViews;
+    await this._wasmRun.init(wasmRunCfg, wasmCfg);
+    this._wasmViews = this._wasmRun.wasmViews;
+    this._wasmRunCfg = wasmRunCfg;
+    this._wasmCfg = wasmCfg;
+  }
+
+  private async _launchWasmWorkers() {
+    console.log('Launching workers...');
+    this._workers = [];
+    let workerCount = this._cfg.numAuxWorkers;
+    const initStart = Date.now();
+    try {
+      await new Promise<void>((resolve, reject) => {
+        for (
+          let workerIdx = 1;
+          workerIdx <= this._cfg.numAuxWorkers;
+          ++workerIdx
+        ) {
+          const worker = new Worker(
+            new URL('./wasmWorker.ts', import.meta.url),
+            {
+              name: `wasm-worker-${workerIdx}`,
+              type: 'module',
+            },
+          );
+          this._workers.push(worker);
+          const workerWasmRunConfig: WasmRunConfig = {
+            ...this._wasmRunCfg,
+            workerIdx,
+          };
+          const workerConfig: WasmWorkerConfig = {
+            wasmRunCfg: workerWasmRunConfig,
+            wasmCfg: this._wasmCfg,
+          };
+          worker.postMessage({
+            command: WasmWorkerCommands.RUN,
+            params: workerConfig,
+          });
+          worker.onmessage = ({ data }) => {
+            --workerCount;
+            console.log(
+              `Worker id=${workerIdx} init, left count=${workerCount}, time=${
+                Date.now() - initStart
+              }ms with data = ${JSON.stringify(data)}`,
+            );
+            if (workerCount === 0) {
+              console.log(
+                `Workers init done. After ${Date.now() - initStart}ms`,
+              );
+              resolve();
+            }
+          };
+          worker.onerror = (error) => {
+            console.log(`Worker id=${workerIdx} error: ${error.message}\n`);
+            reject(error);
+          };
+        }
+      });
+      console.log('Workers initialized');
+    } catch (error) {
+      console.error(`Error during workers init: ${JSON.stringify(error)}`);
+    }
   }
 
   public drawFrame(imageData: ImageData) {
-    this._wasmExecutor.drawFrame();
+    this._wasmRun.drawFrame();
     imageData.data.set(this._wasmViews.frameBufferRGBA);
   }
 }

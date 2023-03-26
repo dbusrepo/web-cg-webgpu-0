@@ -7,9 +7,9 @@ import {
 import { loadImages } from './assets/images/utils';
 import { BitImage } from './assets/images/bitImage';
 import { WasmEngine, WasmEngineConfig } from './wasmEngine';
+import { mainConfig } from '../config/mainConfig';
 
 type EngineImplConfig = {
-  numWorkers: number;
   canvas: OffscreenCanvas;
 };
 
@@ -62,10 +62,10 @@ class EngineImpl {
   private async _initWasmEngine() {
     this._wasmEngine = new WasmEngine();
     const wasmEngineCfg: WasmEngineConfig = {
-      numWorkers: this._cfg.numWorkers,
       canvas: this._cfg.canvas,
       imagesTotalSize: this._imagesTotalSize,
       images: this._images,
+      numAuxWorkers: mainConfig.numWorkers,
     };
     await this._wasmEngine.init(wasmEngineCfg);
   }

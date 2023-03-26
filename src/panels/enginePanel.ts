@@ -127,7 +127,7 @@ class EnginePanel extends Panel {
     const engineConfig: EngineConfig = {
       canvas: offCanvas,
       sendStats: !!this._stats,
-      usePalette: false,
+      // usePalette: false,
     };
     this._engineWorker.postMessage(
       {

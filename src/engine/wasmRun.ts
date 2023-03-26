@@ -9,9 +9,7 @@ import { FONT_X_SIZE, FONT_Y_SIZE, FONT_SPACING } from '../assets/fonts/font';
 import { syncStore } from './utils';
 import { WasmConfig } from './wasmConfig';
 
-import Commands from './engineWorkerCommands';
-
-type WasmExecConfig = {
+type WasmRunConfig = {
   workerIdx: number;
   numWorkers: number;
   frameWidth: number;
@@ -21,14 +19,14 @@ type WasmExecConfig = {
 
 type WasmViews = WasmUtils.views.WasmViews;
 
-class WasmExecutor {
-  protected _cfg: WasmExecConfig;
+class WasmRun {
+  protected _cfg: WasmRunConfig;
   protected _wasmCfg: WasmConfig;
   protected _wasmViews: WasmViews;
   protected _wasmModules: WasmModules;
 
   public async init(
-    workerCfg: WasmExecConfig,
+    workerCfg: WasmRunConfig,
     wasmCfg: WasmConfig,
   ): Promise<void> {
     this._cfg = workerCfg;
@@ -122,45 +120,14 @@ class WasmExecutor {
     return this._wasmViews;
   }
 
+  get wasmModules(): WasmModules {
+    return this._wasmModules;
+  }
+
   public drawFrame() {
     this._wasmModules.engine.run();
   }
 
-  run(): void {
-    console.log(`Worker ${this._cfg.workerIdx} running!`);
-    try {
-      // this._wasmModules.engineWorker.run();
-    } catch (e) {
-      console.log(e);
-    }
-  }
 }
 
-let worker: WasmExecutor;
-
-const commands = {
-  [Commands.INIT]: async (config: WasmExecConfig): Promise<void> => {
-    worker = new WasmExecutor();
-    // const initData = await worker.init(config);
-    // postMessage(initData);
-  },
-  // [Commands.INIT_WASM]: async (config: WorkerWasmMemConfig): Promise<void> => {
-  //   assert(worker);
-  //   // await worker.loadAssets();
-  //   await worker.initWasm(config);
-  //   postMessage('ready');
-  // },
-  run(): void {
-    worker.run();
-  },
-};
-
-self.addEventListener('message', async ({ data: { command, params } }) => {
-  if (commands.hasOwnProperty(command)) {
-    try {
-      commands[command as keyof typeof commands](params);
-    } catch (err) {}
-  }
-});
-
-export { WasmExecutor, WasmExecConfig };
+export { WasmRun, WasmRunConfig };

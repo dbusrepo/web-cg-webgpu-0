@@ -170,6 +170,8 @@ function run(): void {
 
 }
 
+function runWorker(): void {
+  
+}
 
-export { init, run };
-
+export { init, run, runWorker };
