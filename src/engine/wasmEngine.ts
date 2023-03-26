@@ -82,8 +82,8 @@ class WasmEngine {
       frameBufferPalSize: 0, // this._cfg.usePalette ? numPixels : 0,
       // eslint-disable-next-line max-len
       paletteSize: 0, // this._cfg.usePalette ? PALETTE_SIZE * PAL_ENTRY_SIZE : 0,
-      syncArraySize: (numWorkers + 1) * Int32Array.BYTES_PER_ELEMENT,
-      sleepArraySize: (numWorkers + 1) * Int32Array.BYTES_PER_ELEMENT,
+      syncArraySize: numWorkers * Int32Array.BYTES_PER_ELEMENT,
+      sleepArraySize: numWorkers * Int32Array.BYTES_PER_ELEMENT,
       numWorkers,
       workerHeapSize: PAGE_SIZE_BYTES * workerHeapPages,
       sharedHeapSize: mainConfig.wasmSharedHeapSize,
@@ -155,6 +155,11 @@ class WasmEngine {
     };
     this._wasmExecutor.init(wasmExecCfg, wasmCfg);
     this._wasmViews = this._wasmExecutor.wasmViews;
+  }
+
+  public drawFrame(imageData: ImageData) {
+    this._wasmExecutor.drawFrame();
+    imageData.data.set(this._wasmViews.frameBufferRGBA);
   }
 }
 

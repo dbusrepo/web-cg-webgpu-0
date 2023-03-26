@@ -39,7 +39,4 @@ function writeImages(
   }
 }
 
-
-
-
 export { getImagesIndexSize, writeImages };

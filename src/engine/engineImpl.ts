@@ -15,14 +15,29 @@ type EngineImplConfig = {
 
 class EngineImpl {
   private _cfg: EngineImplConfig;
+  private _ctx: OffscreenCanvasRenderingContext2D;
+  private _imageData: ImageData;
   private _images: BitImage[]; // RGBA, PAL_IDX ?
   private _imagesTotalSize: number;
   private _wasmEngine: WasmEngine;
 
   public async init(cfg: EngineImplConfig): Promise<void> {
     this._cfg = cfg;
+    this._initOffscreenCanvasContext(this._cfg.canvas);
+    this._imageData = this._ctx.createImageData(
+      this._cfg.canvas.width,
+      this._cfg.canvas.height,
+    );
     await this._loadImages();
     await this._initWasmEngine();
+  }
+
+  private _initOffscreenCanvasContext(canvas: OffscreenCanvas): void {
+    const ctx = <OffscreenCanvasRenderingContext2D>(
+      canvas.getContext('2d', { alpha: false })
+    );
+    ctx.imageSmoothingEnabled = false;
+    this._ctx = ctx;
   }
 
   private async _loadImages() {
@@ -53,6 +68,11 @@ class EngineImpl {
       images: this._images,
     };
     await this._wasmEngine.init(wasmEngineCfg);
+  }
+
+  public drawFrame() {
+    this._wasmEngine.drawFrame(this._imageData);
+    this._ctx.putImageData(this._imageData, 0, 0);
   }
 }
 

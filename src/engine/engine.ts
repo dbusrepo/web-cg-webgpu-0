@@ -56,27 +56,22 @@ class Engine {
   private static readonly FRAME_TIMES_ARR_LENGTH = 10;
 
   private _cfg: EngineConfig;
-  private _ctx: OffscreenCanvasRenderingContext2D;
-  private _imageData: ImageData;
   private _startTime: number;
 
   private _inputManager: InputManager;
 
-  private _workers: Worker[];
+  private _workers: Worker[]; // TODO mv
 
   private _engineImpl: EngineImpl;
 
   public async init(config: EngineConfig): Promise<void> {
     this._startTime = Date.now();
     this._cfg = config;
-    const { canvas } = config;
-    this._initOffscreenCanvasContext(canvas);
-    this._imageData = this._ctx.createImageData(canvas.width, canvas.height);
     this._initInputManager();
     this._engineImpl = new EngineImpl();
     const engImplCfg: EngineImplConfig = {
-      numWorkers: Engine.NUM_AUX_WORKERS,
-      canvas,
+      numWorkers: 1 + Engine.NUM_AUX_WORKERS,
+      canvas: this._cfg.canvas,
     };
     await this._engineImpl.init(engImplCfg);
     // this._init
@@ -110,17 +105,9 @@ class Engine {
     this._inputManager.onKeyUp(key);
   }
 
-  private _getBPP(): number {
-    return this._cfg.usePalette ? BPP_PAL : BPP_RGBA;
-  }
-
-  private _initOffscreenCanvasContext(canvas: OffscreenCanvas): void {
-    const ctx = <OffscreenCanvasRenderingContext2D>(
-      canvas.getContext('2d', { alpha: false })
-    );
-    ctx.imageSmoothingEnabled = false;
-    this._ctx = ctx;
-  }
+  // private _getBPP(): number {
+  //   return this._cfg.usePalette ? BPP_PAL : BPP_RGBA;
+  // }
 
   // private _buildWorkerConfig(workerIdx: number): WorkerConfig {
   //   return {
@@ -341,13 +328,13 @@ class Engine {
     let isRunning: boolean;
     let isPaused: boolean;
 
-    const runWorkers = (): void => {
-      this._workers.forEach((worker) => {
-        worker.postMessage({
-          command: 'run',
-        });
-      });
-    };
+    // const runWorkers = (): void => {
+    //   this._workers.forEach((worker) => {
+    //     worker.postMessage({
+    //       command: 'run',
+    //     });
+    //   });
+    // };
 
     const getTimeMs = () => performance.now();
 
@@ -369,7 +356,7 @@ class Engine {
       frameThen = performance.now();
       isRunning = true;
       isPaused = false;
-      runWorkers();
+      // runWorkers();
       requestAnimationFrame(mainLoop);
     };
 
@@ -493,9 +480,9 @@ class Engine {
     // for (let i = 0; i < Engine.NUM_AUX_WORKERS; ++i) {
     //   utils.syncWait(this._wasmMemViews.syncArr, i, 1);
     // }
+    this._engineImpl.drawFrame();
     // utils.sleep(this._wasmMemViews.sleepArr, Engine.MAIN_WORKER_IDX, 16);
     // this._imageData.data.set(this._wasmMemViews.frameBufferRGBA);
-    this._ctx.putImageData(this._imageData, 0, 0);
   }
 
   // private showStats(): void {
@@ -511,7 +498,7 @@ const commands = {
   [Commands.RUN]: async (config: EngineConfig): Promise<void> => {
     engine = new Engine();
     await engine.init(config);
-    // engine.run();
+    engine.run();
   },
   [Commands.KEYDOWN]: (key: KeyCode) => {
     engine.onKeyDown(key);

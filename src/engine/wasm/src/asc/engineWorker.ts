@@ -31,6 +31,7 @@ function init(): void {
   if (workerIdx == 0) {
     initSharedHeap();
   }
+  initWorkerMem();
 }
 
 function initWorkerMem(): void {
@@ -40,7 +41,7 @@ function initWorkerMem(): void {
 
 function run(): void {
 
-  initWorkerMem();
+  // initWorkerMem();
 
   // const p = alloc(32);
   // const t = alloc(32);
@@ -130,40 +131,42 @@ function run(): void {
   // logi(sleepLoc);
   // logi(load<u32>(sleepLoc));
 
-  while (true) {
-    atomic.wait<i32>(syncLoc, 0);
-    // utils.sleep(sleepLoc, 16);
+  draw.clearBg(s, e, workerIdx === 0 ? 0xff_ff_00_00 : 0xff_ff_00_00); // ABGR
 
-    // draw.clearBg(s, e, 0xff_00_00_00); // ABGR
-    draw.clearBg(s, e, workerIdx === 0 ? bgColor : 0xff_ff_00_00); // ABGR
-    // logi(0);
-
-
-    // // // logi(image.height);
-    // if (workerIdx == 1) {
-    //   for (let i = s; i != e; ++i) {
-    //     let screenPtr: PTR_T = frameBufferPtr + i * frameWidth * 4;
-    //     const pixels: PTR_T = image.pixels + i * image.width * 4;
-    //     memory.copy(screenPtr, pixels, frameWidth * 4);
-    //   }
-    // }
-
-    // if (workerIdx == 0) {
-    //   draw.drawText(strings.SENT2, 10, 10, 1, 0xFF_00_00_FF);
-    //   draw.drawText(strings.SENT2, 10, 18, 2, 0xFF_00_00_FF);
-    //   // let y = 20;
-    //   // for (let s = 1; s < 5; ) {
-    //   //   draw.drawText(strings.SENT2, 10, y, f32(s), 0xFF_00_00_FF);
-    //   //   y += FONT_Y_SIZE * s;
-    //   //   s++;
-    //   // }
-    // }
-
-    // logi(load<u8>(inputKeysPtr));
-
-    atomic.store<i32>(syncLoc, 0);
-    atomic.notify(syncLoc);
-  }
+  // while (true) {
+  //   atomic.wait<i32>(syncLoc, 0);
+  //   // utils.sleep(sleepLoc, 16);
+  //
+  //   // draw.clearBg(s, e, 0xff_00_00_00); // ABGR
+  //   draw.clearBg(s, e, workerIdx === 0 ? bgColor : 0xff_ff_00_00); // ABGR
+  //   // logi(0);
+  //
+  //
+  //   // // // logi(image.height);
+  //   // if (workerIdx == 1) {
+  //   //   for (let i = s; i != e; ++i) {
+  //   //     let screenPtr: PTR_T = frameBufferPtr + i * frameWidth * 4;
+  //   //     const pixels: PTR_T = image.pixels + i * image.width * 4;
+  //   //     memory.copy(screenPtr, pixels, frameWidth * 4);
+  //   //   }
+  //   // }
+  //
+  //   // if (workerIdx == 0) {
+  //   //   draw.drawText(strings.SENT2, 10, 10, 1, 0xFF_00_00_FF);
+  //   //   draw.drawText(strings.SENT2, 10, 18, 2, 0xFF_00_00_FF);
+  //   //   // let y = 20;
+  //   //   // for (let s = 1; s < 5; ) {
+  //   //   //   draw.drawText(strings.SENT2, 10, y, f32(s), 0xFF_00_00_FF);
+  //   //   //   y += FONT_Y_SIZE * s;
+  //   //   //   s++;
+  //   //   // }
+  //   // }
+  //
+  //   // logi(load<u8>(inputKeysPtr));
+  //
+  //   atomic.store<i32>(syncLoc, 0);
+  //   atomic.notify(syncLoc);
+  // }
 
 }
 

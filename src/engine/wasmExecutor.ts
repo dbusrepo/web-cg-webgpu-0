@@ -123,6 +123,11 @@ class WasmExecutor {
     return this._wasmViews;
   }
 
+  public drawFrame() {
+    this._wasmModules.engineWorker.run();
+    // this._wasmModules.engineWorker.run();
+  }
+
   run(): void {
     console.log(`Worker ${this._cfg.workerIdx} running!`);
     try {
