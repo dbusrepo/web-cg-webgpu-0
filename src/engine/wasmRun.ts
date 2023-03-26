@@ -124,10 +124,6 @@ class WasmRun {
     return this._wasmModules;
   }
 
-  public drawFrame() {
-    this._wasmModules.engine.run();
-  }
-
 }
 
 export { WasmRun, WasmRunConfig };

@@ -239,11 +239,19 @@ class WasmEngine {
       utils.syncStore(this._wasmRun.wasmViews.syncArr, i, 1);
       utils.syncNotify(this._wasmRun.wasmViews.syncArr, i);
     }
-    this._wasmRun.drawFrame();
+    this._wasmRun.wasmModules.engine.run();
     for (let i = 1; i <= this._cfg.numAuxWorkers; ++i) {
       utils.syncWait(this._wasmRun.wasmViews.syncArr, i, 1);
     }
     imageData.data.set(this._wasmViews.frameBufferRGBA);
+  }
+
+  public inputKeyDown(keyIdx: number) {
+    this._wasmViews.inputKeys[keyIdx] = 1;
+  }
+
+  public inputKeyUp(keyIdx: number) {
+    this._wasmViews.inputKeys[keyIdx] = 0;
   }
 }
 

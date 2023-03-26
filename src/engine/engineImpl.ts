@@ -8,6 +8,7 @@ import { loadImages } from './assets/images/utils';
 import { BitImage } from './assets/images/bitImage';
 import { WasmEngine, WasmEngineConfig } from './wasmEngine';
 import { mainConfig } from '../config/mainConfig';
+import { InputManager, KeyCode } from './input/inputManager';
 
 type EngineImplConfig = {
   canvas: OffscreenCanvas;
@@ -20,6 +21,7 @@ class EngineImpl {
   private _images: BitImage[]; // RGBA, PAL_IDX ?
   private _imagesTotalSize: number;
   private _wasmEngine: WasmEngine;
+  private _inputManager: InputManager;
 
   public async init(cfg: EngineImplConfig): Promise<void> {
     this._cfg = cfg;
@@ -30,6 +32,25 @@ class EngineImpl {
     );
     await this._loadImages();
     await this._initWasmEngine();
+    this._initInputManager();
+  }
+
+  private _initInputManager() {
+    this._inputManager = new InputManager();
+    this._inputManager.init();
+    const onkeyDown = (key: KeyCode) => {
+      // console.log('key ', key, ' state: ', down);
+      // TODO map key to index
+      const idx = 0;
+      this._wasmEngine.inputKeyDown(idx);
+    };
+    const onkeyUp = (key: KeyCode) => {
+      // console.log('key ', key, ' state: ', down);
+      const idx = 0; // TODO map key to index
+      this._wasmEngine.inputKeyUp(idx);
+    };
+    this._inputManager.addKeyDownHandler('KeyA', onkeyDown.bind(null, 'KeyA'));
+    this._inputManager.addKeyUpHandler('KeyA', onkeyUp.bind(null, 'KeyA'));
   }
 
   private _initOffscreenCanvasContext(canvas: OffscreenCanvas): void {
@@ -73,6 +94,14 @@ class EngineImpl {
   public drawFrame() {
     this._wasmEngine.drawFrame(this._imageData);
     this._ctx.putImageData(this._imageData, 0, 0);
+  }
+
+  public onKeyDown(key: KeyCode) {
+    this._inputManager.onKeyDown(key);
+  }
+
+  public onKeyUp(key: KeyCode) {
+    this._inputManager.onKeyUp(key);
   }
 }
 
