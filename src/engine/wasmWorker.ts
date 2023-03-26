@@ -1,3 +1,4 @@
+// import assert from 'assert';
 import * as WasmUtils from './wasmMemUtils';
 import { WasmRun, WasmRunConfig } from './wasmRun';
 import { WasmConfig } from './wasmConfig';
@@ -39,18 +40,14 @@ class WasmWorker {
 let wasmWorker: WasmWorker;
 
 const commands = {
-  [Commands.RUN]: async (config: WasmWorkerConfig): Promise<void> => {
+  [Commands.INIT]: async (config: WasmWorkerConfig): Promise<void> => {
     wasmWorker = new WasmWorker();
     await wasmWorker.init(config);
     postMessage({ status: 'init completed' });
+  },
+  [Commands.RUN]: async (): Promise<void> => {
     wasmWorker.run();
   },
-  // [Commands.INIT_WASM]: async (config: WorkerWasmMemConfig): Promise<void> => {
-  //   assert(worker);
-  //   // await worker.loadAssets();
-  //   await worker.initWasm(config);
-  //   postMessage('ready');
-  // },
 };
 
 self.addEventListener('message', async ({ data: { command, params } }) => {

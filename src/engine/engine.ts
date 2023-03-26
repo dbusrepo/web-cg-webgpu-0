@@ -38,9 +38,6 @@ type EngineConfig = {
 };
 
 class Engine {
-  private static readonly NUM_AUX_WORKERS = 1;
-  private static readonly MAIN_WORKER_IDX = this.NUM_AUX_WORKERS;
-
   private static readonly RENDER_PERIOD = MILLI_IN_SEC / mainConfig.targetFPS;
 
   private static readonly UPDATE_PERIOD =

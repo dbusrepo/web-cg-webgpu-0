@@ -1,4 +1,5 @@
 const enum Commands {
+  INIT = 'init',
   RUN = 'run',
 }
 
