@@ -1,7 +1,6 @@
 // import assert from 'assert';
-
-import engineWorkerWasm from './wasm/build/asc/engineWorker.wasm';
-import engineWorkerExport from './wasm/build/asc/engineWorker';
+import engineWasm from './wasm/build/asc/engine.wasm';
+import engineExport from './wasm/build/asc/engine';
 import { ascImportImages } from '../assets/images/imagesList';
 import { ascImportStrings } from '../assets/strings/strings';
 
@@ -14,7 +13,7 @@ type wasmBuilderFunc<T> = (
 // import clear_canvas_wasm from './wasm/build/wat/clear_canvas.wasm';
 // import clear_test_wasm from './wasm/bin/clear_test.wasm';
 
-interface WasmInput {
+type WasmImports = {
   memory: WebAssembly.Memory;
   frameWidth: number;
   frameHeight: number;
@@ -41,22 +40,20 @@ interface WasmInput {
   workersMemCountersSize: number;
   inputKeysPtr: number;
   inputKeysSize: number;
-
   FONT_X_SIZE: number;
   FONT_Y_SIZE: number;
   FONT_SPACING: number;
-
   logi: (v: number) => void;
   logf: (v: number) => void;
-}
+};
 
-interface WasmModules {
-  engineWorker: typeof engineWorkerExport;
+type WasmModules = {
+  engine: typeof engineExport;
 }
 
 async function loadWasm<T>(
   wasm: wasmBuilderFunc<T>,
-  wasmInput: WasmInput,
+  wasmInput: WasmImports,
   ...otherImports: object[]
 ): Promise<T> {
   const otherImpObj = otherImports.reduce(
@@ -90,53 +87,12 @@ async function loadWasm<T>(
   return instance.instance.exports;
 }
 
-async function loadEngineWorkerWasm(
-  wasmInit: WasmInput,
-): Promise<typeof engineWorkerExport> {
-  const engineWorker = await loadWasm<typeof engineWorkerExport>(
-    engineWorkerWasm,
-    wasmInit,
-  );
-  return engineWorker;
-}
-
-async function loadWasmModules(wasmImports: WasmInput): Promise<WasmModules> {
-  const engineWorker = await loadEngineWorkerWasm(wasmImports);
-  // if (wasmInit.workerIdx === 0) {}
-  // pre exec init (shared heap, ds, ...)
-  engineWorker.init();
+async function loadWasmModules(imports: WasmImports): Promise<WasmModules> {
+  const engine = await loadWasm<typeof engineExport>(engineWasm, imports);
+  engine.init();
   return {
-    engineWorker,
+    engine,
   };
 }
 
-export {
-  WasmInput,
-  WasmModules, // output w
-  loadWasmModules,
-};
-
-// const log = (msgNum: number, strIdx: number) => {
-// console.log('str idx is ' + strIdx);
-// const lenIdx = strIdx - 4;
-// const len = new Uint32Array(this._memory.buffer, lenIdx, 4)[0];
-// console.log('Lenght is ' + len);
-// const strBytesSrc = new Uint16Array(this._memory.buffer, strIdx, len);
-// const strBytes = strBytesSrc.slice();
-// const str = new TextDecoder('utf-16').decode(strBytes);
-// console.log('The string is ' + str);
-// const msg = clearCanvasModule.instance.exports.__getString(msgIdx);
-// console.log(`Message: ${msgNum} ${msg}`);
-// };
-
-// const importObject = {
-//   env: {
-//     buffer: memory,
-//     canvas_width: w, // TODO fix names?
-//     canvas_height: h,
-//     pixkl_count,
-//     log: (msgIdx: number, msg: string) => {
-//       console.log(`Message: ${msgIdx} ${msg}`)
-//     }
-//   },
-// };
+export { WasmImports, WasmModules, loadWasmModules };

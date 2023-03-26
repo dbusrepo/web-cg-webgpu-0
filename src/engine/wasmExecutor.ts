@@ -1,7 +1,7 @@
 // import assert from 'assert';
 // import { fileTypeFromBuffer } from 'file-type';
 import * as WasmUtils from './wasmMemUtils';
-import { WasmModules, WasmInput, loadWasmModules } from './wasmInit';
+import { WasmModules, WasmImports, loadWasmModules } from './wasmLoader';
 // import { syncStore, randColor, sleep } from './utils';
 // import { BitImageRGBA } from './assets/images/bitImageRGBA';
 // import { PngDecoderRGBA } from './assets/images/vivaxy-png/PngDecoderRGBA';
@@ -37,29 +37,29 @@ class WasmExecutor {
 
   private async _initWasm(config: WasmConfig): Promise<void> {
     this._wasmCfg = config;
-    this._initWasmMemViews();
-    await this.initWasmModules();
+    this._buildWasmMemViews();
+    await this.loadWasmModules();
   }
 
-  protected _initWasmMemViews(): void {
+  protected _buildWasmMemViews(): void {
     const {
       wasmMem: mem,
       wasmMemRegionsOffsets: memOffsets,
       wasmMemRegionsSizes: memSizes,
     } = this._wasmCfg;
 
-    const { workerIdx } = this._cfg;
-
     this._wasmViews = WasmUtils.views.buildWasmMemViews(
       mem,
       memOffsets,
       memSizes,
     );
+
+    const { workerIdx } = this._cfg;
     syncStore(this._wasmViews.syncArr, workerIdx, 0);
     syncStore(this._wasmViews.sleepArr, workerIdx, 0);
   }
 
-  private async initWasmModules(): Promise<void> {
+  private async loadWasmModules(): Promise<void> {
     const {
       wasmMem: memory,
       wasmMemRegionsSizes: memSizes,
@@ -76,7 +76,7 @@ class WasmExecutor {
       console.log(`[wasm] Worker [${workerIdx}]: ${i}`);
     };
 
-    const wasmImports: WasmInput = {
+    const wasmImports: WasmImports = {
       memory,
       frameWidth,
       frameHeight,
@@ -115,7 +115,6 @@ class WasmExecutor {
       logf,
     };
 
-    // this._wasmInitInput = wasmInput; // save it ?
     this._wasmModules = await loadWasmModules(wasmImports);
   }
 
@@ -124,14 +123,13 @@ class WasmExecutor {
   }
 
   public drawFrame() {
-    this._wasmModules.engineWorker.run();
-    // this._wasmModules.engineWorker.run();
+    this._wasmModules.engine.run();
   }
 
   run(): void {
     console.log(`Worker ${this._cfg.workerIdx} running!`);
     try {
-      this._wasmModules.engineWorker.run();
+      // this._wasmModules.engineWorker.run();
     } catch (e) {
       console.log(e);
     }

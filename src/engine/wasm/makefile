@@ -27,7 +27,7 @@ ASC_ALL_SOURCE_FILES := $(shell find src/asc/ -type f -name '*.ts')
 ASC_DEP_FILES := $(ASC_ALL_SOURCE_FILES:.ts=.d)
 
 # modules to build
-ASC_MODULES := engineWorker
+ASC_MODULES := engine
 
 ASC_SOURCE_FILES := $(ASC_MODULES:%=$(ASC_SOURCE_DIR)/%.ts)
 ASC_BUILD_FILES := $(ASC_SOURCE_FILES:$(ASC_SOURCE_DIR)/%.ts=$(ASC_BUILD_DIR)/%.wasm)
