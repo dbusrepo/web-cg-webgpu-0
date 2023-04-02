@@ -124,14 +124,14 @@ class StatsPanel {
 
     // draw the text
     const text =
-      Math.round(value) +
-        ' ' +
-        this.title +
-        ' (' +
-        // Math.round(this._min) +
-        // '-' +
-        Math.round(this._max) +
-        ')';
+      Math.round(value)
+        + ' '
+        + this.title;
+        // + ' ('
+        // + // Math.round(this._min)
+        // + // '-'
+        // + Math.round(this._max)
+        // + ')';
 
     this._context.fillStyle = this._fgCol;
     this._context.fillText(text,
