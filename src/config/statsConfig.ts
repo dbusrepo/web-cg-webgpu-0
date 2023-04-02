@@ -1,6 +1,5 @@
 const statsConfig = {
-  enable: true,
-  show: false,
+  show: true,
 };
 
 type StatsConfig = typeof statsConfig;

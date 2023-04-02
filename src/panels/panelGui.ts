@@ -4,38 +4,34 @@ import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
 import GUI from '../ui/guify/src/gui';
 import { Panel } from './panel';
 
-type TweakOptions = object;
-
 type PanelGuiConfig = {
   isTweakPaneExpanded: boolean;
 };
 
-type PanelTweakOptions = TweakOptions & {
-  level: number;
-  name: string;
-  active: boolean;
+type PanelTweakOptions = {
   // [k: string]: any;
+  stats: boolean;
 };
 
-// top panel with guify
-// control pane with tweakpane
 class PanelGui {
+  private static _panelsStatsOpt: PanelGui[] = [];
   private _cfg: PanelGuiConfig;
   private _panel: Panel;
   private _topBar: GUI;
   protected _tweakPane: TweakPane;
-  protected _tweakOptions: TweakOptions;
+  protected _tweakOptions: PanelTweakOptions;
 
   // protected _tweakPaneOptions: PanelTweakOptions;
 
   init(panel: Panel): void {
-    this._panel = panel;
-
     if (!this._cfg) {
       this._cfg = {
         isTweakPaneExpanded: false, // start closed
       };
+      PanelGui._panelsStatsOpt.push(this);
     }
+
+    this._panel = panel;
 
     this.initTweakPane(panel);
 
@@ -96,15 +92,18 @@ class PanelGui {
     let tweakOptions = this._tweakOptions as PanelTweakOptions;
     if (!tweakOptions) {
       tweakOptions = {
-        level: 0,
-        name: 'Sketch',
-        active: true,
+        stats: this.panel.isStatsVisible,
       };
     }
-    this._tweakPane.addInput(tweakOptions, 'level');
-    this._tweakPane.addInput(tweakOptions, 'name');
-    this._tweakPane.addInput(tweakOptions, 'active');
+    const statsInput = this._tweakPane.addInput(tweakOptions, 'stats');
+    statsInput.on('change', () => {
+      this.panel.setStatsVisible(tweakOptions.stats);
+      PanelGui.updateStatsOptPanels(this);
+    });
+
     this._tweakOptions = tweakOptions;
+
+    // TODO:
     // this.addPanelOptions();
     // this.initConsoleOptions();
     // this.addEventLogFolderOptions();
@@ -112,6 +111,15 @@ class PanelGui {
     //   this.addOptFullWin();
     // }
     // this.addFullscreenOption();
+  }
+
+  public static updateStatsOptPanels(originPanel: PanelGui): void {
+    for (let panelGui of PanelGui._panelsStatsOpt) {
+      if (panelGui !== originPanel) {
+        panelGui._tweakOptions.stats = originPanel._tweakOptions.stats;
+        panelGui._tweakPane.refresh();
+      }
+    }
   }
 
   // private getDom(): HTMLElement {
@@ -330,4 +338,4 @@ class PanelGui {
   }
 }
 
-export { PanelGui, TweakOptions };
+export { PanelGui };

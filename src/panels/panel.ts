@@ -9,6 +9,7 @@ import {
 import { Console, ConsoleHandlersObjInit } from '../ui/console/console';
 import { PanelGui } from './panelGui';
 import { EventLog } from '../ui/eventLog/eventLog';
+import { Stats } from '../ui/stats/stats';
 
 // TODO move?
 const resetClassName = (node: HTMLElement) => {
@@ -63,6 +64,8 @@ abstract class Panel {
   protected _menuGui?: PanelGui;
   // used with console cmd handler. not used for now.
 
+  protected _stats: Stats;
+
   protected _viewMode: ViewMode;
   protected _preViewMode: ViewMode;
 
@@ -71,8 +74,9 @@ abstract class Panel {
     this._parentNode = parentNode;
   }
 
-  init(panelConfig: PanelConfig) {
+  init(panelConfig: PanelConfig, stats: Stats) {
     this._config = structuredClone(panelConfig);
+    this._stats = stats;
     this.initPanel();
     this.initCanvas();
     this.initEventLog();
@@ -499,6 +503,7 @@ abstract class Panel {
       // }
       this.eventLogCheckInv();
     }
+    this.updateStats(this.boardEl);
   }
 
   private initWinMode(): void {
@@ -514,7 +519,7 @@ abstract class Panel {
 
   protected resetGui(): void {
     this._menuGui?.removefromDom();
-    this.initMenuGui();
+    this.initGui();
   }
 
   private toFullWinStyle(): void {
@@ -529,6 +534,11 @@ abstract class Panel {
     assert(this._panel.parentNode === this._panelContainerWinFull);
   }
 
+  private updateStats(parent: HTMLDivElement): void {
+    this._stats.setParentNode(parent);
+    this.setStatsVisible(this.isStatsVisible);
+  }
+
   protected setFullStyle(): void {
     this.setPanelFullStyle();
     this.setCanvasFullStyle();
@@ -537,6 +547,7 @@ abstract class Panel {
       this.setEventLogBottomPanelFullStyle(); // TODO not necessary?
       this._eventLog.render(true);
     }
+    this.updateStats(this.panelEl);
   }
 
   private setEventLogBottomPanelWinStyle(): void {
@@ -698,6 +709,16 @@ abstract class Panel {
     this.eventLogCheckInv();
   }
 
+  public setStatsVisible(visible: boolean): void {
+    assert(this._stats);
+    this.config.statsConfig.show = visible;
+    if (visible) {
+      this._stats.show();
+    } else {
+      this._stats.hide();
+    }
+  }
+
   setEventLogFontSize(fontSize: number): void {
     assert(this._eventLog);
     this._eventLog.setFontSize(fontSize);
@@ -718,7 +739,7 @@ abstract class Panel {
     this._console?.setLineHeight(lineHeight);
   }
 
-  protected initMenuGui(): void {
+  protected initGui(): void {
     if (!this._menuGui) {
       this._menuGui = new PanelGui();
     }
@@ -739,7 +760,6 @@ abstract class Panel {
   }
 
   run(): void {
-    console.trace('setShowStats');
     this.initWinMode();
     this.initFullWinMode();
     this.initFocus();
@@ -832,6 +852,10 @@ abstract class Panel {
 
   set isEventLogVisible(value: boolean) {
     this._config.eventLogConfig.isVisible = value;
+  }
+
+  public get isStatsVisible(): boolean {
+    return this.config.statsConfig.show;
   }
 
   get isConsoleOpen(): boolean {

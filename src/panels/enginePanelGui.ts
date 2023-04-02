@@ -1,7 +1,12 @@
-import { PanelGui, TweakOptions } from './panelGui';
+import { PanelGui } from './panelGui';
 import { EnginePanel } from './enginePanel';
 
-type EnginePanelTweakOptions = TweakOptions & {
+// each panel has its own tweak pane options
+type EnginePanelTweakOptions = {
+  // [k: string]: any;
+  // level: number;
+  // name: string;
+  // active: boolean;
   stats: boolean;
 };
 
@@ -14,26 +19,22 @@ class EnginePanelGui extends PanelGui {
     let tweakOptions = this._tweakOptions as EnginePanelTweakOptions;
     if (!tweakOptions) {
       tweakOptions = {
-        stats: this.panel.showStats,
+        stats: this.panel.isStatsVisible,
       };
     }
-    this._tweakPane.addInput(tweakOptions, 'stats', {
-      disabled: !this.panel.isStatsEnable,
+    const statsInput = this._tweakPane.addInput(tweakOptions, 'stats');
+    statsInput.on('change', () => {
+      this.panel.setStatsVisible(tweakOptions.stats);
+      PanelGui.updateStatsOptPanels(this);
     });
     this._tweakOptions = tweakOptions;
 
-    // super._initTweakPaneOptions();
     // this._tweakPane.addInput(this._tweakPaneOptions, 'fps');
-
     // this._tweakPane.addMonitor(this._tweakPaneOptions, 'level', {
     //   view: 'graph',
     //   min: -1,
     //   max: +1,
     // });
-
-    // if (this.panel.isStatsEnable) {
-    //   this.addStatsOptions();
-    // }
   }
 
   // TODO

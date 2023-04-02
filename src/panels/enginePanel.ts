@@ -5,7 +5,7 @@ import { StatsPanel } from '../ui/stats/statsPanel';
 // import { MemoryStats } from '../ui/stats/memoryStats';
 import { Panel } from './panel';
 import { EnginePanelGui } from './enginePanelGui';
-import { StatsNames, StatsValues } from '../common';
+import { StatsValues } from '../common';
 import { EngineConfig } from '../engine/engine';
 import Commands from './enginePanelCommands';
 
@@ -14,13 +14,14 @@ const buildEngineWorker = () =>
 
 class EnginePanel extends Panel {
   private _engineWorker: Worker;
-  private _stats?: Stats;
 
-  init(config: EnginePanelConfig): EnginePanel {
-    super.init({
-      ...config,
-    });
-    this.initStats();
+  init(config: EnginePanelConfig, stats: Stats): EnginePanel {
+    super.init(
+      {
+        ...config,
+      },
+      stats,
+    );
     return this;
   }
 
@@ -31,7 +32,7 @@ class EnginePanel extends Panel {
 
     const commands = {
       [Commands.UPDATESTATS]: (values: StatsValues) => {
-        enginePanel._stats?.update(values);
+        enginePanel._stats.update(values);
       },
       [Commands.EVENT]: (msg: string) => {
         // console.log(msg);
@@ -74,26 +75,7 @@ class EnginePanel extends Panel {
     return super.config as EnginePanelConfig;
   }
 
-  private initStats() {
-    if (!this.isStatsEnable) {
-      this.config.statsConfig.show = false;
-      return;
-    }
-    this._stats = new Stats();
-    const fpsPanel = new StatsPanel(StatsNames.FPS, '#0ff', '#022');
-    const upsPanel = new StatsPanel(StatsNames.UPS, '#0f0', '#020');
-    const unlockedFpsPanel = new StatsPanel(StatsNames.UFPS, '#f50', '#110');
-    // const wasmHeapMem = new StatsPanel(StatsNames.WASM_HEAP, '#0b0', '#030');
-    // this.mem_panel = new StatsPanel('MEM', '#ff0', '#330');
-    this._stats.addPanel(fpsPanel);
-    this._stats.addPanel(upsPanel);
-    // this._stats.addPanel(wasmHeapMem);
-    this._stats.addPanel(unlockedFpsPanel);
-    // add mem stats panel
-    // const memPanel = new MemoryStats(this._stats);
-  }
-
-  protected initMenuGui(): void {
+  protected initGui(): void {
     // const menuGuiConfig: EnginePanelMenuConfig = {
     //   ...this.config.menuConfig,
     // };
@@ -101,22 +83,6 @@ class EnginePanel extends Panel {
       this._menuGui = new EnginePanelGui();
     }
     this._menuGui.init(this);
-  }
-
-  protected setFullStyle(): void {
-    super.setFullStyle();
-    if (this._stats) {
-      this._stats.setParentNode(this.panelEl);
-      this.setShowStats(this.showStats);
-    }
-  }
-
-  protected setWinStyle(): void {
-    super.setWinStyle();
-    if (this._stats) {
-      this._stats.setParentNode(this.boardEl);
-      this.setShowStats(this.showStats);
-    }
   }
 
   private runEngineWorker(): void {
@@ -135,48 +101,14 @@ class EnginePanel extends Panel {
     );
   }
 
-  protected toWinStyle(): void {
-    console.trace('toWinStyle');
-    super.toWinStyle();
-    if (this._stats) {
-      this.setShowStats(true);
-    }
-  }
-
-  protected hide(): void {
-    super.hide();
-    if (this._stats) {
-      this.setShowStats(false);
-    }
-  }
-
-  public setShowStats(show: boolean): void {
-    assert(this._stats);
-    this.config.statsConfig.show = show;
-    // console.trace('setShowStats', show);
-    if (show) {
-      this._stats.show();
-    } else {
-      this._stats.hide();
-    }
-  }
-
-  public get isStatsEnable(): boolean {
-    return this.config.statsConfig.enable;
-  }
-
-  public get showStats(): boolean {
-    return this.config.statsConfig.show;
-  }
-
   protected destroy() {
     super.destroy();
   }
 
   run() {
     super.run();
-    // this.initEngineWorker();
-    // this.runEngineWorker();
+    this.initEngineWorker();
+    this.runEngineWorker();
   }
 }
 

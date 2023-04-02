@@ -1,6 +1,7 @@
 // import assert from 'assert';
 import { ViewPanelConfig } from '../config/mainConfig';
 import { Panel } from './panel';
+import { Stats } from '../ui/stats/stats';
 // import { Console, ConsoleHandlersObjInit } from '../ui/console/console';
 
 class ViewPanel extends Panel {
@@ -8,8 +9,8 @@ class ViewPanel extends Panel {
   //   super(board, parentNode);
   // }
 
-  init(config: ViewPanelConfig) {
-    super.init(config);
+  init(config: ViewPanelConfig, stats: Stats) {
+    super.init(config, stats);
     return this;
   }
 
