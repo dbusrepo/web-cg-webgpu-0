@@ -11,6 +11,9 @@ const eventLogConfig = {
   percHeightWin: 0.4, // 40% when win in its own container
   percHeightFull: 0.15, // 15 % of fs height in the same container
   // ************************************************************************
+
+  fontSize: 12,
+  lineHeight: 16,
 };
 
 type EventLogConfig = typeof eventLogConfig & {

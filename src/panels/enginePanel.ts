@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { EnginePanelConfig, EnginePanelMenuConfig } from '../config/mainConfig';
+import { EnginePanelConfig, EnginePanelGuiConfig } from '../config/mainConfig';
 import { Stats } from '../ui/stats/stats';
 import { StatsPanel } from '../ui/stats/statsPanel';
 // import { MemoryStats } from '../ui/stats/memoryStats';
@@ -94,7 +94,7 @@ class EnginePanel extends Panel {
   }
 
   protected initMenuGui(): void {
-    if (!this.config.menuConfig.enable) {
+    if (!this.config.guiConfig.enable) {
       return;
     }
     // const menuGuiConfig: EnginePanelMenuConfig = {
@@ -103,7 +103,7 @@ class EnginePanel extends Panel {
     if (!this._menuGui) {
       this._menuGui = new EnginePanelGui();
     }
-    this._menuGui.init(this, this.config.menuConfig);
+    this._menuGui.init(this, this.config.guiConfig);
   }
 
   protected setFullStyle(): void {

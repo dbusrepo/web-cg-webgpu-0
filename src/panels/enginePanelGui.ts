@@ -1,23 +1,31 @@
 import {
-  EnginePanelMenuConfig,
-  enginePanelConfig,
+  EnginePanelGuiConfig,
+  enginePanelGuiConfig,
 } from '../config/enginePanelConfig';
-import { PanelGui, PanelTweakOptions } from './panelGui';
+import { PanelGui } from './panelGui';
 import { EnginePanel } from './enginePanel';
 
-const STATS_OPT_KEY = Symbol(enginePanelConfig.menuConfig.options.stats.key);
+const { options: gui_options } = enginePanelGuiConfig;
 
 type EnginePanelTweakOptions = {
-  [STATS_OPT_KEY]: boolean;
-} & PanelTweakOptions;
+  // [STATS_OPT_KEY]: boolean;
+};
 
 class EnginePanelGui extends PanelGui {
-  init(panel: EnginePanel, menuConfig: EnginePanelMenuConfig) {
-    super.init(panel, menuConfig);
+  init(panel: EnginePanel, guiConfig: EnginePanelGuiConfig) {
+    super.init(panel, guiConfig);
   }
 
   protected _initTweakPaneOptions() {
-    super._initTweakPaneOptions();
+    // super._initTweakPaneOptions();
+    // this._tweakPane.addInput(this._tweakPaneOptions, 'fps');
+
+    // this._tweakPane.addMonitor(this._tweakPaneOptions, 'level', {
+    //   view: 'graph',
+    //   min: -1,
+    //   max: +1,
+    // });
+
     // if (this.panel.isStatsEnable) {
     //   this.addStatsOptions();
     // }
@@ -51,16 +59,16 @@ class EnginePanelGui extends PanelGui {
     // );
   // }
 
-  get tweakPaneOptions(): EnginePanelTweakOptions {
-    return super._tweakPaneOptions as EnginePanelTweakOptions;
-  }
+  // get tweakPaneOptions(): EnginePanelTweakOptions {
+  //   return super._tweakPaneOptions as EnginePanelTweakOptions;
+  // }
 
   get panel(): EnginePanel {
     return super.panel as EnginePanel;
   }
 
-  get config(): EnginePanelMenuConfig {
-    return super.config as EnginePanelMenuConfig;
+  get config(): EnginePanelGuiConfig {
+    return super.config as EnginePanelGuiConfig;
   }
 }
 

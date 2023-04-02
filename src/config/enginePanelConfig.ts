@@ -1,22 +1,22 @@
 import { PanelConfig, panelConfig } from './panelConfig';
 import { StatsConfig, statsConfig } from './statsConfig';
 import {
-  EnginePanelMenuConfig,
-  enginePanelMenuConfig,
-} from './enginePanelMenuConfig';
+  EnginePanelGuiConfig,
+  enginePanelGuiConfig,
+} from './enginePanelGuiConfig';
 
 const enginePanelConfig = {
   ...panelConfig,
   title: '3D Panel',
-  menuConfig: enginePanelMenuConfig as EnginePanelMenuConfig,
+  guiConfig: enginePanelGuiConfig as EnginePanelGuiConfig,
   statsConfig,
 };
 
 type EnginePanelConfig = typeof enginePanelConfig &
   PanelConfig & {
     statsConfig: StatsConfig;
-    menuConfig: EnginePanelMenuConfig;
+    guiConfig: EnginePanelGuiConfig;
   };
 
-export { EnginePanelConfig, enginePanelConfig };
-export type { EnginePanelMenuConfig } from './enginePanelMenuConfig';
+export { EnginePanelConfig, enginePanelConfig, enginePanelGuiConfig };
+export type { EnginePanelGuiConfig } from './enginePanelGuiConfig';

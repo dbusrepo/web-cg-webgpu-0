@@ -15,6 +15,9 @@ const consoleConfig = {
   percHeightWin: 0.35, // 35%
   percHeightFull: 0.3,
   prompt: '$ ',
+
+  fontSize: 12,
+  lineHeight: 16,
 };
 
 type ConsoleConfig = typeof consoleConfig & {

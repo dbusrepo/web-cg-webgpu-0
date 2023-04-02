@@ -31,5 +31,5 @@ export type { EnginePanelConfig } from './enginePanelConfig';
 export type { ViewPanelConfig } from './viewPanelConfig';
 export type { EventLogConfig } from './eventLogConfig';
 export type { ConsoleConfig } from './consoleConfig';
-export type { EnginePanelMenuConfig } from './enginePanelMenuConfig';
-export type { PanelMenuConfig } from './panelMenuConfig';
+export type { EnginePanelGuiConfig } from './enginePanelGuiConfig';
+export type { PanelGuiConfig } from './panelGuiConfig';

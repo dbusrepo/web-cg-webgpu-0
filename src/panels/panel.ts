@@ -333,8 +333,8 @@ abstract class Panel {
     }
     const eventLogConfig: EventLogConfig = {
       ...this._config.eventLogConfig,
-      fontSize: this._config.menuConfig.DEFAULT_FONT_SIZE,
-      lineHeight: this._config.menuConfig.DEFAULT_LINE_HEIGHT,
+      fontSize: this._config.eventLogConfig.fontSize,
+      lineHeight: this._config.eventLogConfig.lineHeight,
     };
     const eventHandlers = {};
     this._eventLog = new EventLog(
@@ -365,8 +365,8 @@ abstract class Panel {
         this.onConsoleHidden();
       },
       prompt: this.config.consoleConfig.prompt,
-      fontSize: this._config.menuConfig.DEFAULT_FONT_SIZE,
-      lineHeight: this._config.menuConfig.DEFAULT_LINE_HEIGHT,
+      fontSize: this._config.consoleConfig.fontSize,
+      lineHeight: this._config.consoleConfig.lineHeight,
     };
     const consoleHandlers = this.buildConsoleHandlers();
     this._console = new Console(
@@ -719,13 +719,13 @@ abstract class Panel {
   }
 
   protected initMenuGui(): void {
-    if (!this.config.menuConfig.enable) {
+    if (!this.config.guiConfig.enable) {
       return;
     }
     if (!this._menuGui) {
       this._menuGui = new PanelGui();
     }
-    this._menuGui.init(this, this.config.menuConfig);
+    this._menuGui.init(this, this.config.guiConfig);
   }
 
   private initFocus(): void {

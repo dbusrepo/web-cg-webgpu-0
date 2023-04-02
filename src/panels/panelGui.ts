@@ -3,9 +3,11 @@ import { Pane as TweakPane } from 'tweakpane';
 import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
 import GUI from '../ui/guify/src/gui';
 import { Panel } from './panel';
-import { PanelMenuConfig } from '../config/mainConfig';
+import { PanelGuiConfig } from '../config/mainConfig';
 
-type PanelTweakOptions = {
+type TweakOptions = object;
+
+type PanelTweakOptions = TweakOptions & {
   level: number;
   name: string;
   active: boolean;
@@ -15,17 +17,19 @@ type PanelTweakOptions = {
 // top panel with guify
 // control pane with tweakpane
 class PanelGui {
-  private _config: PanelMenuConfig;
+  private _config: PanelGuiConfig;
   private _panel: Panel;
-  protected _topBar: GUI;
+  private _topBar: GUI;
   protected _tweakPane: TweakPane;
-  protected _tweakPaneOptions: PanelTweakOptions;
+  protected _tweakOptions: TweakOptions;
 
-  init(panel: Panel, menuConfig: PanelMenuConfig): void {
+  // protected _tweakPaneOptions: PanelTweakOptions;
+
+  init(panel: Panel, guiConfig: PanelGuiConfig): void {
     this._panel = panel;
-    this._config = menuConfig;
+    this._config = guiConfig;
 
-    this.initTweakPane(panel, menuConfig);
+    this.initTweakPane(panel, guiConfig);
 
     this._topBar = new GUI({
       root: panel.menuGuiContainer,
@@ -46,20 +50,21 @@ class PanelGui {
       },
       toggleControls: () => {
         this._tweakPane.expanded = !this._tweakPane.expanded;
-        menuConfig.controlsPaneOpen = this._tweakPane.expanded;
+        guiConfig.controlsPaneOpen = this._tweakPane.expanded;
         this._panel.focus();
       },
     }); // as unknown as typeof Guify;
   }
 
-  initTweakPane(panel: Panel, menuConfig: PanelMenuConfig): void {
+  initTweakPane(panel: Panel, guiConfig: PanelGuiConfig): void {
     const container = panel.canvasContainerEl;
     this._tweakPane = new TweakPane({
       container,
-      expanded: menuConfig.controlsPaneOpen,
+      expanded: guiConfig.controlsPaneOpen,
     });
     this._tweakPane.registerPlugin(EssentialsPlugin);
     this._initTweakPaneStyle(container);
+    // when (reinit) keep obj opts
     this._initTweakPaneOptions();
   }
 
@@ -100,21 +105,18 @@ class PanelGui {
   // }
 
   protected _initTweakPaneOptions() {
-    if (!this._tweakPaneOptions) {
-      this._tweakPaneOptions = {
+    let tweakOptions = this._tweakOptions as PanelTweakOptions;
+    if (!tweakOptions) {
+      tweakOptions = {
         level: 0,
         name: 'Sketch',
         active: true,
       };
     }
-    this._tweakPane.addInput(this._tweakPaneOptions, 'level');
-    this._tweakPane.addInput(this._tweakPaneOptions, 'name');
-    this._tweakPane.addInput(this._tweakPaneOptions, 'active');
-    this._tweakPane.addMonitor(this._tweakPaneOptions, 'level', {
-      view: 'graph',
-      min: -1,
-      max: +1,
-    });
+    this._tweakPane.addInput(tweakOptions, 'level');
+    this._tweakPane.addInput(tweakOptions, 'name');
+    this._tweakPane.addInput(tweakOptions, 'active');
+    this._tweakOptions = tweakOptions;
     // this.addPanelOptions();
     // this.initConsoleOptions();
     // this.addEventLogFolderOptions();
@@ -306,13 +308,13 @@ class PanelGui {
   //   // this._gui.destroy();
   // }
 
-  protected get config(): PanelMenuConfig {
+  protected get config(): PanelGuiConfig {
     return this._config;
   }
 
-  protected get menuOptions(): PanelTweakOptions {
-    return this._tweakPaneOptions;
-  }
+  // protected get menuOptions(): PanelTweakOptions {
+  //   return this._tweakPaneOptions;
+  // }
 
   protected get panel(): Panel {
     return this._panel;
@@ -324,4 +326,4 @@ class PanelGui {
   }
 }
 
-export { PanelGui, PanelTweakOptions };
+export { PanelGui, TweakOptions };
