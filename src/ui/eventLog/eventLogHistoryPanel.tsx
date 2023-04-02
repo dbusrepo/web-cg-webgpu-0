@@ -67,7 +67,6 @@ function EventLogHistoryPanel(props: EventHistoryProps): JSX.Element {
         if (scrollY > parent.clientHeight) {
           parent.scrollTop += scrollY;
         } else if (lastMsgRef) {
-          console.log('scrolling to last msg');
           // otherwise do a smooth scroll
           // lastMsgRef.scrollIntoView({ behavior: 'smooth', block: 'center' });
           lastMsgRef.scrollIntoView({ behavior: 'auto', block: 'end' });
