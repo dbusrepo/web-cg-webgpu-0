@@ -20,7 +20,7 @@ const GRAPH_HEIGHT = CSS_GRAPH_HEIGHT * PR;
 // when rescaling panel values, this should be at least 1
 const RESCALE_ADD_EXTRA = 2;
 
-const BG_ALPHA = .9;
+const BG_ALPHA = 0.9;
 
 class StatsPanel {
   private _canvas: HTMLCanvasElement;
@@ -32,7 +32,7 @@ class StatsPanel {
   private _start: number; // starting index in values[0..length-1]
   private _min = Infinity;
   private _max = 0;
-	private _redrawThreshold: number; // inv: value <= this._redrawThreshold
+  private _redrawThreshold: number; // inv: value <= this._redrawThreshold
   private _curIdx: number; // cur update index, inc at every update
   private _maxDeque: number[]; // deque values to impl max of last N values
   private _maxDequeIdx: number[]; // deque idxs to impl max of last N values
@@ -98,7 +98,7 @@ class StatsPanel {
       deque.shift();
       dequeIdx.shift();
     }
-    while (deque.length && deque[deque.length-1] <= value) {
+    while (deque.length && deque[deque.length - 1] <= value) {
       deque.pop();
       dequeIdx.pop();
     }
@@ -107,13 +107,13 @@ class StatsPanel {
   }
 
   private downRescale(): boolean {
-    const bound = this._redrawThreshold - (1 + RESCALE_ADD_EXTRA) * CSS_GRAPH_HEIGHT;
+    const bound =
+      this._redrawThreshold - (1 + RESCALE_ADD_EXTRA) * CSS_GRAPH_HEIGHT;
     const res = this._maxDeque[0] < bound;
     return res;
   }
 
   update(value = 0) {
-
     this._min = Math.min(this._min, value);
     this._max = Math.max(this._max, value);
 
@@ -123,18 +123,16 @@ class StatsPanel {
     this._context.fillRect(0, 0, WIDTH, GRAPH_Y);
 
     // draw the text
-    const text =
-      Math.round(value)
-        + ' '
-        + this.title;
-        // + ' ('
-        // + // Math.round(this._min)
-        // + // '-'
-        // + Math.round(this._max)
-        // + ')';
+    const text = Math.round(value) + ' ' + this.title;
+    // + ' ('
+    // + // Math.round(this._min)
+    // + // '-'
+    // + Math.round(this._max)
+    // + ')';
 
     this._context.fillStyle = this._fgCol;
-    this._context.fillText(text,
+    this._context.fillText(
+      text,
       TEXT_X,
       TEXT_Y,
       // GRAPH_WIDTH
@@ -143,7 +141,8 @@ class StatsPanel {
     this.updateMaxDeque(value);
 
     let downscale = false;
-    if (value > this._redrawThreshold || (downscale=this.downRescale())) { // rescale required
+    if (value > this._redrawThreshold || (downscale = this.downRescale())) {
+      // rescale required
       const source = downscale ? this._maxDeque[0] : value;
       const factor = (source / CSS_GRAPH_HEIGHT) | 0;
       const newThreshold = CSS_GRAPH_HEIGHT * (factor + 1 + RESCALE_ADD_EXTRA);
@@ -156,17 +155,11 @@ class StatsPanel {
       // draw the values rescaled
       this._context.fillStyle = this._fgCol;
       this._context.globalAlpha = 1;
-      for (
-        let i = 0, { length } = this._values;
-        i < length;
-        ++i
-      ) {
+      for (let i = 0, { length } = this._values; i < length; ++i) {
         const idx = i + this._start;
         const cur = idx < length ? idx : idx - length;
         const curVal = this._values[cur];
-        const h = Math.round(
-          (curVal / this._redrawThreshold) * GRAPH_HEIGHT,
-        );
+        const h = Math.round((curVal / this._redrawThreshold) * GRAPH_HEIGHT);
         this._context.fillRect(
           GRAPH_X + PR * i,
           GRAPH_Y + GRAPH_HEIGHT - h,

@@ -13,9 +13,9 @@ const PALETTE_SIZE = 256;
 enum StatsNames {
   FPS = 'FPS',
   UPS = 'UPS',
-  UFPS = 'UFPS',
+  FPSU = 'FPSU',
   MEM = 'MEM',
-  WASM_HEAP = 'WASM_HEAP', // heap mem allocated by wasm workers in the private heap + in the shared heap
+  // WASM_HEAP = 'WASM_HEAP', // heap mem allocated by wasm workers in the private heap + in the shared heap
 }
 
 type StatsValues = {

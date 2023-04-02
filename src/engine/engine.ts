@@ -201,7 +201,7 @@ class Engine {
           const stats: Partial<StatsValues> = {
             [StatsNames.FPS]: avgFps,
             [StatsNames.UPS]: avgUps,
-            [StatsNames.UFPS]: avgUnlockedFps,
+            [StatsNames.FPSU]: avgUnlockedFps,
             // [StatsNames.WASM_HEAP]: workersHeapMem,
           };
           // console.log(avgUnlockedFps);

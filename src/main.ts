@@ -44,7 +44,7 @@ class Main {
     const stats = new Stats();
     const fpsPanel = new StatsPanel(StatsNames.FPS, '#0ff', '#022');
     const upsPanel = new StatsPanel(StatsNames.UPS, '#0f0', '#020');
-    const unlockedFpsPanel = new StatsPanel(StatsNames.UFPS, '#f50', '#110');
+    const unlockedFpsPanel = new StatsPanel(StatsNames.FPSU, '#f50', '#110');
     // const wasmHeapMem = new StatsPanel(StatsNames.WASM_HEAP, '#0b0', '#030');
     // this.mem_panel = new StatsPanel('MEM', '#ff0', '#330');
     stats.addPanel(fpsPanel);
