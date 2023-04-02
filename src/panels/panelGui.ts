@@ -1,5 +1,6 @@
 // import assert from 'assert';
 import { Pane as TweakPane } from 'tweakpane';
+import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
 import GUI from '../ui/guify/src/gui';
 import { Panel } from './panel';
 import { PanelMenuConfig } from '../config/mainConfig';
@@ -57,6 +58,7 @@ class PanelGui {
       container,
       expanded: menuConfig.controlsPaneOpen,
     });
+    this._tweakPane.registerPlugin(EssentialsPlugin);
     this._initTweakPaneStyle(container);
     this._initTweakPaneOptions();
   }
