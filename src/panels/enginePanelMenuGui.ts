@@ -2,41 +2,38 @@ import {
   EnginePanelMenuConfig,
   enginePanelConfig,
 } from '../config/enginePanelConfig';
-import { PanelMenuOptions, PanelMenuGui } from './panelMenuGui';
+import { PanelGui, PanelTweakOptions } from './panelGui';
 import { EnginePanel } from './enginePanel';
 
 const STATS_OPT_KEY = Symbol(enginePanelConfig.menuConfig.options.stats.key);
 
-type EnginePanelMenuOptions = {
+type EnginePanelTweakOptions = {
   [STATS_OPT_KEY]: boolean;
-} & PanelMenuOptions;
+} & PanelTweakOptions;
 
-class EnginePanelMenuGui extends PanelMenuGui {
+class EnginePanelMenuGui extends PanelGui {
   init(panel: EnginePanel, menuConfig: EnginePanelMenuConfig) {
     super.init(panel, menuConfig);
   }
 
-  addPanelOptions() {
-    super.addPanelOptions();
-    if (this.panel.isStatsEnable) {
-      this.addStatsOptions();
-    }
+  protected _initTweakPaneOptions() {
+    super._initTweakPaneOptions();
+    // if (this.panel.isStatsEnable) {
+    //   this.addStatsOptions();
+    // }
   }
 
   // TODO
-  addStatsOptions() {
+  // addStatsOptions() {
     // const { label } = enginePanelConfig.menuConfig.options.stats;
-
     // const initial = this.panel.showStats;
     // this.menuOptions[STATS_OPT_KEY] = initial;
-
     // const folder = label;
     // this._gui.Register({
     //   type: 'folder',
     //   label: folder,
     //   open: false,
     // });
-
     // this._gui.Register(
     //   {
     //     type: 'checkbox',
@@ -52,12 +49,12 @@ class EnginePanelMenuGui extends PanelMenuGui {
     //     folder,
     //   },
     // );
-  }
+  // }
 
-  get menuOptions(): EnginePanelMenuOptions {
-    return super.menuOptions as EnginePanelMenuOptions;
+  get tweakPaneOptions(): EnginePanelTweakOptions {
+    return super._tweakPaneOptions as EnginePanelTweakOptions;
   }
-
+  
   get panel(): EnginePanel {
     return super.panel as EnginePanel;
   }

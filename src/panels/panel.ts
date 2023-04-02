@@ -7,7 +7,7 @@ import {
   ConsoleConfig,
 } from '../config/mainConfig';
 import { Console, ConsoleHandlersObjInit } from '../ui/console/console';
-import { PanelMenuGui } from './panelMenuGui';
+import { PanelGui } from './panelGui';
 import { EventLog } from '../ui/eventLog/eventLog';
 
 // TODO move?
@@ -60,7 +60,7 @@ abstract class Panel {
 
   private _console?: Console;
 
-  protected _menuGui?: PanelMenuGui;
+  protected _menuGui?: PanelGui;
   // used with console cmd handler. not used for now.
 
   protected _viewMode: ViewMode;
@@ -723,7 +723,7 @@ abstract class Panel {
       return;
     }
     if (!this._menuGui) {
-      this._menuGui = new PanelMenuGui();
+      this._menuGui = new PanelGui();
     }
     this._menuGui.init(this, this.config.menuConfig);
   }
@@ -812,11 +812,11 @@ abstract class Panel {
     return this._console ?? null;
   }
 
-  get menuGui(): PanelMenuGui | null {
+  get menuGui(): PanelGui | null {
     return this._menuGui ?? null;
   }
 
-  protected set menuGui(menuGui: PanelMenuGui | null) {
+  protected set menuGui(menuGui: PanelGui | null) {
     this._menuGui = menuGui ?? undefined;
   }
 

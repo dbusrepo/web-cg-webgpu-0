@@ -1,30 +1,32 @@
 // import assert from 'assert';
-import {Pane as TweakPane} from 'tweakpane';
+import { Pane as TweakPane } from 'tweakpane';
 import GUI from '../ui/guify/src/gui';
 import { Panel } from './panel';
 import { PanelMenuConfig } from '../config/mainConfig';
 
-// TODO
-type PanelMenuOptions = {
+type PanelTweakOptions = {
+  level: number;
+  name: string;
+  active: boolean;
   // [k: string]: any;
 };
 
 // top panel with guify
 // control pane with tweakpane
-class PanelMenuGui {
+class PanelGui {
   private _config: PanelMenuConfig;
   private _panel: Panel;
-  private _menuOptions: PanelMenuOptions;
-  protected _gui: GUI;
-  protected _controlsPane: TweakPane;
+  protected _topBar: GUI;
+  protected _tweakPane: TweakPane;
+  protected _tweakPaneOptions: PanelTweakOptions;
 
   init(panel: Panel, menuConfig: PanelMenuConfig): void {
     this._panel = panel;
     this._config = menuConfig;
 
-    this.initControlsPane(panel, menuConfig);
+    this.initTweakPane(panel, menuConfig);
 
-    this._gui = new GUI({
+    this._topBar = new GUI({
       root: panel.menuGuiContainer,
       // root: panel.panelEl,
       title: panel.title,
@@ -42,36 +44,37 @@ class PanelMenuGui {
         this._panel.toggleFullWin();
       },
       toggleControls: () => {
-        this._controlsPane.expanded = !this._controlsPane.expanded;
-        menuConfig.controlsPaneOpen = this._controlsPane.expanded;
+        this._tweakPane.expanded = !this._tweakPane.expanded;
+        menuConfig.controlsPaneOpen = this._tweakPane.expanded;
         this._panel.focus();
-      }
+      },
     }); // as unknown as typeof Guify;
   }
 
-  initControlsPane(panel: Panel, menuConfig: PanelMenuConfig): void {
-    const controlsPane = new TweakPane({
-      container: panel.canvasContainerEl,
+  initTweakPane(panel: Panel, menuConfig: PanelMenuConfig): void {
+    const container = panel.canvasContainerEl;
+    this._tweakPane = new TweakPane({
+      container,
       expanded: menuConfig.controlsPaneOpen,
     });
+    this._initTweakPaneStyle(container);
+    this._initTweakPaneOptions();
+  }
 
-    controlsPane.element.style.position = 'absolute';
-    controlsPane.element.style.borderRadius = '0px';
-    controlsPane.element.style.top = '0px';
-    controlsPane.element.style.right = '0px';
-    controlsPane.element.style.overflow = 'scroll';
-    controlsPane.element.style.zIndex = '999999';
+  _initTweakPaneStyle(container: HTMLDivElement) {
+    this._tweakPane.element.style.position = 'absolute';
+    this._tweakPane.element.style.borderRadius = '0px';
+    this._tweakPane.element.style.top = '0px';
+    this._tweakPane.element.style.right = '0px';
+    this._tweakPane.element.style.overflow = 'scroll';
+    this._tweakPane.element.style.zIndex = '999999';
     // tweakPane.controller_.view.buttonElement.disabled = true;
     // tweakPane.controller_.view.buttonElement.style.display = 'none';
 
-    if (controlsPane.element.clientHeight > panel.canvasContainerEl.clientHeight) {
-      // to make overflow scroll work
-      controlsPane.element.style.height = panel.canvasContainerEl.clientHeight + 'px';
+    // to make overflow scroll work
+    if (this._tweakPane.element.clientHeight > container.clientHeight) {
+      this._tweakPane.element.style.height = container.clientHeight + 'px';
     }
-
-    this._controlsPane = controlsPane;
-
-    this.initOptions();
   }
 
   // private getDom(): HTMLElement {
@@ -94,9 +97,18 @@ class PanelMenuGui {
   //   this._panel.panel.removeChild(this.getDom());
   // }
 
-  initOptions() {
-    this._menuOptions = {};
-    this.addPanelOptions();
+  protected _initTweakPaneOptions() {
+    if (!this._tweakPaneOptions) {
+      this._tweakPaneOptions = {
+        level: 0,
+        name: 'Sketch',
+        active: true,
+      };
+    }
+    this._tweakPane.addInput(this._tweakPaneOptions, 'level');
+    this._tweakPane.addInput(this._tweakPaneOptions, 'name');
+    this._tweakPane.addInput(this._tweakPaneOptions, 'active');
+    // this.addPanelOptions();
     // this.initConsoleOptions();
     // this.addEventLogFolderOptions();
     // if (!this._panel.isFullScreen) {
@@ -105,17 +117,17 @@ class PanelMenuGui {
     // this.addFullscreenOption();
   }
 
-  protected addPanelOptions() {
-    // TODO set params from config
-    const PARAMS = {
-      level: 0,
-      name: 'Sketch',
-      active: true,
-    };
-    this._controlsPane.addInput(PARAMS, 'level');
-    this._controlsPane.addInput(PARAMS, 'name');
-    this._controlsPane.addInput(PARAMS, 'active');
-  }
+  // protected addPanelOptions() {
+  //   // TODO set params from config
+  //   const PARAMS = {
+  //     level: 0,
+  //     name: 'Sketch',
+  //     active: true,
+  //   };
+  //   this._tweakPane.addInput(PARAMS, 'level');
+  //   this._tweakPane.addInput(PARAMS, 'name');
+  //   this._tweakPane.addInput(PARAMS, 'active');
+  // }
 
   // private initConsoleOptions(): void {
   //   if (!this._panel.console) {
@@ -291,8 +303,8 @@ class PanelMenuGui {
     return this._config;
   }
 
-  protected get menuOptions(): PanelMenuOptions {
-    return this._menuOptions;
+  protected get menuOptions(): PanelTweakOptions {
+    return this._tweakPaneOptions;
   }
 
   protected get panel(): Panel {
@@ -300,9 +312,9 @@ class PanelMenuGui {
   }
 
   removefromDom() {
-    this._gui.removefromDom();
-    this._controlsPane.dispose();
+    this._topBar.removefromDom();
+    this._tweakPane.dispose();
   }
 }
 
-export { PanelMenuOptions, PanelMenuGui };
+export { PanelGui, PanelTweakOptions };
