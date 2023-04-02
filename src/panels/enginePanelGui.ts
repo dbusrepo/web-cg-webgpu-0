@@ -1,22 +1,27 @@
-import {
-  EnginePanelGuiConfig,
-  enginePanelGuiConfig,
-} from '../config/enginePanelConfig';
-import { PanelGui } from './panelGui';
+import { PanelGui, TweakOptions } from './panelGui';
 import { EnginePanel } from './enginePanel';
 
-const { options: gui_options } = enginePanelGuiConfig;
-
-type EnginePanelTweakOptions = {
-  // [STATS_OPT_KEY]: boolean;
+type EnginePanelTweakOptions = TweakOptions & {
+  stats: boolean;
 };
 
 class EnginePanelGui extends PanelGui {
-  init(panel: EnginePanel, guiConfig: EnginePanelGuiConfig) {
-    super.init(panel, guiConfig);
+  init(panel: EnginePanel) {
+    super.init(panel);
   }
 
   protected _initTweakPaneOptions() {
+    let tweakOptions = this._tweakOptions as EnginePanelTweakOptions;
+    if (!tweakOptions) {
+      tweakOptions = {
+        stats: this.panel.showStats,
+      };
+    }
+    this._tweakPane.addInput(tweakOptions, 'stats', {
+      disabled: !this.panel.isStatsEnable,
+    });
+    this._tweakOptions = tweakOptions;
+
     // super._initTweakPaneOptions();
     // this._tweakPane.addInput(this._tweakPaneOptions, 'fps');
 
@@ -33,30 +38,30 @@ class EnginePanelGui extends PanelGui {
 
   // TODO
   // addStatsOptions() {
-    // const { label } = enginePanelConfig.menuConfig.options.stats;
-    // const initial = this.panel.showStats;
-    // this.menuOptions[STATS_OPT_KEY] = initial;
-    // const folder = label;
-    // this._gui.Register({
-    //   type: 'folder',
-    //   label: folder,
-    //   open: false,
-    // });
-    // this._gui.Register(
-    //   {
-    //     type: 'checkbox',
-    //     label,
-    //     object: this.menuOptions,
-    //     property: STATS_OPT_KEY,
-    //     initial,
-    //     onChange: (visible: boolean) => {
-    //       this.panel.setShowStats(visible);
-    //     },
-    //   },
-    //   {
-    //     folder,
-    //   },
-    // );
+  // const { label } = enginePanelConfig.menuConfig.options.stats;
+  // const initial = this.panel.showStats;
+  // this.menuOptions[STATS_OPT_KEY] = initial;
+  // const folder = label;
+  // this._gui.Register({
+  //   type: 'folder',
+  //   label: folder,
+  //   open: false,
+  // });
+  // this._gui.Register(
+  //   {
+  //     type: 'checkbox',
+  //     label,
+  //     object: this.menuOptions,
+  //     property: STATS_OPT_KEY,
+  //     initial,
+  //     onChange: (visible: boolean) => {
+  //       this.panel.setShowStats(visible);
+  //     },
+  //   },
+  //   {
+  //     folder,
+  //   },
+  // );
   // }
 
   // get tweakPaneOptions(): EnginePanelTweakOptions {
@@ -65,10 +70,6 @@ class EnginePanelGui extends PanelGui {
 
   get panel(): EnginePanel {
     return super.panel as EnginePanel;
-  }
-
-  get config(): EnginePanelGuiConfig {
-    return super.config as EnginePanelGuiConfig;
   }
 }
 

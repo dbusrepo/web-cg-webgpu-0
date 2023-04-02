@@ -1,4 +1,3 @@
-import { panelGuiConfig } from './panelGuiConfig';
 import { eventLogConfig } from './eventLogConfig';
 import { consoleConfig } from './consoleConfig';
 
@@ -30,13 +29,9 @@ const panelConfig = {
   eventLogConfig,
   consoleConfig,
 
-  guiConfig: panelGuiConfig,
-
   focusOnStart: false,
 };
 
 type PanelConfig = typeof panelConfig;
 
 export { StartViewMode, PanelConfig, panelConfig };
-
-export type { PanelGuiConfig } from './panelGuiConfig';

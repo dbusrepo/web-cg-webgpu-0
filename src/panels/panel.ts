@@ -212,7 +212,7 @@ abstract class Panel {
       this._viewMode = ViewMode.FULL_WIN;
     }
     this.setViewMode(ViewMode.FULL_SCREEN);
-    this.resetMenuGui();
+    this.resetGui();
     this.setFullStyle();
   }
 
@@ -477,7 +477,7 @@ abstract class Panel {
       this.appendPanelTo(this._panelContainer);
     }
     this.setWinStyle();
-    this.resetMenuGui();
+    this.resetGui();
     assert(this.isPanelInsideParentContainer());
   }
 
@@ -512,7 +512,7 @@ abstract class Panel {
     return this._preViewMode === undefined;
   }
 
-  protected resetMenuGui(): void {
+  protected resetGui(): void {
     this._menuGui?.removefromDom();
     this.initMenuGui();
   }
@@ -524,7 +524,7 @@ abstract class Panel {
       this.appendPanelTo(this._panelContainerWinFull);
       this.setEventLogVisibility(this.isEventLogVisible);
       this.setFullStyle();
-      this.resetMenuGui();
+      this.resetGui();
     }
     assert(this._panel.parentNode === this._panelContainerWinFull);
   }
@@ -719,13 +719,10 @@ abstract class Panel {
   }
 
   protected initMenuGui(): void {
-    if (!this.config.guiConfig.enable) {
-      return;
-    }
     if (!this._menuGui) {
       this._menuGui = new PanelGui();
     }
-    this._menuGui.init(this, this.config.guiConfig);
+    this._menuGui.init(this);
   }
 
   private initFocus(): void {
@@ -742,6 +739,7 @@ abstract class Panel {
   }
 
   run(): void {
+    console.trace('setShowStats');
     this.initWinMode();
     this.initFullWinMode();
     this.initFocus();

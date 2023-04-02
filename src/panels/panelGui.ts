@@ -3,9 +3,12 @@ import { Pane as TweakPane } from 'tweakpane';
 import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
 import GUI from '../ui/guify/src/gui';
 import { Panel } from './panel';
-import { PanelGuiConfig } from '../config/mainConfig';
 
 type TweakOptions = object;
+
+type PanelGuiConfig = {
+  isTweakPaneExpanded: boolean;
+};
 
 type PanelTweakOptions = TweakOptions & {
   level: number;
@@ -17,7 +20,7 @@ type PanelTweakOptions = TweakOptions & {
 // top panel with guify
 // control pane with tweakpane
 class PanelGui {
-  private _config: PanelGuiConfig;
+  private _cfg: PanelGuiConfig;
   private _panel: Panel;
   private _topBar: GUI;
   protected _tweakPane: TweakPane;
@@ -25,11 +28,16 @@ class PanelGui {
 
   // protected _tweakPaneOptions: PanelTweakOptions;
 
-  init(panel: Panel, guiConfig: PanelGuiConfig): void {
+  init(panel: Panel): void {
     this._panel = panel;
-    this._config = guiConfig;
 
-    this.initTweakPane(panel, guiConfig);
+    if (!this._cfg) {
+      this._cfg = {
+        isTweakPaneExpanded: false, // start closed
+      };
+    }
+
+    this.initTweakPane(panel);
 
     this._topBar = new GUI({
       root: panel.menuGuiContainer,
@@ -50,17 +58,17 @@ class PanelGui {
       },
       toggleControls: () => {
         this._tweakPane.expanded = !this._tweakPane.expanded;
-        guiConfig.controlsPaneOpen = this._tweakPane.expanded;
+        this._cfg.isTweakPaneExpanded = this._tweakPane.expanded;
         this._panel.focus();
       },
     }); // as unknown as typeof Guify;
   }
 
-  initTweakPane(panel: Panel, guiConfig: PanelGuiConfig): void {
+  initTweakPane(panel: Panel): void {
     const container = panel.canvasContainerEl;
     this._tweakPane = new TweakPane({
       container,
-      expanded: guiConfig.controlsPaneOpen,
+      expanded: this._cfg.isTweakPaneExpanded,
     });
     this._tweakPane.registerPlugin(EssentialsPlugin);
     this._initTweakPaneStyle(container);
@@ -84,26 +92,6 @@ class PanelGui {
     }
   }
 
-  // private getDom(): HTMLElement {
-  //   return this._gui.domElement;
-  // }
-
-  // private initPanel(): void {
-  //   if (this._panel.panel !== this.getDom().parentNode) {
-  //     this._panel.panel.appendChild(this.getDom());
-  //   }
-  //   this.setOnTop();
-  // }
-
-  // private setOnTop(): void {
-  //   const parent = this._panel.canvasContainer;
-  //   this.gui.domElement.style.zIndex = String(Number(parent.style.zIndex) + 1);
-  // }
-
-  // private removeMenuFromPanel(): void {
-  //   this._panel.panel.removeChild(this.getDom());
-  // }
-
   protected _initTweakPaneOptions() {
     let tweakOptions = this._tweakOptions as PanelTweakOptions;
     if (!tweakOptions) {
@@ -125,6 +113,26 @@ class PanelGui {
     // }
     // this.addFullscreenOption();
   }
+
+  // private getDom(): HTMLElement {
+  //   return this._gui.domElement;
+  // }
+
+  // private initPanel(): void {
+  //   if (this._panel.panel !== this.getDom().parentNode) {
+  //     this._panel.panel.appendChild(this.getDom());
+  //   }
+  //   this.setOnTop();
+  // }
+
+  // private setOnTop(): void {
+  //   const parent = this._panel.canvasContainer;
+  //   this.gui.domElement.style.zIndex = String(Number(parent.style.zIndex) + 1);
+  // }
+
+  // private removeMenuFromPanel(): void {
+  //   this._panel.panel.removeChild(this.getDom());
+  // }
 
   // protected addPanelOptions() {
   //   // TODO set params from config
@@ -307,10 +315,6 @@ class PanelGui {
   //   // this.removeMenuFromPanel();
   //   // this._gui.destroy();
   // }
-
-  protected get config(): PanelGuiConfig {
-    return this._config;
-  }
 
   // protected get menuOptions(): PanelTweakOptions {
   //   return this._tweakPaneOptions;

@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { EnginePanelConfig, EnginePanelGuiConfig } from '../config/mainConfig';
+import { EnginePanelConfig } from '../config/mainConfig';
 import { Stats } from '../ui/stats/stats';
 import { StatsPanel } from '../ui/stats/statsPanel';
 // import { MemoryStats } from '../ui/stats/memoryStats';
@@ -94,16 +94,13 @@ class EnginePanel extends Panel {
   }
 
   protected initMenuGui(): void {
-    if (!this.config.guiConfig.enable) {
-      return;
-    }
     // const menuGuiConfig: EnginePanelMenuConfig = {
     //   ...this.config.menuConfig,
     // };
     if (!this._menuGui) {
       this._menuGui = new EnginePanelGui();
     }
-    this._menuGui.init(this, this.config.guiConfig);
+    this._menuGui.init(this);
   }
 
   protected setFullStyle(): void {
@@ -139,6 +136,7 @@ class EnginePanel extends Panel {
   }
 
   protected toWinStyle(): void {
+    console.trace('toWinStyle');
     super.toWinStyle();
     if (this._stats) {
       this.setShowStats(true);
@@ -155,6 +153,7 @@ class EnginePanel extends Panel {
   public setShowStats(show: boolean): void {
     assert(this._stats);
     this.config.statsConfig.show = show;
+    // console.trace('setShowStats', show);
     if (show) {
       this._stats.show();
     } else {
@@ -176,8 +175,8 @@ class EnginePanel extends Panel {
 
   run() {
     super.run();
-    this.initEngineWorker();
-    this.runEngineWorker();
+    // this.initEngineWorker();
+    // this.runEngineWorker();
   }
 }
 
