@@ -16,7 +16,8 @@ type EventLogPanelProps = {
 };
 
 const MIN_LENGTH_SEARCH = 0;
-const condApplyFilter = (search: string) => (search || '').length > MIN_LENGTH_SEARCH;
+const condApplyFilter = (search: string) =>
+  (search || '').length > MIN_LENGTH_SEARCH;
 
 const searchFilter = (
   history: EventLogEntry[],
@@ -176,7 +177,9 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
 
   let ctrlDown = false; // TODO ok?
 
-  const onInputKeyDown = (event: JSX.TargetedKeyboardEvent<HTMLInputElement>) => {
+  const onInputKeyDown = (
+    event: JSX.TargetedKeyboardEvent<HTMLInputElement>,
+  ) => {
     // see note here about the use of preventDefault in onKeydown
     // vs onKeyChange with a react input element
     // stackoverflow.com/q/57807522 // TODO

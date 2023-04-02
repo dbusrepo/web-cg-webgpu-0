@@ -61,8 +61,8 @@ class EventLog {
     // let counter = 0;
     // setInterval(() => {
     //   const val = counter++; //Math.round(Math.random()*1000);
-    //   this.log(this.config.welcome + val, 'event ' + val);
-    // }, 500);
+    //   this.log(this._config.helloMsg + val, 'event ' + val);
+    // }, 1000);
 
     // setTimeout(() => {
     // this.clear();
