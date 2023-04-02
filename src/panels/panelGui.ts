@@ -110,6 +110,11 @@ class PanelGui {
     this._tweakPane.addInput(this._tweakPaneOptions, 'level');
     this._tweakPane.addInput(this._tweakPaneOptions, 'name');
     this._tweakPane.addInput(this._tweakPaneOptions, 'active');
+    this._tweakPane.addMonitor(this._tweakPaneOptions, 'level', {
+      view: 'graph',
+      min: -1,
+      max: +1,
+    });
     // this.addPanelOptions();
     // this.initConsoleOptions();
     // this.addEventLogFolderOptions();

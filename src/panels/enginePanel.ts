@@ -4,7 +4,7 @@ import { Stats } from '../ui/stats/stats';
 import { StatsPanel } from '../ui/stats/statsPanel';
 // import { MemoryStats } from '../ui/stats/memoryStats';
 import { Panel } from './panel';
-import { EnginePanelMenuGui } from './enginePanelMenuGui';
+import { EnginePanelGui } from './enginePanelGui';
 import { StatsNames, StatsValues } from '../common';
 import { EngineConfig } from '../engine/engine';
 import Commands from './enginePanelCommands';
@@ -101,7 +101,7 @@ class EnginePanel extends Panel {
     //   ...this.config.menuConfig,
     // };
     if (!this._menuGui) {
-      this._menuGui = new EnginePanelMenuGui();
+      this._menuGui = new EnginePanelGui();
     }
     this._menuGui.init(this, this.config.menuConfig);
   }

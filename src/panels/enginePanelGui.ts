@@ -11,7 +11,7 @@ type EnginePanelTweakOptions = {
   [STATS_OPT_KEY]: boolean;
 } & PanelTweakOptions;
 
-class EnginePanelMenuGui extends PanelGui {
+class EnginePanelGui extends PanelGui {
   init(panel: EnginePanel, menuConfig: EnginePanelMenuConfig) {
     super.init(panel, menuConfig);
   }
@@ -54,7 +54,7 @@ class EnginePanelMenuGui extends PanelGui {
   get tweakPaneOptions(): EnginePanelTweakOptions {
     return super._tweakPaneOptions as EnginePanelTweakOptions;
   }
-  
+
   get panel(): EnginePanel {
     return super.panel as EnginePanel;
   }
@@ -64,4 +64,4 @@ class EnginePanelMenuGui extends PanelGui {
   }
 }
 
-export { EnginePanelMenuGui };
+export { EnginePanelGui };
