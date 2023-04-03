@@ -277,8 +277,8 @@ abstract class Panel {
   private initCanvas(): void {
     this._canvasContainer = document.createElement('div');
     this._canvas = document.createElement('canvas');
-    this._canvas.width = Number(this.config.canvasWidth);
-    this._canvas.height = Number(this.config.canvasHeight);
+    this._canvas.width = Number(this._config.canvasWidth);
+    this._canvas.height = Number(this._config.canvasHeight);
     // other init elements could change canvas props (event log?) so we start
     // hidden
     // this._panelContainer.appendChild(this._canvas);
