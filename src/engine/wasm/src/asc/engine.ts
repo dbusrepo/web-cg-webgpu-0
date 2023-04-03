@@ -131,7 +131,7 @@ function run(): void {
   // logi(sleepLoc);
   // logi(load<u32>(sleepLoc));
 
-  draw.clearBg(s, e, workerIdx === 0 ? 0xff_ff_00_00 : 0xff_ff_00_00); // ABGR
+  draw.clearBg(s, e, 0xff_00_00_00); // ABGR
 }
 
 function runWorker(): void {
@@ -142,7 +142,7 @@ function runWorker(): void {
     atomic.wait<i32>(syncLoc, 0);
     // utils.sleep(sleepLoc, 16);
 
-    draw.clearBg(s, e, workerIdx === 0 ? bgColor : 0xff_ff_00_00); // ABGR
+    draw.clearBg(s, e, 0xff_ff_00_00); // ABGR
     // logi(workerIdx);
 
     // // // logi(image.height);
