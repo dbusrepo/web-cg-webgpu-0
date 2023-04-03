@@ -251,6 +251,9 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
     const line = prompt + inValue.substring(prompt.length);
     inputRef.value = line;
     setInput(line);
+    if (!inValue.substring(prompt.length)) {
+      setAutoScrollNewItems(true);
+    }
   };
 
   const onInputClick = (event: React.ChangeEvent<HTMLInputElement>) => {

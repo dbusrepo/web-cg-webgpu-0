@@ -61,16 +61,17 @@ function EventLogHistoryPanel(props: EventHistoryProps): JSX.Element {
       if (scrollTopTo !== null) {
         parent.scrollTop = scrollTopTo;
       } else if (autoScrollNewItems) {
-        const scrollY =
-          parent.scrollHeight - parent.clientHeight - parent.scrollTop;
-        /* an imm scroll to bottom when there is too much to scroll */
-        if (scrollY > parent.clientHeight) {
-          parent.scrollTop += scrollY;
-        } else if (lastMsgRef) {
-          // otherwise do a smooth scroll
-          // lastMsgRef.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          lastMsgRef.scrollIntoView({ behavior: 'auto', block: 'end' });
-        }
+        lastMsgRef?.scrollIntoView({ behavior: 'auto', block: 'end' });
+        // const scrollY =
+        //   parent.scrollHeight - parent.clientHeight - parent.scrollTop;
+        // /* an imm scroll to bottom when there is too much to scroll */
+        // if (scrollY > parent.clientHeight) {
+        //   parent.scrollTop += scrollY;
+        // } else if (lastMsgRef) {
+        //   // otherwise do a smooth scroll
+        //   lastMsgRef.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        //   // lastMsgRef.scrollIntoView({ behavior: 'auto', block: 'end' });
+        // }
       }
     }
   });

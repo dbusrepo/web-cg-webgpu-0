@@ -33,8 +33,8 @@ class Main {
     // const enginePanel = null;
     const enginePanel = this.buildEnginePanel('3D View', board, row0, stats);
     this.panels.push(enginePanel);
-    // const aPanel = this.buildViewPanel('View', board, row0, stats);
-    // this.panels.push(aPanel);
+    const aPanel = this.buildViewPanel('View', board, row0, stats);
+    this.panels.push(aPanel);
     // board.style.display = 'none';
     // const aPanel2 = this.buildViewPanel('View', board, row1);
     // this.panels.push(aPanel2);
