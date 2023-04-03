@@ -290,16 +290,13 @@ abstract class Panel {
   private setCanvasWinStyle(): void {
     resetClassName(this._canvas);
     this._canvas.classList.add('canvas', 'canvas-win');
-    this._canvas.style.width = `${this._config.canvasDisplayWidthWinMode}px`;
-    this._canvas.style.height = `${this._config.canvasDisplayHeightWinMode}px`;
+    this._canvasContainer.style.width = `${this._config.canvasDisplayWidthWinMode}px`;
+    this._canvasContainer.style.height = `${this._config.canvasDisplayHeightWinMode}px`;
     resetClassName(this._canvasContainer);
     this._canvasContainer.classList.add(
       'canvas-container',
       'canvas-container-win',
     );
-    this._canvasContainer.style.height = `${Number(
-      this.config.canvasDisplayHeightWinMode,
-    )}px`;
   }
 
   private setCanvasFullStyle(): void {
@@ -307,8 +304,8 @@ abstract class Panel {
     // update canvas
     resetClassName(this._canvas);
     this._canvas.classList.add('canvas', 'canvas-full');
-    this._canvas.style.width = '100%';
-    this._canvas.style.height = '100%';
+    this._canvasContainer.style.width = '100%';
+    this._canvasContainer.style.height = '100%';
     // update canvas container
     resetClassName(this._canvasContainer);
     this._canvasContainer.classList.add(

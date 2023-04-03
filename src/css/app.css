@@ -1,4 +1,5 @@
-html, body {
+html,
+body {
   /* overflow: hidden; */
   /* width: 100%; */
   /* height: 100%; */
@@ -30,7 +31,7 @@ html, body {
   position: relative;
   display: flex;
   flex-direction: column;
-  background-color: #8C92AC !important;
+  background-color: #8c92ac !important;
   /* background: linear-gradient(#8C92AC, #8C92AC); */
   /* background: rgb(208,214,233); */
   /* background: radial-gradient(circle, rgba(208,214,233,1) 0%, rgba(105,111,140,1) 100%); */
@@ -47,20 +48,20 @@ html, body {
 }
 
 .row {
-    position: relative;
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    align-items: center;
-    /* height: 40%; */
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  align-items: center;
+  /* height: 40%; */
 }
 
 .row0 {
-    justify-content: space-evenly;
+  justify-content: space-evenly;
 }
 
 .row1 {
-    justify-content: space-evenly;
+  justify-content: space-evenly;
 }
 
 .stats-container {
@@ -147,6 +148,8 @@ html, body {
   display: block;
   image-rendering: pixelated;
   /* object-fit: */
+  width: 100%;
+  height: 100%;
 }
 
 .canvas-win {
@@ -157,8 +160,6 @@ html, body {
 .canvas-full {
   /* position: absolute; */
   top: 0;
-  width: 100%;
-  height: 100%;
 }
 
 /* dat gui menu */
@@ -239,8 +240,8 @@ html, body {
   white-space: nowrap;
 }
 
-.event-log-history::-webkit-scrollbar{
-    display: none;
+.event-log-history::-webkit-scrollbar {
+  display: none;
 }
 
 .event-log-input {
@@ -251,7 +252,7 @@ html, body {
   bottom: 0;
   outline: none;
   border: none;
-  color: #DDD;
+  color: #ddd;
   /* box-sizing: border-box; */
   font-family: Menlo, monospace;
   padding: 0px 5px;
@@ -274,13 +275,13 @@ html, body {
 
 .event-log-msg {
   margin: 0;
-  color: #FF0;
+  color: #ff0;
   white-space: pre;
 }
 
 .event-log-type {
   margin: 0;
-  color: #7E0;
+  color: #7e0;
 }
 
 /* for the console container <- not used */
@@ -302,7 +303,7 @@ html, body {
   background-color: rgba(112, 128, 144, 0.9);
   width: 100%;
   font-family: Menlo, monospace;
-  color: #DDD;
+  color: #ddd;
   transition: margin-top 100ms ease-in-out;
 }
 
@@ -319,8 +320,8 @@ html, body {
   white-space: nowrap;
 }
 
-.console-history::-webkit-scrollbar{
-    display: none;
+.console-history::-webkit-scrollbar {
+  display: none;
 }
 
 .console-input {
@@ -330,7 +331,7 @@ html, body {
   bottom: 0;
   outline: none;
   border: none;
-  color: #DDD;
+  color: #ddd;
   font-family: Menlo, monospace;
   padding: 0px 5px;
   background-color: transparent;
@@ -350,13 +351,13 @@ html, body {
 
 .console-msg {
   margin: 0;
-  color: #DDD;
+  color: #ddd;
   white-space: pre;
 }
 
 .console-stmt {
   margin: 0;
-  color: #7E0;
+  color: #7e0;
 }
 
 /* .event-log-list-panel::-webkit-scrollbar { */
