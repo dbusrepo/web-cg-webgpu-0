@@ -29,7 +29,7 @@ type EventHandler = {
 // (...args: EventHandlerInput) => '';
 
 class EventLog {
-  private _config: EventLogConfig;
+  private _cfg: EventLogConfig;
   private _history: EventLogEntry[];
   private _defaultHandler: EventHandlerFunObj | null;
   private _handlers: { [k: EventKey]: EventHandler };
@@ -42,7 +42,7 @@ class EventLog {
     config: EventLogConfig,
     handlers: { [k: string]: EventHandlerFunObj },
   ) {
-    this._config = config;
+    this._cfg = config;
     this._container = container;
     this._history = [];
     this._handlers = {};
@@ -55,7 +55,7 @@ class EventLog {
     }
 
     // we render here
-    this.log('', this._config.helloMsg); // show panel background imm
+    this.log('', this._cfg.helloMsg); // show panel background imm
     this.log('', 'micio micio bau bau'); // show panel background imm
 
     // let counter = 0;
@@ -118,13 +118,13 @@ class EventLog {
       history: this._history,
       parentContainer: this._container,
       scrollToBottom,
-      fontSize: this._config.fontSize,
-      lineHeight: this._config.lineHeight,
+      fontSize: this._cfg.fontSize,
+      lineHeight: this._cfg.lineHeight,
       updateRender: (props: EventLogPanelProps) => {
         this._panel = <EventLogPanel {...props} />;
         preactRender(this._panel, this._container);
       },
-      prompt: '> ', // TODO cfg ?
+      prompt: this._cfg.prompt,
     };
 
     this._panel = <EventLogPanel {...panelProps} />;
@@ -153,12 +153,12 @@ class EventLog {
   }
 
   setFontSize(fontSize: number): void {
-    this._config.fontSize = fontSize;
+    this._cfg.fontSize = fontSize;
     this.render();
   }
 
   setLineHeight(lineHeight: number): void {
-    this._config.lineHeight = lineHeight;
+    this._cfg.lineHeight = lineHeight;
     this.render();
   }
 

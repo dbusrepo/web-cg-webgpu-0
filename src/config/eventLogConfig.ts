@@ -14,6 +14,8 @@ const eventLogConfig = {
 
   fontSize: 12,
   lineHeight: 16,
+
+  prompt: '> ',
 };
 
 type EventLogConfig = typeof eventLogConfig & {
