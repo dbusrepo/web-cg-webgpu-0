@@ -708,7 +708,7 @@ abstract class Panel {
 
   public setStatsVisible(visible: boolean): void {
     assert(this._stats);
-    this.config.statsConfig.show = visible;
+    this.isStatsVisible = visible;
     if (visible) {
       this._stats.show();
     } else {
@@ -738,10 +738,12 @@ abstract class Panel {
 
   protected initGui(): void {
     if (!this._menuGui) {
-      this._menuGui = new PanelGui();
+      this._menuGui = this.createPanelGui();
     }
     this._menuGui.init(this);
   }
+
+  protected abstract createPanelGui(): PanelGui;
 
   private initFocus(): void {
     // if a previous panel has starting focus, ignore start focus for this
@@ -843,16 +845,12 @@ abstract class Panel {
     return Panel._panels;
   }
 
-  get isEventLogVisible(): boolean {
-    return this._config.eventLogConfig.isVisible;
-  }
-
-  set isEventLogVisible(value: boolean) {
-    this._config.eventLogConfig.isVisible = value;
-  }
-
   public get isStatsVisible(): boolean {
-    return this.config.statsConfig.show;
+    return this._stats.isVisible;
+  }
+
+  private set isStatsVisible(value: boolean) {
+    this._stats.isVisible = value;
   }
 
   get isConsoleOpen(): boolean {
@@ -863,12 +861,20 @@ abstract class Panel {
     this._config.consoleConfig.isOpen = value;
   }
 
-  get isEventLogBelowCanvas(): boolean {
-    return this._config.eventLogConfig.showBelowCanvas;
+  get isEventLogVisible(): boolean {
+    return this._config.eventLogConfig.isVisible;
   }
 
-  set isEventLogBelowCanvas(value: boolean) {
-    this._config.eventLogConfig.showBelowCanvas = value;
+  set isEventLogVisible(value: boolean) {
+    this._config.eventLogConfig.isVisible = value;
+  }
+
+  get isEventLogBelowCanvas(): boolean {
+    return this._config.eventLogConfig.isBelowCanvas;
+  }
+
+  private set isEventLogBelowCanvas(value: boolean) {
+    this._config.eventLogConfig.isBelowCanvas = value;
   }
 }
 

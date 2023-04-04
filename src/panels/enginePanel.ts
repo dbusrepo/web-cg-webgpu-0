@@ -75,14 +75,8 @@ class EnginePanel extends Panel {
     return super.config as EnginePanelConfig;
   }
 
-  protected initGui(): void {
-    // const menuGuiConfig: EnginePanelMenuConfig = {
-    //   ...this.config.menuConfig,
-    // };
-    if (!this._menuGui) {
-      this._menuGui = new EnginePanelGui();
-    }
-    this._menuGui.init(this);
+  protected createPanelGui(): EnginePanelGui {
+    return new EnginePanelGui();
   }
 
   private runEngineWorker(): void {

@@ -1,6 +1,5 @@
 import { eventLogConfig } from './eventLogConfig';
 import { consoleConfig } from './consoleConfig';
-import { StatsConfig, statsConfig } from './statsConfig';
 
 const enum StartViewMode {
   WIN = 'win',
@@ -31,7 +30,6 @@ const panelConfig = {
 
   eventLogConfig,
   consoleConfig,
-  statsConfig,
 
   focusOnStart: false,
 };

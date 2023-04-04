@@ -2,6 +2,7 @@
 import { ViewPanelConfig } from '../config/mainConfig';
 import { Panel } from './panel';
 import { Stats } from '../ui/stats/stats';
+import { ViewPanelGui } from './viewPanelGui';
 // import { Console, ConsoleHandlersObjInit } from '../ui/console/console';
 
 class ViewPanel extends Panel {
@@ -49,6 +50,10 @@ class ViewPanel extends Panel {
 
   protected setWinStyle(): void {
     super.setWinStyle();
+  }
+
+  protected createPanelGui(): ViewPanelGui {
+    return new ViewPanelGui();
   }
 
   run() {

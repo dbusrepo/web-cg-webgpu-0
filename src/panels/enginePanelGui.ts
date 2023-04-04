@@ -1,13 +1,12 @@
-import { PanelGui } from './panelGui';
+import { PanelGui, PanelTweakOptions } from './panelGui';
 import { EnginePanel } from './enginePanel';
 
-// each panel has its own tweak pane options
-type EnginePanelTweakOptions = {
-  // [k: string]: any;
-  // level: number;
-  // name: string;
-  // active: boolean;
-  stats: boolean;
+enum TweakOptionsKeys {
+  EP_OPT = 'EP_OPT',
+}
+
+type EnginePanelTweakOptions = PanelTweakOptions & {
+  [TweakOptionsKeys.EP_OPT]: boolean;
 };
 
 class EnginePanelGui extends PanelGui {
@@ -15,20 +14,26 @@ class EnginePanelGui extends PanelGui {
     super.init(panel);
   }
 
-  protected _initTweakPaneOptions() {
-    let tweakOptions = this._tweakOptions as EnginePanelTweakOptions;
-    if (!tweakOptions) {
-      tweakOptions = {
-        stats: this.panel.isStatsVisible,
-      };
-    }
-    const statsInput = this._tweakPane.addInput(tweakOptions, 'stats');
-    statsInput.on('change', () => {
-      this.panel.setStatsVisible(tweakOptions.stats);
-      PanelGui.updateStatsOptPanels(this);
-    });
-    this._tweakOptions = tweakOptions;
+  get tweakOptions() {
+    return super._tweakOptions as EnginePanelTweakOptions;
+  }
 
+  protected _initTweakPaneOptions() {
+    super._initTweakPaneOptions();
+    // const tweakOptions = this.tweakOptions;
+
+    // let tweakOptions = this._tweakOptions;
+    // if (!tweakOptions) {
+    //   tweakOptions = {
+    //     stats: this.panel.isStatsVisible,
+    //   };
+    // }
+    // const statsInput = this._tweakPane.addInput(tweakOptions, 'stats');
+    // statsInput.on('change', () => {
+    //   this.panel.setStatsVisible(tweakOptions.stats);
+    //   PanelGui.updateStatsOptPanels(this);
+    // });
+    // this._tweakOptions = tweakOptions;
     // this._tweakPane.addInput(this._tweakPaneOptions, 'fps');
     // this._tweakPane.addMonitor(this._tweakPaneOptions, 'level', {
     //   view: 'graph',

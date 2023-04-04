@@ -1,5 +1,5 @@
 const statsConfig = {
-  show: true,
+  isVisible: true,
 };
 
 type StatsConfig = typeof statsConfig;

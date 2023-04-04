@@ -1,19 +1,30 @@
-// import assert from 'assert';
+import assert from 'assert';
 import { Pane as TweakPane } from 'tweakpane';
 import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
 import GUI from '../ui/guify/src/gui';
 import { Panel } from './panel';
 
+enum EventLogVis {
+  BELOW_CANVAS = 'below',
+  OVER_CANVAS = 'over',
+  INVISIBLE = 'invisible',
+}
+
 type PanelGuiConfig = {
   isTweakPaneExpanded: boolean;
 };
 
+enum TweakOptionsKeys {
+  STATS = 'stats',
+  events = 'events',
+}
+
 type PanelTweakOptions = {
-  // [k: string]: any;
-  stats: boolean;
+  [TweakOptionsKeys.STATS]: boolean;
+  [TweakOptionsKeys.events]: EventLogVis;
 };
 
-class PanelGui {
+abstract class PanelGui {
   private static _panelsStatsOpt: PanelGui[] = [];
   private _cfg: PanelGuiConfig;
   private _panel: Panel;
@@ -24,6 +35,8 @@ class PanelGui {
   // protected _tweakPaneOptions: PanelTweakOptions;
 
   init(panel: Panel): void {
+    assert(panel, 'panel is null or undefined');
+
     if (!this._cfg) {
       this._cfg = {
         isTweakPaneExpanded: false, // start closed
@@ -88,25 +101,70 @@ class PanelGui {
     }
   }
 
+  private getEventLogVisState(): EventLogVis {
+    if (this._panel.isEventLogVisible) {
+      return this._panel.isEventLogBelowCanvas
+        ? EventLogVis.BELOW_CANVAS
+        : EventLogVis.OVER_CANVAS;
+    }
+    return EventLogVis.INVISIBLE;
+  }
+
   protected _initTweakPaneOptions() {
-    let tweakOptions = this._tweakOptions as PanelTweakOptions;
+    let tweakOptions = this._tweakOptions;
+
     if (!tweakOptions) {
       tweakOptions = {
-        stats: this.panel.isStatsVisible,
+        [TweakOptionsKeys.STATS]: this.panel.isStatsVisible,
+        [TweakOptionsKeys.events]: this.getEventLogVisState(),
       };
     }
-    const statsInput = this._tweakPane.addInput(tweakOptions, 'stats');
-    statsInput.on('change', () => {
-      this.panel.setStatsVisible(tweakOptions.stats);
+
+    const statsInput = this._tweakPane.addInput(
+      tweakOptions,
+      TweakOptionsKeys.STATS,
+    );
+    statsInput.on('change', (ev) => {
+      this.panel.setStatsVisible(ev.value);
       PanelGui.updateStatsOptPanels(this);
+    });
+
+    const eventsFolder = this._tweakPane.addFolder({
+      title: 'Events',
+      expanded: false,
+    });
+
+    const eventLogPosInput = eventsFolder.addInput(
+      tweakOptions,
+      TweakOptionsKeys.events,
+      {
+        options: {
+          below: EventLogVis.BELOW_CANVAS,
+          over: EventLogVis.OVER_CANVAS,
+          invisible: EventLogVis.INVISIBLE,
+        },
+      },
+    );
+
+    eventLogPosInput.on('change', (ev) => {
+      switch (ev.value) {
+        case EventLogVis.BELOW_CANVAS:
+          this._panel.setEventLogBelowCanvas();
+          this._panel.setEventLogVisibility(true);
+          break;
+        case EventLogVis.OVER_CANVAS:
+          this._panel.setEventLogOnCanvas();
+          this._panel.setEventLogVisibility(true);
+          break;
+        case EventLogVis.INVISIBLE:
+          this._panel.setEventLogVisibility(false);
+          break;
+      }
     });
 
     this._tweakOptions = tweakOptions;
 
     // TODO:
-    // this.addPanelOptions();
-    // this.initConsoleOptions();
-    // this.addEventLogFolderOptions();
     // if (!this._panel.isFullScreen) {
     //   this.addOptFullWin();
     // }
@@ -338,4 +396,4 @@ class PanelGui {
   }
 }
 
-export { PanelGui };
+export { PanelGui, PanelTweakOptions };

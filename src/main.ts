@@ -6,6 +6,7 @@ import {
   ViewPanelConfig,
   mainConfig,
 } from './config/mainConfig';
+import { statsConfig } from './ui/stats/statsConfig';
 import { Panel } from './panels/panel';
 import { EnginePanel } from './panels/enginePanel';
 import { ViewPanel } from './panels/viewPanel';
@@ -42,6 +43,13 @@ class Main {
 
   private initStats() {
     const stats = new Stats();
+    const cfg = {
+      ...statsConfig,
+      isVisible: true,
+      // enable: false,
+      // isVisible: false,
+    };
+    stats.init(cfg);
     const fpsPanel = new StatsPanel(StatsNames.FPS, '#0ff', '#022');
     const upsPanel = new StatsPanel(StatsNames.UPS, '#0f0', '#020');
     const unlockedFpsPanel = new StatsPanel(StatsNames.FPSU, '#f50', '#110');
@@ -70,10 +78,10 @@ class Main {
       startViewMode: StartViewMode.WIN,
       title,
       focusOnStart: true,
-      statsConfig: {
-        ...enginePanelConfig.statsConfig,
-        // enable: false,
-        // isVisible: false,
+      eventLogConfig: {
+        ...enginePanelConfig.eventLogConfig,
+        isVisible: false,
+        isBelowCanvas: true,
       },
     };
     return new EnginePanel(board, parentNode).init(panelConfig, stats);

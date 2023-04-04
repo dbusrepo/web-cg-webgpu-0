@@ -1,11 +1,14 @@
 // import assert from 'assert';
 import { StatsPanel } from './statsPanel';
+import { StatsConfig } from './statsConfig';
 
 class Stats {
+  private _cfg: StatsConfig;
   private _container: HTMLDivElement;
   private _panels = new Map<string, StatsPanel>();
 
-  constructor() {
+  init(cfg: StatsConfig) {
+    this._cfg = structuredClone(cfg);
     this._container = document.createElement('div');
     this._container.classList.add('stats-container');
     // this.schedule_mem_measure(); // TODO move ? remove?
@@ -40,6 +43,13 @@ class Stats {
     }
   }
 
+  public get isVisible(): boolean {
+    return this._cfg.isVisible;
+  }
+
+  public set isVisible(value: boolean) {
+    this._cfg.isVisible = value;
+  }
 }
 
 export { Stats };

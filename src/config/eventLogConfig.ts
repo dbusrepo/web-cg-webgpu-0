@@ -1,7 +1,8 @@
 const eventLogConfig = {
   helloMsg: 'Hello !',
+
   isVisible: true,
-  showBelowCanvas: true,
+  isBelowCanvas: true,
 
   // ************************************************************************
   // when windowed (aka win mode) the event log own container is kept below the
