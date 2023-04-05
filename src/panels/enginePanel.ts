@@ -1,11 +1,10 @@
 import assert from 'assert';
 import { EnginePanelConfig } from '../config/mainConfig';
-import { Stats } from '../ui/stats/stats';
+import { Stats, StatsNames, StatsValues } from '../ui/stats/stats';
 import { StatsPanel } from '../ui/stats/statsPanel';
 // import { MemoryStats } from '../ui/stats/memoryStats';
 import { Panel } from './panel';
 import { EnginePanelGui } from './enginePanelGui';
-import { StatsValues } from '../common';
 import { EngineConfig } from '../engine/engine';
 import Commands from './enginePanelCommands';
 
@@ -25,6 +24,10 @@ class EnginePanel extends Panel {
     return this;
   }
 
+  get menuGui(): EnginePanelGui {
+    return this._menuGui as EnginePanelGui;
+  }
+
   initEngineWorker(): void {
     this._engineWorker = buildEngineWorker();
 
@@ -33,6 +36,7 @@ class EnginePanel extends Panel {
     const commands = {
       [Commands.UPDATESTATS]: (values: StatsValues) => {
         enginePanel._stats.update(values);
+        enginePanel.menuGui.updateFps(values[StatsNames.FPSU]);
       },
       [Commands.EVENT]: (msg: string) => {
         // console.log(msg);

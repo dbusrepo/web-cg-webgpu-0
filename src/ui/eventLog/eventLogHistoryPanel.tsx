@@ -1,5 +1,5 @@
 import { h, JSX } from 'preact';
-import React, { useEffect } from 'react';
+import React, { useEffect, useLayoutEffect } from 'react';
 
 type Event = string;
 
@@ -55,7 +55,7 @@ function EventLogHistoryPanel(props: EventHistoryProps): JSX.Element {
     }
   });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const parent = getPanelRef();
     if (parent) {
       if (scrollTopTo !== null) {

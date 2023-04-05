@@ -3,10 +3,10 @@ import * as WasmUtils from './wasmMemUtils';
 import {
   // BPP_PAL,
   // BPP_RGBA,
-  StatsNames,
-  StatsValues,
   MILLI_IN_SEC,
 } from '../common';
+
+import { StatsNames, StatsValues } from '../ui/stats/stats';
 
 import { mainConfig } from '../config/mainConfig';
 import * as utils from './utils';

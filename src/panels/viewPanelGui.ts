@@ -1,12 +1,12 @@
 import { PanelGui, PanelTweakOptions } from './panelGui';
 import { ViewPanel } from './viewPanel';
 
-enum TweakOptionsKeys {
+enum ViewPanelTweakOptionsKeys {
   VP_OPT = 'VP_OPT',
 }
 
 type ViewPanelTweakOptions = PanelTweakOptions & {
-  [TweakOptionsKeys.VP_OPT]: boolean;
+  [ViewPanelTweakOptionsKeys.VP_OPT]: boolean;
 };
 
 class ViewPanelGui extends PanelGui {
@@ -15,21 +15,16 @@ class ViewPanelGui extends PanelGui {
   }
 
   get tweakOptions() {
-    return super._tweakOptions as ViewPanelTweakOptions;
+    return this._tweakOptions as ViewPanelTweakOptions;
   }
 
-  protected _initTweakPaneOptions() {
-    super._initTweakPaneOptions();
-    // const tweakOptions = this.tweakOptions;
+  protected _initTweakPaneOptionsObj(): void {
+    super._initTweakPaneOptionsObj();
+  }
 
-    // TODO:
-    // this.addPanelOptions();
-    // this.initConsoleOptions();
-    // this.addEventLogFolderOptions();
-    // if (!this._panel.isFullScreen) {
-    //   this.addOptFullWin();
-    // }
-    // this.addFullscreenOption();
+  protected _addTweakPaneOptions() {
+    super._addStatsOpt();
+    super._addEventLogOpt();
   }
 }
 

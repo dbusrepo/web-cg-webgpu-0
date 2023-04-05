@@ -59,9 +59,9 @@ abstract class Panel {
   private _eventLogBottomPanel?: HTMLDivElement;
   private _eventLogMainPanel?: HTMLDivElement;
 
-  private _console?: Console;
+  private _console: Console;
 
-  protected _menuGui?: PanelGui;
+  protected _menuGui: PanelGui;
   // used with console cmd handler. not used for now.
 
   protected _stats: Stats;
@@ -107,6 +107,7 @@ abstract class Panel {
     this._panel.style.marginTop = '0';
     this._panel.style.width = `auto`;
     this._panel.style.height = `auto`;
+    this._panelContainerWinFull.style.display = 'none';
     if (!(this.isInit() || this._preViewMode === ViewMode.WIN)) {
       this.setAllPanelsToWinMode();
     }
@@ -126,6 +127,7 @@ abstract class Panel {
       : this._panelContainerWinFullHeight;
     this._panel.style.height = `${panelFullHeight - 25}px`;
     this.hideOtherPanels();
+    this._panelContainerWinFull.style.display = 'block';
   }
 
   private setViewMode(viewMode: ViewMode): void {
@@ -243,7 +245,6 @@ abstract class Panel {
 
   protected initKeyHandlers(): void {
     const onPanelKeyDown = (e: KeyboardEvent) => {
-      // console.log('panel onKeyDown')
       // switch (e.key) {
       //   case Panel.FULL_WIN_KEY:
       //     // this.toggleFullWin(); // disable for now TODO
@@ -384,7 +385,7 @@ abstract class Panel {
   // TODO refactor ?
   protected buildConsoleHandlers(): ConsoleHandlersObjInit {
     const clear = () => {
-      this._console!.clear();
+      this._console.clear();
     };
     const defaultHandler = () => 'Unrecognized command';
     defaultHandler.isDefault = true;
@@ -425,7 +426,7 @@ abstract class Panel {
 
   protected setAllPanelsToWinMode(): void {
     for (const panel of Panel.getPanelList()) {
-      panel._panelContainerWinFull.style.display = 'block';
+      panel._panelContainerWinFull.style.display = 'none';
       panel._panelContainer.style.display = 'block';
       // force all panels to win mode
       panel.setViewMode(ViewMode.WIN);
@@ -485,7 +486,7 @@ abstract class Panel {
   protected setWinStyle(): void {
     this.setPanelWinStyle();
     this.setCanvasWinStyle();
-    this._console?.setOnWinMode();
+    this._console.setOnWinMode();
     if (this._eventLog) {
       this.setEventLogBottomPanelWinStyle();
       this.moveEventLogBottomPanelOutOfPanel();
@@ -500,7 +501,7 @@ abstract class Panel {
       // }
       this.eventLogCheckInv();
     }
-    this.updateStats(this.boardEl);
+    this.updateStatsParent(this.boardEl);
   }
 
   private initWinMode(): void {
@@ -531,7 +532,15 @@ abstract class Panel {
     assert(this._panel.parentNode === this._panelContainerWinFull);
   }
 
-  private updateStats(parent: HTMLDivElement): void {
+  private updateStatsParent(parent: HTMLDivElement): void {
+    if (
+      this.isInit() &&
+      Panel.getPanelList().filter((p) => p !== this && p.isFullWin).length
+    ) {
+      // if a prev panel while init was in fullWin mode, don't update stats parent
+      // to avoid setting an incorrect parent node
+      return;
+    }
     this._stats.setParentNode(parent);
     this.setStatsVisible(this.isStatsVisible);
   }
@@ -539,12 +548,12 @@ abstract class Panel {
   protected setFullStyle(): void {
     this.setPanelFullStyle();
     this.setCanvasFullStyle();
-    this._console?.setOnFullMode(); // TODO check from here...
+    this._console.setOnFullMode(); // TODO check from here...
     if (this._eventLog) {
       this.setEventLogBottomPanelFullStyle(); // TODO not necessary?
       this._eventLog.render(true);
     }
-    this.updateStats(this.panelEl);
+    this.updateStatsParent(this.panelEl);
   }
 
   private setEventLogBottomPanelWinStyle(): void {
@@ -733,7 +742,7 @@ abstract class Panel {
 
   setConsoleLineHeight(lineHeight: number): void {
     assert(this._eventLog);
-    this._console?.setLineHeight(lineHeight);
+    this._console.setLineHeight(lineHeight);
   }
 
   protected initGui(): void {
@@ -825,16 +834,16 @@ abstract class Panel {
     return this._config;
   }
 
-  get console(): Console | null {
-    return this._console ?? null;
+  get console(): Console {
+    return this._console;
   }
 
-  get menuGui(): PanelGui | null {
-    return this._menuGui ?? null;
+  get menuGui(): PanelGui {
+    return this._menuGui;
   }
 
-  protected set menuGui(menuGui: PanelGui | null) {
-    this._menuGui = menuGui ?? undefined;
+  protected set menuGui(menuGui: PanelGui) {
+    this._menuGui = menuGui;
   }
 
   get eventLog(): EventLog | null {

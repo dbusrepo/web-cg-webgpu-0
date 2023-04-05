@@ -56,12 +56,11 @@ class EventLog {
 
     // we render here
     this.log('', this._cfg.helloMsg); // show panel background imm
-    this.log('', 'micio micio bau bau'); // show panel background imm
 
     // let counter = 0;
     // setInterval(() => {
     //   const val = counter++; //Math.round(Math.random()*1000);
-    //   this.log(this._config.helloMsg + val, 'event ' + val);
+    //   this.log('event ' + val, this._cfg.helloMsg + ' ' + val);
     // }, 1000);
 
     // setTimeout(() => {

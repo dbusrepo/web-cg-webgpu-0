@@ -10,18 +10,6 @@ const PAGE_SIZE_BYTES = _1p;
 const MILLI_IN_SEC = 1000; // TODO move to common ?
 const PALETTE_SIZE = 256;
 
-enum StatsNames {
-  FPS = 'FPS',
-  UPS = 'UPS',
-  FPSU = 'FPSU',
-  MEM = 'MEM',
-  // WASM_HEAP = 'WASM_HEAP', // heap mem allocated by wasm workers in the private heap + in the shared heap
-}
-
-type StatsValues = {
-  [property in keyof typeof StatsNames]: number;
-};
-
 // type TypedArray =
 //   | Int8Array
 //   | Uint8Array
@@ -40,6 +28,4 @@ export {
   PAGE_SIZE_BYTES,
   PAL_ENTRY_SIZE,
   PALETTE_SIZE,
-  StatsNames,
-  StatsValues,
 };

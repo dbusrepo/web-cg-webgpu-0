@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { Pane as TweakPane } from 'tweakpane';
+import { Pane as TweakPane, InputBindingApi } from 'tweakpane';
 import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
 import GUI from '../ui/guify/src/gui';
 import { Panel } from './panel';
@@ -14,14 +14,14 @@ type PanelGuiConfig = {
   isTweakPaneExpanded: boolean;
 };
 
-enum TweakOptionsKeys {
+enum PanelTweakOptionsKeys {
   STATS = 'stats',
-  events = 'events',
+  EVENTS = 'events',
 }
 
 type PanelTweakOptions = {
-  [TweakOptionsKeys.STATS]: boolean;
-  [TweakOptionsKeys.events]: EventLogVis;
+  [PanelTweakOptionsKeys.STATS]: boolean;
+  [PanelTweakOptionsKeys.EVENTS]: EventLogVis;
 };
 
 abstract class PanelGui {
@@ -31,8 +31,7 @@ abstract class PanelGui {
   private _topBar: GUI;
   protected _tweakPane: TweakPane;
   protected _tweakOptions: PanelTweakOptions;
-
-  // protected _tweakPaneOptions: PanelTweakOptions;
+  private _statsInput: InputBindingApi<unknown, boolean>;
 
   init(panel: Panel): void {
     assert(panel, 'panel is null or undefined');
@@ -82,7 +81,8 @@ abstract class PanelGui {
     this._tweakPane.registerPlugin(EssentialsPlugin);
     this._initTweakPaneStyle(container);
     // when (reinit) keep obj opts
-    this._initTweakPaneOptions();
+    this._initTweakPaneOptionsObj();
+    this._addTweakPaneOptions();
   }
 
   _initTweakPaneStyle(container: HTMLDivElement) {
@@ -101,7 +101,7 @@ abstract class PanelGui {
     }
   }
 
-  private getEventLogVisState(): EventLogVis {
+  protected getEventLogVisState(): EventLogVis {
     if (this._panel.isEventLogVisible) {
       return this._panel.isEventLogBelowCanvas
         ? EventLogVis.BELOW_CANVAS
@@ -110,33 +110,37 @@ abstract class PanelGui {
     return EventLogVis.INVISIBLE;
   }
 
-  protected _initTweakPaneOptions() {
-    let tweakOptions = this._tweakOptions;
-
-    if (!tweakOptions) {
-      tweakOptions = {
-        [TweakOptionsKeys.STATS]: this.panel.isStatsVisible,
-        [TweakOptionsKeys.events]: this.getEventLogVisState(),
+  protected _initTweakPaneOptionsObj(): void {
+    if (!this._tweakOptions) {
+      this._tweakOptions = {
+        [PanelTweakOptionsKeys.STATS]: this.panel.isStatsVisible,
+        [PanelTweakOptionsKeys.EVENTS]: this.getEventLogVisState(),
       };
     }
+  }
 
-    const statsInput = this._tweakPane.addInput(
-      tweakOptions,
-      TweakOptionsKeys.STATS,
+  protected abstract _addTweakPaneOptions(): void;
+
+  protected _addStatsOpt(): void {
+    this._statsInput = this._tweakPane.addInput(
+      this._tweakOptions,
+      PanelTweakOptionsKeys.STATS,
     );
-    statsInput.on('change', (ev) => {
+    this._statsInput.on('change', (ev) => {
       this.panel.setStatsVisible(ev.value);
       PanelGui.updateStatsOptPanels(this);
     });
+  }
 
+  protected _addEventLogOpt(): void {
     const eventsFolder = this._tweakPane.addFolder({
       title: 'Events',
       expanded: false,
     });
 
     const eventLogPosInput = eventsFolder.addInput(
-      tweakOptions,
-      TweakOptionsKeys.events,
+      this._tweakOptions,
+      PanelTweakOptionsKeys.EVENTS,
       {
         options: {
           below: EventLogVis.BELOW_CANVAS,
@@ -161,21 +165,14 @@ abstract class PanelGui {
           break;
       }
     });
-
-    this._tweakOptions = tweakOptions;
-
-    // TODO:
-    // if (!this._panel.isFullScreen) {
-    //   this.addOptFullWin();
-    // }
-    // this.addFullscreenOption();
   }
 
   public static updateStatsOptPanels(originPanel: PanelGui): void {
     for (let panelGui of PanelGui._panelsStatsOpt) {
       if (panelGui !== originPanel) {
         panelGui._tweakOptions.stats = originPanel._tweakOptions.stats;
-        panelGui._tweakPane.refresh();
+        // panelGui._tweakPane.refresh();
+        panelGui._statsInput.refresh();
       }
     }
   }
@@ -396,4 +393,4 @@ abstract class PanelGui {
   }
 }
 
-export { PanelGui, PanelTweakOptions };
+export { PanelGui, PanelTweakOptions, PanelTweakOptionsKeys };

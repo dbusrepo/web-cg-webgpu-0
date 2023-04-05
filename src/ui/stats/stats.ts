@@ -2,6 +2,18 @@
 import { StatsPanel } from './statsPanel';
 import { StatsConfig } from './statsConfig';
 
+enum StatsNames {
+  FPS = 'FPS',
+  UPS = 'UPS',
+  FPSU = 'FPSU',
+  MEM = 'MEM',
+  // WASM_HEAP = 'WASM_HEAP', // heap mem allocated by wasm workers in the private heap + in the shared heap
+}
+
+type StatsValues = {
+  [property in keyof typeof StatsNames]: number;
+};
+
 class Stats {
   private _cfg: StatsConfig;
   private _container: HTMLDivElement;
@@ -52,4 +64,4 @@ class Stats {
   }
 }
 
-export { Stats };
+export { Stats, StatsNames, StatsValues };

@@ -12,7 +12,7 @@ import { EnginePanel } from './panels/enginePanel';
 import { ViewPanel } from './panels/viewPanel';
 import { Stats } from './ui/stats/stats';
 import { StatsPanel } from './ui/stats/statsPanel';
-import { StatsNames } from './common';
+import { StatsNames } from './ui/stats/stats';
 
 class Main {
   private panels: Panel[];
@@ -32,10 +32,13 @@ class Main {
     const stats = this.initStats();
     this.panels = [];
     // const enginePanel = null;
+
     const enginePanel = this.buildEnginePanel('3D View', board, row0, stats);
     this.panels.push(enginePanel);
-    const aPanel = this.buildViewPanel('View', board, row0, stats);
-    this.panels.push(aPanel);
+
+    // const aPanel = this.buildViewPanel('View', board, row0, stats);
+    // this.panels.push(aPanel);
+
     // board.style.display = 'none';
     // const aPanel2 = this.buildViewPanel('View', board, row1);
     // this.panels.push(aPanel2);
@@ -71,7 +74,7 @@ class Main {
     stats: Stats,
   ): EnginePanel {
     const { enginePanelConfig } = mainConfig;
-    parentNode.style.zIndex = '1'; // TODO
+    // parentNode.style.zIndex = '1'; // TODO:
     const panelConfig: EnginePanelConfig = {
       ...enginePanelConfig,
       // startViewMode: StartViewMode.FULL_WIN,
@@ -80,7 +83,7 @@ class Main {
       focusOnStart: true,
       eventLogConfig: {
         ...enginePanelConfig.eventLogConfig,
-        isVisible: false,
+        isVisible: true,
         isBelowCanvas: true,
       },
     };
@@ -98,6 +101,7 @@ class Main {
       ...viewPanelConfig,
       startViewMode: StartViewMode.WIN,
       title,
+      // focusOnStart: true,
     };
     return new ViewPanel(board, parentNode).init(panelConfig, stats);
   }

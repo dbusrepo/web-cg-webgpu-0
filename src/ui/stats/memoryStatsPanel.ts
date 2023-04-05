@@ -1,5 +1,5 @@
 import { StatsPanel } from './statsPanel';
-import { StatsNames, StatsValues } from '../../common';
+import { StatsNames, StatsValues } from '../stats/stats';
 
 // TODO not used
 // const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
@@ -16,7 +16,6 @@ import { StatsNames, StatsValues } from '../../common';
 const ONE_MB = 1048576;
 
 class MemoryStatsPanel extends StatsPanel {
-
   constructor() {
     super(StatsNames.MEM, '#FF0', '#220');
   }
@@ -24,7 +23,6 @@ class MemoryStatsPanel extends StatsPanel {
   update(numBytes: number) {
     super.update(numBytes / ONE_MB);
   }
-
 }
 
 export { MemoryStatsPanel };

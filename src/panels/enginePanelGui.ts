@@ -1,78 +1,60 @@
-import { PanelGui, PanelTweakOptions } from './panelGui';
+import { MonitorBindingApi } from 'tweakpane';
+import { PanelGui, PanelTweakOptions, PanelTweakOptionsKeys } from './panelGui';
 import { EnginePanel } from './enginePanel';
 
-enum TweakOptionsKeys {
-  EP_OPT = 'EP_OPT',
+enum EnginePanelTweakOptionsKeys {
+  FPS = 'fps',
 }
 
 type EnginePanelTweakOptions = PanelTweakOptions & {
-  [TweakOptionsKeys.EP_OPT]: boolean;
+  [EnginePanelTweakOptionsKeys.FPS]: number;
 };
 
 class EnginePanelGui extends PanelGui {
+  private _fpsMonitor: MonitorBindingApi<number>;
+
   init(panel: EnginePanel) {
     super.init(panel);
   }
 
   get tweakOptions() {
-    return super._tweakOptions as EnginePanelTweakOptions;
+    return this._tweakOptions as EnginePanelTweakOptions;
   }
 
-  protected _initTweakPaneOptions() {
-    super._initTweakPaneOptions();
-    // const tweakOptions = this.tweakOptions;
-
-    // let tweakOptions = this._tweakOptions;
-    // if (!tweakOptions) {
-    //   tweakOptions = {
-    //     stats: this.panel.isStatsVisible,
-    //   };
-    // }
-    // const statsInput = this._tweakPane.addInput(tweakOptions, 'stats');
-    // statsInput.on('change', () => {
-    //   this.panel.setStatsVisible(tweakOptions.stats);
-    //   PanelGui.updateStatsOptPanels(this);
-    // });
-    // this._tweakOptions = tweakOptions;
-    // this._tweakPane.addInput(this._tweakPaneOptions, 'fps');
-    // this._tweakPane.addMonitor(this._tweakPaneOptions, 'level', {
-    //   view: 'graph',
-    //   min: -1,
-    //   max: +1,
-    // });
+  set tweakOptions(options: EnginePanelTweakOptions) {
+    this._tweakOptions = options;
   }
 
-  // TODO
-  // addStatsOptions() {
-  // const { label } = enginePanelConfig.menuConfig.options.stats;
-  // const initial = this.panel.showStats;
-  // this.menuOptions[STATS_OPT_KEY] = initial;
-  // const folder = label;
-  // this._gui.Register({
-  //   type: 'folder',
-  //   label: folder,
-  //   open: false,
-  // });
-  // this._gui.Register(
-  //   {
-  //     type: 'checkbox',
-  //     label,
-  //     object: this.menuOptions,
-  //     property: STATS_OPT_KEY,
-  //     initial,
-  //     onChange: (visible: boolean) => {
-  //       this.panel.setShowStats(visible);
-  //     },
-  //   },
-  //   {
-  //     folder,
-  //   },
-  // );
-  // }
+  protected _initTweakPaneOptionsObj(): void {
+    super._initTweakPaneOptionsObj();
+    this.tweakOptions = {
+      ...this._tweakOptions,
+      [EnginePanelTweakOptionsKeys.FPS]: 50,
+    };
+  }
 
-  // get tweakPaneOptions(): EnginePanelTweakOptions {
-  //   return super._tweakPaneOptions as EnginePanelTweakOptions;
-  // }
+  protected _addTweakPaneOptions() {
+    super._addStatsOpt();
+    super._addEventLogOpt();
+    this._fpsMonitor = this._tweakPane.addMonitor(
+      this.tweakOptions,
+      EnginePanelTweakOptionsKeys.FPS,
+      {
+        view: 'graph',
+        interval: 100,
+        min: 0,
+        max: 10000,
+      },
+    );
+    // https://github.com/cocopon/tweakpane/issues/415
+    // disable monitor interval and update it only in updateFps ?
+    // this._fpsMonitor.disabled = true;
+  }
+
+  updateFps(fps: number) {
+    this.tweakOptions[EnginePanelTweakOptionsKeys.FPS] = fps;
+    this._fpsMonitor.refresh();
+  }
 
   get panel(): EnginePanel {
     return super.panel as EnginePanel;
