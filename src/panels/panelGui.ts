@@ -45,7 +45,9 @@ abstract class PanelGui {
 
     this._panel = panel;
 
-    this.initTweakPane(panel);
+    if (!this._tweakPane) {
+      this.initTweakPane();
+    }
 
     this._topBar = new GUI({
       root: panel.menuGuiContainer,
@@ -72,8 +74,8 @@ abstract class PanelGui {
     }); // as unknown as typeof Guify;
   }
 
-  initTweakPane(panel: Panel): void {
-    const container = panel.canvasContainerEl;
+  private initTweakPane(): void {
+    const container = this._panel.canvasContainerEl;
     this._tweakPane = new TweakPane({
       container,
       expanded: this._cfg.isTweakPaneExpanded,
@@ -111,12 +113,10 @@ abstract class PanelGui {
   }
 
   protected _initTweakPaneOptionsObj(): void {
-    if (!this._tweakOptions) {
-      this._tweakOptions = {
-        [PanelTweakOptionsKeys.STATS]: this.panel.isStatsVisible,
-        [PanelTweakOptionsKeys.EVENTS]: this.getEventLogVisState(),
-      };
-    }
+    this._tweakOptions = {
+      [PanelTweakOptionsKeys.STATS]: this.panel.isStatsVisible,
+      [PanelTweakOptionsKeys.EVENTS]: this.getEventLogVisState(),
+    };
   }
 
   protected abstract _addTweakPaneOptions(): void;
@@ -388,8 +388,9 @@ abstract class PanelGui {
   }
 
   removefromDom() {
+    console.log('removefromDom');
     this._topBar.removefromDom();
-    this._tweakPane.dispose();
+    // this._tweakPane.dispose();
   }
 }
 
