@@ -44,10 +44,10 @@ class Engine {
   public async init(config: EngineConfig): Promise<void> {
     this._startTime = Date.now();
     this._cfg = config;
-    this._engineImpl = new EngineImpl();
     const engImplCfg: EngineImplConfig = {
       canvas: this._cfg.canvas,
     };
+    this._engineImpl = new EngineImpl();
     await this._engineImpl.init(engImplCfg);
   }
 
