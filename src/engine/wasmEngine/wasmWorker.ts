@@ -28,7 +28,7 @@ class WasmWorker {
   run(): void {
     console.log(`Worker ${this._cfg.wasmRunCfg.workerIdx} running!`);
     try {
-      this._wasmRun.wasmModules.engine.runWorker();
+      this._wasmRun.wasmModules.engine.run();
     } catch (e) {
       console.error(e);
     }

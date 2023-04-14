@@ -86,8 +86,8 @@ class EngineImpl {
     await this._wasmEngine.init(wasmEngineCfg);
   }
 
-  public drawFrame() {
-    this._wasmEngine.drawFrame();
+  public render() {
+    this._wasmEngine.render();
   }
 
   public onKeyDown(key: KeyCode) {

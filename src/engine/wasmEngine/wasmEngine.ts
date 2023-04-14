@@ -232,17 +232,33 @@ class WasmEngine {
     }
   }
 
-  public drawFrame() {
+  private syncWorkers() {
     for (let i = 1; i <= this._cfg.numAuxWorkers; ++i) {
       utils.syncStore(this._wasmRun.wasmViews.syncArr, i, 1);
       utils.syncNotify(this._wasmRun.wasmViews.syncArr, i);
     }
-    this._wasmRun.wasmModules.engine.run();
+  }
+
+  private waitWorkers() {
     for (let i = 1; i <= this._cfg.numAuxWorkers; ++i) {
       utils.syncWait(this._wasmRun.wasmViews.syncArr, i, 1);
     }
+  }
+
+  private drawFrame() {
     this._imageData.data.set(this._wasmViews.frameBufferRGBA);
     this._cfg.ctx.putImageData(this._imageData, 0, 0);
+  }
+
+  public render() {
+    this.syncWorkers();
+    try {
+      this._wasmRun.wasmModules.engine.run();
+    } catch (e) {
+      console.error(e);
+    }
+    this.waitWorkers();
+    this.drawFrame();
   }
 
   public inputKeyDown(keyIdx: number) {

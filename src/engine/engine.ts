@@ -107,7 +107,6 @@ class Engine {
       frameThen = performance.now();
       isRunning = true;
       isPaused = false;
-      // runWorkers();
       requestAnimationFrame(mainLoop);
     };
 
@@ -161,7 +160,7 @@ class Engine {
       const elapsed = frameNow - frameThen;
       if (elapsed >= Engine.FRAME_PERIOD) {
         frameThen = frameNow - (elapsed % Engine.FRAME_PERIOD);
-        this._engineImpl.drawFrame();
+        this._engineImpl.render();
         frameTimeArr[renderCounter++ % frameTimeArr.length] =
           performance.now() - frameStartTime;
       }
