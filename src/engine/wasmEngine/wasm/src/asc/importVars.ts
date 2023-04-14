@@ -1,10 +1,10 @@
 export declare function logi(i: i32): void;
 export declare function logf(i: f32): void;
 
-export declare const numWorkers: u32;
-export declare const workerIdx: u32;
+export declare const numWorkers: usize;
+export declare const workerIdx: usize;
 export declare const workersHeapPtr: usize;
-export declare const workerHeapSize: u32;
+export declare const workerHeapSize: usize;
 
 export declare const heapPtr: usize;
 

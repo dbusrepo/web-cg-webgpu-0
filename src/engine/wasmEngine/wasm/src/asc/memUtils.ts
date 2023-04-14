@@ -1,7 +1,7 @@
 import { myAssert } from './myAssert';
 
 export type PTR_T = usize; // raw pointer type
-export type SIZE_T = u32;
+export type SIZE_T = usize;
 export const NULL_PTR: PTR_T = 0; // TODO note
 export const PTR_SIZE: SIZE_T = getTypeSize<PTR_T>();
 export const PTR_ALIGN_MASK: SIZE_T = getTypeAlignMask<PTR_T>();

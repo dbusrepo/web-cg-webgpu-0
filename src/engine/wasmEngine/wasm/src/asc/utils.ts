@@ -29,7 +29,7 @@ function lcm(m: i32, n: i32): i32 {
 
 // split [0..numTasks-1] between [0..numWorkers-1] and get the index
 // range for worker workerIdx in a 64 bit var. Workers on head get one more task if needed.
-function range(workerIdx: u32, numWorkers: u32, numTasks: u32): u64 {
+function range(workerIdx: usize, numWorkers: usize, numTasks: usize): u64 {
   const numTaskPerWorker = numTasks / numWorkers;
   const numTougherThreads = numTasks % numWorkers;
   const isTougher = workerIdx < numTougherThreads;

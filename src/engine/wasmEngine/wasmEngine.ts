@@ -100,6 +100,7 @@ class WasmEngine {
       stringsSize: stringsArrayData.length,
       imagesIndexSize: WasmUtils.initImages.getImagesIndexSize(),
       imagesSize: this._cfg.imagesTotalSize,
+      // TODO use 64bit/8 byte counter for mem counters? see wasm workerHeapManager
       workersMemCountersSize: numWorkers * Uint32Array.BYTES_PER_ELEMENT,
       inputKeysSize: 4 * Uint8Array.BYTES_PER_ELEMENT,
     };

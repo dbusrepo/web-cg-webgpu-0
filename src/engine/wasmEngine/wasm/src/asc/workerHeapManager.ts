@@ -156,7 +156,7 @@ function alloc(reqSize: SIZE_T): PTR_T {
     // const freeFooter = changetype<HeaderBlock>(freeFooterPtr);
     removeOrReplaceFromFreeList(headerPtr, freeHeaderPtr);
   }
-  incMemCounter(getBlockSize(headerPtr));
+  // incMemCounter(getBlockSize(headerPtr));
   return allocated;
 }
 
@@ -170,7 +170,7 @@ function dealloc(ptr: PTR_T): void {
   myAssert(isBlockUsed(headerPtr));
   let blockSize = getBlockSize(headerPtr);
   myAssert(blockSize > 0);
-  decMemCounter(blockSize);
+  // decMemCounter(blockSize);
   const footerPtr = headerPtr + blockSize - F_SIZE;
   myAssert(isBlockUsed(footerPtr));
   setBlockUnused(headerPtr);
@@ -239,15 +239,18 @@ function dealloc(ptr: PTR_T): void {
 }
 
 // @ts-ignore: decorator
-@inline function incMemCounter(value: u32): void {
+// TODO: not used
+@inline function incMemCounter(value: usize): void {
+  // TODO: use 64-bit counter ?
   const counter = load<i32>(WORKER_MEM_COUNTER_PTR);
-  store<u32>(WORKER_MEM_COUNTER_PTR, counter + value);
+  store<u32>(WORKER_MEM_COUNTER_PTR, counter + (value as u32));
 }
 
 // @ts-ignore: decorator
-@inline function decMemCounter(value: u32): void {
+// TODO: not used
+@inline function decMemCounter(value: usize): void {
   const counter = load<i32>(WORKER_MEM_COUNTER_PTR);
-  store<u32>(WORKER_MEM_COUNTER_PTR, counter - value);
+  store<u32>(WORKER_MEM_COUNTER_PTR, counter - (value as u32));
 }
 
 // pre: ptr != NULL_PTR
