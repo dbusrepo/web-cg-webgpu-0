@@ -1,9 +1,0 @@
-stats checkbox
-console properties: 
-  fontSize, lineHeight range
-events: 
-  visibile checkbox
-  where lista possibili scelte: canvas, below
-  fontSize, lineHeight range
-
-  view panel full win -> stats hidden
