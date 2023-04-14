@@ -19,6 +19,7 @@ type WasmRunConfig = {
   wasmMemRegionsOffsets: WasmUtils.MemRegionsData;
   wasmMemRegionsSizes: WasmUtils.MemRegionsData;
   wasmWorkerHeapSize: number;
+  mainWorkerIdx: number;
   workerIdx: number;
   numWorkers: number;
   frameWidth: number;
@@ -70,7 +71,7 @@ class WasmRun {
       wasmWorkerHeapSize: workerHeapSize,
     } = this._cfg;
 
-    const { frameWidth, frameHeight, numWorkers, numImages, workerIdx } = this._cfg;
+    const { frameWidth, frameHeight, mainWorkerIdx, numWorkers, numImages, workerIdx } = this._cfg;
 
     const logf = (f: number) =>
       console.log(`[wasm] Worker [${workerIdx}]: ${f}`);
@@ -86,6 +87,7 @@ class WasmRun {
       frameBufferPtr: memOffsets[WasmUtils.MemRegions.FRAMEBUFFER_RGBA],
       syncArrayPtr: memOffsets[WasmUtils.MemRegions.SYNC_ARRAY],
       sleepArrayPtr: memOffsets[WasmUtils.MemRegions.SLEEP_ARRAY],
+      mainWorkerIdx,
       workerIdx,
       numWorkers,
       workersHeapPtr: memOffsets[WasmUtils.MemRegions.WORKERS_HEAPS],

@@ -160,6 +160,7 @@ class WasmEngine {
       wasmMemRegionsOffsets: this._wasmRegionsOffsets,
       wasmWorkerHeapSize: mainConfig.wasmWorkerHeapPages * PAGE_SIZE_BYTES,
       numImages: this._cfg.images.length,
+      mainWorkerIdx: 0,
       workerIdx: 0, // main thread is 0, aux workers starts from 1
       numWorkers: this._getNumWorkers(),
       frameWidth: this._imageData.width,
@@ -253,7 +254,7 @@ class WasmEngine {
   public render() {
     this.syncWorkers();
     try {
-      this._wasmRun.wasmModules.engine.run();
+      this._wasmRun.wasmModules.engine.render();
     } catch (e) {
       console.error(e);
     }

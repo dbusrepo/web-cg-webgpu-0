@@ -13,6 +13,7 @@ import {
   bgColor,
   heapPtr,
   numWorkers,
+  mainWorkerIdx,
   workerIdx,
   logi,
   logf,
@@ -48,57 +49,61 @@ import { inputKeysPtr } from './importVars';
 const syncLoc = utils.getArrElPtr<i32>(syncArrayPtr, workerIdx);
 const sleepLoc = utils.getArrElPtr<i32>(sleepArrayPtr, workerIdx);
 
-const MAIN_THREAD_IDX = 0;
+const MAIN_THREAD_IDX = mainWorkerIdx;
+
+let images: SArray<BitImage> | null = null;
 
 function init(): void {
   if (workerIdx == MAIN_THREAD_IDX) {
     initSharedHeap();
   }
   initMemManager();
+  // 
+  images = initImages();
 }
 
-function run(): void {
-
-  const images = initImages();
-  const image = images.at(0);
+function render(): void {
 
   const r = utils.range(workerIdx, numWorkers, frameHeight);
   const s = <u32>(r >> 32);
   const e = <u32>r;
 
-  while (true) {
-    // utils.sleep(sleepLoc, 16);
+  draw.clearBg(s, e, 0xff_00_00_00); // ABGR
+  // draw.clearBg(s, e, 0xff_ff_00_00); // ABGR
 
+  // logi(workerIdx);
+
+  // // // logi(image.height);
+  // if (workerIdx == 1) {
+  //   for (let i = s; i != e; ++i) {
+  //     let screenPtr: PTR_T = frameBufferPtr + i * frameWidth * 4;
+  //     const pixels: PTR_T = image.pixels + i * image.width * 4;
+  //     memory.copy(screenPtr, pixels, frameWidth * 4);
+  //   }
+  // }
+
+  // if (workerIdx == 0) {
+  //   draw.drawText(strings.SENT2, 10, 10, 1, 0xFF_00_00_FF);
+  //   draw.drawText(strings.SENT2, 10, 18, 2, 0xFF_00_00_FF);
+  //   // let y = 20;
+  //   // for (let s = 1; s < 5; ) {
+  //   //   draw.drawText(strings.SENT2, 10, y, f32(s), 0xFF_00_00_FF);
+  //   //   y += FONT_Y_SIZE * s;
+  //   //   s++;
+  //   // }
+  // }
+
+  // logi(load<u8>(inputKeysPtr));
+}
+
+function run(): void {
+  while (true) {
     if (workerIdx != MAIN_THREAD_IDX) {
       atomic.wait<i32>(syncLoc, 0);
     }
 
-    draw.clearBg(s, e, 0xff_ff_00_00); // ABGR
-
-    // draw.clearBg(s, e, 0xff_ff_00_00); // ABGR
-    // logi(workerIdx);
-
-    // // // logi(image.height);
-    // if (workerIdx == 1) {
-    //   for (let i = s; i != e; ++i) {
-    //     let screenPtr: PTR_T = frameBufferPtr + i * frameWidth * 4;
-    //     const pixels: PTR_T = image.pixels + i * image.width * 4;
-    //     memory.copy(screenPtr, pixels, frameWidth * 4);
-    //   }
-    // }
-
-    // if (workerIdx == 0) {
-    //   draw.drawText(strings.SENT2, 10, 10, 1, 0xFF_00_00_FF);
-    //   draw.drawText(strings.SENT2, 10, 18, 2, 0xFF_00_00_FF);
-    //   // let y = 20;
-    //   // for (let s = 1; s < 5; ) {
-    //   //   draw.drawText(strings.SENT2, 10, y, f32(s), 0xFF_00_00_FF);
-    //   //   y += FONT_Y_SIZE * s;
-    //   //   s++;
-    //   // }
-    // }
-
-    // logi(load<u8>(inputKeysPtr));
+    // utils.sleep(sleepLoc, 16);
+    render();
 
     if (workerIdx != MAIN_THREAD_IDX) {
       atomic.store<i32>(syncLoc, 0);
@@ -201,4 +206,4 @@ function run(): void {
 //   draw.clearBg(s, e, 0xff_00_00_00); // ABGR
 // }
 
-export { init, run };
+export { init, render, run };

@@ -24,6 +24,7 @@ type WasmImports = {
   workerHeapSize: number;
   heapPtr: number;
   workerIdx: number;
+  mainWorkerIdx: number;
   numWorkers: number;
   bgColor: number;
   usePalette: number;

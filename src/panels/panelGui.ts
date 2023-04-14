@@ -388,7 +388,6 @@ abstract class PanelGui {
   }
 
   removefromDom() {
-    console.log('removefromDom');
     this._topBar.removefromDom();
     // this._tweakPane.dispose();
   }
