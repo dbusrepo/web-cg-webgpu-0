@@ -114,8 +114,8 @@ class StatsPanel {
     // this._redrawThreshold = CSS_GRAPH_HEIGHT * (factor + RESCALE_FACTOR);
     assert(source >= 0);
     if (this._first) {
-      // if first rescale, draw value at half of the graph height
-      this._heightScaleFactor = source * 2;
+      // if first rescale, draw value at 1/3 of the graph height
+      this._heightScaleFactor = source * 3;
       this._first = false;
     } else {
       this._heightScaleFactor = (source * 3) / 2; // bound scaled values to 2/3 of the graph height
@@ -123,6 +123,7 @@ class StatsPanel {
     // rescale factor to 2/3 of _heightScaleFactor
     this._heightRescaleThreshold = (this._heightScaleFactor * 2) / 3;
     assert(this._heightScaleFactor >= source);
+    console.log('rescale: ', this._heightScaleFactor);
   }
 
   update(value = 0) {

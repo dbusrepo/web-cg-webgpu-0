@@ -72,11 +72,11 @@ class EventLog {
     // }, 1000);
     // }, 1000);
 
-    for (let i = 0; i < 10; ++i) {
-      const val = i; // Math.round(Math.random() * 1000);
-      this.log('event ' + val, 'Hello ' + val);
-      // this.log('', 'Hello ' + val);
-    }
+    // for (let i = 0; i < 10; ++i) {
+    //   const val = i; // Math.round(Math.random() * 1000);
+    //   this.log('event ' + val, 'Hello ' + val);
+    //   // this.log('', 'Hello ' + val);
+    // }
   }
 
   log(event: Event, message: string) {

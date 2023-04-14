@@ -33,7 +33,7 @@ class Engine {
   private static readonly FRAME_TIMES_LEN = 10;
   private static readonly TIMES_FROM_LAST_FRAME_LEN = 5;
 
-  private static readonly UPDATE_STATS_PERIOD = MILLI_IN_SEC;
+  private static readonly UPDATE_STATS_PERIOD = 100; // MILLI_IN_SEC;
 
   private _cfg: EngineConfig;
   private _engineImpl: EngineImpl;
