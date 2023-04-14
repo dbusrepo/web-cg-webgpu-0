@@ -123,7 +123,6 @@ class StatsPanel {
     // rescale factor to 2/3 of _heightScaleFactor
     this._heightRescaleThreshold = (this._heightScaleFactor * 2) / 3;
     assert(this._heightScaleFactor >= source);
-    console.log('rescale: ', this._heightScaleFactor);
   }
 
   update(value = 0) {

@@ -29,9 +29,9 @@ class Engine {
 
   private static readonly UPDATE_TIME_MAX = Engine.UPDATE_PERIOD * 8;
 
-  private static readonly FPS_UPS_STATS_LEN = 5;
-  private static readonly FRAME_TIMES_LEN = 10;
-  private static readonly TIMES_FROM_LAST_FRAME_LEN = 5;
+  private static readonly FPS_UPS_STATS_LEN = 10;
+  private static readonly FRAME_TIMES_LEN = 20;
+  private static readonly TIMES_FROM_LAST_FRAME_LEN = 10;
 
   private static readonly UPDATE_STATS_PERIOD = 100; // MILLI_IN_SEC;
 
@@ -176,7 +176,7 @@ class Engine {
         elapsedTime += elapsed;
         const fps = (renderCounter * MILLI_IN_SEC) / elapsedTime;
         const ups = (updateCounter * MILLI_IN_SEC) / elapsedTime;
-        // console.log(`${fps} - ${ups}`);
+        console.log(`${fps} - ${ups}`);
         const statsIdx = statsCounter++ % fpsArr.length;
         fpsArr[statsIdx] = fps;
         upsArr[statsIdx] = ups;
