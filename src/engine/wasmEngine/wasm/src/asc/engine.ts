@@ -1,13 +1,28 @@
 import { myAssert } from './myAssert';
 import { initSharedHeap } from './heapAlloc';
-import { WORKER_MEM_COUNTER_PTR, initMemManager, alloc, dealloc } from './workerHeapManager';
+import {
+  WORKER_MEM_COUNTER_PTR,
+  initMemManager,
+  alloc,
+  dealloc,
+} from './workerHeapManager';
 import { initAllocators } from './initAllocators';
 // import { ObjectAllocator } from './objectAllocator';
 import * as utils from './utils';
 import * as draw from './draw';
-import { bgColor, heapPtr, numWorkers, workerIdx, logi, logf,
-         frameWidth, frameHeight, frameBufferPtr, syncArrayPtr,
-         sleepArrayPtr } from './importVars';
+import {
+  bgColor,
+  heapPtr,
+  numWorkers,
+  workerIdx,
+  logi,
+  logf,
+  frameWidth,
+  frameHeight,
+  frameBufferPtr,
+  syncArrayPtr,
+  sleepArrayPtr,
+} from './importVars';
 import { BitImage } from './bitImage';
 import { initImages } from './initImages';
 // import { DArray, newDArray, deleteDArray } from './darray';
@@ -17,7 +32,14 @@ import { test } from './test/test';
 import { PTR_T } from './memUtils';
 import { MYIMG, IMG1 } from './importImages';
 
-import { usePalette, imagesIndexPtr, imagesIndexSize, imagesDataSize, imagesDataPtr, numImages } from './importVars';
+import {
+  usePalette,
+  imagesIndexPtr,
+  imagesIndexSize,
+  imagesDataSize,
+  imagesDataPtr,
+  numImages,
+} from './importVars';
 import { stringsDataPtr, stringsDataSize } from './importVars';
 import { FONT_Y_SIZE, fontCharsPtr, fontCharsSize } from './importVars';
 import * as strings from './importStrings';
@@ -40,7 +62,6 @@ function initWorkerMem(): void {
 }
 
 function run(): void {
-
   // initWorkerMem();
 
   // const p = alloc(32);
@@ -143,6 +164,7 @@ function runWorker(): void {
     // utils.sleep(sleepLoc, 16);
 
     draw.clearBg(s, e, 0xff_ff_00_00); // ABGR
+    // draw.clearBg(s, e, 0xff_ff_00_00); // ABGR
     // logi(workerIdx);
 
     // // // logi(image.height);

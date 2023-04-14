@@ -1,6 +1,6 @@
 // import assert from 'assert';
-import engineWasm from './../wasm/build/asc/engine.wasm';
-import engineExport from './../wasm/build/asc/engine';
+import engineWasm from './wasm/build/asc/engine.wasm';
+import engineExport from './wasm/build/asc/engine';
 import { ascImportImages } from '../../assets/images/imagesList';
 import { ascImportStrings } from '../../assets/strings/strings';
 
