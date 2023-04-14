@@ -1,5 +1,5 @@
-import { images as sourceImgs } from '../assets/images/imagesList';
-import { BitImage } from './assets/images/bitImage';
+import { images as sourceImgs } from '../../assets/images/imagesList';
+import { BitImage } from './../assets/images/bitImage';
 
 // IMAGES REGION LAYOUT:
 

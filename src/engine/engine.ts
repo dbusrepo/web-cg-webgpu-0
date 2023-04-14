@@ -1,5 +1,4 @@
-import assert from 'assert';
-import * as WasmUtils from './wasmMemUtils';
+// import assert from 'assert';
 import {
   // BPP_PAL,
   // BPP_RGBA,

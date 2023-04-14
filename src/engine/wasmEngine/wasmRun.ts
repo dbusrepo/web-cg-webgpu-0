@@ -5,8 +5,12 @@ import { WasmModules, WasmImports, loadWasmModules } from './wasmLoader';
 // import { syncStore, randColor, sleep } from './utils';
 // import { BitImageRGBA } from './assets/images/bitImageRGBA';
 // import { PngDecoderRGBA } from './assets/images/vivaxy-png/PngDecoderRGBA';
-import { FONT_X_SIZE, FONT_Y_SIZE, FONT_SPACING } from '../assets/fonts/font';
-import { syncStore } from './utils';
+import {
+  FONT_X_SIZE,
+  FONT_Y_SIZE,
+  FONT_SPACING,
+} from '../../assets/fonts/font';
+import { syncStore } from './../utils';
 import { WasmConfig } from './wasmConfig';
 
 type WasmRunConfig = {
@@ -123,7 +127,6 @@ class WasmRun {
   get wasmModules(): WasmModules {
     return this._wasmModules;
   }
-
 }
 
 export { WasmRun, WasmRunConfig };

@@ -3,18 +3,18 @@ import * as WasmUtils from './wasmMemUtils';
 import { WasmRun, WasmRunConfig } from './wasmRun';
 import WasmWorkerCommands from './wasmWorkerCommands';
 import { WasmWorkerConfig } from './wasmWorker';
-import { FONT_Y_SIZE, fontChars } from '../assets/fonts/font';
-import { stringsArrayData } from '../assets/strings/strings';
-import { BitImage } from './assets/images/bitImage';
-import * as utils from './utils';
+import { FONT_Y_SIZE, fontChars } from '../../assets/fonts/font';
+import { stringsArrayData } from '../../assets/strings/strings';
+import { BitImage } from './../assets/images/bitImage';
+import * as utils from './../utils';
 import {
   // BPP_PAL,
   BPP_RGBA,
   // PAL_ENTRY_SIZE,
   // PALETTE_SIZE,
   PAGE_SIZE_BYTES,
-} from '../common';
-import { mainConfig } from '../config/mainConfig';
+} from '../../common';
+import { mainConfig } from '../../config/mainConfig';
 import { WasmConfig } from './wasmConfig';
 
 type WasmViews = WasmUtils.views.WasmViews;

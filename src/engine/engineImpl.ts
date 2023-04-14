@@ -6,7 +6,7 @@ import {
 } from '../assets/images/imagesList';
 import { loadImages } from './assets/images/utils';
 import { BitImage } from './assets/images/bitImage';
-import { WasmEngine, WasmEngineConfig } from './wasmEngine';
+import { WasmEngine, WasmEngineConfig } from './wasmEngine/wasmEngine';
 import { mainConfig } from '../config/mainConfig';
 import { InputManager, KeyCode } from './input/inputManager';
 

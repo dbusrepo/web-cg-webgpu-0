@@ -1,8 +1,8 @@
 // import assert from 'assert';
-import engineWasm from './wasm/build/asc/engine.wasm';
-import engineExport from './wasm/build/asc/engine';
-import { ascImportImages } from '../assets/images/imagesList';
-import { ascImportStrings } from '../assets/strings/strings';
+import engineWasm from './../wasm/build/asc/engine.wasm';
+import engineExport from './../wasm/build/asc/engine';
+import { ascImportImages } from '../../assets/images/imagesList';
+import { ascImportStrings } from '../../assets/strings/strings';
 
 // TODO
 type wasmBuilderFunc<T> = (
@@ -49,7 +49,7 @@ type WasmImports = {
 
 type WasmModules = {
   engine: typeof engineExport;
-}
+};
 
 async function loadWasm<T>(
   wasm: wasmBuilderFunc<T>,
