@@ -17,7 +17,6 @@ type EngineImplConfig = {
 class EngineImpl {
   private _cfg: EngineImplConfig;
   private _ctx: OffscreenCanvasRenderingContext2D;
-  private _imageData: ImageData;
   private _images: BitImage[]; // RGBA, PAL_IDX ?
   private _imagesTotalSize: number;
   private _wasmEngine: WasmEngine;
@@ -26,10 +25,6 @@ class EngineImpl {
   public async init(cfg: EngineImplConfig): Promise<void> {
     this._cfg = cfg;
     this._initOffscreenCanvasContext(this._cfg.canvas);
-    this._imageData = this._ctx.createImageData(
-      this._cfg.canvas.width,
-      this._cfg.canvas.height,
-    );
     await this._loadImages();
     await this._initWasmEngine();
     this._initInputManager();
@@ -83,7 +78,7 @@ class EngineImpl {
   private async _initWasmEngine() {
     this._wasmEngine = new WasmEngine();
     const wasmEngineCfg: WasmEngineConfig = {
-      canvas: this._cfg.canvas,
+      ctx: this._ctx,
       imagesTotalSize: this._imagesTotalSize,
       images: this._images,
       numAuxWorkers: mainConfig.numWorkers,
@@ -92,8 +87,7 @@ class EngineImpl {
   }
 
   public drawFrame() {
-    this._wasmEngine.drawFrame(this._imageData);
-    this._ctx.putImageData(this._imageData, 0, 0);
+    this._wasmEngine.drawFrame();
   }
 
   public onKeyDown(key: KeyCode) {

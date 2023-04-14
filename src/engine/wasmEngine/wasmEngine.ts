@@ -21,9 +21,9 @@ type WasmViews = WasmUtils.views.WasmViews;
 
 type WasmEngineConfig = {
   numAuxWorkers: number;
-  canvas: OffscreenCanvas;
   imagesTotalSize: number;
   images: BitImage[];
+  ctx: OffscreenCanvasRenderingContext2D;
 };
 
 class WasmEngine {
@@ -37,10 +37,18 @@ class WasmEngine {
   private _wasmViews: WasmViews;
   private _wasmRun: WasmRun;
   private _workers: Worker[]; // TODO mv
+  private _imageData: ImageData;
 
   public async init(cfg: WasmEngineConfig) {
     this._cfg = cfg;
+    this._initImageData();
     await this._initWasm();
+  }
+
+  private _initImageData() {
+    const ctx = this._cfg.ctx;
+    const canvas = this._cfg.ctx.canvas;
+    this._imageData = ctx.createImageData(canvas.width, canvas.height);
   }
 
   private async _initWasm(): Promise<void> {
@@ -76,7 +84,7 @@ class WasmEngine {
 
   private _initWasmMemConfig(): void {
     const startOffset = mainConfig.wasmMemStartOffset;
-    const numPixels = this._cfg.canvas.width * this._cfg.canvas.height;
+    const numPixels = this._imageData.width * this._imageData.height;
     const imagesIndexSize = WasmUtils.initImages.getImagesIndexSize();
     const imagesRegionSize = this._cfg.imagesTotalSize;
     const workerHeapPages = mainConfig.wasmWorkerHeapPages;
@@ -155,8 +163,8 @@ class WasmEngine {
     const wasmRunCfg: WasmRunConfig = {
       workerIdx: 0, // main thread is 0, aux workers starts from 1
       numWorkers: this._getNumWorkers(),
-      frameWidth: this._cfg.canvas.width,
-      frameHeight: this._cfg.canvas.height,
+      frameWidth: this._imageData.width,
+      frameHeight: this._imageData.height,
     };
     const wasmCfg: WasmConfig = {
       wasmMem: this._wasmMem,
@@ -234,7 +242,7 @@ class WasmEngine {
     }
   }
 
-  public drawFrame(imageData: ImageData) {
+  public drawFrame() {
     for (let i = 1; i <= this._cfg.numAuxWorkers; ++i) {
       utils.syncStore(this._wasmRun.wasmViews.syncArr, i, 1);
       utils.syncNotify(this._wasmRun.wasmViews.syncArr, i);
@@ -243,7 +251,8 @@ class WasmEngine {
     for (let i = 1; i <= this._cfg.numAuxWorkers; ++i) {
       utils.syncWait(this._wasmRun.wasmViews.syncArr, i, 1);
     }
-    imageData.data.set(this._wasmViews.frameBufferRGBA);
+    this._imageData.data.set(this._wasmViews.frameBufferRGBA);
+    this._cfg.ctx.putImageData(this._imageData, 0, 0);
   }
 
   public inputKeyDown(keyIdx: number) {

@@ -263,7 +263,7 @@ git config push.default upstream <- to allow pushing to a branch with a differen
 now to set the link to the main branch of the base proj:
 git branch -u origin-graphics-base-wasm/main <- set the link with this or if aligned:
 (git push -u origin-graphics-base-wasm base-main:main <- link it to base proj main branch)
-
+or git branch --set-upstream-to=origin-web-cg-base/main
 
 $ git remote show origin
 $ git remote show <other_remote_name>
