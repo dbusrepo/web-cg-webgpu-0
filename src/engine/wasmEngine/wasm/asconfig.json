@@ -22,7 +22,7 @@
 
     "stats": true,
 
-    "enable": ["sign-extension", "nontrapping-f2i", "threads", "simd", "bulk-memory", "reference-types"],
+    "enable": ["sign-extension", "nontrapping-f2i", "threads", "simd", "relaxed-simd", "bulk-memory", "reference-types"],
     "disable": ["mutable-globals", "gc"],
 
     "runtime": "stub",
