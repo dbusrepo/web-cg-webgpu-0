@@ -36,7 +36,7 @@ class EnginePanel extends Panel {
     const commands = {
       [Commands.UPDATE_STATS]: (values: StatsValues) => {
         enginePanel._stats.update(values);
-        enginePanel.menuGui.updateFps(values[StatsNames.FPSU]);
+        enginePanel.menuGui.updateFps(values[StatsNames.FPS]);
       },
       [Commands.EVENT]: (msg: string) => {
         // console.log(msg);

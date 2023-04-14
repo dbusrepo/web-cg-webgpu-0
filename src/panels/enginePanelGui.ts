@@ -43,7 +43,8 @@ class EnginePanelGui extends PanelGui {
         view: 'graph',
         interval: 100,
         min: 0,
-        max: 10000,
+        max: 200,
+        // max: 10000,
       },
     );
     // https://github.com/cocopon/tweakpane/issues/415

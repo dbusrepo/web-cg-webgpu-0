@@ -23,8 +23,7 @@ type EngineConfig = {
 };
 
 class Engine {
-  private static readonly RENDER_PERIOD = MILLI_IN_SEC / mainConfig.targetFPS;
-
+  private static readonly FRAME_PERIOD = MILLI_IN_SEC / mainConfig.targetFPS;
   private static readonly UPDATE_PERIOD =
     (mainConfig.multiplier * MILLI_IN_SEC) / mainConfig.targetUPS;
 
@@ -79,7 +78,7 @@ class Engine {
     let lastStatsTime: number;
     let statsTimeAcc: number;
 
-    let renderFrameTimeArr: Float64Array;
+    let frameTimeArr: Float64Array;
     let timeSinceLastFrameArr: Float64Array;
     let fpsArr: Float32Array;
     let upsArr: Float32Array;
@@ -92,7 +91,7 @@ class Engine {
 
     const mainLoopInit = () => {
       lastFrameStartTime = lastStatsTime = getTimeMs();
-      renderFrameTimeArr = new Float64Array(Engine.FRAME_TIMES_ARR_LENGTH);
+      frameTimeArr = new Float64Array(Engine.FRAME_TIMES_ARR_LENGTH);
       updTimeAcc = 0;
       elapsedTime = 0;
       timeSinceLastFrameArr = new Float64Array(
@@ -160,10 +159,10 @@ class Engine {
     const render = () => {
       const frameNow = performance.now();
       const elapsed = frameNow - frameThen;
-      if (elapsed >= Engine.RENDER_PERIOD) {
-        frameThen = frameNow - (elapsed % Engine.RENDER_PERIOD);
+      if (elapsed >= Engine.FRAME_PERIOD) {
+        frameThen = frameNow - (elapsed % Engine.FRAME_PERIOD);
         this._engineImpl.drawFrame();
-        renderFrameTimeArr[renderCounter++ % renderFrameTimeArr.length] =
+        frameTimeArr[renderCounter++ % frameTimeArr.length] =
           performance.now() - frameStartTime;
       }
     };
@@ -190,8 +189,7 @@ class Engine {
             utils.calcAvgArrValue(upsArr, statsCounter),
           );
           const avgUnlockedFps = Math.round(
-            MILLI_IN_SEC /
-              utils.calcAvgArrValue(renderFrameTimeArr, renderCounter),
+            MILLI_IN_SEC / utils.calcAvgArrValue(frameTimeArr, renderCounter),
           );
           // const workersHeapMem = this._wasmMemViews.workersMemCounters.reduce(
           //   (tot, cnt) => tot + cnt,
