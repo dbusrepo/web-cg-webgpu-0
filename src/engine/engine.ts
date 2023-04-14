@@ -27,13 +27,13 @@ class Engine {
   private static readonly UPDATE_PERIOD =
     (mainConfig.multiplier * MILLI_IN_SEC) / mainConfig.targetUPS;
 
-  private static readonly STATS_PERIOD = MILLI_IN_SEC;
-
   private static readonly UPDATE_TIME_MAX = Engine.UPDATE_PERIOD * 8;
 
-  private static readonly STATS_ARR_LENGTH = 8;
-  private static readonly TIME_LAST_FRAME_ARR_LENGTH = 4;
-  private static readonly FRAME_TIMES_ARR_LENGTH = 10;
+  private static readonly FPS_UPS_STATS_LEN = 5;
+  private static readonly FRAME_TIMES_LEN = 10;
+  private static readonly TIMES_FROM_LAST_FRAME_LEN = 5;
+
+  private static readonly UPDATE_STATS_PERIOD = MILLI_IN_SEC;
 
   private _cfg: EngineConfig;
   private _engineImpl: EngineImpl;
@@ -91,16 +91,16 @@ class Engine {
 
     const mainLoopInit = () => {
       lastFrameStartTime = lastStatsTime = getTimeMs();
-      frameTimeArr = new Float64Array(Engine.FRAME_TIMES_ARR_LENGTH);
+      frameTimeArr = new Float64Array(Engine.FRAME_TIMES_LEN);
       updTimeAcc = 0;
       elapsedTime = 0;
       timeSinceLastFrameArr = new Float64Array(
-        Engine.TIME_LAST_FRAME_ARR_LENGTH,
+        Engine.TIMES_FROM_LAST_FRAME_LEN,
       );
       frameCounter = 0;
       statsTimeAcc = 0;
-      fpsArr = new Float32Array(Engine.STATS_ARR_LENGTH);
-      upsArr = new Float32Array(Engine.STATS_ARR_LENGTH);
+      fpsArr = new Float32Array(Engine.FPS_UPS_STATS_LEN);
+      upsArr = new Float32Array(Engine.FPS_UPS_STATS_LEN);
       statsCounter = 0;
       resync = false;
       renderCounter = updateCounter = 0;
@@ -168,7 +168,7 @@ class Engine {
 
     const updateStats = () => {
       statsTimeAcc += timeSinceLastFrame;
-      if (statsTimeAcc >= Engine.STATS_PERIOD) {
+      if (statsTimeAcc >= Engine.UPDATE_STATS_PERIOD) {
         statsTimeAcc = 0;
         // const tspent = (tnow - start_time) / App.MILLI_IN_SEC;
         const elapsed = frameStartTime - lastStatsTime;
