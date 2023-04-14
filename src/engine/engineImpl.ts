@@ -24,7 +24,7 @@ class EngineImpl {
 
   public async init(cfg: EngineImplConfig): Promise<void> {
     this._cfg = cfg;
-    this._initOffscreenCanvasContext(this._cfg.canvas);
+    this._initOffscreenCanvasContext();
     await this._loadImages();
     await this._initWasmEngine();
     this._initInputManager();
@@ -48,9 +48,9 @@ class EngineImpl {
     this._inputManager.addKeyUpHandler('KeyA', onkeyUp.bind(null, 'KeyA'));
   }
 
-  private _initOffscreenCanvasContext(canvas: OffscreenCanvas): void {
+  private _initOffscreenCanvasContext(): void {
     const ctx = <OffscreenCanvasRenderingContext2D>(
-      canvas.getContext('2d', { alpha: false })
+      this._cfg.canvas.getContext('2d', { alpha: false })
     );
     ctx.imageSmoothingEnabled = false;
     this._ctx = ctx;
