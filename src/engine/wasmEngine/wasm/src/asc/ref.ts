@@ -35,19 +35,21 @@ import { logi } from './importVars';
   }
 }
 
-let refArena = changetype<ArenaAlloc>(0);
+let refArena = changetype<ArenaAlloc>(NULL_PTR);
 
-function initRefAllocator(): void {
+function initRefArena(): void {
   const NUM_REFS_PER_BLOCK: u32 = 128;
   const objSize = getTypeSize<Ref<Object>>();
   refArena = newArena(objSize, NUM_REFS_PER_BLOCK);
 }
 
-// to alloc single Refs use the alloc function here
 function newRef<T>(ptr: PTR_T = NULL_PTR): Ref<T> {
+  if (changetype<PTR_T>(refArena) == NULL_PTR) {
+    initRefArena();
+  }
   const ref = changetype<Ref<T>>(refArena.alloc());
   ref.init(ptr);
   return ref;
 }
 
-export { Ref, initRefAllocator, newRef };
+export { Ref, initRefArena as initRefAllocator, newRef };

@@ -1,5 +1,5 @@
 import { myAssert } from './myAssert';
-import { PTR_T, SIZE_T } from './memUtils';
+import { PTR_T, SIZE_T, NULL_PTR } from './memUtils';
 import { alloc, dealloc } from './workerHeapManager';
 import { ObjectAllocator, newObjectAllocator } from './objectAllocator';
 import { logi } from './importVars';
@@ -21,9 +21,9 @@ const imageDataPtr: PTR_T = imagesDataPtr;
 // @ts-ignore: decorator
 @final @unmanaged class BitImage {
 
-  private _imgIdx: u32 = 0;
+  private _imgIdx: usize = 0;
 
-  init(idx: u32): void {
+  init(idx: usize): void {
     myAssert(idx >= 0 && idx < numImages);
     this._imgIdx = idx;
   }
@@ -42,10 +42,20 @@ const imageDataPtr: PTR_T = imagesDataPtr;
   }
 }
 
-let bitImageAlloc = changetype<ObjectAllocator<BitImage>>(0);
+let bitImageAlloc = changetype<ObjectAllocator<BitImage>>(NULL_PTR);
 
 function initBitImageAllocator(): void {
-  bitImageAlloc = newObjectAllocator<BitImage>(128);
+  bitImageAlloc = newObjectAllocator<BitImage>(16);
 }
 
-export { BitImage, initBitImageAllocator, bitImageAlloc };
+// TODO: test
+function newBitImage(imgIdx: usize): BitImage {
+  if (changetype<PTR_T>(bitImageAlloc) === NULL_PTR) {
+    initBitImageAllocator();
+  }
+  const bitImage = bitImageAlloc.new();
+  bitImage.init(imgIdx);
+  return bitImage;
+}
+
+export { BitImage, newBitImage };

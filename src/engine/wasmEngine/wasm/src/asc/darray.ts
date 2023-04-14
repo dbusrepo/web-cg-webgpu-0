@@ -110,7 +110,7 @@ import { logi } from './importVars';
   }
 }
 
-let arrayArena = changetype<ArenaAlloc>(0);
+let arrayArena = changetype<ArenaAlloc>(NULL_PTR);
 
 function initDArrayAllocator(): void {
   const ARR_BLOCK_SIZE = 128;
@@ -119,6 +119,9 @@ function initDArrayAllocator(): void {
 }
 
 function newDArray<T>(initialCapacity: SIZE_T, alignLg2: SIZE_T = alignof<T>()): DArray<T> {
+  if (changetype<PTR_T>(arrayArena) === NULL_PTR) {
+    initDArrayAllocator();
+  }
   const arr = changetype<DArray<T>>(arrayArena.alloc());
   arr.init(initialCapacity, alignLg2);
   return arr;
@@ -129,4 +132,4 @@ function deleteDArray<T>(arr: DArray<T>): void {
   arrayArena.dealloc(changetype<PTR_T>(arr));
 }
 
-export { DArray, initDArrayAllocator, newDArray, deleteDArray };
+export { DArray, newDArray, deleteDArray };

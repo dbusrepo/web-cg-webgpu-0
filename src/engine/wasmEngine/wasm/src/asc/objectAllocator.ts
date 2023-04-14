@@ -22,18 +22,21 @@ import { logi } from './importVars';
   }
 }
 
-let objectAllocatorsArena = changetype<ArenaAlloc>(0);
+let objectAllocatorsArena = changetype<ArenaAlloc>(NULL_PTR);
 
 function initObjectAllocatorsArena(): void {
-  const NUM_OBJ_ALLOC_PER_BLOCK = 64;
+  const NUM_OBJ_ALLOC_PER_BLOCK = 16;
   const objSize: SIZE_T = offsetof<ObjectAllocator<Object>>();
   objectAllocatorsArena = newArena(objSize, NUM_OBJ_ALLOC_PER_BLOCK);
 }
 
 function newObjectAllocator<T>(numObjPerBlock: SIZE_T): ObjectAllocator<T> {
+  if (changetype<PTR_T>(objectAllocatorsArena) == NULL_PTR) {
+    initObjectAllocatorsArena();
+  }
   const objAlloc = changetype<ObjectAllocator<T>>(objectAllocatorsArena.alloc());
   objAlloc.init(numObjPerBlock);
   return objAlloc;
 }
 
-export { ObjectAllocator, initObjectAllocatorsArena, newObjectAllocator };
+export { ObjectAllocator, newObjectAllocator };

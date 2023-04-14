@@ -6,7 +6,6 @@ import {
   alloc,
   dealloc,
 } from './workerHeapManager';
-import { initAllocators } from './initAllocators';
 // import { ObjectAllocator } from './objectAllocator';
 import * as utils from './utils';
 import * as draw from './draw';
@@ -53,12 +52,7 @@ function init(): void {
   if (workerIdx == 0) {
     initSharedHeap();
   }
-  initWorkerMem();
-}
-
-function initWorkerMem(): void {
   initMemManager();
-  initAllocators();
 }
 
 function run(): void {

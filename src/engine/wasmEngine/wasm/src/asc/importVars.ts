@@ -23,7 +23,7 @@ export declare const imagesIndexPtr: usize;
 export declare const imagesIndexSize: usize;
 export declare const imagesDataSize: usize;
 export declare const imagesDataPtr: usize;
-export declare const numImages: u32;
+export declare const numImages: usize;
 
 export declare const stringsDataPtr: usize;
 export declare const stringsDataSize: usize;
