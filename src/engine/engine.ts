@@ -206,7 +206,7 @@ class Engine {
           // console.log(avgUnlockedFps);
           // console.log(renderFrameTimeArr);
           postMessage({
-            command: PanelCommands.UPDATESTATS,
+            command: PanelCommands.UPDATE_STATS,
             params: stats,
           });
         }
