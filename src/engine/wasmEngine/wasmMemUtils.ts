@@ -154,7 +154,7 @@ function getMemRegionsSizesAndOffsets(
   regionsOffsets[MemRegions.START_MEM] = startOffset;
   const startSize =
     regionsOffsets[MemRegions.HEAP] +
-    regionsSizes[MemRegions.HEAP] - // 0 if the heaps expands freely
+    regionsSizes[MemRegions.HEAP] - // 0 if the shared heap expands freely
     startOffset;
   regionsSizes[MemRegions.START_MEM] = startSize;
 

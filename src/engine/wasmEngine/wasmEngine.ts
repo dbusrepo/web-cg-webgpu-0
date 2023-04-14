@@ -15,7 +15,6 @@ import {
   PAGE_SIZE_BYTES,
 } from '../../common';
 import { mainConfig } from '../../config/mainConfig';
-import { WasmConfig } from './wasmConfig';
 
 type WasmViews = WasmUtils.views.WasmViews;
 
@@ -29,7 +28,6 @@ type WasmEngineConfig = {
 class WasmEngine {
   private _cfg: WasmEngineConfig;
   private _wasmRunCfg: WasmRunConfig;
-  private _wasmCfg: WasmConfig;
   private _wasmMem: WebAssembly.Memory;
   private _wasmMemConfig: WasmUtils.MemConfig;
   private _wasmRegionsSizes: WasmUtils.MemRegionsData;
@@ -83,17 +81,12 @@ class WasmEngine {
   }
 
   private _initWasmMemConfig(): void {
-    const startOffset = mainConfig.wasmMemStartOffset;
     const numPixels = this._imageData.width * this._imageData.height;
-    const imagesIndexSize = WasmUtils.initImages.getImagesIndexSize();
-    const imagesRegionSize = this._cfg.imagesTotalSize;
-    const workerHeapPages = mainConfig.wasmWorkerHeapPages;
     const numWorkers = this._getNumWorkers();
-    const stringsRegionSize = stringsArrayData.length;
 
     // set wasm mem regions sizes
     const wasmMemConfig: WasmUtils.MemConfig = {
-      startOffset,
+      startOffset: mainConfig.wasmMemStartOffset,
       frameBufferRGBASize: numPixels * BPP_RGBA,
       frameBufferPalSize: 0, // this._cfg.usePalette ? numPixels : 0,
       // eslint-disable-next-line max-len
@@ -101,12 +94,12 @@ class WasmEngine {
       syncArraySize: numWorkers * Int32Array.BYTES_PER_ELEMENT,
       sleepArraySize: numWorkers * Int32Array.BYTES_PER_ELEMENT,
       numWorkers,
-      workerHeapSize: PAGE_SIZE_BYTES * workerHeapPages,
+      workerHeapSize: PAGE_SIZE_BYTES * mainConfig.wasmWorkerHeapPages,
       sharedHeapSize: mainConfig.wasmSharedHeapSize,
       fontCharsSize: fontChars.length * FONT_Y_SIZE,
-      stringsSize: stringsRegionSize,
-      imagesIndexSize,
-      imagesSize: imagesRegionSize,
+      stringsSize: stringsArrayData.length,
+      imagesIndexSize: WasmUtils.initImages.getImagesIndexSize(),
+      imagesSize: this._cfg.imagesTotalSize,
       workersMemCountersSize: numWorkers * Uint32Array.BYTES_PER_ELEMENT,
       inputKeysSize: 4 * Uint8Array.BYTES_PER_ELEMENT,
     };
@@ -161,22 +154,19 @@ class WasmEngine {
   private async _initWasmRun() {
     this._wasmRun = new WasmRun();
     const wasmRunCfg: WasmRunConfig = {
+      wasmMem: this._wasmMem,
+      wasmMemRegionsSizes: this._wasmRegionsSizes,
+      wasmMemRegionsOffsets: this._wasmRegionsOffsets,
+      wasmWorkerHeapSize: mainConfig.wasmWorkerHeapPages * PAGE_SIZE_BYTES,
+      numImages: this._cfg.images.length,
       workerIdx: 0, // main thread is 0, aux workers starts from 1
       numWorkers: this._getNumWorkers(),
       frameWidth: this._imageData.width,
       frameHeight: this._imageData.height,
     };
-    const wasmCfg: WasmConfig = {
-      wasmMem: this._wasmMem,
-      wasmMemRegionsSizes: this._wasmRegionsSizes,
-      wasmMemRegionsOffsets: this._wasmRegionsOffsets,
-      wasmWorkerHeapSize: mainConfig.wasmWorkerHeapPages * PAGE_SIZE_BYTES,
-      wasmNumImages: this._cfg.images.length,
-    };
-    await this._wasmRun.init(wasmRunCfg, wasmCfg);
+    await this._wasmRun.init(wasmRunCfg);
     this._wasmViews = this._wasmRun.wasmViews;
     this._wasmRunCfg = wasmRunCfg;
-    this._wasmCfg = wasmCfg;
   }
 
   private async _launchWasmWorkers() {
@@ -205,7 +195,6 @@ class WasmEngine {
           };
           const workerConfig: WasmWorkerConfig = {
             wasmRunCfg: workerWasmRunConfig,
-            wasmCfg: this._wasmCfg,
           };
           worker.postMessage({
             command: WasmWorkerCommands.INIT,

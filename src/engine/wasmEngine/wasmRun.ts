@@ -11,34 +11,35 @@ import {
   FONT_SPACING,
 } from '../../assets/fonts/font';
 import { syncStore } from './../utils';
-import { WasmConfig } from './wasmConfig';
+
+type WasmViews = WasmUtils.views.WasmViews;
 
 type WasmRunConfig = {
+  wasmMem: WebAssembly.Memory;
+  wasmMemRegionsOffsets: WasmUtils.MemRegionsData;
+  wasmMemRegionsSizes: WasmUtils.MemRegionsData;
+  wasmWorkerHeapSize: number;
   workerIdx: number;
   numWorkers: number;
   frameWidth: number;
   frameHeight: number;
+  numImages: number;
   // usePalette: boolean;
 };
 
-type WasmViews = WasmUtils.views.WasmViews;
-
 class WasmRun {
   protected _cfg: WasmRunConfig;
-  protected _wasmCfg: WasmConfig;
   protected _wasmViews: WasmViews;
   protected _wasmModules: WasmModules;
 
   public async init(
     workerCfg: WasmRunConfig,
-    wasmCfg: WasmConfig,
   ): Promise<void> {
     this._cfg = workerCfg;
-    await this._initWasm(wasmCfg);
+    await this._initWasm();
   }
 
-  private async _initWasm(config: WasmConfig): Promise<void> {
-    this._wasmCfg = config;
+  private async _initWasm(): Promise<void> {
     this._buildWasmMemViews();
     await this.loadWasmModules();
   }
@@ -48,7 +49,7 @@ class WasmRun {
       wasmMem: mem,
       wasmMemRegionsOffsets: memOffsets,
       wasmMemRegionsSizes: memSizes,
-    } = this._wasmCfg;
+    } = this._cfg;
 
     this._wasmViews = WasmUtils.views.buildWasmMemViews(
       mem,
@@ -61,15 +62,15 @@ class WasmRun {
     syncStore(this._wasmViews.sleepArr, workerIdx, 0);
   }
 
-  private async loadWasmModules(): Promise<void> {
+  private buildWasmImports(): WasmImports {
     const {
       wasmMem: memory,
       wasmMemRegionsSizes: memSizes,
       wasmMemRegionsOffsets: memOffsets,
       wasmWorkerHeapSize: workerHeapSize,
-    } = this._wasmCfg;
+    } = this._cfg;
 
-    const { frameWidth, frameHeight, numWorkers, workerIdx } = this._cfg;
+    const { frameWidth, frameHeight, numWorkers, numImages, workerIdx } = this._cfg;
 
     const logf = (f: number) =>
       console.log(`[wasm] Worker [${workerIdx}]: ${f}`);
@@ -78,7 +79,7 @@ class WasmRun {
       console.log(`[wasm] Worker [${workerIdx}]: ${i}`);
     };
 
-    const wasmImports: WasmImports = {
+    return {
       memory,
       frameWidth,
       frameHeight,
@@ -95,7 +96,7 @@ class WasmRun {
       usePalette: 0,
       fontCharsPtr: memOffsets[WasmUtils.MemRegions.FONT_CHARS],
       fontCharsSize: memSizes[WasmUtils.MemRegions.FONT_CHARS],
-      numImages: this._wasmCfg.wasmNumImages,
+      numImages,
       imagesIndexSize: memSizes[WasmUtils.MemRegions.IMAGES_INDEX],
       imagesIndexPtr: memOffsets[WasmUtils.MemRegions.IMAGES_INDEX],
       imagesDataPtr: memOffsets[WasmUtils.MemRegions.IMAGES],
@@ -116,7 +117,10 @@ class WasmRun {
       logi,
       logf,
     };
+  }
 
+  private async loadWasmModules(): Promise<void> {
+    const wasmImports = this.buildWasmImports();
     this._wasmModules = await loadWasmModules(wasmImports);
   }
 

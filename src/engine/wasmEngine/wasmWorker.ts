@@ -1,12 +1,10 @@
 // import assert from 'assert';
 import * as WasmUtils from './wasmMemUtils';
 import { WasmRun, WasmRunConfig } from './wasmRun';
-import { WasmConfig } from './wasmConfig';
 import Commands from './wasmWorkerCommands';
 
 type WasmWorkerConfig = {
   wasmRunCfg: WasmRunConfig;
-  wasmCfg: WasmConfig;
 };
 
 type WasmViews = WasmUtils.views.WasmViews;
@@ -23,7 +21,7 @@ class WasmWorker {
 
   private async _initWasmRun() {
     this._wasmRun = new WasmRun();
-    await this._wasmRun.init(this._cfg.wasmRunCfg, this._cfg.wasmCfg);
+    await this._wasmRun.init(this._cfg.wasmRunCfg);
     this._wasmViews = this._wasmRun.wasmViews;
   }
 
