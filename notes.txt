@@ -5,7 +5,7 @@ under src/assets/images
 add a line to images.res: key=imagefile
 under src/assets there is a makefile that builds the ts file with compiled infos
 about the images and generates also a ts files with export declaration for asc
-under src/engine/wasm/src/asc/
+under src/engine/wasmEngine/wasm/src/asc/
 
 
 see asconfig.json:
@@ -298,7 +298,7 @@ https://stackoverflow.com/questions/59435971/eslint-partial-is-not-defined-in-ty
 note about timeout in wasm vs js: nano vs milli
 https://github.com/WebAssembly/threads/issues/175
 
-Note: when building wasm files with make from src/engine/wasm dir, the specific
+Note: when building wasm files with make from src/engine/wasmEngine/wasm dir, the specific
 version of asc the version related to the current node version you are using,
 which can differ from the version used by the scripts run with npm run start (in
 that case the version is the one specified in the package.json). So to check:

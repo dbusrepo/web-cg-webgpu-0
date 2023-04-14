@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "exclude": [
-    "src/engine/wasm",
+    "src/engine/wasmEngine/wasm",
     "node_modules"
   ],
   "include": [

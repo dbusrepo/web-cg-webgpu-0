@@ -6,8 +6,8 @@ import { readFileSync, writeFileSync, mkdirSync } from "fs";
 import wabt from 'wabt';
 
 // relative to node invocation in package.json
-const BASE_DIR = "./src/engine/wasm/source/wat";
-const BUILD_DIR = './src/engine/wasm/build';
+const BASE_DIR = "./src/engine/wasmEngine/wasm/source/wat";
+const BUILD_DIR = './src/engine/wasmEngine/wasm/build';
 
 const getSourcePath = (n) => `${BASE_DIR}/${n}.wat`;
 const getBinPath = (n) => `${BUILD_DIR}/${n}.wasm`;

@@ -9,7 +9,7 @@ import fg from 'fast-glob';
 import asc from 'assemblyscript/dist/asc.js';
 
 // relative to node invocation in package.json
-const BASE_DIR = './src/engine/wasm/source/asc';
+const BASE_DIR = './src/engine/wasmEngine/wasm/source/asc';
 
 // these paths instead are relative to .ts asc input files
 const BUILD_DIR = '../../build';

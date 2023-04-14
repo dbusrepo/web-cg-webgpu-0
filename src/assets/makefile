@@ -1,7 +1,7 @@
 # https://stackoverflow.com/questions/3871444/making-all-rules-depend-on-the-makefile-itself
 .EXTRA_PREREQS:= $(abspath $(lastword $(MAKEFILE_LIST)))
 
-ASC_DIR := ../engine/wasm/src/asc
+ASC_DIR := ../engine/wasmEngine/wasm/src/asc
 
 IMAGES_DIR := ./images
 IMAGES_SCRIPT := $(IMAGES_DIR)/preprocImagesList.mjs
