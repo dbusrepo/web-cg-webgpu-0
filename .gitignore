@@ -1,0 +1,12 @@
+dist
+build
+bin
+node_modules
+npm-debug.log
+.env
+.DS_Store
+.vscode
+*.wasm
+*.map
+**/wasm/src/asc/**/*.d
+build_flags

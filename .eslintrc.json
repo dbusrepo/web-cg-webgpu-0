@@ -1,0 +1,92 @@
+{
+  "root": true,
+  "settings": {
+    "import/extensions": [".js", ".jsx", ".ts", ".tsx"],
+    "import/parsers": {
+      "@typescript-eslint/parser": [".ts", ".tsx"]
+    },
+    "import/resolver": {
+      "node": {
+        "extensions": [".js", ".jsx", ".ts", ".tsx"]
+      }
+    }
+  },
+  "env": {
+    "browser": true,
+    "es2022": true,
+    "worker": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:import/recommended",
+    "plugin:import/typescript",
+    "airbnb",
+    "prettier"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module",
+    "project": "./tsconfig.json"
+  },
+  "plugins": ["@typescript-eslint", "prettier"],
+  "rules": {
+    "prettier/prettier": "warn",
+    "import/no-unresolved": "error",
+    "import/no-extraneous-dependencies": ["error", {"devDependencies": true}],
+    "no-shadow": "off",
+    "max-classes-per-file": ["off", 1],
+    "camelcase": "off",
+    "lines-between-class-members": "off",
+    "no-unused-vars": "off",
+    "no-bitwise": "off",
+    "no-plusplus": "off",
+    "no-multi-assign": "off",
+    "prefer-const": "off",
+    "prefer-template": "off",
+    "one-var": "off",
+    "no-restricted-globals": "off",
+    "no-use-before-define": "off",
+    "no-restricted-syntax": [0, "ForOfStatement"],
+    "no-underscore-dangle": "off",
+    "no-empty": "off",
+    "no-loop-func": "off",
+    "no-prototype-builtins": "off",
+    "class-methods-use-this": "off",
+    "no-param-reassign": "off",
+    "no-lone-blocks": "off",
+    "import/no-cycle": "off",
+    "import/prefer-default-export": "off",
+    "react/jsx-filename-extension": [2, { "extensions": [".tsx", ".ts", ".js", ".jsx"] }],
+    "react/jsx-props-no-spreading": "off",
+    "react/destructuring-assignment": "off",
+    "react/sort-comp": "off",
+    "semi": [2, "always"],
+    "max-len": ["warn", { "code": 80 }],
+    "no-console": "off",
+    "no-return-assign": "off",
+    "no-unused-expressions": "off",
+    "import/extensions": [
+      "error",
+      "ignorePackages",
+      {
+        "js": "never",
+        "jsx": "never",
+        "ts": "never",
+        "tsx": "never",
+        "mjs": "never"
+      }
+    ],
+    "@typescript-eslint/indent": ["off"],
+    "@typescript-eslint/no-unused-vars": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-empty-interface": "off",
+    "@typescript-eslint/no-empty-function": "off",
+    "@typescript-eslint/no-non-null-assertion": "off",
+    "@typescript-eslint/no-inferrable-types": "warn",
+    "@typescript-eslint/no-this-alias": "off",
+    "@typescript-eslint/no-shadow": ["error"]
+  }
+}

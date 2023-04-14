@@ -1,0 +1,728 @@
+// load png as arraybuffer
+// const imgUrl = (await import('../asset/images/samplePNGImage.png')).default;
+// const imgBuffer = await loadUtils.loadResAsArrayBuffer(imgUrl);
+// const pngDecoder = new PngDecoder24();
+// const [w, h] = pngDecoder.readSize(imgBuffer);
+// console.log(w, h);
+
+// function calcImagesRegionSize(images: Assets.WasmImage[]): number {
+//   const imagesIndexSize = Assets.WasmImage.OFFSET_SIZE * images.length;
+//   const imagesHeaderDataSize = images.reduce(
+//     (size, img) => (size += img.size),
+//     0,
+//   );
+//   return imagesIndexSize + imagesHeaderDataSize;
+// }
+
+function getRegionsAlignSizes(
+  sizes: Readonly<MemRegionsData>,
+  memRegionsAllocSeq: MemRegionKeyType[],
+): MemRegionsData {
+  const alignSizes = {} as MemRegionsData;
+  for (const region of memRegionsAllocSeq) {
+    alignSizes[region] = sizes[region];
+    if (sizes[region]) {
+      const alignSize = MEM_REGIONS_ALIGN_SIZES[region] - 1;
+      alignSizes[region] += alignSize;
+    }
+  }
+  return alignSizes;
+}
+
+
+// const ASSETS_PATH = '../asset';
+// const IMAGES_PATH = `${ASSETS_PATH}/images`;
+// import myImgUrl from '../asset/images/samplePNGImage.png';
+
+// function board_style(): object {
+//   return {
+//     // boxSizing: 'border-box',
+//     // position: 'absolute',
+//     width: config.display_width,
+//     height: config.display_height,
+//     // top: '-50px',
+//     // width: '100%',
+//     // height: '100%',
+//     // objectFit: 'contain',
+//     margin: 'auto',
+//     // bottom: 0,
+//     // left: 0,
+//     // right: 0,
+//     padding: 0,
+//     border: '5px solid #c0c0c0',
+//     // textAlign: 'center',
+//   };
+// }
+
+// function canvas_style(): object {
+//   return {
+//     display: 'block',
+//     // margin: 'auto',
+//     // padding: 0,
+//     // position: 'absolute',
+//     // top: '-50px',
+//     // bottom: 0,
+//     // left: 0,
+//     // right: 0,
+//     // width: config.display_width,
+//     // height: config.display_height,
+//     width: '100%',
+//     height: '100%',
+//     // objectFit: 'fill',
+//     imageRendering: 'pixelated',
+//   };
+// }
+
+// Object.assign(this.container.style, board_style());
+
+// this.board.tabIndex = 0; // call this before focus() !
+// this.board.focus();
+// this.board.addEventListener('keydown', (e) => {
+//   console.log('board here');
+//   // e.stopPropagation();
+// });
+
+// /**/
+// // used to test mem all/gc, see memory-stats.js proj
+// garbage: object[] = [];
+// garbageSize = 1024 * 1024 * 6;
+// garbageIdx = 0;
+
+// // call GC() from console to test a GC
+// private GC() {
+//   this.garbage = [];
+//   this.garbageIdx = 0;
+// }
+
+// private makeGarbage(amount: number) {
+//   for (let i = 0; i < amount; i++) {
+//     this.garbage[this.garbageIdx] = {};
+//     this.garbageIdx = (this.garbageIdx + 1) % this.garbageSize;
+//   }
+// }
+// use this.makeGarbage(1024); in render()
+// /**/
+
+private clearBckgr(): void {
+    // js version
+    // const frameUi32 = new Uint32Array(this._wasmData.ui8cFramebuffer.buffer);
+    // const limit = this._pixelCount;
+    // for (let i = 0; i !== limit; i += 1) {
+    //   // canvas_mem[i] = 0xff_ff_00_00;
+    //   frameUi32[i] = 0xff_00_00_00;
+    // }
+
+    // call asc function here! // TODO fix asc call here!
+    // const frameBufferOffset = this._wasmData.memRegOffs[FRAME_BUF_IDX];
+    // this._wasmData.ascExports.clearCanvasVec(frameBufferOffset);
+
+    // this._ascFunctions.clearCanvasVec(this._canvasOffset);
+
+    // canvas_mem[199 * 320 + 0] = 0xff_00_00_ff;
+
+    // const canvas_mem: Uint32Array = new Uint32Array(this.canvas_mem_i8c.buffer);
+    // const limit = this.pixel_count;
+    // for (let i = 0; i !== limit; i += 4) {
+    //   canvas_mem[i] = 0xff_00_00_00;
+    //   canvas_mem[i + 1] = 0xff_00_00_00;
+    //   canvas_mem[i + 2] = 0xff_00_00_00;
+    //   canvas_mem[i + 3] = 0xff_00_00_00;
+    // }
+
+    // using ctx and not the imagedata, remove put_image_data in render()
+    // const { ctx } = this;
+    // ctx.fillStyle = 'blue';
+    // ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    // ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    // const val = this.clear_wasm();
+    // console.log(val);
+  }
+
+showStatsMenuCheckHandler(showStats: boolean) {
+    this.getStats().isEnabled = showStats;
+    this.engineWorker.postMessage({
+command: 'sendsStats',
+params: { value: showStats },
+});
+}
+
+menuGui.ts:
+// const guidiv = document.querySelectorAll('[class="dg main gui"]');
+// const button = guidiv[0].querySelectorAll('.close-button');
+
+
+  protected initConsole(): void {
+    // note: console container is above the panel container and its canvas
+    // focus given to console last has precedence
+    this._isConsoleOpen = false;
+    if (!this.panelSettings.enableConsole) {
+      return;
+    }
+    this.initConsoleContainer();
+    this.console = new Console(this.buildConsoleHandlers(), {
+      hotkey: Panel.CONSOLE_KEY,
+      welcome: 'Hello User.',
+      caseSensitive: true,
+      autoComplete: true,
+      defaultHandler() {},
+      container: this.consoleContainer,
+      onShow: () => {
+        // called immediately after key
+        // this.remove_key_listener();
+        this.onShowConsole();
+      },
+      onHide: () => {
+        this.onHideConsole();
+      },
+      onClosing: () => {
+        // before transitionEnd of the console...
+        // show these immediately to avoid a pop effect of the menu gui/stats,
+        // note: the console remains open and above 'cause it has higher zIndex
+        this.onCloseConsole();
+      },
+    });
+    this.container.addEventListener('focus', () => {
+      // when closing the gui menu focus goes back to panel container ! so we
+      // give focus also to the console's container
+      // TODO check btw
+      assert(this.consoleContainer);
+      this.consoleContainer.focus();
+    });
+  }
+
+
+this._canvasContainer.style.zIndex = String(
+  Number(this._panel.style.zIndex) + 1,
+);
+
+
+
+let cc = 0;
+setInterval(() => {
+  cc++;
+  this._stats!.update({
+    // 'FPS': cc > 74 ? 50 : 30,
+    'FPS': cc < 100 ? 200 + (Math.random() * 300) | 0 : Math.random()*50,
+  });
+}, 100);
+
+
+private get_font_height(): number {
+  return this._ctx.measureText('M').width + 1;
+}
+
+private draw_text(txt: string): void {
+  // TODO x,y?
+  this._ctx.font = 'bold 16pt monospace';
+  const lineHeight = 3 + this.get_font_height();
+  this._ctx.fillStyle = '#999'; // gray
+  const lines = txt.split('\n');
+  for (
+      let i = 0, x = 1, y = lineHeight;
+      i !== lines.length;
+      i += 1, y += lineHeight
+      ) {
+    this._ctx.fillText(lines[i], x, y);
+  }
+}
+
+private _sleepArr: Int32Array;
+engine._sleepArr = new Int32Array(new SharedArrayBuffer(NUM_BYTES_DWORD)); // for atomic sleep
+
+// worker main loop
+for (;;) {
+  syncWait(this._syncArr, idx, 0);
+  // sleep(this._syncArr, idx, 1000);
+  clearBg(this._wasmModules, color, this._frameHeightRange);
+  syncStore(this._syncArr, idx, 0);
+  syncNotify(this._syncArr, idx);
+}
+
+
+$(ASC_BUILD_DIR)/%.wasm: $(ASC_SOURCE_DIR)/%.ts build_flags $(ASC_CONFIG_FILE)
+	@echo
+	@echo Compiling $@ ...
+	asc --config $(ASC_CONFIG_FILE) $< -o $@ -t $(basename $@).wat -b $(ASC_BINDINGS) --target $(TARGET)
+
+	@echo $(MAKEFILE_LIST)
+
+
+// function _new<T>(): T {
+//   assert(isReference<T>());
+//   const size = offsetof<T>();
+//   // logi(addr);
+//   const addr = alloc(size);
+//   // logi(addr);
+//   return changetype<T>(addr);
+// }
+
+// const v = _new<Vec>();
+// logi(changetype<usize>(v));
+
+// class Vec3 {
+//     x: float;
+//     y: float;
+//     z: float;
+//     // w: float;
+//     // position, also color (r,g,b)
+//     // constructor(public x: float = 0.0, public y: float = 0.0, public z: float = 0.0) {}
+//     init(x: float, y: float, z: float): void {
+//       this.x = x;
+//       this.y = y;
+//       this.z = z;
+//     }
+
+//     static new(x: float, y: float, z: float): Vec3 {
+//       const size = offsetof<Vec3>();
+//       const f: usize = alloc(size);
+//       const p = changetype<Vec3>(f);
+//       p.x = x; p.y = y; p.z = z;
+//       return p;
+//     }
+
+//     static delete(v: Vec3): void {
+//       const ptr = changetype<usize>(v);
+//       dealloc(ptr);
+//     }
+// }
+
+// @global function __new(size: usize, id: u32): usize {
+//   logi(<i32>size);
+//   return 0;
+// }
+
+// export function instantiateRaw<T>(): T {
+//     // when field is class with nonnull, it's unsafe.
+//     if (isReference<T>()) {
+//         return changetype<T>(__new(offsetof<T>(), idof<T>()));
+//     }
+//     // It's safe.
+//     return instantiate<T>();
+// }
+
+function printValues(): void {
+
+  // const myArr = new StaticArray<i32>(100);
+  // logi(memory.grow(1));
+
+  // logi(<i32>heap.alloc(16));
+  // logi(sleepArr);
+  
+  // NativeMathf.seed
+
+  // logi(syncLoc);
+
+  // logi(ASC_MEMORY_BASE);
+  // const myblock = heap.alloc(16);
+  // logi(memory.size()); //<<16);
+  logi(i32(__data_end));
+  logi(<i32>__heap_base);
+  // logi(<i32>myblock);
+  // log(heap.alloc(10));
+}
+
+// const workerAlloc = await loadWasm<typeof workerHeapAllocExport>(
+//   'workerHeapAlloc',
+//   workerHeapAllocWasm,
+//   wasmInit,
+// );
+const engineWorker = await loadWasm<typeof engineWorkerExport>(
+  'engineWorker',
+  engineWorkerWasm,
+  wasmInit,
+  // workerAlloc,
+);
+
+function testVec3(): Vec3 {
+  // const f: usize = alloc(16);
+  // const p = changetype<Vec3>(f);
+  // p.init(3, 4, 5);
+  // return p;
+  // return Vec3.new(3, 4, 5);
+  const v = newVec3(3, 4, 5);
+  // v.init(7,2,3);
+  return v;
+}
+
+  const v = testVec3();
+  logi(changetype<usize>(v));
+  // logf(v.x);
+
+  // Vec3.delete(v);
+
+  // logi(s);
+  // logi(e);
+  // logi(heapOffset);
+  // logi(workerHeapSize);
+  // logi(heapLoc);
+  // logi(__heap_base);
+  // logi(alloc(10));
+  // logi(alloc(12));
+  // logi(alloc(1024));
+  // logi(alloc(1024));
+  // const addr = alloc(4);
+  // logi(load<u32>(addr));
+  // logi(alloc(1));
+  // printValues();
+
+  // const f: usize = alloc(12);
+  // // const g: usize = alloc(2);
+  // // const h: usize = alloc(3);
+  // logi(f);
+
+  // const g: usize = alloc(5);
+  // logi(g);
+  // dealloc(f);
+  // // dealloc(g);
+
+  // const h: usize = alloc(7);
+  // logi(h);
+
+  // logi(-1);
+  // dealloc(h);
+  // logi(-1);
+  // dealloc(g);
+  // logi(-1);
+  // const z: usize = alloc(2);
+  // logi(z);
+  // logi(-1);
+
+    // if (workerIdx > 0) {
+    //   // const a = alloc(256);
+    // }
+
+  while (true) {
+    // const f: usize = alloc(12);
+    // // const g: usize = alloc(2);
+    // // const h: usize = alloc(3);
+    // logi(f);
+    // // logi(g);
+    // // logi(h);
+    // const g: usize = alloc(5);
+    // logi(g);
+    // dealloc(f);
+    // dealloc(g);
+
+    // const v = newVec3(c, c+1, c+2);
+    // c+=3;
+    // delVec3(v);
+
+    // const h: usize = alloc(7);
+    // dealloc(h);
+    // logi(h);
+
+    // const a = alloc(77);
+    // if (workerIdx <= 0) {
+    // const a = alloc(12);
+    // }
+    atomic.wait<i32>(syncLoc, 0);
+    clearBg(bgColor, s, e);
+    atomic.store<i32>(syncLoc, 0);
+    atomic.notify(syncLoc);
+    break;
+  }
+
+
+# ifeq (build_asc,$(findstring build_asc,$(MAKECMDGOALS)))
+ifneq "" "$(or $(findstring build_asc,$(MAKECMDGOALS)), $(findstring all,$(MAKECMDGOALS)))"
+
+ifeq (,$(findstring clean,$(MAKECMDGOALS)))
+
+
+private async initEngineWorkers(wasmMemStartSize: number): Promise<void> {
+  assert(Engine.NUM_WORKERS >= 1);
+
+  this._workers = [];
+
+  let count = Engine.NUM_WORKERS;
+  const now = Date.now();
+
+  return new Promise((resolve, reject) => {
+    for (
+      let workerIdx = 0;
+      workerIdx < Engine.NUM_WORKERS;
+      ++workerIdx
+    ) {
+      const worker = new Worker(
+        new URL('./engineWorker.ts', import.meta.url),
+        {
+          name: `worker-${workerIdx}`,
+          type: 'module',
+        },
+      );
+      this._workers.push(worker);
+      worker.onmessage = ({ data: msg }) => {
+        // TODO
+        console.log(
+          `Worker ready: id=${workerIdx}, count=${--count}, time=${
+            Date.now() - now
+          }ms`,
+        );
+        if (count === 0) {
+          console.log(`All workers ready. After ${Date.now() - now}ms`);
+          resolve();
+        }
+      };
+      worker.onerror = (error) => {
+        console.log(`Worker id=${workerIdx} error: ${error.message}\n`);
+        reject(error);
+      };
+      const workerConfig = this.buildWorkerConfig(
+        workerIdx,
+        wasmMemStartSize,
+      );
+      worker.postMessage({
+        command: 'init',
+        params: workerConfig,
+      });
+    }
+  });
+}
+
+&& npm run onchange:wasm
+
+"onchange:wasm": "onchange -v -i 'src/engine/wasm/makefile' 'src/engine/wasm/asconfig.json' 'src/engine/wasm/src/**/*.ts' -- make --no-print-directory --debug=basic -C src/engine/wasm ",
+
+let arr = newVector<u32>(2);
+logi(arr.length);
+logi(arr.start);
+logi(arr.end);
+// // logi(arr.end);
+logi(changetype<usize>(arr.atIdx(0)));
+logi(changetype<usize>(arr.atIdx(1)));
+// deleteVector(arr);
+
+from darray:
+
+// @inline get objSize(): SIZE_T {
+//   return this._objSize;
+// }
+
+// @inline get start(): PTR_T {
+//   return this._data;
+// }
+
+// @inline get end(): PTR_T {
+//   return this._next;
+// }
+
+// @inline get length(): u32 {
+//   return this._count;
+// }
+
+// @inline get arrayStart(): PTR_T {
+//   return this._array;
+// }
+
+// @inline get arrayEnd(): PTR_T {
+//   return this._arrayEnd;
+// }
+
+
+// const imagesDir = '../assets/images/';
+// const fileNames = Object.values(imagesList);
+// console.log(`PATH: ${imagesDir}${fileNames[0]}`);
+// // const imagesUrls = await Promise.all(
+// //   Object.values(imagesList).map(
+// //     async (fileName) => (await import(`${imagesDir}${fileName}`)).default,
+// //   ),
+// // );
+// // this._imagesPaths = imagesUrls;
+// // console.log(imagesUrls);
+// const path = 'samplePNGImage.png';
+// const imgUrl = (await import('../assets/images/samplePNGImage.png')).default;
+// const imgUrl2 = (await import('../assets/images/samplePNGImage2.png')).default;
+// this._imagesPaths = [imgUrl, imgUrl2];
+
+// const imagesDir = '../assets/images/';
+// const imagesUrls = await Promise.all(
+//   Object.values(imagesList).map(
+//     async (fileName) => console.log(fileName),
+//   ),
+// );
+
+while (true) {
+  atomic.wait<i32>(syncLoc, 0);
+  // const v = vec3Alloc.new();
+  // clearBg(bgColor, s, e);
+
+  // // logi(image.height);
+  if (workerIdx == 1) {
+    for (let i = s; i != e; ++i) {
+      let screenPtr: PTR_T = frameBufferPtr + i * frameWidth * 4;
+      const pixels: PTR_T = image.pixels + i * image.width * 4;
+      memory.copy(screenPtr, pixels, frameWidth * 4);
+    }
+  }
+
+  if (workerIdx == 0) {
+    draw.drawText(strings.SENT2, 10, 10, 1, 0xFF_00_00_FF);
+    draw.drawText(strings.SENT2, 10, 18, 2, 0xFF_00_00_FF);
+    // let y = 20;
+    // for (let s = 1; s < 5; ) {
+    //   draw.drawText(strings.SENT2, 10, y, f32(s), 0xFF_00_00_FF);
+    //   y += FONT_Y_SIZE * s;
+    //   s++;
+    // }
+  }
+
+  atomic.store<i32>(syncLoc, 0);
+  atomic.notify(syncLoc);
+}
+
+function run(): void {
+
+  initWorkerMem();
+
+  // const p = alloc(32);
+  // const t = alloc(32);
+  // dealloc(p);
+  // logi(load<u32>(WORKER_MEM_COUNTER_PTR));
+
+  // logi(strings.MSG1);
+  // logi(strings.SENT2);
+  // logi(strings.SENT3);
+
+  // logi(load<u8>(fontCharsPtr + 65*8));
+
+  // logi(load<u8>(stringsDataPtr));
+  // logi(load<u8>(stringsDataPtr+1));
+  // logi(load<u8>(stringsDataPtr+2));
+  // logi(load<u8>(stringsDataPtr+3));
+  // logi(load<u8>(stringsDataPtr+4));
+
+  // logi(stringsIndexPtr);
+  // logi(stringsIndexSize);
+  // logi(stringsDataPtr);
+  // logi(stringsDataSize);
+
+  // logi(fontCharsPtr);
+  // logi(fontCharsSize);
+
+  // logi(usePalette);
+  // logi(imagesIndexPtr);
+  // logi(imagesIndexSize);
+  // logi(imagesDataPtr);
+  // logi(imagesDataSize);
+  // logi(numImages);
+
+  // logi(MYIMG);
+  // logi(imagesIndexSize);
+
+  // test();
+  // test images loading
+  // logi(numImages);
+  // const images = initImages();
+  // for (let i = 0; i < images.length(); ++i) {
+  //   const pixels = images.at(i).pixels;
+  //   logi(<i32>pixels);
+  //   const byte = load<u8>(pixels);
+  //   logi(byte);
+  //   logi(images.at(i).width);
+  //   logi(images.at(i).height);
+  // }
+
+  const images = initImages();
+  const image = images.at(0);
+
+  // const width = image.width;
+  // const height = image.height;
+
+  // let screenPtr: PTR_T;
+  // let pixels: PTR_T;
+
+  // logi(imagesIndexOffset);
+  // logi(image.pixels);
+  // logi(image.width);
+  // logi(image.height);
+  // for (let i = 0; i != frameHeight; ++i) {
+  //   let screenPtr: PTR_T = frameBufferPtr + i * frameWidth * 4;
+  //   const pixels: PTR_T = image.pixels + i * image.width * 4;
+  //   memory.copy(screenPtr, pixels, frameWidth * 4);
+
+  //   // screenPtr = frameBufferPtr + i * frameWidth * 4;
+  //   // pixels = image.pixels + i * image.width * 4;
+  //   // // logi(screenPtr);
+  //   // for (let j = 0; j != frameWidth; ++j) {
+  //   //   const col = load<u32>(pixels);
+  //   //   store<u32>(screenPtr, col);
+  //   //   // store<i32>(screenPtr, 0xFF_00_00_FF);
+  //   //   pixels += 4;
+  //   //   screenPtr += 4;
+  //   //   // logi(j);
+  //   // }
+  // }
+
+  const r = utils.range(workerIdx, numWorkers, frameHeight);
+  const s = <u32>(r >> 32);
+  const e = <u32>r;
+
+  // logi(<i32>process.hrtime())
+
+  // logi(sleepLoc);
+  // logi(load<u32>(sleepLoc));
+
+  while (true) {
+    atomic.wait<i32>(syncLoc, 0);
+    // utils.sleep(sleepLoc, 16);
+
+    // draw.clearBg(s, e, 0xff_00_00_00); // ABGR
+    draw.clearBg(s, e, bgColor); // ABGR
+    // logi(0);
+
+
+    // // // logi(image.height);
+    // if (workerIdx == 1) {
+    //   for (let i = s; i != e; ++i) {
+    //     let screenPtr: PTR_T = frameBufferPtr + i * frameWidth * 4;
+    //     const pixels: PTR_T = image.pixels + i * image.width * 4;
+    //     memory.copy(screenPtr, pixels, frameWidth * 4);
+    //   }
+    // }
+
+    // if (workerIdx == 0) {
+    //   draw.drawText(strings.SENT2, 10, 10, 1, 0xFF_00_00_FF);
+    //   draw.drawText(strings.SENT2, 10, 18, 2, 0xFF_00_00_FF);
+    //   // let y = 20;
+    //   // for (let s = 1; s < 5; ) {
+    //   //   draw.drawText(strings.SENT2, 10, y, f32(s), 0xFF_00_00_FF);
+    //   //   y += FONT_Y_SIZE * s;
+    //   //   s++;
+    //   // }
+    // }
+
+    // logi(load<u8>(inputKeysPtr));
+
+    atomic.store<i32>(syncLoc, 0);
+    atomic.notify(syncLoc);
+  }
+
+}
+
+
+logi(nextPowerOfTwo(8));
+
+// const log = (msgNum: number, strIdx: number) => {
+// console.log('str idx is ' + strIdx);
+// const lenIdx = strIdx - 4;
+// const len = new Uint32Array(this._memory.buffer, lenIdx, 4)[0];
+// console.log('Lenght is ' + len);
+// const strBytesSrc = new Uint16Array(this._memory.buffer, strIdx, len);
+// const strBytes = strBytesSrc.slice();
+// const str = new TextDecoder('utf-16').decode(strBytes);
+// console.log('The string is ' + str);
+// const msg = clearCanvasModule.instance.exports.__getString(msgIdx);
+// console.log(`Message: ${msgNum} ${msg}`);
+// };
+
+// const importObject = {
+//   env: {
+//     buffer: memory,
+//     canvas_width: w, // TODO fix names?
+//     canvas_height: h,
+//     pixkl_count,
+//     log: (msgIdx: number, msg: string) => {
+//       console.log(`Message: ${msgIdx} ${msg}`)
+//     }
+//   },
+// };
