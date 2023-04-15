@@ -236,10 +236,12 @@ class Engine {
 let engine: Engine;
 
 const commands = {
-  [Commands.RUN]: async (config: EngineConfig): Promise<void> => {
+  [Commands.RUN]: (config: EngineConfig) => {
     engine = new Engine();
-    await engine.init(config);
-    engine.run();
+    (async () => {
+      await engine.init(config);
+      engine.run();
+    })();
   },
   [Commands.KEYDOWN]: (key: KeyCode) => {
     engine.onKeyDown(key);
