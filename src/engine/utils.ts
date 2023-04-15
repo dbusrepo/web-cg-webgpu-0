@@ -30,12 +30,13 @@ function randColor(): number {
   return color;
 }
 
-const calcAvgArrValue = (
+const arrAvg = (
   values: Float32Array | Float64Array,
   count: number,
 ) => {
   let acc = 0;
   const numIter = Math.min(count, values.length);
+  if (numIter === 0) return 0;
   for (let i = 0; i < numIter; i++) {
     acc += values[i];
   }
@@ -59,7 +60,7 @@ function syncNotify(syncArr: Int32Array, idx: number): void {
 }
 
 export {
-  calcAvgArrValue,
+  arrAvg,
   range,
   Range,
   randColor,

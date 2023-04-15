@@ -22,7 +22,15 @@ const GRAPH_HEIGHT = CSS_GRAPH_HEIGHT * PR;
 
 const BG_ALPHA = 0.9;
 
+type StatsPanelConfig = {
+  title: string; 
+  fg: string;
+  bg: string;
+  graphHeight: number;
+};
+
 class StatsPanel {
+  private _cfg: StatsPanelConfig;
   private _canvas: HTMLCanvasElement;
   private _context: CanvasRenderingContext2D;
   private _title: string;
@@ -37,17 +45,17 @@ class StatsPanel {
   private _curIdx: number; // cur update index, inc at every update
   private _maxDeque: number[]; // deque values to impl max of last N values
   private _maxDequeIdx: number[]; // deque indices
-  private _first: boolean;
 
-  constructor(title: string, fg: string, bg: string) {
+  constructor(cfg: StatsPanelConfig) {
+    this._cfg = cfg;
     this._canvas = document.createElement('canvas');
     this._canvas.width = WIDTH;
     this._canvas.height = HEIGHT;
     this._canvas.style.width = `${CSS_WIDTH}px`;
     this._canvas.style.height = `${CSS_HEIGHT}px`;
-    this._title = title;
-    this._fgCol = fg;
-    this._bgCol = bg;
+    this._title = this._cfg.title;
+    this._fgCol = this._cfg.fg;
+    this._bgCol = this._cfg.bg;
 
     const context = this._canvas.getContext('2d');
     assert(context);
@@ -56,25 +64,25 @@ class StatsPanel {
     this._context.textBaseline = 'top';
 
     // draw the entire canvas background
-    this._context.fillStyle = bg;
+    this._context.fillStyle = this._cfg.bg;
     this._context.fillRect(0, 0, WIDTH, HEIGHT);
 
     // draw the title
-    this._context.fillStyle = fg;
-    this._context.fillText(title, TEXT_X, TEXT_Y);
+    this._context.fillStyle = this._cfg.fg;
+    this._context.fillText(this._cfg.title, TEXT_X, TEXT_Y);
 
     // draw the graph area
     this.drawGraphBackground();
 
     // alloc mem for panel values and the threshold for scaling heights
     this._values = new Array(CSS_GRAPH_WIDTH).fill(0);
-    this._heightScaleFactor = 0; // normalization factor to scale value to col heights in pixels
+    // normalization factor to scale value to col heights in pixels
+    this._heightScaleFactor = this._cfg.graphHeight;
     this._heightRescaleThreshold = 0;
     this._nextIdx = 0;
     this._curIdx = 0;
     this._maxDeque = [];
     this._maxDequeIdx = [];
-    this._first = true;
   }
 
   get title(): string {
@@ -94,38 +102,35 @@ class StatsPanel {
     this._context.fillRect(GRAPH_X, GRAPH_Y, GRAPH_WIDTH, GRAPH_HEIGHT);
   }
 
-  private downScaleBound(): number {
-    return ((this._heightRescaleThreshold / 3) * 2) / 3;
-  }
+  // private downScaleBound(): number {
+  //   return ((this._heightRescaleThreshold / 3) * 2) / 3;
+  // }
 
-  private checkDownRescale(): boolean {
-    // downscale if max value is less than 2/3 of the first third of the graph height
-    const res = this._maxDeque[0] < this.downScaleBound();
-    return res;
-  }
+  // private checkDownRescale(): boolean {
+  //   // downscale if max value is less than 2/3 of the first third of the graph height
+  //   const res = this._maxDeque[0] < this.downScaleBound();
+  //   // return res;
+  //   return false;
+  // }
 
   // bound max value to 2/3 of the graph height, so up rescale when a new value
   // is greater than 2/3 of the graph height
   // down rescale when max value is less than 2/3 of the first third of the graph height
   // and map the 2/3 of the first third of the graph height to 2/3 of the graph height
-  private recalcRedrawThreshold(source: number): void {
-    // const factor = (source / CSS_GRAPH_HEIGHT) | 0;
-    // const RESCALE_FACTOR = 2;
-    // this._redrawThreshold = CSS_GRAPH_HEIGHT * (factor + RESCALE_FACTOR);
-    assert(source >= 0);
-    if (this._first) {
-      // if first rescale, draw value at 1/3 of the graph height
-      this._heightScaleFactor = source * 3;
-      this._first = false;
-    } else {
-      this._heightScaleFactor = (source * 3) / 2; // bound scaled values to 2/3 of the graph height
-    }
-    // rescale factor to 2/3 of _heightScaleFactor
-    this._heightRescaleThreshold = (this._heightScaleFactor * 2) / 3;
-    assert(this._heightScaleFactor >= source);
-  }
+  // private recalcRedrawThreshold(source: number): void {
+  //   // const factor = (source / CSS_GRAPH_HEIGHT) | 0;
+  //   // const RESCALE_FACTOR = 2;
+  //   // this._redrawThreshold = CSS_GRAPH_HEIGHT * (factor + RESCALE_FACTOR);
+  //   console.log(source);
+  //   this._heightScaleFactor = source * 3; // bound scaled values to 2/3 of the graph height
+  //   this._heightRescaleThreshold = (this._heightScaleFactor * 3);
+  //   assert(this._heightScaleFactor >= source);
+  //   console.log(this._heightScaleFactor, this._heightRescaleThreshold);
+  // }
 
   update(value = 0) {
+    value = Math.max(value, 0);
+
     this._min = Math.min(this._min, value);
     this._max = Math.max(this._max, value);
 
@@ -150,36 +155,37 @@ class StatsPanel {
       // GRAPH_WIDTH
     );
 
-    this.updateMaxDeque(value);
-
-    let downScale = false;
-    if (
-      value > this._heightRescaleThreshold ||
-      (downScale = this.checkDownRescale())
-    ) {
-      do {
-        const source = downScale ? this.downScaleBound() : value;
-        this.recalcRedrawThreshold(source);
-      } while (downScale && (downScale = this.checkDownRescale()));
-
-      this.drawGraphBackground();
-
-      // redraw scaled values
-      this._context.fillStyle = this._fgCol;
-      this._context.globalAlpha = 1;
-      for (let i = 0, { length } = this._values; i < length; ++i) {
-        const idx = i + this._nextIdx;
-        const cur = idx < length ? idx : idx - length;
-        const curVal = this._values[cur];
-        const h = Math.round((curVal / this._heightScaleFactor) * GRAPH_HEIGHT);
-        this._context.fillRect(
-          GRAPH_X + PR * i,
-          GRAPH_Y + GRAPH_HEIGHT - h,
-          PR,
-          h,
-        );
-      }
-    }
+    // rescaling disabled
+    // this.updateMaxDeque(value);
+    // let downScale = false;
+    // if (
+    //   value > this._heightRescaleThreshold ||
+    //   (downScale = this.checkDownRescale())
+    // ) {
+    //   console.log('rescaling');
+    //   do {
+    //     const source = downScale ? this.downScaleBound() : value;
+    //     this.recalcRedrawThreshold(source);
+    //   } while (downScale && (downScale = this.checkDownRescale()));
+    //
+    //   this.drawGraphBackground();
+    //
+    //   // redraw scaled values
+    //   this._context.fillStyle = this._fgCol;
+    //   this._context.globalAlpha = 1;
+    //   for (let i = 0, { length } = this._values; i < length; ++i) {
+    //     const idx = i + this._nextIdx;
+    //     const cur = idx < length ? idx : idx - length;
+    //     const curVal = this._values[cur];
+    //     const h = Math.round((curVal / this._heightScaleFactor) * GRAPH_HEIGHT);
+    //     this._context.fillRect(
+    //       GRAPH_X + PR * i,
+    //       GRAPH_Y + GRAPH_HEIGHT - h,
+    //       PR,
+    //       h,
+    //     );
+    //   }
+    // }
 
     this._values[this._nextIdx++] = value;
     this._nextIdx %= this._values.length;

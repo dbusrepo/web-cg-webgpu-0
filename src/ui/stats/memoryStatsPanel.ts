@@ -17,7 +17,7 @@ const ONE_MB = 1048576;
 
 class MemoryStatsPanel extends StatsPanel {
   constructor() {
-    super(StatsNames.MEM, '#FF0', '#220');
+    super({ title: StatsNames.FPS, fg: '#FF0', bg: '#220', graphHeight: 100 });
   }
 
   update(numBytes: number) {

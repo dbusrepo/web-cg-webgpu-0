@@ -1,4 +1,4 @@
-// import assert from 'assert';
+import assert from 'assert';
 import './css/app.css';
 import {
   StartViewMode,
@@ -53,15 +53,18 @@ class Main {
       // isVisible: false,
     };
     stats.init(cfg);
-    const fpsPanel = new StatsPanel(StatsNames.FPS, '#0ff', '#022');
-    const upsPanel = new StatsPanel(StatsNames.UPS, '#0f0', '#020');
-    const unlockedFpsPanel = new StatsPanel(StatsNames.FPSU, '#f50', '#110');
+    const fpsPanel = new StatsPanel({ title: StatsNames.FPS, fg: '#0ff', bg: '#022', graphHeight: 200 });
+    const rpsPanel = new StatsPanel({ title: StatsNames.RPS, fg: '#f80', bg: '#022', graphHeight: 200 });
+    const upsPanel = new StatsPanel({ title: StatsNames.UPS, fg: '#0f0', bg: '#020', graphHeight: 200 });
+    const ufpsPanel = new StatsPanel({ title: StatsNames.UFPS, fg: '#f50', bg: '#110', graphHeight: 5000 });
+    // const unlockedFpsPanel = new StatsPanel(StatsNames.FPSU, '#f50', '#110');
     // const wasmHeapMem = new StatsPanel(StatsNames.WASM_HEAP, '#0b0', '#030');
     // this.mem_panel = new StatsPanel('MEM', '#ff0', '#330');
     stats.addPanel(fpsPanel);
+    stats.addPanel(rpsPanel);
     stats.addPanel(upsPanel);
+    stats.addPanel(ufpsPanel);
     // this._stats.addPanel(wasmHeapMem);
-    stats.addPanel(unlockedFpsPanel);
     // add mem stats panel
     // const memPanel = new MemoryStats(this._stats);
     return stats;

@@ -1,4 +1,4 @@
-// import assert from 'assert';
+import assert from 'assert';
 import {
   // BPP_PAL,
   // BPP_RGBA,
@@ -23,17 +23,17 @@ type EngineConfig = {
 };
 
 class Engine {
-  private static readonly FRAME_PERIOD = MILLI_IN_SEC / mainConfig.targetFPS;
-  private static readonly UPDATE_PERIOD =
+  private static readonly RENDER_PERIOD_MS = MILLI_IN_SEC / mainConfig.targetRPS;
+  private static readonly UPDATE_PERIOD_MS =
     (mainConfig.multiplier * MILLI_IN_SEC) / mainConfig.targetUPS;
 
-  private static readonly UPDATE_TIME_MAX = Engine.UPDATE_PERIOD * 8;
+  private static readonly UPDATE_TIME_MAX = Engine.UPDATE_PERIOD_MS * 8;
 
-  private static readonly FPS_UPS_STATS_LEN = 10;
-  private static readonly FRAME_TIMES_LEN = 20;
-  private static readonly TIMES_FROM_LAST_FRAME_LEN = 10;
+  private static readonly STATS_LEN = 10; // fps, rps, ups
+  private static readonly FRAME_TIMES_LEN = 20; // used for ufps
+  private static readonly TIMES_SINCE_LAST_FRAME_LEN = 10; // update, render
 
-  private static readonly UPDATE_STATS_PERIOD = 100; // MILLI_IN_SEC;
+  private static readonly STATS_PERIOD_MS = 100; // MILLI_IN_SEC;
 
   private _cfg: EngineConfig;
   private _engineImpl: EngineImpl;
@@ -65,15 +65,18 @@ class Engine {
     let lastFrameStartTime: number;
     // let last_render_t: number;
     let updTimeAcc: number;
-    let elapsedTime: number;
-    let frameThen: number;
+    let renderTimeAcc: number;
+    let elapsedTimeMs: number;
+    let renderThen: number;
     let timeSinceLastFrame: number;
+    let avgTimeLastFrame: number;
     let frameStartTime: number;
 
-    let frameCounter: number;
-    let renderCounter: number;
-    let updateCounter: number;
-    let statsCounter: number;
+    let timeLastFrameCnt: number;
+    let frameCnt: number;
+    let renderCnt: number;
+    let updateCnt: number;
+    let statsCnt: number;
 
     let lastStatsTime: number;
     let statsTimeAcc: number;
@@ -81,48 +84,67 @@ class Engine {
     let frameTimeArr: Float64Array;
     let timeSinceLastFrameArr: Float64Array;
     let fpsArr: Float32Array;
+    let rpsArr: Float32Array;
     let upsArr: Float32Array;
 
     let resync: boolean;
     let isRunning: boolean;
     let isPaused: boolean;
 
-    const getTimeMs = () => performance.now();
-
     const mainLoopInit = () => {
-      lastFrameStartTime = lastStatsTime = getTimeMs();
+      lastFrameStartTime = lastStatsTime = renderThen = performance.now();
       frameTimeArr = new Float64Array(Engine.FRAME_TIMES_LEN);
       updTimeAcc = 0;
-      elapsedTime = 0;
+      renderTimeAcc = 0;
+      elapsedTimeMs = 0;
       timeSinceLastFrameArr = new Float64Array(
-        Engine.TIMES_FROM_LAST_FRAME_LEN,
+        Engine.TIMES_SINCE_LAST_FRAME_LEN,
       );
-      frameCounter = 0;
+      frameCnt = 0;
+      timeLastFrameCnt = 0;
       statsTimeAcc = 0;
-      fpsArr = new Float32Array(Engine.FPS_UPS_STATS_LEN);
-      upsArr = new Float32Array(Engine.FPS_UPS_STATS_LEN);
-      statsCounter = 0;
+      fpsArr = new Float32Array(Engine.STATS_LEN);
+      rpsArr = new Float32Array(Engine.STATS_LEN);
+      upsArr = new Float32Array(Engine.STATS_LEN);
+      statsCnt = 0;
       resync = false;
-      renderCounter = updateCounter = 0;
-      frameThen = performance.now();
+      updateCnt = 0;
+      renderCnt  = 0;
       isRunning = true;
       isPaused = false;
-      requestAnimationFrame(mainLoop);
+      requestAnimationFrame(frame);
     };
 
-    const updateFrameTime = () => {
+    const begin = () => {
+      frameStartTime = performance.now();
+      timeSinceLastFrame = frameStartTime - lastFrameStartTime;
       lastFrameStartTime = frameStartTime;
-      // if (is_paused) return; // TODO
-      // handle timer anomalies
       timeSinceLastFrame = Math.min(timeSinceLastFrame, Engine.UPDATE_TIME_MAX);
       timeSinceLastFrame = Math.max(timeSinceLastFrame, 0);
-      timeSinceLastFrameArr[frameCounter++ % timeSinceLastFrameArr.length] =
+      timeSinceLastFrameArr[timeLastFrameCnt++ % timeSinceLastFrameArr.length] =
         timeSinceLastFrame;
-      timeSinceLastFrame = utils.calcAvgArrValue(
+      avgTimeLastFrame= utils.arrAvg(
         timeSinceLastFrameArr,
-        frameCounter,
+        timeLastFrameCnt,
       );
-      updTimeAcc += timeSinceLastFrame;
+    }
+
+    const next = () => {
+      requestAnimationFrame(frame);
+    }
+
+    const frame = () => {
+      begin();
+      update();
+      render();
+      stats();
+      next();
+    };
+
+    const update = () => {
+      // if (is_paused) return; // TODO
+      updTimeAcc += avgTimeLastFrame;
+      // handle timer anomalies
       // spiral of death protection
       if (updTimeAcc > Engine.UPDATE_TIME_MAX) {
         resync = true;
@@ -132,76 +154,65 @@ class Engine {
         updTimeAcc = 0; // TODO
         // delta_time = App.UPD_PERIOD;
       }
-    };
-
-    const mainLoop = () => {
-      requestAnimationFrame(mainLoop);
-      frameStartTime = getTimeMs();
-      timeSinceLastFrame = frameStartTime - lastFrameStartTime;
-      updateStats();
-      update();
-      render();
-    };
-
-    const update = () => {
-      updateFrameTime();
-      while (updTimeAcc >= Engine.UPDATE_PERIOD) {
-        // TODO see multiplier in update_period def
-        // update state with UPD_PERIOD
-        // this.scene.update(STEP, t / MULTIPLIER);
-        // gameUpdate(STEP, t / MULTIPLIER);
-        updTimeAcc -= Engine.UPDATE_PERIOD;
-        updateCounter++;
+      while (updTimeAcc >= Engine.UPDATE_PERIOD_MS) {
+        // TODO: see multiplier in update_period def
+        // update state with UPDATE_PERIOD_MS
+        // updateState(STEP, t / MULTIPLIER);
+        updTimeAcc -= Engine.UPDATE_PERIOD_MS;
+        updateCnt++;
       }
     };
+
+    const saveFrameTime = () => {
+      const frameTime = performance.now() - frameStartTime;
+      frameTimeArr[renderCnt++ % frameTimeArr.length] = frameTime;
+    };  
 
     const render = () => {
-      const frameNow = performance.now();
-      const elapsed = frameNow - frameThen;
-      if (elapsed >= Engine.FRAME_PERIOD) {
-        frameThen = frameNow - (elapsed % Engine.FRAME_PERIOD);
+      renderTimeAcc += avgTimeLastFrame;
+      if (renderTimeAcc >= Engine.RENDER_PERIOD_MS) {
+        renderTimeAcc %= Engine.RENDER_PERIOD_MS;
         this._engineImpl.render();
-        frameTimeArr[renderCounter++ % frameTimeArr.length] =
-          performance.now() - frameStartTime;
+        saveFrameTime();
       }
     };
 
-    const updateStats = () => {
+    const stats = () => {
+      ++frameCnt;
       statsTimeAcc += timeSinceLastFrame;
-      if (statsTimeAcc >= Engine.UPDATE_STATS_PERIOD) {
+      if (statsTimeAcc >= Engine.STATS_PERIOD_MS) {
         statsTimeAcc = 0;
         // const tspent = (tnow - start_time) / App.MILLI_IN_SEC;
-        const elapsed = frameStartTime - lastStatsTime;
-        lastStatsTime = frameStartTime;
-        elapsedTime += elapsed;
-        const fps = (renderCounter * MILLI_IN_SEC) / elapsedTime;
-        const ups = (updateCounter * MILLI_IN_SEC) / elapsedTime;
-        console.log(`${fps} - ${ups}`);
-        const statsIdx = statsCounter++ % fpsArr.length;
-        fpsArr[statsIdx] = fps;
-        upsArr[statsIdx] = ups;
+        const now = performance.now();
+        const elapsed = now - lastStatsTime;
+        lastStatsTime = now;
+        elapsedTimeMs += elapsed;
+        const oneOverElapsed = MILLI_IN_SEC / elapsedTimeMs;
+        const fps = frameCnt * oneOverElapsed;
+        const rps = renderCnt * oneOverElapsed;
+        const ups = updateCnt * oneOverElapsed;
+        // console.log(`${fps} - ${rps} - ${ups}`);
+        const st_idx = statsCnt++ % fpsArr.length;
+        fpsArr[st_idx] = fps;
+        rpsArr[st_idx] = rps;
+        upsArr[st_idx] = ups;
         if (this._cfg.sendStats) {
-          const avgFps = Math.round(
-            utils.calcAvgArrValue(fpsArr, statsCounter),
-          );
-          const avgUps = Math.round(
-            utils.calcAvgArrValue(upsArr, statsCounter),
-          );
-          const avgUnlockedFps = Math.round(
-            MILLI_IN_SEC / utils.calcAvgArrValue(frameTimeArr, renderCounter),
-          );
+          const avgFps = utils.arrAvg(fpsArr, statsCnt);
+          const avgRps = utils.arrAvg(rpsArr, statsCnt);
+          const avgUps = utils.arrAvg(upsArr, statsCnt);
+          const avgFrameTime = utils.arrAvg(frameTimeArr, renderCnt);
+          let avgUFps = avgFrameTime === 0 ? 0 : MILLI_IN_SEC / avgFrameTime;
           // const workersHeapMem = this._wasmMemViews.workersMemCounters.reduce(
           //   (tot, cnt) => tot + cnt,
           //   0,
           // );
-          const stats: Partial<StatsValues> = {
+          const stats: StatsValues = {
             [StatsNames.FPS]: avgFps,
+            [StatsNames.RPS]: avgRps,
             [StatsNames.UPS]: avgUps,
-            [StatsNames.FPSU]: avgUnlockedFps,
+            [StatsNames.UFPS]: avgUFps,
             // [StatsNames.WASM_HEAP]: workersHeapMem,
           };
-          // console.log(avgUnlockedFps);
-          // console.log(renderFrameTimeArr);
           postMessage({
             command: PanelCommands.UPDATE_STATS,
             params: stats,
@@ -242,7 +253,9 @@ self.onmessage = ({ data: { command, params } }) => {
   if (commands.hasOwnProperty(command)) {
     try {
       commands[command as keyof typeof commands](params);
-    } catch (err) {}
+    } catch (err) {
+      console.error(err);
+    }
   }
 };
 

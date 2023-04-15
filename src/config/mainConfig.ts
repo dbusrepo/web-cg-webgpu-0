@@ -3,6 +3,9 @@ import { enginePanelConfig } from './enginePanelConfig';
 import { viewPanelConfig } from './viewPanelConfig';
 
 const mainConfig = {
+
+  numWorkers: 0,
+
   wasmMemStartOffset: 0,
   wasmMemStartPages: 64,
   wasmWorkerHeapPages: 1,
@@ -11,11 +14,10 @@ const mainConfig = {
   wasmSharedHeapSize: 0,
   wasmMemMaxPages: 1000,
 
-  targetFPS: 60,
+  targetRPS: 60,
   targetUPS: 80,
-  multiplier: 1,
 
-  numWorkers: 0,
+  multiplier: 1,
 
   panelConfig,
   enginePanelConfig,

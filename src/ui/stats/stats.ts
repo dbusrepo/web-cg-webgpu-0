@@ -4,14 +4,15 @@ import { StatsConfig } from './statsConfig';
 
 enum StatsNames {
   FPS = 'FPS',
+  RPS = 'RPS',
   UPS = 'UPS',
-  FPSU = 'FPSU',
-  MEM = 'MEM',
+  UFPS = 'UFPS',
+  // MEM = 'MEM',
   // WASM_HEAP = 'WASM_HEAP', // heap mem allocated by wasm workers in the private heap + in the shared heap
 }
 
 type StatsValues = {
-  [property in keyof typeof StatsNames]: number;
+  -readonly [property in keyof typeof StatsNames]: number;
 };
 
 class Stats {
