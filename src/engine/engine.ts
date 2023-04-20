@@ -35,30 +35,30 @@ class Engine {
 
   private static readonly STATS_PERIOD_MS = 100; // MILLI_IN_SEC;
 
-  private _cfg: EngineConfig;
-  private _engineImpl: EngineImpl;
-  private _startTime: number;
+  private cfg: EngineConfig;
+  private engineImpl: EngineImpl;
+  private startTime: number;
 
   public async init(config: EngineConfig): Promise<void> {
-    this._startTime = Date.now();
-    this._cfg = config;
+    this.startTime = Date.now();
+    this.cfg = config;
     const engImplCfg: EngineImplConfig = {
-      canvas: this._cfg.canvas,
+      canvas: this.cfg.canvas,
     };
-    this._engineImpl = new EngineImpl();
-    await this._engineImpl.init(engImplCfg);
+    this.engineImpl = new EngineImpl();
+    await this.engineImpl.init(engImplCfg);
   }
 
   public onKeyDown(key: KeyCode) {
-    this._engineImpl.onKeyDown(key);
+    this.engineImpl.onKeyDown(key);
   }
 
   public onKeyUp(key: KeyCode) {
-    this._engineImpl.onKeyUp(key);
+    this.engineImpl.onKeyUp(key);
   }
 
-  // private _getBPP(): number {
-  //   return this._cfg.usePalette ? BPP_PAL : BPP_RGBA;
+  // private getBPP(): number {
+  //   return this.cfg.usePalette ? BPP_PAL : BPP_RGBA;
   // }
 
   public run(): void {
@@ -172,7 +172,7 @@ class Engine {
       renderTimeAcc += avgTimeLastFrame;
       if (renderTimeAcc >= Engine.RENDER_PERIOD_MS) {
         renderTimeAcc %= Engine.RENDER_PERIOD_MS;
-        this._engineImpl.render();
+        this.engineImpl.render();
         saveFrameTime();
       }
     };
@@ -196,7 +196,7 @@ class Engine {
         fpsArr[st_idx] = fps;
         rpsArr[st_idx] = rps;
         upsArr[st_idx] = ups;
-        if (this._cfg.sendStats) {
+        if (this.cfg.sendStats) {
           const avgFps = utils.arrAvg(fpsArr, statsCnt);
           const avgRps = utils.arrAvg(rpsArr, statsCnt);
           const avgUps = utils.arrAvg(upsArr, statsCnt);

@@ -16,40 +16,40 @@ type StatsValues = {
 };
 
 class Stats {
-  private _cfg: StatsConfig;
-  private _container: HTMLDivElement;
-  private _panels = new Map<string, StatsPanel>();
+  private cfg: StatsConfig;
+  private container: HTMLDivElement;
+  private panels = new Map<string, StatsPanel>();
 
   init(cfg: StatsConfig) {
-    this._cfg = structuredClone(cfg);
-    this._container = document.createElement('div');
-    this._container.classList.add('stats-container');
+    this.cfg = structuredClone(cfg);
+    this.container = document.createElement('div');
+    this.container.classList.add('stats-container');
     // this.schedule_mem_measure(); // TODO move ? remove?
   }
 
   addPanel(statsPanel: StatsPanel) {
-    this._panels.set(statsPanel.title, statsPanel);
-    this._container.appendChild(statsPanel.dom);
+    this.panels.set(statsPanel.Title, statsPanel);
+    this.container.appendChild(statsPanel.dom);
   }
 
   setParentNode(parentNode: HTMLElement): void {
-    this._container.parentNode?.removeChild(this._container);
-    parentNode.appendChild(this._container);
+    this.container.parentNode?.removeChild(this.container);
+    parentNode.appendChild(this.container);
   }
 
   hide() {
-    this._container.style.display = 'none';
+    this.container.style.display = 'none';
     // this.container.style.zIndex = '1';
   }
 
   show() {
-    this._container.style.display = 'block';
+    this.container.style.display = 'block';
     // this.container.style.zIndex = '10000';
   }
 
   update(stats: { [k: string]: number }): void {
     for (const [k, v] of Object.entries(stats)) {
-      const panel = this._panels.get(k);
+      const panel = this.panels.get(k);
       if (panel) {
         panel.update(v);
       }
@@ -57,11 +57,11 @@ class Stats {
   }
 
   public get isVisible(): boolean {
-    return this._cfg.isVisible;
+    return this.cfg.isVisible;
   }
 
   public set isVisible(value: boolean) {
-    this._cfg.isVisible = value;
+    this.cfg.isVisible = value;
   }
 }
 

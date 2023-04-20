@@ -1,6 +1,7 @@
 import { MonitorBindingApi } from 'tweakpane';
 import { PanelGui, PanelTweakOptions, PanelTweakOptionsKeys } from './panelGui';
 import { EnginePanel } from './enginePanel';
+import { Panel } from './panel';
 
 enum EnginePanelTweakOptionsKeys {
   FPS = 'fps',
@@ -11,32 +12,26 @@ type EnginePanelTweakOptions = PanelTweakOptions & {
 };
 
 class EnginePanelGui extends PanelGui {
-  private _fpsMonitor: MonitorBindingApi<number>;
+  protected panel: EnginePanel;
+  protected tweakOptions: EnginePanelTweakOptions;
+  private fpsMonitor: MonitorBindingApi<number>;
 
   init(panel: EnginePanel) {
     super.init(panel);
   }
 
-  get tweakOptions() {
-    return this._tweakOptions as EnginePanelTweakOptions;
-  }
-
-  set tweakOptions(options: EnginePanelTweakOptions) {
-    this._tweakOptions = options;
-  }
-
-  protected _initTweakPaneOptionsObj(): void {
-    super._initTweakPaneOptionsObj();
+  protected initTweakPaneOptionsObj(): void {
+    super.initTweakPaneOptionsObj();
     this.tweakOptions = {
-      ...this._tweakOptions,
+      ...this.tweakOptions,
       [EnginePanelTweakOptionsKeys.FPS]: 50,
     };
   }
 
-  protected _addTweakPaneOptions() {
-    super._addStatsOpt();
-    super._addEventLogOpt();
-    this._fpsMonitor = this._tweakPane.addMonitor(
+  protected addTweakPaneOptions() {
+    super.addStatsOpt();
+    super.addEventLogOpt();
+    this.fpsMonitor = this.tweakPane.addMonitor(
       this.tweakOptions,
       EnginePanelTweakOptionsKeys.FPS,
       {
@@ -49,17 +44,17 @@ class EnginePanelGui extends PanelGui {
     );
     // https://github.com/cocopon/tweakpane/issues/415
     // disable monitor interval and update it only in updateFps ?
-    // this._fpsMonitor.disabled = true;
+    // this.fpsMonitor.disabled = true;
   }
 
   updateFps(fps: number) {
     this.tweakOptions[EnginePanelTweakOptionsKeys.FPS] = fps;
-    this._fpsMonitor.refresh();
+    this.fpsMonitor.refresh();
   }
 
-  get panel(): EnginePanel {
-    return super.panel as EnginePanel;
-  }
+  // get panel(): EnginePanel {
+  //   return super.panel as EnginePanel;
+  // }
 }
 
 export { EnginePanelGui };

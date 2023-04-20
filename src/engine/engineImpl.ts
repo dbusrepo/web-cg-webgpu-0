@@ -15,55 +15,55 @@ type EngineImplConfig = {
 };
 
 class EngineImpl {
-  private _cfg: EngineImplConfig;
-  private _ctx: OffscreenCanvasRenderingContext2D;
-  private _images: BitImage[]; // RGBA, PAL_IDX ?
-  private _imagesTotalSize: number;
-  private _wasmEngine: WasmEngine;
-  private _inputManager: InputManager;
+  private cfg: EngineImplConfig;
+  private ctx: OffscreenCanvasRenderingContext2D;
+  private images: BitImage[]; // RGBA, PAL_IDX ?
+  private imagesTotalSize: number;
+  private wasmEngine: WasmEngine;
+  private inputManager: InputManager;
 
   public async init(cfg: EngineImplConfig): Promise<void> {
-    this._cfg = cfg;
-    this._initOffscreenCanvasContext();
-    await this._loadImages();
-    await this._initWasmEngine();
-    this._initInputManager();
+    this.cfg = cfg;
+    this.initOffscreenCanvasContext();
+    await this.loadImages();
+    await this.initWasmEngine();
+    this.initInputManager();
   }
 
-  private _initInputManager() {
-    this._inputManager = new InputManager();
-    this._inputManager.init();
+  private initInputManager() {
+    this.inputManager = new InputManager();
+    this.inputManager.init();
     const onkeyDown = (key: KeyCode) => {
       // console.log('key ', key, ' state: ', down);
       // TODO map key to index
       const idx = 0;
-      this._wasmEngine.inputKeyDown(idx);
+      this.wasmEngine.inputKeyDown(idx);
     };
     const onkeyUp = (key: KeyCode) => {
       // console.log('key ', key, ' state: ', down);
       const idx = 0; // TODO map key to index
-      this._wasmEngine.inputKeyUp(idx);
+      this.wasmEngine.inputKeyUp(idx);
     };
-    this._inputManager.addKeyDownHandler('KeyA', onkeyDown.bind(null, 'KeyA'));
-    this._inputManager.addKeyUpHandler('KeyA', onkeyUp.bind(null, 'KeyA'));
+    this.inputManager.addKeyDownHandler('KeyA', onkeyDown.bind(null, 'KeyA'));
+    this.inputManager.addKeyUpHandler('KeyA', onkeyUp.bind(null, 'KeyA'));
   }
 
-  private _initOffscreenCanvasContext(): void {
+  private initOffscreenCanvasContext(): void {
     const ctx = <OffscreenCanvasRenderingContext2D>(
-      this._cfg.canvas.getContext('2d', { alpha: false })
+      this.cfg.canvas.getContext('2d', { alpha: false })
     );
     ctx.imageSmoothingEnabled = false;
-    this._ctx = ctx;
+    this.ctx = ctx;
   }
 
-  private async _loadImages() {
-    const imageBuffers = await this._loadImageBuffers();
+  private async loadImages() {
+    const imageBuffers = await this.loadImageBuffers();
     const { imagesTotalSize, images } = await loadImages(imageBuffers);
-    this._images = images;
-    this._imagesTotalSize = imagesTotalSize;
+    this.images = images;
+    this.imagesTotalSize = imagesTotalSize;
   }
 
-  private async _loadImageBuffers(): Promise<ArrayBuffer[]> {
+  private async loadImageBuffers(): Promise<ArrayBuffer[]> {
     const imagesPaths = await getImagesPaths();
     // assert(imagesPaths.length === Object.keys(sourceImages).length);
     const imageBuffers = await Promise.all(
@@ -75,27 +75,27 @@ class EngineImpl {
     // console.log('RES HERE: ', await loadUtils.loadResAsText(resFile));
   }
 
-  private async _initWasmEngine() {
-    this._wasmEngine = new WasmEngine();
+  private async initWasmEngine() {
+    this.wasmEngine = new WasmEngine();
     const wasmEngineCfg: WasmEngineConfig = {
-      ctx: this._ctx,
-      imagesTotalSize: this._imagesTotalSize,
-      images: this._images,
+      ctx: this.ctx,
+      imagesTotalSize: this.imagesTotalSize,
+      images: this.images,
       numAuxWorkers: mainConfig.numWorkers,
     };
-    await this._wasmEngine.init(wasmEngineCfg);
+    await this.wasmEngine.init(wasmEngineCfg);
   }
 
   public render() {
-    this._wasmEngine.render();
+    this.wasmEngine.render();
   }
 
   public onKeyDown(key: KeyCode) {
-    this._inputManager.onKeyDown(key);
+    this.inputManager.onKeyDown(key);
   }
 
   public onKeyUp(key: KeyCode) {
-    this._inputManager.onKeyUp(key);
+    this.inputManager.onKeyUp(key);
   }
 }
 

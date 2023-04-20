@@ -60,6 +60,7 @@ function init(): void {
   initMemManager();
   // 
   images = initImages();
+  test();
 }
 
 function render(): void {
