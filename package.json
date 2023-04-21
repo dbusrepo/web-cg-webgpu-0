@@ -26,7 +26,8 @@
     "start": "run-p --race launch onchange:wasm onchange:assets",
     "prod": "webpack --production",
     "clean": "rimraf dist/ && cd src/engine/wasmEngine/wasm && make clean",
-    "cleandist": "rimraf dist/"
+    "cleandist": "rimraf dist/",
+    "ascv": "asc --version"
   },
   "keywords": [],
   "author": "",
