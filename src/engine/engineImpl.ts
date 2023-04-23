@@ -87,7 +87,7 @@ class EngineImpl {
   }
 
   public render() {
-    this.wasmEngine.render();
+    // this.wasmEngine.render();
   }
 
   public onKeyDown(key: KeyCode) {
