@@ -28,7 +28,6 @@ const dragElement = (element: HTMLElement) => {
     // https://stackoverflow.com/questions/52231588/how-to-constrain-div-drag-space-no-jquery
     let x = +(parseInt(element.style.left) || 0) + event.movementX;
     let y = +(parseInt(element.style.top) || 0) + event.movementY;
-    console.log(parseInt(element.style.top));
 
     const xp = +(parentEl.style.left.match(/-?\d+/g) || 0);
     const yp = +(parentEl.style.top.match(/-?\d+/g) || 0);
@@ -52,7 +51,6 @@ const dragElement = (element: HTMLElement) => {
     }
 
     if (y < yp) {
-      console.log('C');
       y = yp;
     }
 

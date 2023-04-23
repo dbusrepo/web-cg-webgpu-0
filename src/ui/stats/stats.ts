@@ -29,6 +29,11 @@ class Stats {
     // this.schedule_mem_measure(); // TODO (re)move ?
   }
 
+  setPos(x: number, y: number) {
+    this.container.style.left = `${x}px`;
+    this.container.style.top = `${y}px`;
+  }
+
   addPanel(statsPanel: StatsPanel) {
     this.panels.set(statsPanel.Title, statsPanel);
     statsPanel.appendAsChild(this.container);
