@@ -1,7 +1,7 @@
 import { MonitorBindingApi } from 'tweakpane';
 import { PanelGui, PanelTweakOptions, PanelTweakOptionsKeys } from './panelGui';
 import { EnginePanel } from './enginePanel';
-import MaxDequeue from '../ds/maxDeque';
+import MaxDeque from '../ds/maxDeque';
 
 enum EnginePanelTweakOptionsKeys {
   FPS = 'fps',
@@ -15,7 +15,7 @@ class EnginePanelGui extends PanelGui {
   protected panel: EnginePanel;
   protected tweakOptions: EnginePanelTweakOptions;
   private fpsMonitor: MonitorBindingApi<number>;
-  private maxDeque: MaxDequeue;
+  private maxDeque: MaxDeque;
 
   init(panel: EnginePanel) {
     super.init(panel);
@@ -49,7 +49,7 @@ class EnginePanelGui extends PanelGui {
         bufferSize,
       }
     );
-    this.maxDeque = new MaxDequeue(bufferSize);
+    this.maxDeque = new MaxDeque(bufferSize);
     // this.fpsMonitor.disabled = true;
   }
 
