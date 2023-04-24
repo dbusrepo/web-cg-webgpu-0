@@ -75,9 +75,9 @@ class WasmEngine {
     };
     type MappedKey = keyof typeof key2Idx;
     const inputArr = this.wasmRun.WasmViews.inputKeys;
-    const keyHandler = (key: MappedKey, val: number) => () => {
-      // console.log(`key ${key} ${val}`);
-      inputArr[key2Idx[key]] = val;
+    const keyHandler = (key: MappedKey, dir: number) => () => {
+      // console.log(`key ${key} ${dir}`);
+      inputArr[key2Idx[key]] = dir;
     };
     const keyA = 'KeyA';
     this.inputManager.addKeyDownHandler(keyA, keyHandler(keyA, 1));
