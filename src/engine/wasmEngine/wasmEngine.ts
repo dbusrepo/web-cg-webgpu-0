@@ -6,6 +6,7 @@ import WasmWorkerCommands from './wasmWorkerCommands';
 import { WasmWorkerConfig } from './wasmWorker';
 import { FONT_Y_SIZE, fontChars } from '../../assets/fonts/font';
 import { stringsArrayData } from '../../assets/strings/strings';
+import { InputManager, KeyCode } from '../input/inputManager';
 import * as utils from './../utils';
 import {
   // BPP_PAL,
@@ -17,8 +18,6 @@ import {
 import { mainConfig } from '../../config/mainConfig';
 
 // type WasmViews = WasmUtils.views.WasmViews;
-
-import { InputManager, KeyCode } from '../input/inputManager';
 
 type WasmEngineConfig = {
   canvas: OffscreenCanvas;
