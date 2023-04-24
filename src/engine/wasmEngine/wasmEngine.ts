@@ -1,11 +1,11 @@
 import assert from 'assert';
 import * as WasmUtils from './wasmMemUtils';
+import { AssetManager } from '../assets/assetManager';
 import { WasmRun, WasmRunConfig } from './wasmRun';
 import WasmWorkerCommands from './wasmWorkerCommands';
 import { WasmWorkerConfig } from './wasmWorker';
 import { FONT_Y_SIZE, fontChars } from '../../assets/fonts/font';
 import { stringsArrayData } from '../../assets/strings/strings';
-import { BitImage } from './../assets/images/bitImage';
 import * as utils from './../utils';
 import {
   // BPP_PAL,
@@ -16,36 +16,75 @@ import {
 } from '../../common';
 import { mainConfig } from '../../config/mainConfig';
 
-type WasmViews = WasmUtils.views.WasmViews;
+// type WasmViews = WasmUtils.views.WasmViews;
+
+import { InputManager, KeyCode } from '../input/inputManager';
 
 type WasmEngineConfig = {
+  canvas: OffscreenCanvas;
   numAuxWorkers: number;
-  imagesTotalSize: number;
-  images: BitImage[];
-  ctx: OffscreenCanvasRenderingContext2D;
 };
 
 class WasmEngine {
   private cfg: WasmEngineConfig;
+  private ctx: OffscreenCanvasRenderingContext2D;
+  private assetManager: AssetManager;
+  private inputManager: InputManager;
   private wasmRunCfg: WasmRunConfig;
   private wasmMem: WebAssembly.Memory;
   private wasmMemConfig: WasmUtils.MemConfig;
   private wasmRegionsSizes: WasmUtils.MemRegionsData;
   private wasmRegionsOffsets: WasmUtils.MemRegionsData;
   private wasmRun: WasmRun;
-  private workers: Worker[]; // TODO: mv
+  private workers: Worker[];
   private imageData: ImageData;
 
   public async init(cfg: WasmEngineConfig) {
     this.cfg = cfg;
-    this.initImageData();
+    this.initGfx();
+    await this.initAssetManager();
     await this.initWasm();
+    this.initInputManager();
   }
 
-  private initImageData() {
-    const ctx = this.cfg.ctx;
-    const canvas = this.cfg.ctx.canvas;
-    this.imageData = ctx.createImageData(canvas.width, canvas.height);
+  private initGfx() {
+    this.ctx = <OffscreenCanvasRenderingContext2D>(
+      this.cfg.canvas.getContext('2d', { alpha: false })
+    );
+    this.ctx.imageSmoothingEnabled = false; // no blur, keep the pixels sharpness
+    // this.ctx.imageSmoothingQuality = "low"; // for this, imageSmoothingEnabled must be true
+    const canvas = this.ctx.canvas;
+    this.imageData = this.ctx.createImageData(canvas.width, canvas.height);
+  }
+
+  private async initAssetManager() {
+    this.assetManager = new AssetManager();
+    await this.assetManager.init();
+  }
+
+  private initInputManager() {
+    this.inputManager = new InputManager();
+    this.inputManager.init();
+    this.initInputHandlers();
+  }
+
+  private initInputHandlers() {
+    const key2Idx = {
+      KeyA: 0,
+      // KeyB: 1,
+    };
+    type MappedKey = keyof typeof key2Idx;
+    const inputArr = this.wasmRun.WasmViews.inputKeys;
+    const keyHandler = (key: MappedKey, val: number) => () => {
+      // console.log(`key ${key} ${val}`);
+      inputArr[key2Idx[key]] = val;
+    };
+    const keyA = 'KeyA';
+    this.inputManager.addKeyDownHandler(keyA, keyHandler(keyA, 1));
+    this.inputManager.addKeyUpHandler(keyA, keyHandler(keyA, 0));
+    // const keyB = 'KeyB';
+    // this.inputManager.addKeyDownHandler(keyB, keyHandler(keyB, 1));
+    // this.inputManager.addKeyUpHandler(keyB, keyHandler(keyB, 0));
   }
 
   private async initWasm(): Promise<void> {
@@ -98,7 +137,7 @@ class WasmEngine {
       fontCharsSize: fontChars.length * FONT_Y_SIZE,
       stringsSize: stringsArrayData.length,
       imagesIndexSize: WasmUtils.initImages.getImagesIndexSize(),
-      imagesSize: this.cfg.imagesTotalSize,
+      imagesSize: this.assetManager.ImagesTotalSize,
       // TODO use 64bit/8 byte counter for mem counters? see wasm workerHeapManager
       workersMemCountersSize: numWorkers * Uint32Array.BYTES_PER_ELEMENT,
       inputKeysSize: 4 * Uint8Array.BYTES_PER_ELEMENT,
@@ -141,7 +180,7 @@ class WasmEngine {
 
   private initWasmImages(): void {
     WasmUtils.initImages.writeImages(
-      this.cfg.images,
+      this.assetManager.Images,
       this.wasmRun.WasmViews.imagesPixels,
       this.wasmRun.WasmViews.imagesIndex,
     );
@@ -158,7 +197,7 @@ class WasmEngine {
       wasmMemRegionsSizes: this.wasmRegionsSizes,
       wasmMemRegionsOffsets: this.wasmRegionsOffsets,
       wasmWorkerHeapSize: mainConfig.wasmWorkerHeapPages * PAGE_SIZE_BYTES,
-      numImages: this.cfg.images.length,
+      numImages: this.assetManager.Images.length,
       mainWorkerIdx: 0,
       workerIdx: 0, // main thread is 0, aux workers starts from 1
       numWorkers: this.getNumWorkers(),
@@ -246,7 +285,7 @@ class WasmEngine {
 
   private drawFrame() {
     this.imageData.data.set(this.wasmRun.WasmViews.frameBufferRGBA);
-    this.cfg.ctx.putImageData(this.imageData, 0, 0);
+    this.ctx.putImageData(this.imageData, 0, 0);
   }
 
   public render() {
@@ -260,12 +299,12 @@ class WasmEngine {
     this.drawFrame();
   }
 
-  public inputKeyDown(keyIdx: number) {
-    this.wasmRun.WasmViews.inputKeys[keyIdx] = 1;
+  public onKeyDown(key: KeyCode) {
+    this.inputManager.onKeyDown(key);
   }
 
-  public inputKeyUp(keyIdx: number) {
-    this.wasmRun.WasmViews.inputKeys[keyIdx] = 0;
+  public onKeyUp(key: KeyCode) {
+    this.inputManager.onKeyUp(key);
   }
 }
 
