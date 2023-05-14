@@ -74,7 +74,7 @@ class WasmEngine {
   private initInputHandlers() {
     const key2Idx = {
       KeyA: 0,
-      // KeyB: 1,
+      KeyB: 1,
     };
     type MappedKey = keyof typeof key2Idx;
     const inputArr = this.wasmRun.WasmViews.inputKeys;
@@ -83,11 +83,9 @@ class WasmEngine {
       inputArr[key2Idx[key]] = dir;
     };
     const keyA = 'KeyA';
-    this.inputManager.addKeyDownHandler(keyA, keyHandler(keyA, 1));
-    this.inputManager.addKeyUpHandler(keyA, keyHandler(keyA, 0));
-    // const keyB = 'KeyB';
-    // this.inputManager.addKeyDownHandler(keyB, keyHandler(keyB, 1));
-    // this.inputManager.addKeyUpHandler(keyB, keyHandler(keyB, 0));
+    this.inputManager.addKeyHandler(keyA, keyHandler(keyA, 1), keyHandler(keyA, 0));
+    const keyB = 'KeyB';
+    this.inputManager.addKeyHandler(keyB, keyHandler(keyB, 1), keyHandler(keyB, 0));
   }
 
   private async initWorkers() {
