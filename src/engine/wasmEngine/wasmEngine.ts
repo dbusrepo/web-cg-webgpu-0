@@ -83,9 +83,9 @@ class WasmEngine {
       inputArr[key2Idx[key]] = dir;
     };
     const keyA = 'KeyA';
-    this.inputManager.addKeyHandler(keyA, keyHandler(keyA, 1), keyHandler(keyA, 0));
+    this.inputManager.addKeyHandlers(keyA, keyHandler(keyA, 1), keyHandler(keyA, 0));
     const keyB = 'KeyB';
-    this.inputManager.addKeyHandler(keyB, keyHandler(keyB, 1), keyHandler(keyB, 0));
+    this.inputManager.addKeyHandlers(keyB, keyHandler(keyB, 1), keyHandler(keyB, 0));
   }
 
   private async initWorkers() {
