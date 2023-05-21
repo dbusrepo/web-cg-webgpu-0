@@ -12,8 +12,7 @@ import { AssetManager } from './assets/assetManager';
 import PanelCommands from '../panels/enginePanelCommands';
 import { KeyCode } from './input/inputManager';
 import { EngineWorkerParams, EngineWorkerCommands } from './engineWorker';
-
-import { WasmEngine } from './wasmEngine/wasmEngine';
+import { WasmEngine, WasmEngineParams } from './wasmEngine/wasmEngine';
 
 type EngineParams = {
   canvas: OffscreenCanvas;
@@ -33,41 +32,37 @@ class Engine {
   private static readonly STATS_PERIOD_MS = 100; // MILLI_IN_SEC;
 
   private params: EngineParams;
-  private impl: WasmEngine;
+  private wasmEngine: WasmEngine;
   private assetManager: AssetManager;
 
-  private workers: Worker[];
+  private auxWorkers: Worker[];
   private syncArray: Int32Array;
   private sleepArray: Int32Array;
-
-// engine._sleepArr = new Int32Array(new SharedArrayBuffer(NUM_BYTES_DWORD)); // for atomic sleep
 
   public async init(params: EngineParams): Promise<void> {
     this.params = params;
     await this.initAssetManager();
-    // this.impl = new WasmEngine();
-    // await this.impl.init({
-    //   canvas: this.cfg.canvas,
-    //   numAuxWorkers: mainConfig.numWorkers,
-    //   assetManager: this.assetManager,
-    // });
-    const numWorkers = mainConfig.numEngineWorkers;
+    const numWorkers = mainConfig.numAuxWorkers;
     console.log(`Using 1 main engine worker plus ${numWorkers} auxiliary engine workers`);
     const numTotalWorkers = numWorkers + 1;
     this.syncArray = new Int32Array(new SharedArrayBuffer(numTotalWorkers * Int32Array.BYTES_PER_ELEMENT));
     this.sleepArray = new Int32Array(new SharedArrayBuffer(numTotalWorkers * Int32Array.BYTES_PER_ELEMENT));
-    this.workers = [];
+    this.auxWorkers = [];
     if (numWorkers > 0) {
-      // await this.initWorkers(numWorkers);
-
-      // console.log('Workers initialized. Launching...');
-      // this.workers.forEach((worker) => {
-      //   worker.postMessage({
-      //     command: EngineWorkerCommands.RUN,
-      //   });
-      // });
-
+      await this.initAuxWorkers(numWorkers);
     }
+    await this.initWasmEngine();
+  }
+  
+  private async initWasmEngine() {
+    this.wasmEngine = new WasmEngine();
+    const wasmEngineParams: WasmEngineParams = {
+      canvas: this.params.canvas,
+      assetManager: this.assetManager,
+      auxWorkers: this.auxWorkers,
+      runLoopInWorker: true,
+    };
+    await this.wasmEngine.init(wasmEngineParams);
   }
 
   private async initAssetManager() {
@@ -75,7 +70,7 @@ class Engine {
     await this.assetManager.init();
   }
 
-  private async initWorkers(numWorkers: number) {
+  private async initAuxWorkers(numWorkers: number) {
     assert(numWorkers > 0);
     let remWorkers = numWorkers;
     const initStart = Date.now();
@@ -93,7 +88,7 @@ class Engine {
               type: 'module',
             },
           );
-          this.workers.push(worker);
+          this.auxWorkers.push(worker);
           const workerParams: EngineWorkerParams = {
             workerIndex,
             numWorkers,
@@ -130,6 +125,7 @@ Date.now() - initStart
   }
 
   public run(): void {
+
     let lastFrameStartTime: number;
     // let last_render_t: number;
     let updTimeAcc: number;
@@ -244,7 +240,7 @@ Date.now() - initStart
         renderTimeAcc %= Engine.RENDER_PERIOD_MS;
         // this.syncWorkers();
         // this.waitWorkers();
-        // this.impl.render();
+        this.wasmEngine.render();
         saveFrameTime();
       }
     };
@@ -297,24 +293,24 @@ Date.now() - initStart
   }
 
   private syncWorkers() {
-    for (let i = 1; i <= this.workers.length; ++i) {
+    for (let i = 1; i <= this.auxWorkers.length; ++i) {
       Atomics.store(this.syncArray, i, 1);
       Atomics.notify(this.syncArray, i);
     }
   }
 
   private waitWorkers() {
-    for (let i = 1; i <= this.workers.length; ++i) {
+    for (let i = 1; i <= this.auxWorkers.length; ++i) {
       Atomics.wait(this.syncArray, i, 1);
     }
   }
 
   public onKeyDown(key: KeyCode) {
-    // this.impl.onKeyDown(key);
+    this.wasmEngine.onKeyDown(key);
   }
 
   public onKeyUp(key: KeyCode) {
-    // this.impl.onKeyUp(key);
+    this.wasmEngine.onKeyUp(key);
   }
 }
 
@@ -331,6 +327,7 @@ const commands = {
   [EngineCommands.INIT]: async (params: EngineParams) => {
     engine = new Engine();
     await engine.init(params);
+    postMessage({ status: 'init completed' });
   },
   [EngineCommands.RUN]: () => {
     engine.run();

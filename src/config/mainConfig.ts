@@ -4,7 +4,7 @@ import { viewPanelConfig } from './viewPanelConfig';
 
 const mainConfig = {
 
-  numEngineWorkers: 0,
+  numAuxWorkers: 0,
 
   wasmMemStartOffset: 0,
   wasmMemStartPages: 64,

@@ -2,10 +2,11 @@ import assert from 'assert';
 import * as WasmUtils from './wasmMemUtils';
 import { AssetManager } from '../assets/assetManager';
 import { BPP_RGBA } from '../assets/images/bitImageRGBA';
-import { WasmRun, WasmRunConfig } from './wasmRun';
+import { WasmRun, WasmRunParams } from './wasmRun';
 import { FONT_Y_SIZE, fontChars } from '../../assets/fonts/font';
 import { stringsArrayData } from '../../assets/build/strings';
 import { InputManager, KeyCode } from '../input/inputManager';
+import { EngineWorkerCommands } from '../engineWorker';
 import * as utils from './../utils';
 import {
   // BPP_PAL,
@@ -17,14 +18,20 @@ import { mainConfig } from '../../config/mainConfig';
 
 // type WasmViews = WasmUtils.views.WasmViews;
 
-type WasmEngineConfig = {
+type WasmEngineParams = {
   canvas: OffscreenCanvas;
-  numAuxWorkers: number;
   assetManager: AssetManager;
+  auxWorkers: Worker[];
+  runLoopInWorker: boolean;
+};
+
+const Key2Idx = {
+  KeyA: 0,
+  KeyB: 1,
 };
 
 class WasmEngine {
-  private cfg: WasmEngineConfig;
+  private params: WasmEngineParams;
   private ctx: OffscreenCanvasRenderingContext2D;
   private inputManager: InputManager;
   private wasmMem: WebAssembly.Memory;
@@ -32,12 +39,10 @@ class WasmEngine {
   private wasmRegionsSizes: WasmUtils.MemRegionsData;
   private wasmRegionsOffsets: WasmUtils.MemRegionsData;
   private wasmRun: WasmRun;
-  private wasmRunCfg: WasmRunConfig;
-  private workers: Worker[];
   private imageData: ImageData;
 
-  public async init(cfg: WasmEngineConfig) {
-    this.cfg = cfg;
+  public async init(params: WasmEngineParams) {
+    this.params = params;
     this.initGfx();
     await this.initWasm();
     this.initInputManager();
@@ -45,7 +50,7 @@ class WasmEngine {
 
   private initGfx() {
     this.ctx = <OffscreenCanvasRenderingContext2D>(
-      this.cfg.canvas.getContext('2d', { 
+      this.params.canvas.getContext('2d', {
         alpha: false,
         desynchronized: true, // TODO:
       })
@@ -58,25 +63,18 @@ class WasmEngine {
 
   private initInputManager() {
     this.inputManager = new InputManager();
-    this.inputManager.init();
     this.initInputHandlers();
   }
 
   private initInputHandlers() {
-    const key2Idx = {
-      KeyA: 0,
-      KeyB: 1,
-    };
-    type MappedKey = keyof typeof key2Idx;
-    const inputArr = this.wasmRun.WasmViews.inputKeys;
+    type MappedKey = keyof typeof Key2Idx;
+    const { inputKeys } = this.wasmRun.WasmViews;
     const keyHandler = (key: MappedKey, dir: number) => () => {
-      // console.log(`key ${key} ${dir}`);
-      inputArr[key2Idx[key]] = dir;
+      inputKeys[Key2Idx[key]] = dir;
     };
-    const keyA = 'KeyA';
-    this.inputManager.addKeyHandlers(keyA, keyHandler(keyA, 1), keyHandler(keyA, 0));
-    const keyB = 'KeyB';
-    this.inputManager.addKeyHandlers(keyB, keyHandler(keyB, 1), keyHandler(keyB, 0));
+    (Object.keys(Key2Idx) as MappedKey[]).forEach((key) => {
+      this.inputManager.addKeyHandlers(key, keyHandler(key, 1), keyHandler(key, 0));
+    });
   }
 
   private async initWasm(): Promise<void> {
@@ -84,6 +82,9 @@ class WasmEngine {
     this.allocWasmMem();
     await this.initWasmRun();
     this.initWasmAssets();
+    if (this.params.runLoopInWorker) {
+      this.runWorkersWasmLoop();
+    }
   }
 
   private allocWasmMem(): void {
@@ -109,7 +110,7 @@ class WasmEngine {
 
   private initWasmMemConfig(): void {
     const numPixels = this.imageData.width * this.imageData.height;
-    const numWorkers = this.getNumWorkers();
+    const numWorkers = this.params.auxWorkers.length + 1;
 
     // set wasm mem regions sizes
     const wasmMemConfig: WasmUtils.MemConfig = {
@@ -126,17 +127,15 @@ class WasmEngine {
       fontCharsSize: fontChars.length * FONT_Y_SIZE,
       stringsSize: stringsArrayData.length,
       imagesIndexSize: WasmUtils.initImages.getImagesIndexSize(),
-      imagesSize: this.cfg.assetManager.ImagesTotalSize,
+      imagesSize: this.params.assetManager.ImagesTotalSize,
       // TODO use 64bit/8 byte counter for mem counters? see wasm workerHeapManager
       workersMemCountersSize: numWorkers * Uint32Array.BYTES_PER_ELEMENT,
-      inputKeysSize: 4 * Uint8Array.BYTES_PER_ELEMENT,
+      inputKeysSize: Object.keys(Key2Idx).length * Uint8Array.BYTES_PER_ELEMENT,
       hrTimerSize: BigUint64Array.BYTES_PER_ELEMENT,
     };
 
     this.wasmMemConfig = wasmMemConfig;
-    const [sizes, offsets] = WasmUtils.getMemRegionsSizesAndOffsets(
-      this.wasmMemConfig,
-    );
+    const [sizes, offsets] = WasmUtils.getMemRegionsSizesAndOffsets(this.wasmMemConfig);
     this.wasmRegionsSizes = sizes;
     this.wasmRegionsOffsets = offsets;
 
@@ -170,51 +169,57 @@ class WasmEngine {
 
   private initWasmImages(): void {
     WasmUtils.initImages.copyImages2WasmMem(
-      this.cfg.assetManager.Images,
+      this.params.assetManager.Images,
       this.wasmRun.WasmViews.imagesIndex,
       this.wasmRun.WasmViews.imagesPixels,
     );
   }
 
-  private getNumWorkers(): number {
-    return this.cfg.numAuxWorkers + 1; // #auxiliary workers + main
-  }
-
   private async initWasmRun() {
     this.wasmRun = new WasmRun();
-    const wasmRunCfg: WasmRunConfig = {
+    const params: WasmRunParams = {
       wasmMem: this.wasmMem,
       wasmMemRegionsSizes: this.wasmRegionsSizes,
       wasmMemRegionsOffsets: this.wasmRegionsOffsets,
       wasmWorkerHeapSize: mainConfig.wasmWorkerHeapPages * PAGE_SIZE_BYTES,
-      numImages: this.cfg.assetManager.Images.length,
+      numImages: this.params.assetManager.Images.length,
       mainWorkerIdx: 0,
       workerIdx: 0, // main thread is 0, aux workers starts from 1
-      numWorkers: this.getNumWorkers(),
+      numWorkers: 1 + this.params.auxWorkers.length,
       frameWidth: this.imageData.width,
       frameHeight: this.imageData.height,
     };
-    await this.wasmRun.init(wasmRunCfg);
-    this.wasmRunCfg = wasmRunCfg;
-    // TODO: init workers here ? and pass wasmRunCfg to them
-  }
-
-  private syncWorkers() {
-    for (let i = 1; i <= this.cfg.numAuxWorkers; ++i) {
-      utils.syncStore(this.wasmRun.WasmViews.syncArr, i, 1);
-      utils.syncNotify(this.wasmRun.WasmViews.syncArr, i);
+    await this.wasmRun.init(params);
+    // now init wasm run for aux workers
+    if (this.params.auxWorkers.length > 0) {
+      try {
+        await Promise.all(this.params.auxWorkers.map((worker, index) => {
+          params.workerIdx = index + 1;
+          worker.postMessage({
+            command: EngineWorkerCommands.INIT_WASM,
+            params,
+          });
+          return new Promise<void>((resolve, reject) => {
+            worker.onmessage = ({ data }) => {
+              // TODO: no check for data.status
+              resolve();
+            };
+          });
+        }));
+      } catch (e) {
+        console.log('error initializing wasm in aux workers');
+        console.error(e);
+      }
     }
   }
 
-  private waitWorkers() {
-    for (let i = 1; i <= this.cfg.numAuxWorkers; ++i) {
-      utils.syncWait(this.wasmRun.WasmViews.syncArr, i, 1);
-    }
-  }
-
-  private drawFrame() {
-    this.imageData.data.set(this.wasmRun.WasmViews.frameBufferRGBA);
-    this.ctx.putImageData(this.imageData, 0, 0);
+  private runWorkersWasmLoop() {
+    assert(this.params.runLoopInWorker);
+    this.params.auxWorkers.forEach((worker) => {
+      worker.postMessage({
+        command: EngineWorkerCommands.RUN_WASM,
+      });
+    });
   }
 
   public render() {
@@ -230,6 +235,24 @@ class WasmEngine {
     // console.log(views.hrTimer[0]);
   }
 
+  private syncWorkers() {
+    for (let i = 1; i <= this.params.auxWorkers.length; ++i) {
+      utils.syncStore(this.wasmRun.WasmViews.syncArr, i, 1);
+      utils.syncNotify(this.wasmRun.WasmViews.syncArr, i);
+    }
+  }
+
+  private waitWorkers() {
+    for (let i = 1; i <= this.params.auxWorkers.length; ++i) {
+      utils.syncWait(this.wasmRun.WasmViews.syncArr, i, 1);
+    }
+  }
+
+  private drawFrame() {
+    this.imageData.data.set(this.wasmRun.WasmViews.frameBufferRGBA);
+    this.ctx.putImageData(this.imageData, 0, 0);
+  }
+
   public onKeyDown(key: KeyCode) {
     this.inputManager.onKeyDown(key);
   }
@@ -239,4 +262,4 @@ class WasmEngine {
   }
 }
 
-export { WasmEngine, WasmEngineConfig };
+export { WasmEngine, WasmEngineParams };

@@ -13,11 +13,10 @@ class EnginePanel extends Panel {
   private mainEngineWorker: Worker;
   private inputKeys: Set<string> = new Set();
 
-  init(config: EnginePanelConfig, stats: Stats): EnginePanel {
+  async init(config: EnginePanelConfig, stats: Stats) {
     super.init({ ...config }, stats);
     this.initInputListeners();
-    this.initMainEngineWorker();
-    return this;
+    await this.initMainEngineWorker();
   }
 
   initInputListeners(): void {
@@ -39,14 +38,11 @@ class EnginePanel extends Panel {
       })
     );
 
-    addKeyListener('keydown');
-    addKeyListener('keyup');
+    (['keydown', 'keyup'] as KeyEvents[]).forEach(addKeyListener);
   }
 
-  initMainEngineWorker(): void {
+  async initMainEngineWorker() {
     this.mainEngineWorker = new Worker(new URL('../engine/engine.ts', import.meta.url));
-
-    this.setMainEngineWorkerHandlers();
 
     // init main engine worker
     const offscreenCanvas = this.canvasEl.transferControlToOffscreen();
@@ -60,6 +56,20 @@ class EnginePanel extends Panel {
       },
       [offscreenCanvas],
     );
+
+    try {
+      // wait for main engine worker to init
+      await new Promise<void>((resolve, reject) => {
+        this.mainEngineWorker.onmessage = ({ data }) => {
+          // TODO: no check for data.status
+          resolve();
+        };
+      });
+    } catch (err) {
+      console.error(err);
+    }
+      
+    this.setMainEngineWorkerHandlers();
   }
 
   private setMainEngineWorkerHandlers(): void {
@@ -98,8 +108,8 @@ class EnginePanel extends Panel {
   }
 
   private runMainEngineWorker(): void {
-    this.mainEngineWorker.postMessage({ 
-      command: EngineCommands.RUN 
+    this.mainEngineWorker.postMessage({
+      command: EngineCommands.RUN
     });
   }
 

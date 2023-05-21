@@ -1,5 +1,5 @@
-// import assert from 'assert';
-import { WasmRun, WasmRunConfig } from './wasmEngine/wasmRun';
+import assert from 'assert';
+import { WasmRun, WasmRunParams } from './wasmEngine/wasmRun';
 
 const enum EngineWorkerCommands {
   INIT = 'worker_init',
@@ -17,12 +17,14 @@ type EngineWorkerParams = {
 
 class EngineWorker {
   private params: EngineWorkerParams;
+  private wasmRun: WasmRun | null;
 
-  public async init(params: EngineWorkerParams): Promise<void> {
+  async init(params: EngineWorkerParams): Promise<void> {
     this.params = params;
+    this.wasmRun = null;
   }
 
-  run(): void {
+  async run() {
     const { syncArray, workerIndex } = this.params;
     console.log(`Engine worker ${workerIndex} running!`);
     try {
@@ -38,37 +40,45 @@ class EngineWorker {
     }
   }
 
-  // private async initWasmRun() {
-  //   this.wasmRun = new WasmRun();
-  //   await this.wasmRun.init(this.cfg.wasmRunCfg);
-  // }
+  async initWasm(params: WasmRunParams) {
+    this.wasmRun = new WasmRun();
+    await this.wasmRun.init(params);
+  }
 
-  // run(): void {
-  //   console.log(`Worker ${this.cfg.wasmRunCfg.workerIdx} running!`);
-  //   try {
-  //     this.wasmRun.WasmModules.engine.run();
-  //   } catch (e) {
-  //     console.error(e);
-  //   }
-  // }
+  async runWasm() {
+    assert(this.wasmRun);
+    const { workerIndex } = this.params;
+    console.log(`Engine worker ${workerIndex} running wasm!`);
+    try {
+      this.wasmRun.WasmModules.engine.run();
+    } catch (e) {
+      console.log(`Error while running engine worker ${this.params.workerIndex} in wasm run`);
+      console.error(e);
+    }
+  }
+
+  get Index(): number {
+    return this.params.workerIndex;
+  }
 }
 
 let engineWorker: EngineWorker;
 
 const commands = {
-  [EngineWorkerCommands.INIT]: async (config: EngineWorkerParams): Promise<void> => {
+  [EngineWorkerCommands.INIT]: async (params: EngineWorkerParams) => {
     engineWorker = new EngineWorker();
-    await engineWorker.init(config);
-    postMessage({ status: 'init completed' });
+    await engineWorker.init(params);
+    postMessage({ status: `engine worker ${engineWorker.Index} init completed` });
   },
-  [EngineWorkerCommands.RUN]: async (): Promise<void> => {
-    engineWorker.run();
+  [EngineWorkerCommands.RUN]: async () => {
+    await engineWorker.run();
   },
-  [EngineWorkerCommands.INIT_WASM]: async (): Promise<void> => {
-    // wasmWorker.run();
+  [EngineWorkerCommands.INIT_WASM]: async (params: WasmRunParams) => {
+    await engineWorker.initWasm(params);
+    postMessage({ status: `engine worker ${engineWorker.Index} wasm init completed` });
   },
-  [EngineWorkerCommands.RUN_WASM]: async (): Promise<void> => {
-    // wasmWorker.run();
+  [EngineWorkerCommands.RUN_WASM]: async () => {
+    await engineWorker.runWasm();
   },
 };
 
