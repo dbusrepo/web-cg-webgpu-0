@@ -1,6 +1,7 @@
 import assert from 'assert';
 import * as WasmUtils from './wasmMemUtils';
 import { AssetManager } from '../assets/assetManager';
+import { BPP_RGBA } from '../assets/images/bitImageRGBA';
 import { WasmRun, WasmRunConfig } from './wasmRun';
 import WasmWorkerCommands from './wasmWorkerCommands';
 import { WasmWorkerConfig } from './wasmWorker';
@@ -10,7 +11,6 @@ import { InputManager, KeyCode } from '../input/inputManager';
 import * as utils from './../utils';
 import {
   // BPP_PAL,
-  BPP_RGBA,
   // PAL_ENTRY_SIZE,
   // PALETTE_SIZE,
   PAGE_SIZE_BYTES,
@@ -56,7 +56,7 @@ class WasmEngine {
     );
     this.ctx.imageSmoothingEnabled = false; // no blur, keep the pixels sharpness
     // this.ctx.imageSmoothingQuality = "low"; // for this, imageSmoothingEnabled must be true
-    const canvas = this.ctx.canvas;
+    const { canvas } = this.ctx;
     this.imageData = this.ctx.createImageData(canvas.width, canvas.height);
   }
 
