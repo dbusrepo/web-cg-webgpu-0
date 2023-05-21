@@ -5,11 +5,10 @@ import {
   MILLI_IN_SEC,
 } from '../common';
 
-import { StatsNames, StatsValues } from '../ui/stats/stats';
-
 import { mainConfig } from '../config/mainConfig';
 import * as utils from './utils';
-
+import { StatsNames, StatsValues } from '../ui/stats/stats';
+import { AssetManager } from './assets/assetManager';
 import Commands from './commands';
 import PanelCommands from '../panels/enginePanelCommands';
 import { KeyCode } from './input/inputManager';
@@ -35,14 +34,22 @@ class Engine {
 
   private cfg: EngineConfig;
   private impl: WasmEngine;
+  private assetManager: AssetManager;
 
   public async init(config: EngineConfig): Promise<void> {
     this.cfg = config;
+    await this.initAssetManager();
     this.impl = new WasmEngine();
     await this.impl.init({
       canvas: this.cfg.canvas,
       numAuxWorkers: mainConfig.numWorkers,
+      assetManager: this.assetManager,
     });
+  }
+
+  private async initAssetManager() {
+    this.assetManager = new AssetManager();
+    await this.assetManager.init();
   }
 
   public run(): void {

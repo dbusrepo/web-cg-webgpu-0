@@ -22,12 +22,12 @@ import { mainConfig } from '../../config/mainConfig';
 type WasmEngineConfig = {
   canvas: OffscreenCanvas;
   numAuxWorkers: number;
+  assetManager: AssetManager;
 };
 
 class WasmEngine {
   private cfg: WasmEngineConfig;
   private ctx: OffscreenCanvasRenderingContext2D;
-  private assetManager: AssetManager;
   private inputManager: InputManager;
   private wasmRunCfg: WasmRunConfig;
   private wasmMem: WebAssembly.Memory;
@@ -41,7 +41,6 @@ class WasmEngine {
   public async init(cfg: WasmEngineConfig) {
     this.cfg = cfg;
     this.initGfx();
-    await this.initAssetManager();
     await this.initWasm();
     await this.initWorkers();
     this.initInputManager();
@@ -58,11 +57,6 @@ class WasmEngine {
     // this.ctx.imageSmoothingQuality = "low"; // for this, imageSmoothingEnabled must be true
     const { canvas } = this.ctx;
     this.imageData = this.ctx.createImageData(canvas.width, canvas.height);
-  }
-
-  private async initAssetManager() {
-    this.assetManager = new AssetManager();
-    await this.assetManager.init();
   }
 
   private initInputManager() {
@@ -143,7 +137,7 @@ class WasmEngine {
       fontCharsSize: fontChars.length * FONT_Y_SIZE,
       stringsSize: stringsArrayData.length,
       imagesIndexSize: WasmUtils.initImages.getImagesIndexSize(),
-      imagesSize: this.assetManager.ImagesTotalSize,
+      imagesSize: this.cfg.assetManager.ImagesTotalSize,
       // TODO use 64bit/8 byte counter for mem counters? see wasm workerHeapManager
       workersMemCountersSize: numWorkers * Uint32Array.BYTES_PER_ELEMENT,
       inputKeysSize: 4 * Uint8Array.BYTES_PER_ELEMENT,
@@ -187,7 +181,7 @@ class WasmEngine {
 
   private initWasmImages(): void {
     WasmUtils.initImages.copyImages2WasmMem(
-      this.assetManager.Images,
+      this.cfg.assetManager.Images,
       this.wasmRun.WasmViews.imagesIndex,
       this.wasmRun.WasmViews.imagesPixels,
     );
@@ -204,7 +198,7 @@ class WasmEngine {
       wasmMemRegionsSizes: this.wasmRegionsSizes,
       wasmMemRegionsOffsets: this.wasmRegionsOffsets,
       wasmWorkerHeapSize: mainConfig.wasmWorkerHeapPages * PAGE_SIZE_BYTES,
-      numImages: this.assetManager.Images.length,
+      numImages: this.cfg.assetManager.Images.length,
       mainWorkerIdx: 0,
       workerIdx: 0, // main thread is 0, aux workers starts from 1
       numWorkers: this.getNumWorkers(),
