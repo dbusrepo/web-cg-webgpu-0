@@ -3,8 +3,6 @@ import * as WasmUtils from './wasmMemUtils';
 import { AssetManager } from '../assets/assetManager';
 import { BPP_RGBA } from '../assets/images/bitImageRGBA';
 import { WasmRun, WasmRunConfig } from './wasmRun';
-import WasmWorkerCommands from './wasmWorkerCommands';
-import { WasmWorkerConfig } from './wasmWorker';
 import { FONT_Y_SIZE, fontChars } from '../../assets/fonts/font';
 import { stringsArrayData } from '../../assets/build/strings';
 import { InputManager, KeyCode } from '../input/inputManager';
@@ -29,12 +27,12 @@ class WasmEngine {
   private cfg: WasmEngineConfig;
   private ctx: OffscreenCanvasRenderingContext2D;
   private inputManager: InputManager;
-  private wasmRunCfg: WasmRunConfig;
   private wasmMem: WebAssembly.Memory;
   private wasmMemConfig: WasmUtils.MemConfig;
   private wasmRegionsSizes: WasmUtils.MemRegionsData;
   private wasmRegionsOffsets: WasmUtils.MemRegionsData;
   private wasmRun: WasmRun;
+  private wasmRunCfg: WasmRunConfig;
   private workers: Worker[];
   private imageData: ImageData;
 
@@ -42,7 +40,6 @@ class WasmEngine {
     this.cfg = cfg;
     this.initGfx();
     await this.initWasm();
-    await this.initWorkers();
     this.initInputManager();
   }
 
@@ -80,14 +77,6 @@ class WasmEngine {
     this.inputManager.addKeyHandlers(keyA, keyHandler(keyA, 1), keyHandler(keyA, 0));
     const keyB = 'KeyB';
     this.inputManager.addKeyHandlers(keyB, keyHandler(keyB, 1), keyHandler(keyB, 0));
-  }
-
-  private async initWorkers() {
-    console.log('#workers: ', 1 + this.cfg.numAuxWorkers);
-    this.workers = [];
-    if (this.cfg.numAuxWorkers >= 1) {
-      await this.launchWorkers();
-    }
   }
 
   private async initWasm(): Promise<void> {
@@ -207,68 +196,7 @@ class WasmEngine {
     };
     await this.wasmRun.init(wasmRunCfg);
     this.wasmRunCfg = wasmRunCfg;
-  }
-
-  private async launchWorkers() {
-    assert(this.cfg.numAuxWorkers >= 1);
-    console.log('Launching workers...');
-    let workerCount = this.cfg.numAuxWorkers;
-    const initStart = Date.now();
-    try {
-      await new Promise<void>((resolve, reject) => {
-        for (
-          let workerIdx = 1;
-          workerIdx <= this.cfg.numAuxWorkers;
-          ++workerIdx
-        ) {
-          const worker = new Worker(
-            new URL('./wasmWorker.ts', import.meta.url),
-            {
-              name: `wasm-worker-${workerIdx}`,
-              type: 'module',
-            },
-          );
-          this.workers.push(worker);
-          const workerWasmRunConfig: WasmRunConfig = {
-            ...this.wasmRunCfg,
-            workerIdx,
-          };
-          const workerConfig: WasmWorkerConfig = {
-            wasmRunCfg: workerWasmRunConfig,
-          };
-          worker.postMessage({
-            command: WasmWorkerCommands.INIT,
-            params: workerConfig,
-          });
-          worker.onmessage = ({ data }) => {
-            --workerCount;
-            console.log(
-              `Worker id=${workerIdx} init, left count=${workerCount}, time=${
-                Date.now() - initStart
-              }ms with data = ${JSON.stringify(data)}`,
-            );
-            if (workerCount === 0) {
-              console.log(
-                `Workers init done. After ${Date.now() - initStart}ms`,
-              );
-              resolve();
-            }
-          };
-          worker.onerror = (error) => {
-            console.log(`Worker id=${workerIdx} error: ${error.message}\n`);
-            reject(error);
-          };
-        }
-      });
-      console.log('Workers initialized. Launching...');
-      this.workers.forEach((worker) => {
-        worker.postMessage({
-          command: WasmWorkerCommands.RUN,
-        });
-      });
-    } catch (error) {
-      console.error(`Error during workers init: ${JSON.stringify(error)}`);
-    }
+    // TODO: init workers here ? and pass wasmRunCfg to them
   }
 
   private syncWorkers() {
