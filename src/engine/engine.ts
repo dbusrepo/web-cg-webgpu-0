@@ -10,9 +10,10 @@ import * as utils from './utils';
 import { StatsNames, StatsValues } from '../ui/stats/stats';
 import { AssetManager } from './assets/assetManager';
 import PanelCommands from '../panels/enginePanelCommands';
-import { KeyCode } from './input/inputManager';
+import { InputManager, Key, KeyHandler } from './input/inputManager';
 import { EngineWorkerParams, EngineWorkerCommands } from './engineWorker';
 import { WasmEngine, WasmEngineParams } from './wasmEngine/wasmEngine';
+import EnginePanelCommands from '../panels/enginePanelCommands';
 
 type EngineParams = {
   canvas: OffscreenCanvas;
@@ -32,37 +33,47 @@ class Engine {
   private static readonly STATS_PERIOD_MS = 100; // MILLI_IN_SEC;
 
   private params: EngineParams;
-  private wasmEngine: WasmEngine;
   private assetManager: AssetManager;
+  private inputManager: InputManager;
 
   private auxWorkers: Worker[];
   private syncArray: Int32Array;
   private sleepArray: Int32Array;
 
+  private wasmEngine: WasmEngine;
+
   public async init(params: EngineParams): Promise<void> {
     this.params = params;
     await this.initAssetManager();
-    const numWorkers = mainConfig.numAuxWorkers;
-    console.log(`Using 1 main engine worker plus ${numWorkers} auxiliary engine workers`);
-    const numTotalWorkers = numWorkers + 1;
+    this.initInputManager();
+    const numAuxWorkers = mainConfig.numAuxWorkers;
+    console.log(`Using 1 main engine worker plus ${numAuxWorkers} auxiliary workers`);
+    const numTotalWorkers = numAuxWorkers + 1;
     this.syncArray = new Int32Array(new SharedArrayBuffer(numTotalWorkers * Int32Array.BYTES_PER_ELEMENT));
     this.sleepArray = new Int32Array(new SharedArrayBuffer(numTotalWorkers * Int32Array.BYTES_PER_ELEMENT));
     this.auxWorkers = [];
-    if (numWorkers > 0) {
-      await this.initAuxWorkers(numWorkers);
+    if (numAuxWorkers > 0) {
+      await this.initAuxWorkers(numAuxWorkers);
     }
-    await this.initWasmEngine();
+    // await this.initWasmEngine();
   }
   
-  private async initWasmEngine() {
-    this.wasmEngine = new WasmEngine();
-    const wasmEngineParams: WasmEngineParams = {
-      canvas: this.params.canvas,
-      assetManager: this.assetManager,
-      auxWorkers: this.auxWorkers,
-      runLoopInWorker: true,
+  private initInputManager() {
+    this.inputManager = new InputManager();
+    const Keys = {
+      KEY_A: 'KeyA',
+      KEY_B: 'KeyB',
     };
-    await this.wasmEngine.init(wasmEngineParams);
+    this.addKeyHandlers(Keys.KEY_A, () => {}, () => {});
+    this.addKeyHandlers(Keys.KEY_B, () => {}, () => {});
+  }
+
+  private addKeyHandlers(key: Key, keyDownHandler: KeyHandler, keyUpHandler: KeyHandler) {
+    this.inputManager.addKeyHandlers(key, keyDownHandler, keyUpHandler);
+    postMessage({
+      command: EnginePanelCommands.REGISTER_KEY_HANDLER,
+      params: key,
+    });
   }
 
   private async initAssetManager() {
@@ -88,6 +99,7 @@ class Engine {
               type: 'module',
             },
           );
+          (worker as any).idx = workerIndex;
           this.auxWorkers.push(worker);
           const workerParams: EngineWorkerParams = {
             workerIndex,
@@ -122,6 +134,20 @@ Date.now() - initStart
     } catch (error) {
       console.error(`Error during workers init: ${JSON.stringify(error)}`);
     }
+  }
+
+  private async initWasmEngine() {
+    this.wasmEngine = new WasmEngine();
+    const MAIN_WORKER_IDX = 0;
+    const wasmEngineParams: WasmEngineParams = {
+      mainWorkerIdx: MAIN_WORKER_IDX,
+      canvas: this.params.canvas,
+      assetManager: this.assetManager,
+      inputManager: this.inputManager,
+      auxWorkers: this.auxWorkers,
+      runLoopInWorker: true,
+    };
+    await this.wasmEngine.init(wasmEngineParams);
   }
 
   public run(): void {
@@ -240,7 +266,7 @@ Date.now() - initStart
         renderTimeAcc %= Engine.RENDER_PERIOD_MS;
         // this.syncWorkers();
         // this.waitWorkers();
-        this.wasmEngine.render();
+        // this.wasmEngine.render();
         saveFrameTime();
       }
     };
@@ -305,12 +331,12 @@ Date.now() - initStart
     }
   }
 
-  public onKeyDown(key: KeyCode) {
-    this.wasmEngine.onKeyDown(key);
+  public onKeyDown(key: Key) {
+    this.inputManager.onKeyDown(key);
   }
 
-  public onKeyUp(key: KeyCode) {
-    this.wasmEngine.onKeyUp(key);
+  public onKeyUp(key: Key) {
+    this.inputManager.onKeyUp(key);
   }
 }
 
@@ -332,10 +358,10 @@ const commands = {
   [EngineCommands.RUN]: () => {
     engine.run();
   },
-  [EngineCommands.KEYDOWN]: (key: KeyCode) => {
+  [EngineCommands.KEYDOWN]: (key: Key) => {
     engine.onKeyDown(key);
   },
-  [EngineCommands.KEYUP]: (key: KeyCode) => {
+  [EngineCommands.KEYUP]: (key: Key) => {
     engine.onKeyUp(key);
   },
 };

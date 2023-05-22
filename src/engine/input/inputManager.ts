@@ -1,47 +1,44 @@
 import Commands from '../../panels/enginePanelCommands';
 
-type KeyCode = string;
+type Key = string;
 
 type KeyHandler = () => void;
 
-type KeyHandlersMap = {
-  [k: KeyCode]: KeyHandler[];
+type KeyHandlers = {
+  [k: Key]: KeyHandler[];
 };
 
 class InputManager {
-  private keyDownHandlers: KeyHandlersMap = {};
-  private keyUpHandlers: KeyHandlersMap = {};
+  private keyDownHandlers: KeyHandlers = {};
+  private keyUpHandlers: KeyHandlers = {};
 
-  // public init() {}
-
-  public addKeyHandlers(key: KeyCode, keyDownHandler: KeyHandler, keyUpHandler: KeyHandler) {
+  public addKeyHandlers(key: Key, keyDownHandler: KeyHandler, keyUpHandler: KeyHandler) {
     this.addKeyDownHandler(key, keyDownHandler);
     this.addKeyUpHandler(key, keyUpHandler);
-    postMessage({
-      command: Commands.REGISTER_KEY_HANDLER,
-      params: key,
-    });
   }
 
-  private addKeyDownHandler(key: KeyCode, keyHandler: KeyHandler) {
+  private addKeyDownHandler(key: Key, keyHandler: KeyHandler) {
     this.keyDownHandlers[key] = this.keyDownHandlers[key] ?? [];
     this.keyDownHandlers[key].push(keyHandler);
   }
 
-  private addKeyUpHandler(key: KeyCode, keyHandler: KeyHandler) {
+  private addKeyUpHandler(key: Key, keyHandler: KeyHandler) {
     this.keyUpHandlers[key] = this.keyUpHandlers[key] ?? [];
     this.keyUpHandlers[key].push(keyHandler);
   }
 
-  public onKeyDown(key: KeyCode) {
-    const hs = this.keyDownHandlers[key] ?? [];
-    hs.forEach((h) => h());
+  public onKeyDown(key: Key) {
+    this.keyDownHandlers[key]?.forEach((h) => h());
   }
 
-  public onKeyUp(key: KeyCode) {
-    const hs = this.keyUpHandlers[key] ?? [];
-    hs.forEach((h) => h());
+  public onKeyUp(key: Key) {
+    this.keyUpHandlers[key]?.forEach((h) => h());
   }
+
+  public get Keys(): Key[] {
+    return Object.keys(this.keyDownHandlers);
+  }
+
 }
 
-export { InputManager, KeyCode };
+export { InputManager, Key, KeyHandler };
