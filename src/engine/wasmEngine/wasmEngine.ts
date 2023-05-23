@@ -7,6 +7,7 @@ import { WasmRun, WasmRunParams } from './wasmRun';
 import { FONT_Y_SIZE, fontChars } from '../../assets/fonts/font';
 import { stringsArrayData } from '../../assets/build/strings';
 import { EngineWorkerCommands } from '../engineWorker';
+import { AuxWorker } from '../auxWorker';
 import * as utils from './../utils';
 import {
   // BPP_PAL,
@@ -23,7 +24,7 @@ type WasmEngineParams = {
   assetManager: AssetManager;
   inputManager: InputManager;
   mainWorkerIdx: number;
-  auxWorkers: Worker[];
+  auxWorkers: AuxWorker[];
   runLoopInWorker: boolean;
 };
 
@@ -191,14 +192,16 @@ class WasmEngine {
     // now init wasm run for aux workers
     if (this.params.auxWorkers.length > 0) {
       try {
-        await Promise.all(this.params.auxWorkers.map((worker, index) => {
-          params.workerIdx = index + 1;
-          worker.postMessage({
+        await Promise.all(this.params.auxWorkers.map((auxWorker) => {
+          auxWorker.worker.postMessage({
             command: EngineWorkerCommands.INIT_WASM,
-            params,
+            params: {
+              ...params,
+              workerIdx: auxWorker.index,
+            },
           });
           return new Promise<void>((resolve/*, reject*/) => {
-            worker.onmessage = ({ data: _ }) => {
+            auxWorker.worker.onmessage = ({ data: _ }) => {
               // TODO: no check for data.status
               resolve();
             };
@@ -213,7 +216,7 @@ class WasmEngine {
 
   private runWorkersWasmLoop() {
     assert(this.params.runLoopInWorker);
-    this.params.auxWorkers.forEach((worker) => {
+    this.params.auxWorkers.forEach(({ worker }) => {
       worker.postMessage({
         command: EngineWorkerCommands.RUN_WASM,
       });

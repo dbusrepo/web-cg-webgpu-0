@@ -14,10 +14,13 @@ import { InputManager, Key, KeyHandler } from './input/inputManager';
 import { EngineWorkerParams, EngineWorkerCommands } from './engineWorker';
 import { WasmEngine, WasmEngineParams } from './wasmEngine/wasmEngine';
 import EnginePanelCommands from '../panels/enginePanelCommands';
+import { AuxWorker } from './auxWorker';
 
 type EngineParams = {
   canvas: OffscreenCanvas;
 };
+
+const MAIN_WORKER_IDX = 0;
 
 class Engine {
   private static readonly RENDER_PERIOD_MS = MILLI_IN_SEC / mainConfig.targetRPS;
@@ -36,7 +39,7 @@ class Engine {
   private assetManager: AssetManager;
   private inputManager: InputManager;
 
-  private auxWorkers: Worker[];
+  private auxWorkers: AuxWorker[];
   private syncArray: Int32Array;
   private sleepArray: Int32Array;
 
@@ -55,21 +58,24 @@ class Engine {
     if (numAuxWorkers > 0) {
       await this.initAuxWorkers(numAuxWorkers);
     }
-    // await this.initWasmEngine();
+    await this.initWasmEngine();
   }
   
   private initInputManager() {
     this.inputManager = new InputManager();
     const Keys = {
       KEY_A: 'KeyA',
-      KEY_B: 'KeyB',
+      KEY_S: 'KeyS',
+      KEY_D: 'KeyD',
     };
-    this.addKeyHandlers(Keys.KEY_A, () => {}, () => {});
-    this.addKeyHandlers(Keys.KEY_B, () => {}, () => {});
+    this.addKeyHandlers(Keys.KEY_A, () => { console.log('A down') }, () => { console.log('A up') });
+    this.addKeyHandlers(Keys.KEY_S, () => { console.log('S down') }, () => { console.log('S up') });
+    this.addKeyHandlers(Keys.KEY_D, () => { console.log('D down') }, () => { console.log('D up') });
   }
 
   private addKeyHandlers(key: Key, keyDownHandler: KeyHandler, keyUpHandler: KeyHandler) {
     this.inputManager.addKeyHandlers(key, keyDownHandler, keyUpHandler);
+    console.log('sending cmd key handler', key);
     postMessage({
       command: EnginePanelCommands.REGISTER_KEY_HANDLER,
       params: key,
@@ -81,37 +87,43 @@ class Engine {
     await this.assetManager.init();
   }
 
-  private async initAuxWorkers(numWorkers: number) {
-    assert(numWorkers > 0);
-    let remWorkers = numWorkers;
+  private async initAuxWorkers(numAuxWorkers: number) {
+    assert(numAuxWorkers > 0);
     const initStart = Date.now();
     try {
+      let nextWorkerIdx = 0;
+      const getWorkerIdx = () => {
+        if (nextWorkerIdx === MAIN_WORKER_IDX) {
+          nextWorkerIdx++;
+        }
+        return nextWorkerIdx++;
+      };
+      let remWorkers = numAuxWorkers;
       await new Promise<void>((resolve, reject) => {
-        for (
-        let workerIndex = 1; // 0 is reserved for main worker
-        workerIndex <= numWorkers;
-        ++workerIndex
-      ) {
-          const worker = new Worker(
-            new URL('./engineWorker.ts', import.meta.url),
-            {
-              name: `engine-worker-${workerIndex}`,
-              type: 'module',
-            },
-          );
-          (worker as any).idx = workerIndex;
-          this.auxWorkers.push(worker);
+        for (let i = 0; i < numAuxWorkers; ++i) {
+          const workerIndex = getWorkerIdx();
+          const auxWorker = {
+            index: workerIndex,
+            worker: new Worker(
+              new URL('./engineWorker.ts', import.meta.url),
+              {
+                name: `engine-worker-${workerIndex}`,
+                type: 'module',
+              },
+            )
+          };
+          this.auxWorkers.push(auxWorker);
           const workerParams: EngineWorkerParams = {
             workerIndex,
-            numWorkers,
+            numWorkers: numAuxWorkers,
             syncArray: this.syncArray,
             sleepArray: this.sleepArray,
           };
-          worker.postMessage({
+          auxWorker.worker.postMessage({
             command: EngineWorkerCommands.INIT,
             params: workerParams,
           });
-          worker.onmessage = ({ data }) => {
+          auxWorker.worker.onmessage = ({ data }) => {
             --remWorkers;
             console.log(
               `Worker id=${workerIndex} init, left count=${remWorkers}, time=${
@@ -125,7 +137,7 @@ Date.now() - initStart
               resolve();
             }
           };
-          worker.onerror = (error) => {
+          auxWorker.worker.onerror = (error) => {
             console.log(`Worker id=${workerIndex} error: ${error.message}\n`);
             reject(error);
           };
@@ -138,7 +150,6 @@ Date.now() - initStart
 
   private async initWasmEngine() {
     this.wasmEngine = new WasmEngine();
-    const MAIN_WORKER_IDX = 0;
     const wasmEngineParams: WasmEngineParams = {
       mainWorkerIdx: MAIN_WORKER_IDX,
       canvas: this.params.canvas,
@@ -345,23 +356,25 @@ let engine: Engine;
 const enum EngineCommands {
   INIT = 'main_engine_worker_init',
   RUN = 'main_engine_worker_run',
-  KEYDOWN = 'main_engine_worker_keydown',
-  KEYUP = 'main_engine_worker_keyup',
+  KEY_DOWN = 'main_engine_worker_keydown',
+  KEY_UP = 'main_engine_worker_keyup',
 }
 
 const commands = {
   [EngineCommands.INIT]: async (params: EngineParams) => {
     engine = new Engine();
     await engine.init(params);
-    postMessage({ status: 'init completed' });
+    postMessage({
+      command: PanelCommands.INIT,
+    });
   },
   [EngineCommands.RUN]: () => {
     engine.run();
   },
-  [EngineCommands.KEYDOWN]: (key: Key) => {
+  [EngineCommands.KEY_DOWN]: (key: Key) => {
     engine.onKeyDown(key);
   },
-  [EngineCommands.KEYUP]: (key: Key) => {
+  [EngineCommands.KEY_UP]: (key: Key) => {
     engine.onKeyUp(key);
   },
 };
