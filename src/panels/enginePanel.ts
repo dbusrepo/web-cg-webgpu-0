@@ -81,7 +81,6 @@ class EnginePanel extends Panel {
         resolveInit();
       },
       [EnginePanelCommands.REGISTER_KEY_HANDLER]: (key: string) => {
-        console.log('register key handler', key); // TODO: remove
         this.inputKeys.add(key);
       },
       [EnginePanelCommands.UPDATE_STATS]: (values: StatsValues) => {

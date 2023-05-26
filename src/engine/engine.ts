@@ -10,11 +10,12 @@ import * as utils from './utils';
 import { StatsNames, StatsValues } from '../ui/stats/stats';
 import { AssetManager } from './assets/assetManager';
 import PanelCommands from '../panels/enginePanelCommands';
-import { InputManager, Key, KeyHandler } from './input/inputManager';
+import { InputManager } from './input/inputManager';
 import { EngineWorkerParams, EngineWorkerCommands } from './engineWorker';
 import { WasmEngine, WasmEngineParams } from './wasmEngine/wasmEngine';
 import EnginePanelCommands from '../panels/enginePanelCommands';
 import { AuxWorker } from './auxWorker';
+import Keys from './input/keys';
 
 type EngineParams = {
   canvas: OffscreenCanvas;
@@ -48,7 +49,7 @@ class Engine {
   public async init(params: EngineParams): Promise<void> {
     this.params = params;
     await this.initAssetManager();
-    this.initInputManager();
+    this.initInput();
     const numAuxWorkers = mainConfig.numAuxWorkers;
     console.log(`Using 1 main engine worker plus ${numAuxWorkers} auxiliary workers`);
     const numTotalWorkers = numAuxWorkers + 1;
@@ -61,25 +62,21 @@ class Engine {
     await this.initWasmEngine();
   }
   
-  private initInputManager() {
-    this.inputManager = new InputManager();
-    const Keys = {
-      KEY_A: 'KeyA',
-      KEY_S: 'KeyS',
-      KEY_D: 'KeyD',
-    };
-    this.addKeyHandlers(Keys.KEY_A, () => { console.log('A down') }, () => { console.log('A up') });
-    this.addKeyHandlers(Keys.KEY_S, () => { console.log('S down') }, () => { console.log('S up') });
-    this.addKeyHandlers(Keys.KEY_D, () => { console.log('D down') }, () => { console.log('D up') });
+  private initInput() {
+    Object.values(Keys).forEach((key) => {
+      postMessage({
+        command: EnginePanelCommands.REGISTER_KEY_HANDLER,
+        params: key,
+      });
+    });
+    this.initInputManager();
   }
 
-  private addKeyHandlers(key: Key, keyDownHandler: KeyHandler, keyUpHandler: KeyHandler) {
-    this.inputManager.addKeyHandlers(key, keyDownHandler, keyUpHandler);
-    console.log('sending cmd key handler', key);
-    postMessage({
-      command: EnginePanelCommands.REGISTER_KEY_HANDLER,
-      params: key,
-    });
+  private initInputManager() {
+    this.inputManager = new InputManager();
+    // this.inputManager.addKeyHandlers(Keys.KEY_A, () => { console.log('A down') }, () => { console.log('A up') });
+    // this.inputManager.addKeyHandlers(Keys.KEY_S, () => { console.log('S down') }, () => { console.log('S up') });
+    // this.inputManager.addKeyHandlers(Keys.KEY_D, () => { console.log('D down') }, () => { console.log('D up') });
   }
 
   private async initAssetManager() {
@@ -342,11 +339,11 @@ Date.now() - initStart
     }
   }
 
-  public onKeyDown(key: Key) {
+  public onKeyDown(key: Keys) {
     this.inputManager.onKeyDown(key);
   }
 
-  public onKeyUp(key: Key) {
+  public onKeyUp(key: Keys) {
     this.inputManager.onKeyUp(key);
   }
 }
@@ -371,10 +368,10 @@ const commands = {
   [EngineCommands.RUN]: () => {
     engine.run();
   },
-  [EngineCommands.KEY_DOWN]: (key: Key) => {
+  [EngineCommands.KEY_DOWN]: (key: Keys) => {
     engine.onKeyDown(key);
   },
-  [EngineCommands.KEY_UP]: (key: Key) => {
+  [EngineCommands.KEY_UP]: (key: Keys) => {
     engine.onKeyUp(key);
   },
 };

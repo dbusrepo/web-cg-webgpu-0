@@ -1,7 +1,7 @@
 import assert from 'assert';
 import * as WasmUtils from './wasmMemUtils';
 import { AssetManager } from '../assets/assetManager';
-import { InputManager, Key } from '../input/inputManager';
+import { InputManager } from '../input/inputManager';
 import { BPP_RGBA } from '../assets/images/bitImageRGBA';
 import { WasmRun, WasmRunParams } from './wasmRun';
 import { FONT_Y_SIZE, fontChars } from '../../assets/fonts/font';
@@ -9,6 +9,7 @@ import { stringsArrayData } from '../../assets/build/strings';
 import { EngineWorkerCommands } from '../engineWorker';
 import { AuxWorker } from '../auxWorker';
 import * as utils from './../utils';
+import Keys from '../input/keys';
 import {
   // BPP_PAL,
   // PAL_ENTRY_SIZE,
@@ -59,17 +60,16 @@ class WasmEngine {
   }
 
   private initInputHandlers() {
-    const keys = this.params.inputManager.Keys;
-    const key2idx: { [k: Key]: number } = {};
-    keys.forEach((key, idx) => {
+    let key2idx: Partial<Record<Keys, number>> = {};
+    Object.values(Keys).forEach((key: Keys, idx) => {
       key2idx[key] = idx;
     });
     const { inputKeys } = this.wasmRun.WasmViews;
     const keyHandler = (keyOffset: number, state: number) => () => {
       inputKeys[keyOffset] = state;
     };
-    keys.forEach((key) => {
-      const keyOffset = key2idx[key];
+    Object.values(Keys).forEach((key: Keys) => {
+      const keyOffset = key2idx[key]!;
       const keyDownHandler = keyHandler(keyOffset, 1);
       const keyUpHandler = keyHandler(keyOffset, 0);
       this.params.inputManager.addKeyHandlers(key, keyDownHandler, keyUpHandler);
@@ -129,7 +129,7 @@ class WasmEngine {
       imagesSize: this.params.assetManager.ImagesTotalSize,
       // TODO use 64bit/8 byte counter for mem counters? see wasm workerHeapManager
       workersMemCountersSize: numWorkers * Uint32Array.BYTES_PER_ELEMENT,
-      inputKeysSize: this.params.inputManager.Keys.length * Uint8Array.BYTES_PER_ELEMENT,
+      inputKeysSize: Object.keys(Keys).length * Uint8Array.BYTES_PER_ELEMENT,
       hrTimerSize: BigUint64Array.BYTES_PER_ELEMENT,
     };
 
