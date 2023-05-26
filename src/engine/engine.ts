@@ -6,16 +6,18 @@ import {
 } from '../common';
 
 import { mainConfig } from '../config/mainConfig';
-import * as utils from './utils';
-import { StatsNames, StatsValues } from '../ui/stats/stats';
+import type { StatsValues } from '../ui/stats/stats';
+import { StatsNameEnum } from '../ui/stats/stats';
 import { AssetManager } from './assets/assetManager';
-import PanelCommands from '../panels/enginePanelCommands';
+import EnginePanelCommandsEnum from '../panels/enginePanelCommands';
 import { InputManager } from './input/inputManager';
-import { EngineWorkerParams, EngineWorkerCommands } from './engineWorker';
-import { WasmEngine, WasmEngineParams } from './wasmEngine/wasmEngine';
-import EnginePanelCommands from '../panels/enginePanelCommands';
+import type { EngineWorkerParams } from './engineWorker';
+import { EngineWorkerCommandsEnum } from './engineWorker';
+import type { WasmEngineParams } from './wasmEngine/wasmEngine';
+import { WasmEngine } from './wasmEngine/wasmEngine';
 import { AuxWorker } from './auxWorker';
-import Keys from './input/keys';
+import { KeysEnum } from './input/keys';
+import * as utils from './utils';
 
 type EngineParams = {
   canvas: OffscreenCanvas;
@@ -63,9 +65,9 @@ class Engine {
   }
   
   private initInput() {
-    Object.values(Keys).forEach((key) => {
+    Object.values(KeysEnum).forEach((key) => {
       postMessage({
-        command: EnginePanelCommands.REGISTER_KEY_HANDLER,
+        command: EnginePanelCommandsEnum.REGISTER_KEY_HANDLER,
         params: key,
       });
     });
@@ -117,7 +119,7 @@ class Engine {
             sleepArray: this.sleepArray,
           };
           auxWorker.worker.postMessage({
-            command: EngineWorkerCommands.INIT,
+            command: EngineWorkerCommandsEnum.INIT,
             params: workerParams,
           });
           auxWorker.worker.onmessage = ({ data }) => {
@@ -304,13 +306,13 @@ Date.now() - initStart
         const avgFrameTime = utils.arrAvg(frameTimeArr, renderCnt);
         let avgUFps = avgFrameTime === 0 ? 0 : MILLI_IN_SEC / avgFrameTime;
         const stats: StatsValues = {
-          [StatsNames.FPS]: avgFps,
-          [StatsNames.RPS]: avgRps,
-          [StatsNames.UPS]: avgUps,
-          [StatsNames.UFPS]: avgUFps,
+          [StatsNameEnum.FPS]: avgFps,
+          [StatsNameEnum.RPS]: avgRps,
+          [StatsNameEnum.UPS]: avgUps,
+          [StatsNameEnum.UFPS]: avgUFps,
         };
         postMessage({
-          command: PanelCommands.UPDATE_STATS,
+          command: EnginePanelCommandsEnum.UPDATE_STATS,
           params: stats,
         });
       }
@@ -339,18 +341,18 @@ Date.now() - initStart
     }
   }
 
-  public onKeyDown(key: Keys) {
+  public onKeyDown(key: KeysEnum) {
     this.inputManager.onKeyDown(key);
   }
 
-  public onKeyUp(key: Keys) {
+  public onKeyUp(key: KeysEnum) {
     this.inputManager.onKeyUp(key);
   }
 }
 
 let engine: Engine;
 
-const enum EngineCommands {
+const enum EngineCommandsEnum {
   INIT = 'main_engine_worker_init',
   RUN = 'main_engine_worker_run',
   KEY_DOWN = 'main_engine_worker_keydown',
@@ -358,20 +360,20 @@ const enum EngineCommands {
 }
 
 const commands = {
-  [EngineCommands.INIT]: async (params: EngineParams) => {
+  [EngineCommandsEnum.INIT]: async (params: EngineParams) => {
     engine = new Engine();
     await engine.init(params);
     postMessage({
-      command: PanelCommands.INIT,
+      command: EnginePanelCommandsEnum.INIT,
     });
   },
-  [EngineCommands.RUN]: () => {
+  [EngineCommandsEnum.RUN]: () => {
     engine.run();
   },
-  [EngineCommands.KEY_DOWN]: (key: Keys) => {
+  [EngineCommandsEnum.KEY_DOWN]: (key: KeysEnum) => {
     engine.onKeyDown(key);
   },
-  [EngineCommands.KEY_UP]: (key: Keys) => {
+  [EngineCommandsEnum.KEY_UP]: (key: KeysEnum) => {
     engine.onKeyUp(key);
   },
 };
@@ -386,4 +388,5 @@ self.onmessage = ({ data: { command, params } }) => {
   }
 };
 
-export { EngineParams, EngineCommands };
+export type { EngineParams };
+export { EngineCommandsEnum };

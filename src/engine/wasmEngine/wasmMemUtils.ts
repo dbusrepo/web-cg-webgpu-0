@@ -1,5 +1,4 @@
 // import assert from 'assert';
-// import * as views from './wasmViews';
 import * as initImages from './wasmMemInitImages';
 import * as initStrings from './wasmMemInitStrings';
 import * as initFontChars from './wasmMemInitFontChars';
@@ -25,7 +24,7 @@ type MemConfig = {
 
 // all regions have bounds except for the last part, the shared heap that can grow
 // enum for mem regions keys used to index their sizes/offsets
-const enum MemRegions {
+const enum MemRegionsEnum {
   FRAMEBUFFER_RGBA = 'FRAMEBUFFER_RGBA',
   FRAMEBUFFER_PAL = 'FRAMEBUFFER_PAL',
   PALETTE = 'PALETTE',
@@ -45,7 +44,7 @@ const enum MemRegions {
   START_MEM = 'START_MEM', // for the size/offset of all previous mem regions
 }
 
-type MemRegionKeyType = keyof typeof MemRegions;
+type MemRegionKeyType = keyof typeof MemRegionsEnum;
 
 type MemRegionsData = {
   -readonly [key in MemRegionKeyType]: number;
@@ -71,21 +70,21 @@ function getMemRegionsSizes(config: MemConfig): MemRegionsData {
   } = config;
 
   const sizes: MemRegionsData = {
-    [MemRegions.FRAMEBUFFER_RGBA]: frameBufferRGBASize,
-    [MemRegions.FRAMEBUFFER_PAL]: frameBufferPalSize,
-    [MemRegions.PALETTE]: paletteSize,
-    [MemRegions.SYNC_ARRAY]: syncArraySize,
-    [MemRegions.SLEEP_ARRAY]: sleepArraySize,
-    [MemRegions.FONT_CHARS]: fontCharsSize,
-    [MemRegions.STRINGS]: stringsSize,
-    [MemRegions.IMAGES_INDEX]: imagesIndexSize,
-    [MemRegions.IMAGES]: imagesSize,
-    [MemRegions.WORKERS_HEAPS]: numWorkers * workerHeapSize,
-    [MemRegions.HEAP]: sharedHeapSize,
-    [MemRegions.MEM_COUNTERS]: workersMemCountersSize,
-    [MemRegions.INPUT_KEYS]: inputKeysSize,
-    [MemRegions.HR_TIMER]: hrTimerSize,
-    [MemRegions.START_MEM]: 0,
+    [MemRegionsEnum.FRAMEBUFFER_RGBA]: frameBufferRGBASize,
+    [MemRegionsEnum.FRAMEBUFFER_PAL]: frameBufferPalSize,
+    [MemRegionsEnum.PALETTE]: paletteSize,
+    [MemRegionsEnum.SYNC_ARRAY]: syncArraySize,
+    [MemRegionsEnum.SLEEP_ARRAY]: sleepArraySize,
+    [MemRegionsEnum.FONT_CHARS]: fontCharsSize,
+    [MemRegionsEnum.STRINGS]: stringsSize,
+    [MemRegionsEnum.IMAGES_INDEX]: imagesIndexSize,
+    [MemRegionsEnum.IMAGES]: imagesSize,
+    [MemRegionsEnum.WORKERS_HEAPS]: numWorkers * workerHeapSize,
+    [MemRegionsEnum.HEAP]: sharedHeapSize,
+    [MemRegionsEnum.MEM_COUNTERS]: workersMemCountersSize,
+    [MemRegionsEnum.INPUT_KEYS]: inputKeysSize,
+    [MemRegionsEnum.HR_TIMER]: hrTimerSize,
+    [MemRegionsEnum.START_MEM]: 0,
   };
 
   // console.log(JSON.stringify(sizes));
@@ -99,39 +98,39 @@ function getMemRegionsOffsets(
   // for each new section add its alignment here
   // lg of align req
   const memRegLgAlign: MemRegionsData = {
-    [MemRegions.FRAMEBUFFER_RGBA]: 2,
-    [MemRegions.FRAMEBUFFER_PAL]: 2,
-    [MemRegions.PALETTE]: 2,
-    [MemRegions.SYNC_ARRAY]: 2,
-    [MemRegions.SLEEP_ARRAY]: 2,
-    [MemRegions.FONT_CHARS]: 2,
-    [MemRegions.STRINGS]: 2,
-    [MemRegions.IMAGES_INDEX]: 2,
-    [MemRegions.IMAGES]: 2,
-    [MemRegions.WORKERS_HEAPS]: 2,
-    [MemRegions.HEAP]: 6,
-    [MemRegions.MEM_COUNTERS]: 2,
-    [MemRegions.INPUT_KEYS]: 4,
-    [MemRegions.HR_TIMER]: 3,
-    [MemRegions.START_MEM]: 0,
+    [MemRegionsEnum.FRAMEBUFFER_RGBA]: 2,
+    [MemRegionsEnum.FRAMEBUFFER_PAL]: 2,
+    [MemRegionsEnum.PALETTE]: 2,
+    [MemRegionsEnum.SYNC_ARRAY]: 2,
+    [MemRegionsEnum.SLEEP_ARRAY]: 2,
+    [MemRegionsEnum.FONT_CHARS]: 2,
+    [MemRegionsEnum.STRINGS]: 2,
+    [MemRegionsEnum.IMAGES_INDEX]: 2,
+    [MemRegionsEnum.IMAGES]: 2,
+    [MemRegionsEnum.WORKERS_HEAPS]: 2,
+    [MemRegionsEnum.HEAP]: 6,
+    [MemRegionsEnum.MEM_COUNTERS]: 2,
+    [MemRegionsEnum.INPUT_KEYS]: 4,
+    [MemRegionsEnum.HR_TIMER]: 3,
+    [MemRegionsEnum.START_MEM]: 0,
   };
 
   // for each new section add it in the region alloc order here
   const memRegionsAllocSeq: MemRegionKeyType[] = [
-    MemRegions.FRAMEBUFFER_RGBA,
-    MemRegions.FRAMEBUFFER_PAL,
-    MemRegions.PALETTE,
-    MemRegions.INPUT_KEYS,
-    MemRegions.HR_TIMER,
-    MemRegions.SYNC_ARRAY,
-    MemRegions.SLEEP_ARRAY,
-    MemRegions.MEM_COUNTERS,
-    MemRegions.FONT_CHARS,
-    MemRegions.STRINGS,
-    MemRegions.IMAGES_INDEX,
-    MemRegions.IMAGES,
-    MemRegions.WORKERS_HEAPS,
-    MemRegions.HEAP,
+    MemRegionsEnum.FRAMEBUFFER_RGBA,
+    MemRegionsEnum.FRAMEBUFFER_PAL,
+    MemRegionsEnum.PALETTE,
+    MemRegionsEnum.INPUT_KEYS,
+    MemRegionsEnum.HR_TIMER,
+    MemRegionsEnum.SYNC_ARRAY,
+    MemRegionsEnum.SLEEP_ARRAY,
+    MemRegionsEnum.MEM_COUNTERS,
+    MemRegionsEnum.FONT_CHARS,
+    MemRegionsEnum.STRINGS,
+    MemRegionsEnum.IMAGES_INDEX,
+    MemRegionsEnum.IMAGES,
+    MemRegionsEnum.WORKERS_HEAPS,
+    MemRegionsEnum.HEAP,
   ];
 
   // check seq in memRegionsAllocSeq and no duplicates ?
@@ -157,12 +156,12 @@ function getMemRegionsSizesAndOffsets(
   const regionsOffsets = getMemRegionsOffsets(config, regionsSizes);
 
   const { startOffset } = config;
-  regionsOffsets[MemRegions.START_MEM] = startOffset;
+  regionsOffsets[MemRegionsEnum.START_MEM] = startOffset;
   const startSize =
-    regionsOffsets[MemRegions.HEAP] +
-    regionsSizes[MemRegions.HEAP] - // 0 if the shared heap expands freely
+    regionsOffsets[MemRegionsEnum.HEAP] +
+    regionsSizes[MemRegionsEnum.HEAP] - // 0 if the shared heap expands freely
     startOffset;
-  regionsSizes[MemRegions.START_MEM] = startSize;
+  regionsSizes[MemRegionsEnum.START_MEM] = startSize;
 
   return [regionsSizes, regionsOffsets];
 }
@@ -173,9 +172,8 @@ export type {
 };
 
 export {
-  MemRegions,
+  MemRegionsEnum,
   getMemRegionsSizesAndOffsets,
-  // views,
   initFontChars,
   initStrings,
   initImages,

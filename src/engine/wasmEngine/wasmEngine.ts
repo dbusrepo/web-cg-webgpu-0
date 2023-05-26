@@ -1,16 +1,18 @@
 import assert from 'assert';
 import type { MemConfig, MemRegionsData } from './wasmMemUtils';
+import type { WasmModules } from './wasmLoader';
 import * as WasmUtils from './wasmMemUtils';
 import { AssetManager } from '../assets/assetManager';
 import { InputManager } from '../input/inputManager';
 import { BPP_RGBA } from '../assets/images/bitImageRGBA';
-import { WasmRun, WasmRunParams } from './wasmRun';
+import type { WasmRunParams } from './wasmRun';
+import { WasmRun } from './wasmRun';
 import { FONT_Y_SIZE, fontChars } from '../../assets/fonts/font';
 import { stringsArrayData } from '../../assets/build/strings';
-import { EngineWorkerCommands } from '../engineWorker';
+import { EngineWorkerCommandsEnum } from '../engineWorker';
 import { AuxWorker } from '../auxWorker';
 import * as utils from './../utils';
-import Keys from '../input/keys';
+import { KeysEnum } from '../input/keys';
 import {
   // BPP_PAL,
   // PAL_ENTRY_SIZE,
@@ -18,8 +20,6 @@ import {
   PAGE_SIZE_BYTES,
 } from '../../common';
 import { mainConfig } from '../../config/mainConfig';
-
-// type WasmViews = WasmUtils.views.WasmViews;
 
 type WasmEngineParams = {
   canvas: OffscreenCanvas;
@@ -36,8 +36,10 @@ class WasmEngine {
   private wasmMem: WebAssembly.Memory;
   private wasmMemConfig: MemConfig;
   private wasmRegionsSizes: MemRegionsData;
-  private wasmRegionsOffsets: WasmUtils.MemRegionsData;
+  private wasmRegionsOffsets: MemRegionsData;
+  private wasmRunParams: WasmRunParams;
   private wasmRun: WasmRun;
+  private wasmModules: WasmModules;
   private imageData: ImageData;
 
   public async init(params: WasmEngineParams) {
@@ -61,15 +63,15 @@ class WasmEngine {
   }
 
   private initInputHandlers() {
-    let key2idx: Partial<Record<Keys, number>> = {};
-    Object.values(Keys).forEach((key: Keys, idx) => {
+    let key2idx: Partial<Record<KeysEnum, number>> = {};
+    Object.values(KeysEnum).forEach((key: KeysEnum, idx) => {
       key2idx[key] = idx;
     });
     const { inputKeys } = this.wasmRun.WasmViews;
     const keyHandler = (keyOffset: number, state: number) => () => {
       inputKeys[keyOffset] = state;
     };
-    Object.values(Keys).forEach((key: Keys) => {
+    Object.values(KeysEnum).forEach((key: KeysEnum) => {
       const keyOffset = key2idx[key]!;
       const keyDownHandler = keyHandler(keyOffset, 1);
       const keyUpHandler = keyHandler(keyOffset, 0);
@@ -82,15 +84,16 @@ class WasmEngine {
     this.allocWasmMem();
     await this.initWasmRun();
     this.initWasmAssets();
+    await this.initAuxWorkers();
     if (this.params.runLoopInWorker) {
       this.runWorkersWasmLoop();
     }
   }
 
   private allocWasmMem(): void {
-    const startSize = this.wasmRegionsSizes[WasmUtils.MemRegions.START_MEM];
+    const startSize = this.wasmRegionsSizes[WasmUtils.MemRegionsEnum.START_MEM];
     const startOffset =
-      this.wasmRegionsOffsets[WasmUtils.MemRegions.START_MEM];
+      this.wasmRegionsOffsets[WasmUtils.MemRegionsEnum.START_MEM];
     const wasmMemStartTotalSize = startOffset + startSize;
     const { wasmMemStartPages: initial, wasmMemMaxPages: maximum } = mainConfig;
     assert(initial * PAGE_SIZE_BYTES >= wasmMemStartTotalSize);
@@ -113,7 +116,7 @@ class WasmEngine {
     const numWorkers = this.params.auxWorkers.length + 1;
 
     // set wasm mem regions sizes
-    const wasmMemConfig: WasmUtils.MemConfig = {
+    const wasmMemConfig: MemConfig = {
       startOffset: mainConfig.wasmMemStartOffset,
       frameBufferRGBASize: numPixels * BPP_RGBA, // TODO:
       frameBufferPalSize: 0, // this._cfg.usePalette ? numPixels : 0,
@@ -130,7 +133,7 @@ class WasmEngine {
       imagesSize: this.params.assetManager.ImagesTotalSize,
       // TODO use 64bit/8 byte counter for mem counters? see wasm workerHeapManager
       workersMemCountersSize: numWorkers * Uint32Array.BYTES_PER_ELEMENT,
-      inputKeysSize: Object.keys(Keys).length * Uint8Array.BYTES_PER_ELEMENT,
+      inputKeysSize: Object.keys(KeysEnum).length * Uint8Array.BYTES_PER_ELEMENT,
       hrTimerSize: BigUint64Array.BYTES_PER_ELEMENT,
     };
 
@@ -143,12 +146,12 @@ class WasmEngine {
     console.log('OFFSETS: ', JSON.stringify(this.wasmRegionsOffsets));
     console.log(
       `wasm mem start offset: ${
-        this.wasmRegionsOffsets[WasmUtils.MemRegions.START_MEM]
+        this.wasmRegionsOffsets[WasmUtils.MemRegionsEnum.START_MEM]
       }`,
     );
     console.log(
       `wasm mem start size: ${
-        this.wasmRegionsSizes[WasmUtils.MemRegions.START_MEM]
+        this.wasmRegionsSizes[WasmUtils.MemRegionsEnum.START_MEM]
       }`,
     );
   }
@@ -177,7 +180,7 @@ class WasmEngine {
 
   private async initWasmRun() {
     this.wasmRun = new WasmRun();
-    const params: WasmRunParams = {
+    this.wasmRunParams ={
       wasmMem: this.wasmMem,
       wasmMemRegionsSizes: this.wasmRegionsSizes,
       wasmMemRegionsOffsets: this.wasmRegionsOffsets,
@@ -189,29 +192,30 @@ class WasmEngine {
       frameWidth: this.imageData.width,
       frameHeight: this.imageData.height,
     };
-    await this.wasmRun.init(params);
-    // now init wasm run for aux workers
-    if (this.params.auxWorkers.length > 0) {
-      try {
-        await Promise.all(this.params.auxWorkers.map((auxWorker) => {
-          auxWorker.worker.postMessage({
-            command: EngineWorkerCommands.INIT_WASM,
-            params: {
-              ...params,
-              workerIdx: auxWorker.index,
-            },
-          });
-          return new Promise<void>((resolve/*, reject*/) => {
-            auxWorker.worker.onmessage = ({ data: _ }) => {
-              // TODO: no check for data.status
-              resolve();
-            };
-          });
-        }));
-      } catch (e) {
-        console.log('error initializing wasm in aux workers');
-        console.error(e);
-      }
+    await this.wasmRun.init(this.wasmRunParams);
+    this.wasmModules = this.wasmRun.WasmModules;
+  }
+
+  private async initAuxWorkers() {
+    try {
+      await Promise.all(this.params.auxWorkers.map((auxWorker) => {
+        auxWorker.worker.postMessage({
+          command: EngineWorkerCommandsEnum.INIT_WASM,
+          params: {
+            ...this.wasmRunParams,
+            workerIdx: auxWorker.index,
+          },
+        });
+        return new Promise<void>((resolve/*, reject*/) => {
+          auxWorker.worker.onmessage = ({ data: _ }) => {
+            // TODO: no check for data.status
+            resolve();
+          };
+        });
+      }));
+    } catch (e) {
+      console.log('error initializing wasm in aux workers');
+      console.error(e);
     }
   }
 
@@ -219,7 +223,7 @@ class WasmEngine {
     assert(this.params.runLoopInWorker);
     this.params.auxWorkers.forEach(({ worker }) => {
       worker.postMessage({
-        command: EngineWorkerCommands.RUN_WASM,
+        command: EngineWorkerCommandsEnum.RUN_WASM,
       });
     });
   }
@@ -227,7 +231,7 @@ class WasmEngine {
   public render() {
     this.syncWorkers();
     try {
-      this.wasmRun.WasmModules.engine.render();
+      this.wasmModules.engine.render();
     } catch (e) {
       console.error(e);
     }
@@ -263,16 +267,20 @@ class WasmEngine {
     return this.wasmMem;
   }
 
-  public get WasmMemConfig(): WasmUtils.MemConfig {
+  public get WasmMemConfig(): MemConfig {
     return this.wasmMemConfig;
   }
 
-  public get WasmRegionsSizes(): WasmUtils.MemRegionsData {
+  public get WasmRegionsSizes(): MemRegionsData {
     return this.wasmRegionsSizes;
   }
 
-  public get WasmRegionsOffsets(): WasmUtils.MemRegionsData {
+  public get WasmRegionsOffsets(): MemRegionsData {
     return this.wasmRegionsOffsets;
+  }
+
+  public get WasmModules(): WasmModules {
+    return this.wasmModules;
   }
   
   public get ImageData(): ImageData {
@@ -280,4 +288,5 @@ class WasmEngine {
   }
 }
 
-export { WasmEngine, WasmEngineParams };
+export type { WasmEngineParams };
+export { WasmEngine };
