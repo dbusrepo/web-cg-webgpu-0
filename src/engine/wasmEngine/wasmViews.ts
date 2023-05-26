@@ -101,4 +101,5 @@ function buildWasmMemViews(
   return memViews;
 }
 
-export { WasmViews, buildWasmMemViews };
+export type { WasmViews };
+export { buildWasmMemViews };

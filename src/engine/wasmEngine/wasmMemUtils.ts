@@ -1,5 +1,5 @@
 // import assert from 'assert';
-import * as views from './wasmViews';
+// import * as views from './wasmViews';
 import * as initImages from './wasmMemInitImages';
 import * as initStrings from './wasmMemInitStrings';
 import * as initFontChars from './wasmMemInitFontChars';
@@ -167,12 +167,15 @@ function getMemRegionsSizesAndOffsets(
   return [regionsSizes, regionsOffsets];
 }
 
-export {
+export type {
   MemConfig,
-  MemRegions,
   MemRegionsData,
+};
+
+export {
+  MemRegions,
   getMemRegionsSizesAndOffsets,
-  views,
+  // views,
   initFontChars,
   initStrings,
   initImages,

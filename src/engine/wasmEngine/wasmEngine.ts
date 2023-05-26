@@ -1,4 +1,5 @@
 import assert from 'assert';
+import type { MemConfig, MemRegionsData } from './wasmMemUtils';
 import * as WasmUtils from './wasmMemUtils';
 import { AssetManager } from '../assets/assetManager';
 import { InputManager } from '../input/inputManager';
@@ -33,8 +34,8 @@ class WasmEngine {
   private params: WasmEngineParams;
   private ctx: OffscreenCanvasRenderingContext2D;
   private wasmMem: WebAssembly.Memory;
-  private wasmMemConfig: WasmUtils.MemConfig;
-  private wasmRegionsSizes: WasmUtils.MemRegionsData;
+  private wasmMemConfig: MemConfig;
+  private wasmRegionsSizes: MemRegionsData;
   private wasmRegionsOffsets: WasmUtils.MemRegionsData;
   private wasmRun: WasmRun;
   private imageData: ImageData;

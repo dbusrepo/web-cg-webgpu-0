@@ -1,7 +1,11 @@
 // import assert from 'assert';
-// import { fileTypeFromBuffer } from 'file-type';
 import * as WasmUtils from './wasmMemUtils';
-import { WasmModules, WasmImports, loadWasmModules } from './wasmLoader';
+
+import type { WasmViews } from './wasmViews';
+import { buildWasmMemViews } from './wasmViews';
+import type { WasmModules, WasmImports } from './wasmLoader';
+import { loadWasmModules } from './wasmLoader';
+
 // import { syncStore, randColor, sleep } from './utils';
 // import { BitImageRGBA } from './assets/images/bitImageRGBA';
 // import { PngDecoderRGBA } from './assets/images/vivaxy-png/PngDecoderRGBA';
@@ -11,8 +15,6 @@ import {
   FONT_SPACING,
 } from '../../assets/fonts/font';
 import { syncStore } from './../utils';
-
-type WasmViews = WasmUtils.views.WasmViews;
 
 type WasmRunParams = {
   wasmMem: WebAssembly.Memory;
@@ -39,18 +41,18 @@ class WasmRun {
   }
 
   private async initWasm(): Promise<void> {
-    this.buildWasmMemViews();
+    this.buildMemViews();
     await this.loadWasmModules();
   }
 
-  protected buildWasmMemViews(): void {
+  protected buildMemViews(): void {
     const {
       wasmMem: mem,
       wasmMemRegionsOffsets: memOffsets,
       wasmMemRegionsSizes: memSizes,
     } = this.params;
 
-    this.wasmViews = WasmUtils.views.buildWasmMemViews(
+    this.wasmViews = buildWasmMemViews(
       mem,
       memOffsets,
       memSizes,
