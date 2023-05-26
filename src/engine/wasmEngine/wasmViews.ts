@@ -1,4 +1,4 @@
-import { MemRegionsEnum, MemRegionsData } from './wasmMemUtils';
+import { MemRegionsEnum, WasmMemRegionsData } from './wasmMemUtils';
 
 type WasmViews = {
   memUI8: Uint8Array;
@@ -16,8 +16,8 @@ type WasmViews = {
 
 function buildWasmMemViews(
   wasmMem: WebAssembly.Memory,
-  memOffsets: MemRegionsData,
-  memSizes: MemRegionsData,
+  memOffsets: WasmMemRegionsData,
+  memSizes: WasmMemRegionsData,
 ): WasmViews {
   const startSize = memSizes[MemRegionsEnum.START_MEM];
   const startOffset = memOffsets[MemRegionsEnum.START_MEM];

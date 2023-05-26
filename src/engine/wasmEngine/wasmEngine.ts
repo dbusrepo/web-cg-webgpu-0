@@ -1,7 +1,10 @@
 import assert from 'assert';
-import type { MemConfig, MemRegionsData } from './wasmMemUtils';
+import type { WasmMemParams, WasmMemRegionsData } from './wasmMemUtils';
 import type { WasmModules } from './wasmLoader';
 import * as WasmUtils from './wasmMemUtils';
+import * as initImages from './wasmMemInitImages';
+import * as initStrings from './wasmMemInitStrings';
+import * as initFontChars from './wasmMemInitFontChars';
 import { AssetManager } from '../assets/assetManager';
 import { InputManager } from '../input/inputManager';
 import { BPP_RGBA } from '../assets/images/bitImageRGBA';
@@ -34,9 +37,9 @@ class WasmEngine {
   private params: WasmEngineParams;
   private ctx: OffscreenCanvasRenderingContext2D;
   private wasmMem: WebAssembly.Memory;
-  private wasmMemConfig: MemConfig;
-  private wasmRegionsSizes: MemRegionsData;
-  private wasmRegionsOffsets: MemRegionsData;
+  private wasmMemParams: WasmMemParams;
+  private wasmRegionsSizes: WasmMemRegionsData;
+  private wasmRegionsOffsets: WasmMemRegionsData;
   private wasmRunParams: WasmRunParams;
   private wasmRun: WasmRun;
   private wasmModules: WasmModules;
@@ -116,7 +119,7 @@ class WasmEngine {
     const numWorkers = this.params.auxWorkers.length + 1;
 
     // set wasm mem regions sizes
-    const wasmMemConfig: MemConfig = {
+    const wasmMemParams: WasmMemParams = {
       startOffset: mainConfig.wasmMemStartOffset,
       frameBufferRGBASize: numPixels * BPP_RGBA, // TODO:
       frameBufferPalSize: 0, // this._cfg.usePalette ? numPixels : 0,
@@ -129,7 +132,7 @@ class WasmEngine {
       sharedHeapSize: mainConfig.wasmSharedHeapSize,
       fontCharsSize: fontChars.length * FONT_Y_SIZE,
       stringsSize: stringsArrayData.length,
-      imagesIndexSize: WasmUtils.initImages.getImagesIndexSize(),
+      imagesIndexSize: initImages.getImagesIndexSize(),
       imagesSize: this.params.assetManager.ImagesTotalSize,
       // TODO use 64bit/8 byte counter for mem counters? see wasm workerHeapManager
       workersMemCountersSize: numWorkers * Uint32Array.BYTES_PER_ELEMENT,
@@ -137,8 +140,8 @@ class WasmEngine {
       hrTimerSize: BigUint64Array.BYTES_PER_ELEMENT,
     };
 
-    this.wasmMemConfig = wasmMemConfig;
-    const [sizes, offsets] = WasmUtils.getMemRegionsSizesAndOffsets(this.wasmMemConfig);
+    this.wasmMemParams = wasmMemParams;
+    const [sizes, offsets] = WasmUtils.getMemRegionsSizesAndOffsets(this.wasmMemParams);
     this.wasmRegionsSizes = sizes;
     this.wasmRegionsOffsets = offsets;
 
@@ -163,15 +166,15 @@ class WasmEngine {
   }
 
   private initWasmFontChars() {
-    WasmUtils.initFontChars.copyFontChars2WasmMem(this.wasmRun.WasmViews.fontChars);
+    initFontChars.copyFontChars2WasmMem(this.wasmRun.WasmViews.fontChars);
   }
 
   private initWasmStrings() {
-    WasmUtils.initStrings.copyStrings2WasmMem(this.wasmRun.WasmViews.strings);
+    initStrings.copyStrings2WasmMem(this.wasmRun.WasmViews.strings);
   }
 
   private initWasmImages(): void {
-    WasmUtils.initImages.copyImages2WasmMem(
+    initImages.copyImages2WasmMem(
       this.params.assetManager.Images,
       this.wasmRun.WasmViews.imagesIndex,
       this.wasmRun.WasmViews.imagesPixels,
@@ -267,15 +270,15 @@ class WasmEngine {
     return this.wasmMem;
   }
 
-  public get WasmMemConfig(): MemConfig {
-    return this.wasmMemConfig;
+  public get WasmMemParams(): WasmMemParams {
+    return this.wasmMemParams;
   }
 
-  public get WasmRegionsSizes(): MemRegionsData {
+  public get WasmRegionsSizes(): WasmMemRegionsData {
     return this.wasmRegionsSizes;
   }
 
-  public get WasmRegionsOffsets(): MemRegionsData {
+  public get WasmRegionsOffsets(): WasmMemRegionsData {
     return this.wasmRegionsOffsets;
   }
 

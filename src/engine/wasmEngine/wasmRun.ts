@@ -18,8 +18,8 @@ import { syncStore } from './../utils';
 
 type WasmRunParams = {
   wasmMem: WebAssembly.Memory;
-  wasmMemRegionsOffsets: WasmUtils.MemRegionsData;
-  wasmMemRegionsSizes: WasmUtils.MemRegionsData;
+  wasmMemRegionsOffsets: WasmUtils.WasmMemRegionsData;
+  wasmMemRegionsSizes: WasmUtils.WasmMemRegionsData;
   wasmWorkerHeapSize: number;
   mainWorkerIdx: number;
   workerIdx: number;

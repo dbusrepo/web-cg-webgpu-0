@@ -1,9 +1,6 @@
 // import assert from 'assert';
-import * as initImages from './wasmMemInitImages';
-import * as initStrings from './wasmMemInitStrings';
-import * as initFontChars from './wasmMemInitFontChars';
 
-type MemConfig = {
+type WasmMemParams = {
   startOffset: number;
   frameBufferRGBASize: number;
   frameBufferPalSize: number;
@@ -46,11 +43,11 @@ const enum MemRegionsEnum {
 
 type MemRegionKeyType = keyof typeof MemRegionsEnum;
 
-type MemRegionsData = {
+type WasmMemRegionsData = {
   -readonly [key in MemRegionKeyType]: number;
 };
 
-function getMemRegionsSizes(config: MemConfig): MemRegionsData {
+function getMemRegionsSizes(params: WasmMemParams): WasmMemRegionsData {
   const {
     frameBufferRGBASize,
     frameBufferPalSize,
@@ -67,9 +64,9 @@ function getMemRegionsSizes(config: MemConfig): MemRegionsData {
     workersMemCountersSize,
     inputKeysSize,
     hrTimerSize,
-  } = config;
+  } = params;
 
-  const sizes: MemRegionsData = {
+  const sizes: WasmMemRegionsData = {
     [MemRegionsEnum.FRAMEBUFFER_RGBA]: frameBufferRGBASize,
     [MemRegionsEnum.FRAMEBUFFER_PAL]: frameBufferPalSize,
     [MemRegionsEnum.PALETTE]: paletteSize,
@@ -92,12 +89,12 @@ function getMemRegionsSizes(config: MemConfig): MemRegionsData {
 }
 
 function getMemRegionsOffsets(
-  config: MemConfig,
-  sizes: Readonly<MemRegionsData>,
-): MemRegionsData {
+  params: WasmMemParams,
+  sizes: Readonly<WasmMemRegionsData>,
+): WasmMemRegionsData {
   // for each new section add its alignment here
   // lg of align req
-  const memRegLgAlign: MemRegionsData = {
+  const memRegLgAlign: WasmMemRegionsData = {
     [MemRegionsEnum.FRAMEBUFFER_RGBA]: 2,
     [MemRegionsEnum.FRAMEBUFFER_PAL]: 2,
     [MemRegionsEnum.PALETTE]: 2,
@@ -135,8 +132,8 @@ function getMemRegionsOffsets(
 
   // check seq in memRegionsAllocSeq and no duplicates ?
 
-  const offsets = {} as MemRegionsData;
-  let curOffset = config.startOffset;
+  const offsets = {} as WasmMemRegionsData;
+  let curOffset = params.startOffset;
 
   for (const region of memRegionsAllocSeq) {
     const alignMask = (1 << memRegLgAlign[region]) - 1;
@@ -150,12 +147,12 @@ function getMemRegionsOffsets(
 
 // returns sizes and offsets
 function getMemRegionsSizesAndOffsets(
-  config: MemConfig,
-): [MemRegionsData, MemRegionsData] {
-  const regionsSizes = getMemRegionsSizes(config);
-  const regionsOffsets = getMemRegionsOffsets(config, regionsSizes);
+  params: WasmMemParams,
+): [WasmMemRegionsData, WasmMemRegionsData] {
+  const regionsSizes = getMemRegionsSizes(params);
+  const regionsOffsets = getMemRegionsOffsets(params, regionsSizes);
 
-  const { startOffset } = config;
+  const { startOffset } = params;
   regionsOffsets[MemRegionsEnum.START_MEM] = startOffset;
   const startSize =
     regionsOffsets[MemRegionsEnum.HEAP] +
@@ -167,14 +164,11 @@ function getMemRegionsSizesAndOffsets(
 }
 
 export type {
-  MemConfig,
-  MemRegionsData,
+  WasmMemParams,
+  WasmMemRegionsData,
 };
 
 export {
   MemRegionsEnum,
   getMemRegionsSizesAndOffsets,
-  initFontChars,
-  initStrings,
-  initImages,
 };
