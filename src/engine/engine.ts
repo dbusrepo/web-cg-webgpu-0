@@ -9,18 +9,18 @@ import { mainConfig } from '../config/mainConfig';
 import type { StatsValues } from '../ui/stats/stats';
 import { StatsNameEnum } from '../ui/stats/stats';
 import { AssetManager } from './assets/assetManager';
-import EnginePanelCommandsEnum from '../panels/enginePanelCommands';
+import type { InputEvent, PanelId } from '../app/appTypes';
+import { AppCommandsEnum, AppPanelsIdEnum } from '../app/appTypes';
 import { InputManager } from './input/inputManager';
 import type { EngineWorkerParams } from './engineWorker';
 import { EngineWorkerCommandsEnum } from './engineWorker';
 import type { WasmEngineParams } from './wasmEngine/wasmEngine';
 import { WasmEngine } from './wasmEngine/wasmEngine';
 import { AuxWorker } from './auxWorker';
-import { KeysEnum } from './input/keys';
 import * as utils from './utils';
 
 type EngineParams = {
-  canvas: OffscreenCanvas;
+  surfaces: Record<PanelId, OffscreenCanvas>;
 };
 
 const MAIN_WORKER_IDX = 0;
@@ -65,12 +65,6 @@ class Engine {
   }
   
   private initInput() {
-    Object.values(KeysEnum).forEach((key) => {
-      postMessage({
-        command: EnginePanelCommandsEnum.REGISTER_KEY_HANDLER,
-        params: key,
-      });
-    });
     this.initInputManager();
   }
 
@@ -151,7 +145,7 @@ Date.now() - initStart
     this.wasmEngine = new WasmEngine();
     const wasmEngineParams: WasmEngineParams = {
       mainWorkerIdx: MAIN_WORKER_IDX,
-      canvas: this.params.canvas,
+      surfaces: this.params.surfaces,
       assetManager: this.assetManager,
       inputManager: this.inputManager,
       auxWorkers: this.auxWorkers,
@@ -312,7 +306,7 @@ Date.now() - initStart
           [StatsNameEnum.UFPS]: avgUFps,
         };
         postMessage({
-          command: EnginePanelCommandsEnum.UPDATE_STATS,
+          command: AppCommandsEnum.UPDATE_STATS,
           params: stats,
         });
       }
@@ -341,12 +335,12 @@ Date.now() - initStart
     }
   }
 
-  public onKeyDown(key: KeysEnum) {
-    this.inputManager.onKeyDown(key);
+  public onKeyDown(inputEvent: InputEvent) {
+    // this.inputManager.onKeyDown(key);
   }
 
-  public onKeyUp(key: KeysEnum) {
-    this.inputManager.onKeyUp(key);
+  public onKeyUp(inputEvent: InputEvent) {
+    // this.inputManager.onKeyUp(key);
   }
 }
 
@@ -359,26 +353,23 @@ const enum EngineCommandsEnum {
   KEY_UP = 'main_engine_worker_keyup',
 }
 
+
 const commands = {
   [EngineCommandsEnum.INIT]: async (params: EngineParams) => {
     engine = new Engine();
     await engine.init(params);
     postMessage({
-      command: EnginePanelCommandsEnum.INIT,
+      command: AppCommandsEnum.INIT,
     });
   },
   [EngineCommandsEnum.RUN]: () => {
     engine.run();
   },
-  [EngineCommandsEnum.KEY_DOWN]: (key: string) => {
-    if (Object.values(KeysEnum).includes(key as KeysEnum)) {
-      engine.onKeyDown(key as KeysEnum);
-    }
+  [EngineCommandsEnum.KEY_DOWN]: (inputEvent: InputEvent) => {
+    engine.onKeyDown(inputEvent);
   },
-  [EngineCommandsEnum.KEY_UP]: (key: string) => {
-    if (Object.values(KeysEnum).includes(key as KeysEnum)) {
-      engine.onKeyUp(key as KeysEnum);
-    }
+  [EngineCommandsEnum.KEY_UP]: (inputEvent: InputEvent) => {
+    engine.onKeyUp(inputEvent);
   },
 };
 

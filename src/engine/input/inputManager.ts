@@ -1,34 +1,40 @@
-import { KeysEnum } from './keys';
+import type { EnginePanelInputKey } from '../../panels/enginePanelTypes';
+import { EnginePanelInputKeysEnum } from '../../panels/enginePanelTypes';
+import type { ViewPanelInputKey } from '../../panels/viewPanelTypes';
+import { ViewPanelInputKeysEnum } from '../../panels/viewPanelTypes';
+
+type Key = EnginePanelInputKey | ViewPanelInputKey;
+const keys = { ...EnginePanelInputKeysEnum, ...ViewPanelInputKeysEnum };
 
 type KeyHandler = () => void;
 
-type KeyHandlers = Partial<Record<KeysEnum, KeyHandler[]>>;
+type KeyHandlers = Partial<Record<Key, KeyHandler[]>>;
 
 class InputManager {
   private keyDownHandlers: KeyHandlers = {};
   private keyUpHandlers: KeyHandlers = {};
 
-  public addKeyHandlers(key: KeysEnum, keyDownHandler: KeyHandler, keyUpHandler: KeyHandler) {
+  public addKeyHandlers(key: Key, keyDownHandler: KeyHandler, keyUpHandler: KeyHandler) {
     this.addKeyDownHandler(key, keyDownHandler);
     this.addKeyUpHandler(key, keyUpHandler);
   }
 
-  private addKeyDownHandler(key: KeysEnum, keyHandler: KeyHandler) {
+  private addKeyDownHandler(key: Key, keyHandler: KeyHandler) {
     (this.keyDownHandlers[key] = this.keyDownHandlers[key] ?? []).push(keyHandler);
   }
 
-  private addKeyUpHandler(key: KeysEnum, keyHandler: KeyHandler) {
+  private addKeyUpHandler(key: Key, keyHandler: KeyHandler) {
     (this.keyUpHandlers[key] = this.keyUpHandlers[key] ?? []).push(keyHandler);
   }
 
-  public onKeyDown(key: KeysEnum) {
+  public onKeyDown(key: Key) {
     this.keyDownHandlers[key]?.forEach((h) => h());
   }
 
-  public onKeyUp(key: KeysEnum) {
+  public onKeyUp(key: Key) {
     this.keyUpHandlers[key]?.forEach((h) => h());
   }
 }
 
-export type { KeyHandler };
-export { InputManager };
+export type { KeyHandler, Key };
+export { InputManager, keys };

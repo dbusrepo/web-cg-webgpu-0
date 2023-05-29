@@ -6,7 +6,10 @@ import * as initImages from './wasmMemInitImages';
 import * as initStrings from './wasmMemInitStrings';
 import * as initFontChars from './wasmMemInitFontChars';
 import { AssetManager } from '../assets/assetManager';
-import { InputManager } from '../input/inputManager';
+import type { Key } from '../input/inputManager';
+import { InputManager, keys } from '../input/inputManager';
+import type { PanelId } from '../../app/appTypes';
+import { AppPanelsIdEnum } from '../../app/appTypes';
 import { BPP_RGBA } from '../assets/images/bitImageRGBA';
 import type { WasmRunParams } from './wasmRun';
 import { WasmRun } from './wasmRun';
@@ -15,7 +18,7 @@ import { stringsArrayData } from '../../assets/build/strings';
 import { EngineWorkerCommandsEnum } from '../engineWorker';
 import { AuxWorker } from '../auxWorker';
 import * as utils from './../utils';
-import { KeysEnum } from '../input/keys';
+
 import {
   // BPP_PAL,
   // PAL_ENTRY_SIZE,
@@ -25,7 +28,7 @@ import {
 import { mainConfig } from '../../config/mainConfig';
 
 type WasmEngineParams = {
-  canvas: OffscreenCanvas;
+  surfaces: Record<PanelId, OffscreenCanvas>;
   assetManager: AssetManager;
   inputManager: InputManager;
   mainWorkerIdx: number;
@@ -47,35 +50,31 @@ class WasmEngine {
 
   public async init(params: WasmEngineParams) {
     this.params = params;
-    this.initGfx();
+    this.initGraphics();
     await this.initWasm();
     this.initInputHandlers();
   }
 
-  private initGfx() {
+  private initGraphics() {
+    const canvas = this.params.surfaces[AppPanelsIdEnum.ENGINE];
     this.ctx = <OffscreenCanvasRenderingContext2D>(
-      this.params.canvas.getContext('2d', {
+      canvas.getContext('2d', {
         alpha: false,
-        desynchronized: true, // TODO:
+        desynchronized: false, // TODO:
       })
     );
     this.ctx.imageSmoothingEnabled = false; // no blur, keep the pixels sharpness
     // this.ctx.imageSmoothingQuality = "low"; // for this, imageSmoothingEnabled must be true
-    const { canvas } = this.ctx;
     this.imageData = this.ctx.createImageData(canvas.width, canvas.height);
   }
 
   private initInputHandlers() {
-    let key2idx: Partial<Record<KeysEnum, number>> = {};
-    Object.values(KeysEnum).forEach((key: KeysEnum, idx) => {
-      key2idx[key] = idx;
-    });
     const { inputKeys } = this.wasmRun.WasmViews;
     const keyHandler = (keyOffset: number, state: number) => () => {
       inputKeys[keyOffset] = state;
     };
-    Object.values(KeysEnum).forEach((key: KeysEnum) => {
-      const keyOffset = key2idx[key]!;
+    Object.values(keys).forEach((key: Key, index: number) => {
+      const keyOffset = index;
       const keyDownHandler = keyHandler(keyOffset, 1);
       const keyUpHandler = keyHandler(keyOffset, 0);
       this.params.inputManager.addKeyHandlers(key, keyDownHandler, keyUpHandler);
@@ -136,7 +135,7 @@ class WasmEngine {
       imagesSize: this.params.assetManager.ImagesTotalSize,
       // TODO use 64bit/8 byte counter for mem counters? see wasm workerHeapManager
       workersMemCountersSize: numWorkers * Uint32Array.BYTES_PER_ELEMENT,
-      inputKeysSize: Object.keys(KeysEnum).length * Uint8Array.BYTES_PER_ELEMENT,
+      inputKeysSize: Object.values(keys).length * Uint8Array.BYTES_PER_ELEMENT,
       hrTimerSize: BigUint64Array.BYTES_PER_ELEMENT,
     };
 
