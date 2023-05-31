@@ -279,7 +279,7 @@ Date.now() - initStart
       ++frameCnt;
       statsTimeAcc += timeSinceLastFrame;
       if (statsTimeAcc >= Engine.STATS_PERIOD_MS) {
-        statsTimeAcc = 0;
+        statsTimeAcc = statsTimeAcc % Engine.STATS_PERIOD_MS;
         // const tspent = (tnow - start_time) / App.MILLI_IN_SEC;
         const now = performance.now();
         const elapsed = now - lastStatsTime;
@@ -289,21 +289,20 @@ Date.now() - initStart
         const fps = frameCnt * oneOverElapsed;
         const rps = renderCnt * oneOverElapsed;
         const ups = updateCnt * oneOverElapsed;
-        // console.log(`${fps} - ${rps} - ${ups}`);
-        const st_idx = statsCnt++ % fpsArr.length;
-        fpsArr[st_idx] = fps;
-        rpsArr[st_idx] = rps;
-        upsArr[st_idx] = ups;
+        const stat_idx = statsCnt++ % fpsArr.length;
+        fpsArr[stat_idx] = fps;
+        rpsArr[stat_idx] = rps;
+        upsArr[stat_idx] = ups;
         const avgFps = utils.arrAvg(fpsArr, statsCnt);
         const avgRps = utils.arrAvg(rpsArr, statsCnt);
         const avgUps = utils.arrAvg(upsArr, statsCnt);
         const avgFrameTime = utils.arrAvg(frameTimeArr, renderCnt);
-        let avgUFps = avgFrameTime === 0 ? 0 : MILLI_IN_SEC / avgFrameTime;
+        const avgUfps = MILLI_IN_SEC / avgFrameTime;
         const stats: StatsValues = {
           [StatsNameEnum.FPS]: avgFps,
           [StatsNameEnum.RPS]: avgRps,
           [StatsNameEnum.UPS]: avgUps,
-          [StatsNameEnum.UFPS]: avgUFps,
+          [StatsNameEnum.UFPS]: avgUfps,
         };
         postMessage({
           command: AppCommandsEnum.UPDATE_STATS,

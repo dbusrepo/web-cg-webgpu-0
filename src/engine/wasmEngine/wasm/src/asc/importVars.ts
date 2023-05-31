@@ -9,16 +9,20 @@ export declare const workerHeapSize: usize;
 
 export declare const heapPtr: usize;
 
-export declare const frameBufferPtr: usize;
-export declare const frameWidth: i32;
-export declare const frameHeight: i32;
+export declare const rgbaSurface0ptr: usize;
+export declare const rgbaSurface0width: u32;
+export declare const rgbaSurface0height: u32;
+
+export declare const rgbaSurface1ptr: usize;
+export declare const rgbaSurface1width: u32;
+export declare const rgbaSurface1height: u32;
 
 export declare const syncArrayPtr: usize;
 export declare const sleepArrayPtr: usize;
 
 export declare const bgColor: u32;
 
-export declare const usePalette: i32;
+// export declare const usePalette: i32;
 
 export declare const imagesIndexPtr: usize;
 export declare const imagesIndexSize: usize;

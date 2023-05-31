@@ -38,7 +38,8 @@ type WasmEngineParams = {
 
 class WasmEngine {
   private params: WasmEngineParams;
-  private ctx: OffscreenCanvasRenderingContext2D;
+  private gfxContexts: Record<PanelId, OffscreenCanvasRenderingContext2D>;
+  private imageData: Record<PanelId, ImageData>;
   private wasmMem: WebAssembly.Memory;
   private wasmMemParams: WasmMemParams;
   private wasmRegionsSizes: WasmMemRegionsData;
@@ -46,7 +47,6 @@ class WasmEngine {
   private wasmRunParams: WasmRunParams;
   private wasmRun: WasmRun;
   private wasmModules: WasmModules;
-  private imageData: ImageData;
 
   public async init(params: WasmEngineParams) {
     this.params = params;
@@ -55,17 +55,28 @@ class WasmEngine {
     this.initInputHandlers();
   }
 
-  private initGraphics() {
-    const canvas = this.params.surfaces[AppPanelsIdEnum.ENGINE];
-    this.ctx = <OffscreenCanvasRenderingContext2D>(
+  private get2dCtxFromCanvas(canvas: OffscreenCanvas) {
+    const ctx = <OffscreenCanvasRenderingContext2D>(
       canvas.getContext('2d', {
         alpha: false,
-        desynchronized: false, // TODO:
+        desynchronized: true,
       })
     );
-    this.ctx.imageSmoothingEnabled = false; // no blur, keep the pixels sharpness
-    // this.ctx.imageSmoothingQuality = "low"; // for this, imageSmoothingEnabled must be true
-    this.imageData = this.ctx.createImageData(canvas.width, canvas.height);
+    ctx.imageSmoothingEnabled = false; // no blur, keep the pixels sharpness
+    return ctx;
+  }
+
+  private initGraphics() {
+    this.gfxContexts = {} as any;
+    this.imageData = {} as any;
+    Object.entries(this.params.surfaces).forEach(([key, offscreenCanvas]) => {
+      const panelId = key as PanelId;
+      const ctx = this.get2dCtxFromCanvas(offscreenCanvas);
+      this.gfxContexts[panelId] = ctx;
+      this.imageData[panelId] = this.gfxContexts[panelId].createImageData(
+        offscreenCanvas.width,
+        offscreenCanvas.height);
+    });
   }
 
   private initInputHandlers() {
@@ -94,8 +105,7 @@ class WasmEngine {
 
   private allocWasmMem(): void {
     const startSize = this.wasmRegionsSizes[WasmUtils.MemRegionsEnum.START_MEM];
-    const startOffset =
-      this.wasmRegionsOffsets[WasmUtils.MemRegionsEnum.START_MEM];
+    const startOffset = this.wasmRegionsOffsets[WasmUtils.MemRegionsEnum.START_MEM];
     const wasmMemStartTotalSize = startOffset + startSize;
     const { wasmMemStartPages: initial, wasmMemMaxPages: maximum } = mainConfig;
     assert(initial * PAGE_SIZE_BYTES >= wasmMemStartTotalSize);
@@ -110,20 +120,23 @@ class WasmEngine {
         wasmMemStartTotalSize / PAGE_SIZE_BYTES,
       )}`,
     );
-    console.log(`wasm mem start pages: ${initial}`);
+    console.log(`wasm mem config start pages: ${initial}`);
   }
 
   private initWasmMemConfig(): void {
-    const numPixels = this.imageData.width * this.imageData.height;
+
+    const { width: surface0width, height: surface0height } = this.imageData[AppPanelsIdEnum.ENGINE];
+    const { width: surface1width, height: surface1height } = this.imageData[AppPanelsIdEnum.VIEW];
+
     const numWorkers = this.params.auxWorkers.length + 1;
 
     // set wasm mem regions sizes
     const wasmMemParams: WasmMemParams = {
+      // frameBufferPalSize: 0, // this._cfg.usePalette ? numPixels : 0,
+      // paletteSize: 0, // this._cfg.usePalette ? PALETTE_SIZE * PAL_ENTRY_SIZE : 0,
       startOffset: mainConfig.wasmMemStartOffset,
-      frameBufferRGBASize: numPixels * BPP_RGBA, // TODO:
-      frameBufferPalSize: 0, // this._cfg.usePalette ? numPixels : 0,
-      // eslint-disable-next-line max-len
-      paletteSize: 0, // this._cfg.usePalette ? PALETTE_SIZE * PAL_ENTRY_SIZE : 0,
+      rgbaSurface0size: surface0width * surface0height * BPP_RGBA,
+      rgbaSurface1size: surface1width * surface1height * BPP_RGBA,
       syncArraySize: numWorkers * Int32Array.BYTES_PER_ELEMENT,
       sleepArraySize: numWorkers * Int32Array.BYTES_PER_ELEMENT,
       numWorkers,
@@ -181,19 +194,24 @@ class WasmEngine {
   }
 
   private async initWasmRun() {
+
+    const { width: surface0width, height: surface0height } = this.imageData[AppPanelsIdEnum.ENGINE];
+    const { width: surface1width, height: surface1height } = this.imageData[AppPanelsIdEnum.VIEW];
+
     this.wasmRun = new WasmRun();
-    this.wasmRunParams ={
+    this.wasmRunParams = {
       wasmMem: this.wasmMem,
       wasmMemRegionsSizes: this.wasmRegionsSizes,
       wasmMemRegionsOffsets: this.wasmRegionsOffsets,
       wasmWorkerHeapSize: mainConfig.wasmWorkerHeapPages * PAGE_SIZE_BYTES,
-      numImages: this.params.assetManager.Images.length,
       mainWorkerIdx: this.params.mainWorkerIdx,
       workerIdx: this.params.mainWorkerIdx, // main worker here
       numWorkers: this.params.auxWorkers.length + 1,
-      frameWidth: this.imageData.width,
-      frameHeight: this.imageData.height,
+      numImages: this.params.assetManager.Images.length,
+      surface0sizes: [surface0width, surface0height],
+      surface1sizes: [surface1width, surface1height],
     };
+
     await this.wasmRun.init(this.wasmRunParams);
     this.wasmModules = this.wasmRun.WasmModules;
   }
@@ -257,8 +275,9 @@ class WasmEngine {
   }
 
   public drawFrame() {
-    this.imageData.data.set(this.wasmRun.WasmViews.frameBufferRGBA);
-    this.ctx.putImageData(this.imageData, 0, 0);
+    // TODO:
+    // this.imageData.data.set(this.wasmRun.WasmViews.frameBufferRGBA);
+    // this.ctx.putImageData(this.imageData, 0, 0);
   }
 
   public get WasmRun(): WasmRun {
@@ -285,9 +304,9 @@ class WasmEngine {
     return this.wasmModules;
   }
   
-  public get ImageData(): ImageData {
-    return this.imageData;
-  }
+  // public get ImageData(): ImageData {
+  //   // TODO:
+  // }
 }
 
 export type { WasmEngineParams };

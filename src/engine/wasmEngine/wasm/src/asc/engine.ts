@@ -16,9 +16,9 @@ import {
   workerIdx,
   logi,
   logf,
-  frameWidth,
-  frameHeight,
-  frameBufferPtr,
+  rgbaSurface0ptr,
+  rgbaSurface0width,
+  rgbaSurface0height,
   syncArrayPtr,
   sleepArrayPtr,
   hrTimerPtr,
@@ -34,7 +34,6 @@ import { PTR_T, SIZE_T } from './memUtils';
 // import { MYIMG, IMG1 } from './_genImportImages';
 
 import {
-  usePalette,
   imagesIndexPtr,
   imagesIndexSize,
   imagesDataSize,
@@ -77,7 +76,7 @@ function init(): void {
 
 function render(): void {
 
-  const r = utils.range(workerIdx, numWorkers, frameHeight);
+  const r = utils.range(workerIdx, numWorkers, rgbaSurface0height);
   const s = <u32>(r >> 32);
   const e = <u32>r;
 
