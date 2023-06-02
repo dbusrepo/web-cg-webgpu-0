@@ -5,6 +5,12 @@ enum AppCommandsEnum {
   REGISTER_KEY_HANDLER = 'register_handler',
 }
 
+enum PanelIdEnum {
+  ENGINE = 0,
+}
+
+type PanelId = `${PanelIdEnum}`;
+
 enum KeyEventsEnum {
   KEY_DOWN = 'keydown',
   KEY_UP = 'keyup',
@@ -12,10 +18,5 @@ enum KeyEventsEnum {
 
 type KeyEvent = `${KeyEventsEnum}`;
 
-type InputEvent = {
-  code: string;
-  panelId: string;
-}
-
-export type { KeyEvent, InputEvent };
-export { AppCommandsEnum, KeyEventsEnum };
+export type { KeyEvent, PanelId };
+export { AppCommandsEnum, PanelIdEnum, KeyEventsEnum };

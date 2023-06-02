@@ -13,8 +13,8 @@ import { EngineCommandsEnum } from '../engine/engine';
 import { Panel } from '../panels/panel';
 import { EnginePanel } from '../panels/enginePanel';
 // import { ViewPanel } from '../panels/viewPanel';
-import type { KeyEvent } from './appTypes';
-import { AppCommandsEnum, KeyEventsEnum } from './appTypes';
+import type { KeyEvent, PanelId } from './appTypes';
+import { AppCommandsEnum, PanelIdEnum, KeyEventsEnum } from './appTypes';
 
 class App {
   private stats: Stats;
@@ -182,7 +182,7 @@ class App {
       // startViewMode: StartViewMode.FULL_WIN,
       startViewMode: StartViewMode.WIN,
       title: 'Engine view',
-      id: 0,
+      id: PanelIdEnum.ENGINE,
       focusOnStart: true,
       eventLogConfig: {
         ...enginePanelConfig.eventLogConfig,

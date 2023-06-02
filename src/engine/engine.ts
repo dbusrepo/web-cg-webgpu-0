@@ -9,9 +9,10 @@ import { mainConfig } from '../config/mainConfig';
 import type { StatsValues } from '../ui/stats/stats';
 import { StatsNameEnum } from '../ui/stats/stats';
 import { AssetManager } from './assets/assetManager';
-import type { InputEvent } from '../app/appTypes';
-import { AppCommandsEnum } from '../app/appTypes';
-import { InputManager } from './input/inputManager';
+import type { InputEvent } from './events';
+import { AppCommandsEnum, PanelIdEnum, KeyEventsEnum } from '../app/appTypes';
+import type { KeyHandler, Key } from './input/inputManager';
+import { InputManager, keys } from './input/inputManager';
 import type { EngineWorkerParams } from './engineWorker';
 import { EngineWorkerCommandsEnum } from './engineWorker';
 import type { WasmEngineParams } from './wasmEngine/wasmEngine';
@@ -70,9 +71,9 @@ class Engine {
 
   private initInputManager() {
     this.inputManager = new InputManager();
-    // this.inputManager.addKeyHandlers(Keys.KEY_A, () => { console.log('A down') }, () => { console.log('A up') });
-    // this.inputManager.addKeyHandlers(Keys.KEY_S, () => { console.log('S down') }, () => { console.log('S up') });
-    // this.inputManager.addKeyHandlers(Keys.KEY_D, () => { console.log('D down') }, () => { console.log('D up') });
+    // this.inputManager.addKeyHandlers(keys.KEY_A, () => { console.log('A down') }, () => { console.log('A up') });
+    // this.inputManager.addKeyHandlers(keys.KEY_S, () => { console.log('S down') }, () => { console.log('S up') });
+    // this.inputManager.addKeyHandlers(keys.KEY_D, () => { console.log('D down') }, () => { console.log('D up') });
   }
 
   private async initAssetManager() {
@@ -335,11 +336,11 @@ Date.now() - initStart
   }
 
   public onKeyDown(inputEvent: InputEvent) {
-    // this.inputManager.onKeyDown(key);
+    this.inputManager.onKeyDown(inputEvent.code);
   }
 
   public onKeyUp(inputEvent: InputEvent) {
-    // this.inputManager.onKeyUp(key);
+    this.inputManager.onKeyUp(inputEvent.code);
   }
 }
 

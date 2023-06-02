@@ -1,10 +1,5 @@
-import type { EnginePanelInputKey } from '../../panels/enginePanelTypes';
-import { EnginePanelInputKeysEnum } from '../../panels/enginePanelTypes';
-import type { ViewPanelInputKey } from '../../panels/viewPanelTypes';
-import { ViewPanelInputKeysEnum } from '../../panels/viewPanelTypes';
-
-type Key = EnginePanelInputKey | ViewPanelInputKey;
-const keys = { ...EnginePanelInputKeysEnum, ...ViewPanelInputKeysEnum };
+import type { Key } from '../keys';
+import { keys } from '../keys';
 
 type KeyHandler = () => void;
 
