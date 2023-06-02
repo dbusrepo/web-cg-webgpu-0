@@ -1,5 +1,5 @@
-import type { Key } from '../keys';
-import { keys } from '../keys';
+import type { Key } from '../app/keys';
+import { keys } from '../app/keys';
 
 type KeyHandler = () => void;
 

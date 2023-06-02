@@ -6,31 +6,31 @@ import * as initImages from './wasmMemInitImages';
 import * as initStrings from './wasmMemInitStrings';
 import * as initFontChars from './wasmMemInitFontChars';
 import { AssetManager } from '../assets/assetManager';
-import type { Key } from '../input/inputManager';
-import { InputManager, keys } from '../input/inputManager';
+import type { Key } from '../../input/inputManager';
+import { InputManager, keys } from '../../input/inputManager';
 import { BPP_RGBA } from '../assets/images/bitImageRGBA';
 import type { WasmRunParams } from './wasmRun';
 import { WasmRun } from './wasmRun';
 import { FONT_Y_SIZE, fontChars } from '../../../assets/fonts/font';
 import { stringsArrayData } from '../../../assets/build/strings';
-import { EngineWorkerCommandsEnum } from '../engineWorker';
-import { EngineWorker } from '../auxWorker';
+import { EngineWorkerCommandEnum } from '../engineWorker';
+import { EngineWorkerDesc } from '../engineWorker';
 import * as utils from './../utils';
-
+import { mainConfig } from '../../config/mainConfig';
 import {
   // BPP_PAL,
   // PAL_ENTRY_SIZE,
   // PALETTE_SIZE,
   PAGE_SIZE_BYTES,
 } from '../../common';
-import { mainConfig } from '../../config/mainConfig';
+
 
 type WasmEngineParams = {
   enginePanel: OffscreenCanvas;
   assetManager: AssetManager;
   inputManager: InputManager;
   mainWorkerIdx: number;
-  auxWorkers: EngineWorker[];
+  engineWorkers: EngineWorkerDesc[];
   runLoopInWorker: boolean;
 };
 
@@ -119,7 +119,7 @@ class WasmEngine {
 
     const { width: engineImageWidth, height: engineImageHeight } = this.engineImageData
 
-    const numWorkers = this.params.auxWorkers.length + 1;
+    const numWorkers = this.params.engineWorkers.length + 1;
 
     // set wasm mem regions sizes
     const wasmMemParams: WasmMemParams = {
@@ -196,7 +196,7 @@ class WasmEngine {
       wasmWorkerHeapSize: mainConfig.wasmWorkerHeapPages * PAGE_SIZE_BYTES,
       mainWorkerIdx: this.params.mainWorkerIdx,
       workerIdx: this.params.mainWorkerIdx, // main worker here
-      numWorkers: this.params.auxWorkers.length + 1,
+      numWorkers: this.params.engineWorkers.length + 1,
       numImages: this.params.assetManager.Images.length,
       surface0sizes: [engineImageWidth, engineImageHeight],
       surface1sizes: [0, 0], // not used
@@ -208,9 +208,9 @@ class WasmEngine {
 
   private async initAuxWorkers() {
     try {
-      await Promise.all(this.params.auxWorkers.map((auxWorker) => {
+      await Promise.all(this.params.engineWorkers.map((auxWorker) => {
         auxWorker.worker.postMessage({
-          command: EngineWorkerCommandsEnum.INIT_WASM,
+          command: EngineWorkerCommandEnum.INIT_WASM,
           params: {
             ...this.wasmRunParams,
             workerIdx: auxWorker.index,
@@ -231,9 +231,9 @@ class WasmEngine {
 
   private runWorkersWasmLoop() {
     assert(this.params.runLoopInWorker);
-    this.params.auxWorkers.forEach(({ worker }) => {
+    this.params.engineWorkers.forEach(({ worker }) => {
       worker.postMessage({
-        command: EngineWorkerCommandsEnum.RUN_WASM,
+        command: EngineWorkerCommandEnum.RUN_WASM,
       });
     });
   }
@@ -252,14 +252,14 @@ class WasmEngine {
   }
 
   public syncWorkers() {
-    for (let i = 1; i <= this.params.auxWorkers.length; ++i) {
+    for (let i = 1; i <= this.params.engineWorkers.length; ++i) {
       utils.syncStore(this.wasmRun.WasmViews.syncArr, i, 1);
       utils.syncNotify(this.wasmRun.WasmViews.syncArr, i);
     }
   }
 
   public waitWorkers() {
-    for (let i = 1; i <= this.params.auxWorkers.length; ++i) {
+    for (let i = 1; i <= this.params.engineWorkers.length; ++i) {
       utils.syncWait(this.wasmRun.WasmViews.syncArr, i, 1);
     }
   }

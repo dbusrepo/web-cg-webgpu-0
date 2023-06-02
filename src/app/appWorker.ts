@@ -9,15 +9,14 @@ import { mainConfig } from '../config/mainConfig';
 import type { StatsValues } from '../ui/stats/stats';
 import { StatsNameEnum } from '../ui/stats/stats';
 import { AssetManager } from '../engine/assets/assetManager';
-import type { InputEvent } from '../engine/events'; // TODO: move
+import type { InputEvent } from './events';
 import { AppCommandEnum, PanelIdEnum, KeyEventsEnum } from '../app/appTypes';
-import type { KeyHandler, Key } from '../engine/input/inputManager';
-import { InputManager, keys } from '../engine/input/inputManager';
+import type { KeyHandler, Key } from '../input/inputManager';
+import { InputManager, keys } from '../input/inputManager';
 import type { EngineWorkerParams } from '../engine/engineWorker';
-import { EngineWorkerCommandsEnum } from '../engine/engineWorker';
+import { EngineWorkerCommandEnum, EngineWorkerDesc } from '../engine/engineWorker';
 import type { WasmEngineParams } from '../engine/wasmEngine/wasmEngine';
 import { WasmEngine } from '../engine/wasmEngine/wasmEngine';
-import { EngineWorker } from '../engine/auxWorker';
 import * as utils from '../engine/utils';
 
 type AppWorkerParams = {
@@ -43,7 +42,7 @@ class AppWorker {
   private assetManager: AssetManager;
   private inputManager: InputManager;
 
-  private engineWorkers: EngineWorker[];
+  private engineWorkers: EngineWorkerDesc[];
   private syncArray: Int32Array;
   private sleepArray: Int32Array;
 
@@ -81,8 +80,8 @@ class AppWorker {
     await this.assetManager.init();
   }
 
-  private async initEngineWorkers(numAuxWorkers: number) {
-    assert(numAuxWorkers > 0);
+  private async initEngineWorkers(numEngineWorkers: number) {
+    assert(numEngineWorkers > 0);
     const initStart = Date.now();
     try {
       let nextWorkerIdx = 0;
@@ -92,11 +91,11 @@ class AppWorker {
         }
         return nextWorkerIdx++;
       };
-      let remWorkers = numAuxWorkers;
+      let remWorkers = numEngineWorkers;
       await new Promise<void>((resolve, reject) => {
-        for (let i = 0; i < numAuxWorkers; ++i) {
+        for (let i = 0; i < numEngineWorkers; ++i) {
           const workerIndex = getWorkerIdx();
-          const auxWorker = {
+          const engineWorker = {
             index: workerIndex,
             worker: new Worker(
               new URL('../engine/engineWorker.ts', import.meta.url),
@@ -106,18 +105,18 @@ class AppWorker {
               },
             )
           };
-          this.engineWorkers.push(auxWorker);
+          this.engineWorkers.push(engineWorker);
           const workerParams: EngineWorkerParams = {
             workerIndex,
-            numWorkers: numAuxWorkers,
+            numWorkers: numEngineWorkers,
             syncArray: this.syncArray,
             sleepArray: this.sleepArray,
           };
-          auxWorker.worker.postMessage({
-            command: EngineWorkerCommandsEnum.INIT,
+          engineWorker.worker.postMessage({
+            command: EngineWorkerCommandEnum.INIT,
             params: workerParams,
           });
-          auxWorker.worker.onmessage = ({ data }) => {
+          engineWorker.worker.onmessage = ({ data }) => {
             --remWorkers;
             console.log(
               `Worker id=${workerIndex} init, left count=${remWorkers}, time=${
@@ -131,7 +130,7 @@ Date.now() - initStart
               resolve();
             }
           };
-          auxWorker.worker.onerror = (error) => {
+          engineWorker.worker.onerror = (error) => {
             console.log(`Worker id=${workerIndex} error: ${error.message}\n`);
             reject(error);
           };
@@ -149,7 +148,7 @@ Date.now() - initStart
       enginePanel: this.params.engineCanvas,
       assetManager: this.assetManager,
       inputManager: this.inputManager,
-      auxWorkers: this.engineWorkers,
+      engineWorkers: this.engineWorkers,
       runLoopInWorker: true,
     };
     await this.wasmEngine.init(wasmEngineParams);
