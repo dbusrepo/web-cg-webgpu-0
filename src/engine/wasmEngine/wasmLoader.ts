@@ -19,9 +19,10 @@ type WasmImports = {
   rgbaSurface0ptr: number;
   rgbaSurface0width: number;
   rgbaSurface0height: number;
-  rgbaSurface1ptr: number;
-  rgbaSurface1width: number;
-  rgbaSurface1height: number;
+
+  // rgbaSurface1ptr: number;
+  // rgbaSurface1width: number;
+  // rgbaSurface1height: number;
 
   syncArrayPtr: number;
   sleepArrayPtr: number;

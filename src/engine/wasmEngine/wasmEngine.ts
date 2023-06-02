@@ -8,8 +8,6 @@ import * as initFontChars from './wasmMemInitFontChars';
 import { AssetManager } from '../assets/assetManager';
 import type { Key } from '../input/inputManager';
 import { InputManager, keys } from '../input/inputManager';
-import type { PanelId } from '../../app/appTypes';
-import { AppPanelsIdEnum } from '../../app/appTypes';
 import { BPP_RGBA } from '../assets/images/bitImageRGBA';
 import type { WasmRunParams } from './wasmRun';
 import { WasmRun } from './wasmRun';
@@ -28,7 +26,7 @@ import {
 import { mainConfig } from '../../config/mainConfig';
 
 type WasmEngineParams = {
-  surfaces: Record<PanelId, OffscreenCanvas>;
+  enginePanel: OffscreenCanvas;
   assetManager: AssetManager;
   inputManager: InputManager;
   mainWorkerIdx: number;
@@ -38,8 +36,8 @@ type WasmEngineParams = {
 
 class WasmEngine {
   private params: WasmEngineParams;
-  private gfxContexts: Record<PanelId, OffscreenCanvasRenderingContext2D>;
-  private imageData: Record<PanelId, ImageData>;
+  private ctx2d: OffscreenCanvasRenderingContext2D;
+  private engineImageData: ImageData;
   private wasmMem: WebAssembly.Memory;
   private wasmMemParams: WasmMemParams;
   private wasmRegionsSizes: WasmMemRegionsData;
@@ -50,7 +48,7 @@ class WasmEngine {
 
   public async init(params: WasmEngineParams) {
     this.params = params;
-    this.initGraphics();
+    this.initGfx();
     await this.initWasm();
     this.initInputHandlers();
   }
@@ -66,17 +64,11 @@ class WasmEngine {
     return ctx;
   }
 
-  private initGraphics() {
-    this.gfxContexts = {} as any;
-    this.imageData = {} as any;
-    Object.entries(this.params.surfaces).forEach(([key, offscreenCanvas]) => {
-      const panelId = key as PanelId;
-      const ctx = this.get2dCtxFromCanvas(offscreenCanvas);
-      this.gfxContexts[panelId] = ctx;
-      this.imageData[panelId] = this.gfxContexts[panelId].createImageData(
-        offscreenCanvas.width,
-        offscreenCanvas.height);
-    });
+  private initGfx() {
+    this.ctx2d = this.get2dCtxFromCanvas(this.params.enginePanel);
+    this.engineImageData = this.ctx2d.createImageData(
+      this.params.enginePanel.width,
+      this.params.enginePanel.height);
   }
 
   private initInputHandlers() {
@@ -125,8 +117,7 @@ class WasmEngine {
 
   private initWasmMemConfig(): void {
 
-    const { width: surface0width, height: surface0height } = this.imageData[AppPanelsIdEnum.ENGINE];
-    const { width: surface1width, height: surface1height } = this.imageData[AppPanelsIdEnum.VIEW];
+    const { width: engineImageWidth, height: engineImageHeight } = this.engineImageData
 
     const numWorkers = this.params.auxWorkers.length + 1;
 
@@ -135,8 +126,8 @@ class WasmEngine {
       // frameBufferPalSize: 0, // this._cfg.usePalette ? numPixels : 0,
       // paletteSize: 0, // this._cfg.usePalette ? PALETTE_SIZE * PAL_ENTRY_SIZE : 0,
       startOffset: mainConfig.wasmMemStartOffset,
-      rgbaSurface0size: surface0width * surface0height * BPP_RGBA,
-      rgbaSurface1size: surface1width * surface1height * BPP_RGBA,
+      rgbaSurface0size: engineImageWidth * engineImageHeight * BPP_RGBA,
+      rgbaSurface1size: 0,
       syncArraySize: numWorkers * Int32Array.BYTES_PER_ELEMENT,
       sleepArraySize: numWorkers * Int32Array.BYTES_PER_ELEMENT,
       numWorkers,
@@ -195,8 +186,7 @@ class WasmEngine {
 
   private async initWasmRun() {
 
-    const { width: surface0width, height: surface0height } = this.imageData[AppPanelsIdEnum.ENGINE];
-    const { width: surface1width, height: surface1height } = this.imageData[AppPanelsIdEnum.VIEW];
+    const { width: engineImageWidth, height: engineImageHeight } = this.engineImageData
 
     this.wasmRun = new WasmRun();
     this.wasmRunParams = {
@@ -208,8 +198,8 @@ class WasmEngine {
       workerIdx: this.params.mainWorkerIdx, // main worker here
       numWorkers: this.params.auxWorkers.length + 1,
       numImages: this.params.assetManager.Images.length,
-      surface0sizes: [surface0width, surface0height],
-      surface1sizes: [surface1width, surface1height],
+      surface0sizes: [engineImageWidth, engineImageHeight],
+      surface1sizes: [0, 0], // not used
     };
 
     await this.wasmRun.init(this.wasmRunParams);
@@ -275,9 +265,8 @@ class WasmEngine {
   }
 
   public drawFrame() {
-    // TODO:
-    // this.imageData.data.set(this.wasmRun.WasmViews.frameBufferRGBA);
-    // this.ctx.putImageData(this.imageData, 0, 0);
+    this.engineImageData.data.set(this.wasmRun.WasmViews.rgbaSurface0);
+    this.ctx2d.putImageData(this.engineImageData, 0, 0);
   }
 
   public get WasmRun(): WasmRun {

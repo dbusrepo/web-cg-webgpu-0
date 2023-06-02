@@ -32,7 +32,7 @@ const panelConfig = {
 };
 
 type PanelConfig = typeof panelConfig & {
-  id: string;
+  id: number;
 };
 
 export { StartViewMode, PanelConfig, panelConfig };

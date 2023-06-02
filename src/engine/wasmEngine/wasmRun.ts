@@ -91,9 +91,9 @@ class WasmRun {
       rgbaSurface0width: surface0sizes[0],
       rgbaSurface0height: surface0sizes[1],
 
-      rgbaSurface1ptr: memOffsets[WasmUtils.MemRegionsEnum.RGBA_SURFACE_1],
-      rgbaSurface1width: surface1sizes[0],
-      rgbaSurface1height: surface1sizes[1],
+      // rgbaSurface1ptr: memOffsets[WasmUtils.MemRegionsEnum.RGBA_SURFACE_1],
+      // rgbaSurface1width: surface1sizes[0],
+      // rgbaSurface1height: surface1sizes[1],
 
       syncArrayPtr: memOffsets[WasmUtils.MemRegionsEnum.SYNC_ARRAY],
       sleepArrayPtr: memOffsets[WasmUtils.MemRegionsEnum.SLEEP_ARRAY],

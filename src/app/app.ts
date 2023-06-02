@@ -12,30 +12,28 @@ import { StatsPanel } from '../ui/stats/statsPanel';
 import { EngineCommandsEnum } from '../engine/engine';
 import { Panel } from '../panels/panel';
 import { EnginePanel } from '../panels/enginePanel';
-import { ViewPanel } from '../panels/viewPanel';
-import type { KeyEvent, PanelId } from './appTypes';
-import { AppCommandsEnum, AppPanelsIdEnum, KeyEventsEnum } from './appTypes';
+// import { ViewPanel } from '../panels/viewPanel';
+import type { KeyEvent } from './appTypes';
+import { AppCommandsEnum, KeyEventsEnum } from './appTypes';
 
 class App {
   private stats: Stats;
-  private panels: Record<AppPanelsIdEnum, Panel>;
+  private enginePanel: EnginePanel;
   private engineWorker: Worker;
 
   async init() {
     this.stats = this.initStatsPanel();
     this.initPanels();
     this.initKeyListeners();
-    Object.values(this.panels).forEach((panel) => panel.showInit());
+    this.enginePanel.showInit();
     await this.initEngineWorker();
   }
 
   private initKeyListeners() {
-    (Object.keys(this.panels) as PanelId[]).forEach((panelId) => this.addKeyListener(panelId));
+    this.addKeyListener(this.enginePanel);
   }
 
-  private addKeyListener(panelId: PanelId) {
-
-    const panel = this.panels[panelId];
+  private addKeyListener(panel: Panel) {
 
     const keyEvent2EngineCmd = {
       [KeyEventsEnum.KEY_DOWN]: EngineCommandsEnum.KEY_DOWN,
@@ -51,7 +49,7 @@ class App {
           command: keyEvent2EngineCmd[keyEvent],
           params: { 
             code: event.code,
-            panelId,
+            panelId: panel.Id,
           }
         });
       })
@@ -64,19 +62,13 @@ class App {
 
     const getOffscreenCanvas = (panel: Panel) => panel.Canvas.transferControlToOffscreen();
 
-    const surfaces = (Object.entries(this.panels) as [PanelId, Panel][]).reduce(
-      (acc, [ panelId, panel ]) => {
-      acc[panelId] = getOffscreenCanvas(panel);
-      return acc;
-    }, {} as Record<PanelId, OffscreenCanvas>);
-
     const params: EngineParams = {
-      surfaces,
+      engineCanvas: getOffscreenCanvas(this.enginePanel),
     };
 
     return {
       params,
-      transferables: Object.values(surfaces),
+      transferables: [params.engineCanvas],
     };
   }
 
@@ -99,8 +91,7 @@ class App {
   }
 
   private initEngineWorkerMessageHandlers() {
-    let enginePanel = this.panels[AppPanelsIdEnum.ENGINE] as EnginePanel;
-    let viewPanel = this.panels[AppPanelsIdEnum.VIEW] as ViewPanel;
+    let enginePanel = this.enginePanel;
 
     let resolveInit: (value: void | PromiseLike<void>) => void;
 
@@ -175,17 +166,12 @@ class App {
     row1.classList.add('row', 'row1');
     board.appendChild(row0);
     board.appendChild(row1);
-
-    this.panels = {
-      [AppPanelsIdEnum.ENGINE]: this.buildEnginePanel('3D View', board, row0),
-      [AppPanelsIdEnum.VIEW]: this.buildViewPanel('View', board, row0),
-    };
-
     // board.style.display = 'none';
+
+    this.enginePanel = this.buildEnginePanel(board, row0);
   }
 
   private buildEnginePanel(
-    title: string,
     board: HTMLDivElement,
     parentNode: HTMLDivElement,
   ) {
@@ -194,9 +180,9 @@ class App {
     const panelConfig: EnginePanelConfig = {
       ...enginePanelConfig,
       // startViewMode: StartViewMode.FULL_WIN,
-      // startViewMode: StartViewMode.WIN,
-      title,
-      id: AppPanelsIdEnum.ENGINE,
+      startViewMode: StartViewMode.WIN,
+      title: 'Engine view',
+      id: 0,
       focusOnStart: true,
       eventLogConfig: {
         ...enginePanelConfig.eventLogConfig,
@@ -209,23 +195,22 @@ class App {
     return enginePanel;
   }
 
-  private buildViewPanel(
-    title: string,
-    board: HTMLDivElement,
-    parentNode: HTMLDivElement,
-  ): ViewPanel {
-    const { viewPanelConfig } = mainConfig;
-    const panelConfig: ViewPanelConfig = {
-      ...viewPanelConfig,
-      startViewMode: StartViewMode.WIN,
-      title,
-      id: AppPanelsIdEnum.VIEW,
-      // focusOnStart: true,
-    };
-    const viewPanel = new ViewPanel(board, parentNode);
-    viewPanel.init(panelConfig, this.stats);
-    return viewPanel;
-  }
+  // private buildViewPanel(
+  //   board: HTMLDivElement,
+  //   parentNode: HTMLDivElement,
+  // ): ViewPanel {
+  //   const { viewPanelConfig } = mainConfig;
+  //   const panelConfig: ViewPanelConfig = {
+  //     ...viewPanelConfig,
+  //     startViewMode: StartViewMode.WIN,
+  //     title: 'View',
+  //     id: 1,
+  //     // focusOnStart: true,
+  //   };
+  //   const viewPanel = new ViewPanel(board, parentNode);
+  //   viewPanel.init(panelConfig, this.stats);
+  //   return viewPanel;
+  // }
 }
 
 export { App };

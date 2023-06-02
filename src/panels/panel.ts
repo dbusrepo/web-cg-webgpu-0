@@ -889,7 +889,7 @@ abstract class Panel {
     return this.canvasContainer;
   }
 
-  get Id(): string {
+  get Id() {
     return this.cfg.id;
   }
 }

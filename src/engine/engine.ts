@@ -9,8 +9,8 @@ import { mainConfig } from '../config/mainConfig';
 import type { StatsValues } from '../ui/stats/stats';
 import { StatsNameEnum } from '../ui/stats/stats';
 import { AssetManager } from './assets/assetManager';
-import type { InputEvent, PanelId } from '../app/appTypes';
-import { AppCommandsEnum, AppPanelsIdEnum } from '../app/appTypes';
+import type { InputEvent } from '../app/appTypes';
+import { AppCommandsEnum } from '../app/appTypes';
 import { InputManager } from './input/inputManager';
 import type { EngineWorkerParams } from './engineWorker';
 import { EngineWorkerCommandsEnum } from './engineWorker';
@@ -20,7 +20,7 @@ import { AuxWorker } from './auxWorker';
 import * as utils from './utils';
 
 type EngineParams = {
-  surfaces: Record<PanelId, OffscreenCanvas>;
+  engineCanvas: OffscreenCanvas;
 };
 
 const MAIN_WORKER_IDX = 0;
@@ -145,7 +145,7 @@ Date.now() - initStart
     this.wasmEngine = new WasmEngine();
     const wasmEngineParams: WasmEngineParams = {
       mainWorkerIdx: MAIN_WORKER_IDX,
-      surfaces: this.params.surfaces,
+      enginePanel: this.params.engineCanvas,
       assetManager: this.assetManager,
       inputManager: this.inputManager,
       auxWorkers: this.auxWorkers,
@@ -270,7 +270,7 @@ Date.now() - initStart
         renderTimeAcc %= Engine.RENDER_PERIOD_MS;
         // this.syncWorkers();
         // this.waitWorkers();
-        // this.wasmEngine.render();
+        this.wasmEngine.render();
         saveFrameTime();
       }
     };

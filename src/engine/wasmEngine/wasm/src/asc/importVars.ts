@@ -13,10 +13,6 @@ export declare const rgbaSurface0ptr: usize;
 export declare const rgbaSurface0width: u32;
 export declare const rgbaSurface0height: u32;
 
-export declare const rgbaSurface1ptr: usize;
-export declare const rgbaSurface1width: u32;
-export declare const rgbaSurface1height: u32;
-
 export declare const syncArrayPtr: usize;
 export declare const sleepArrayPtr: usize;
 

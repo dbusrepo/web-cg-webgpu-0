@@ -18,6 +18,9 @@ function clearBg(
   const startOff: usize = rgbaSurface0ptr + start * FRAME_ROW_LEN;
   const endOff: usize = rgbaSurface0ptr + end * FRAME_ROW_LEN;
 
+  // const startOff1: usize = rgbaSurface1ptr + start * FRAME_ROW_LEN;
+  // const endOff1: usize = rgbaSurface1ptr + end * FRAME_ROW_LEN;
+
   // let value = v128.splat<i32>(color);
   // TODO check bounds ?
   // for (let i = startOff; i < endOff; i += 32) {
@@ -27,8 +30,11 @@ function clearBg(
 
   // TODO handle remainder elements here ?
 
+  // let ptr1 = startOff1;
   for (let ptr = startOff; ptr < endOff; ptr += PIX_OFFS) {
     store<u32>(ptr, color);
+    // store<u32>(ptr1, 0xff_00_ff_00);
+    // ptr1 += PIX_OFFS;
   }
 
   // test first and last pixel
