@@ -1,8 +1,8 @@
 // import assert from 'assert';
 import engineWasm from './wasm/build/asc/engine.wasm';
 import engineExport from './wasm/build/asc/engine';
-import { ascImportImages } from '../../assets/build/images';
-import { ascImportStrings } from '../../assets/build/strings';
+import { ascImportImages } from '../../../assets/build/images';
+import { ascImportStrings } from '../../../assets/build/strings';
 
 // TODO
 type wasmBuilderFunc<T> = (

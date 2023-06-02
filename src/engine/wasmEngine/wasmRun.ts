@@ -13,7 +13,7 @@ import {
   FONT_X_SIZE,
   FONT_Y_SIZE,
   FONT_SPACING,
-} from '../../assets/fonts/font';
+} from '../../../assets/fonts/font';
 import { syncStore } from './../utils';
 
 type WasmRunParams = {
