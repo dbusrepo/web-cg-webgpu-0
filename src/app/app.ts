@@ -6,15 +6,15 @@ import {
   mainConfig,
 } from '../config/mainConfig';
 import { statsConfig } from '../ui/stats/statsConfig';
-import type { EngineParams } from '../engine/engine';
+import type { AppWorkerParams } from './appWorker';
+import { AppWorkerCommandEnum } from './appWorker';
 import { Stats, StatsNameEnum, StatsValues } from '../ui/stats/stats';
 import { StatsPanel } from '../ui/stats/statsPanel';
-import { EngineCommandsEnum } from '../engine/engine';
 import { Panel } from '../panels/panel';
 import { EnginePanel } from '../panels/enginePanel';
 // import { ViewPanel } from '../panels/viewPanel';
 import type { KeyEvent, PanelId } from './appTypes';
-import { AppCommandsEnum, PanelIdEnum, KeyEventsEnum } from './appTypes';
+import { AppCommandEnum, PanelIdEnum, KeyEventsEnum } from './appTypes';
 
 class App {
   private stats: Stats;
@@ -36,8 +36,8 @@ class App {
   private addKeyListener(panel: Panel) {
 
     const keyEvent2EngineCmd = {
-      [KeyEventsEnum.KEY_DOWN]: EngineCommandsEnum.KEY_DOWN,
-      [KeyEventsEnum.KEY_UP]: EngineCommandsEnum.KEY_UP,
+      [KeyEventsEnum.KEY_DOWN]: AppWorkerCommandEnum.KEY_DOWN,
+      [KeyEventsEnum.KEY_UP]: AppWorkerCommandEnum.KEY_UP,
     };
 
     const addKeyListener = (keyEvent: KeyEvent) => (
@@ -62,7 +62,7 @@ class App {
 
     const getOffscreenCanvas = (panel: Panel) => panel.Canvas.transferControlToOffscreen();
 
-    const params: EngineParams = {
+    const params: AppWorkerParams = {
       engineCanvas: getOffscreenCanvas(this.enginePanel),
     };
 
@@ -73,7 +73,7 @@ class App {
   }
 
   async initEngineWorker() {
-    this.engineWorker = new Worker(new URL('../engine/engine.ts', import.meta.url));
+    this.engineWorker = new Worker(new URL('./appWorker.ts', import.meta.url));
 
     const initPromise = this.initEngineWorkerMessageHandlers();
 
@@ -81,7 +81,7 @@ class App {
 
     this.engineWorker.postMessage(
       {
-        command: EngineCommandsEnum.INIT,
+        command: AppWorkerCommandEnum.INIT,
         params,
       },
       transferables,
@@ -100,14 +100,14 @@ class App {
     });
 
     const commands = {
-      [AppCommandsEnum.INIT]: () => {
+      [AppCommandEnum.INIT]: () => {
         resolveInit();
       },
-      [AppCommandsEnum.UPDATE_STATS]: (values: StatsValues) => {
+      [AppCommandEnum.UPDATE_STATS]: (values: StatsValues) => {
         enginePanel.Stats.update(values);
         enginePanel.MenuGui.updateFps(values[StatsNameEnum.UFPS]);
       },
-      [AppCommandsEnum.EVENT]: (msg: string) => {
+      [AppCommandEnum.EVENT]: (msg: string) => {
         enginePanel.EventLog?.log('event ' + msg, 'Hello ' + msg);
       },
     };
@@ -128,7 +128,7 @@ class App {
 
   run() {
     this.engineWorker.postMessage({
-      command: EngineCommandsEnum.RUN
+      command: AppWorkerCommandEnum.RUN
     });
   }
 

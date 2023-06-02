@@ -8,30 +8,30 @@ import {
 import { mainConfig } from '../config/mainConfig';
 import type { StatsValues } from '../ui/stats/stats';
 import { StatsNameEnum } from '../ui/stats/stats';
-import { AssetManager } from './assets/assetManager';
-import type { InputEvent } from './events';
-import { AppCommandsEnum, PanelIdEnum, KeyEventsEnum } from '../app/appTypes';
-import type { KeyHandler, Key } from './input/inputManager';
-import { InputManager, keys } from './input/inputManager';
-import type { EngineWorkerParams } from './engineWorker';
-import { EngineWorkerCommandsEnum } from './engineWorker';
-import type { WasmEngineParams } from './wasmEngine/wasmEngine';
-import { WasmEngine } from './wasmEngine/wasmEngine';
-import { AuxWorker } from './auxWorker';
-import * as utils from './utils';
+import { AssetManager } from '../engine/assets/assetManager';
+import type { InputEvent } from '../engine/events'; // TODO: move
+import { AppCommandEnum, PanelIdEnum, KeyEventsEnum } from '../app/appTypes';
+import type { KeyHandler, Key } from '../engine/input/inputManager';
+import { InputManager, keys } from '../engine/input/inputManager';
+import type { EngineWorkerParams } from '../engine/engineWorker';
+import { EngineWorkerCommandsEnum } from '../engine/engineWorker';
+import type { WasmEngineParams } from '../engine/wasmEngine/wasmEngine';
+import { WasmEngine } from '../engine/wasmEngine/wasmEngine';
+import { EngineWorker } from '../engine/auxWorker';
+import * as utils from '../engine/utils';
 
-type EngineParams = {
+type AppWorkerParams = {
   engineCanvas: OffscreenCanvas;
 };
 
 const MAIN_WORKER_IDX = 0;
 
-class Engine {
+class AppWorker {
   private static readonly RENDER_PERIOD_MS = MILLI_IN_SEC / mainConfig.targetRPS;
   private static readonly UPDATE_PERIOD_MS =
     (mainConfig.multiplier * MILLI_IN_SEC) / mainConfig.targetUPS;
 
-  private static readonly UPDATE_TIME_MAX = Engine.UPDATE_PERIOD_MS * 8;
+  private static readonly UPDATE_TIME_MAX = AppWorker.UPDATE_PERIOD_MS * 8;
 
   private static readonly STATS_LEN = 10; // fps, rps, ups
   private static readonly FRAME_TIMES_LEN = 20; // used for ufps
@@ -39,28 +39,28 @@ class Engine {
 
   private static readonly STATS_PERIOD_MS = 100; // MILLI_IN_SEC;
 
-  private params: EngineParams;
+  private params: AppWorkerParams;
   private assetManager: AssetManager;
   private inputManager: InputManager;
 
-  private auxWorkers: AuxWorker[];
+  private engineWorkers: EngineWorker[];
   private syncArray: Int32Array;
   private sleepArray: Int32Array;
 
   private wasmEngine: WasmEngine;
 
-  public async init(params: EngineParams): Promise<void> {
+  public async init(params: AppWorkerParams): Promise<void> {
     this.params = params;
     await this.initAssetManager();
     this.initInput();
-    const numAuxWorkers = mainConfig.numAuxWorkers;
-    console.log(`Using 1 main engine worker plus ${numAuxWorkers} auxiliary workers`);
-    const numTotalWorkers = numAuxWorkers + 1;
+    const numEngineWorkers = mainConfig.numEngineWorkers;
+    console.log(`Using 1 main worker plus ${numEngineWorkers} engine workers`);
+    const numTotalWorkers = numEngineWorkers + 1;
     this.syncArray = new Int32Array(new SharedArrayBuffer(numTotalWorkers * Int32Array.BYTES_PER_ELEMENT));
     this.sleepArray = new Int32Array(new SharedArrayBuffer(numTotalWorkers * Int32Array.BYTES_PER_ELEMENT));
-    this.auxWorkers = [];
-    if (numAuxWorkers > 0) {
-      await this.initAuxWorkers(numAuxWorkers);
+    this.engineWorkers = [];
+    if (numEngineWorkers) {
+      await this.initEngineWorkers(numEngineWorkers);
     }
     await this.initWasmEngine();
   }
@@ -81,7 +81,7 @@ class Engine {
     await this.assetManager.init();
   }
 
-  private async initAuxWorkers(numAuxWorkers: number) {
+  private async initEngineWorkers(numAuxWorkers: number) {
     assert(numAuxWorkers > 0);
     const initStart = Date.now();
     try {
@@ -99,14 +99,14 @@ class Engine {
           const auxWorker = {
             index: workerIndex,
             worker: new Worker(
-              new URL('./engineWorker.ts', import.meta.url),
+              new URL('../engine/engineWorker.ts', import.meta.url),
               {
                 name: `engine-worker-${workerIndex}`,
                 type: 'module',
               },
             )
           };
-          this.auxWorkers.push(auxWorker);
+          this.engineWorkers.push(auxWorker);
           const workerParams: EngineWorkerParams = {
             workerIndex,
             numWorkers: numAuxWorkers,
@@ -149,7 +149,7 @@ Date.now() - initStart
       enginePanel: this.params.engineCanvas,
       assetManager: this.assetManager,
       inputManager: this.inputManager,
-      auxWorkers: this.auxWorkers,
+      auxWorkers: this.engineWorkers,
       runLoopInWorker: true,
     };
     await this.wasmEngine.init(wasmEngineParams);
@@ -188,19 +188,19 @@ Date.now() - initStart
 
     const mainLoopInit = () => {
       lastFrameStartTime = lastStatsTime = renderThen = performance.now();
-      frameTimeArr = new Float64Array(Engine.FRAME_TIMES_LEN);
+      frameTimeArr = new Float64Array(AppWorker.FRAME_TIMES_LEN);
       updTimeAcc = 0;
       renderTimeAcc = 0;
       elapsedTimeMs = 0;
       timeSinceLastFrameArr = new Float64Array(
-        Engine.TIMES_SINCE_LAST_FRAME_LEN,
+        AppWorker.TIMES_SINCE_LAST_FRAME_LEN,
       );
       frameCnt = 0;
       timeLastFrameCnt = 0;
       statsTimeAcc = 0;
-      fpsArr = new Float32Array(Engine.STATS_LEN);
-      rpsArr = new Float32Array(Engine.STATS_LEN);
-      upsArr = new Float32Array(Engine.STATS_LEN);
+      fpsArr = new Float32Array(AppWorker.STATS_LEN);
+      rpsArr = new Float32Array(AppWorker.STATS_LEN);
+      upsArr = new Float32Array(AppWorker.STATS_LEN);
       statsCnt = 0;
       resync = false;
       updateCnt = 0;
@@ -216,7 +216,7 @@ Date.now() - initStart
       frameStartTime = performance.now();
       timeSinceLastFrame = frameStartTime - lastFrameStartTime;
       lastFrameStartTime = frameStartTime;
-      timeSinceLastFrame = Math.min(timeSinceLastFrame, Engine.UPDATE_TIME_MAX);
+      timeSinceLastFrame = Math.min(timeSinceLastFrame, AppWorker.UPDATE_TIME_MAX);
       timeSinceLastFrame = Math.max(timeSinceLastFrame, 0);
       timeSinceLastFrameArr[timeLastFrameCnt++ % timeSinceLastFrameArr.length] =
         timeSinceLastFrame;
@@ -243,7 +243,7 @@ Date.now() - initStart
       updTimeAcc += avgTimeLastFrame;
       // handle timer anomalies
       // spiral of death protection
-      if (updTimeAcc > Engine.UPDATE_TIME_MAX) {
+      if (updTimeAcc > AppWorker.UPDATE_TIME_MAX) {
         resync = true;
       }
       // timer resync if requested
@@ -251,11 +251,11 @@ Date.now() - initStart
         updTimeAcc = 0; // TODO
         // delta_time = App.UPD_PERIOD;
       }
-      while (updTimeAcc >= Engine.UPDATE_PERIOD_MS) {
+      while (updTimeAcc >= AppWorker.UPDATE_PERIOD_MS) {
         // TODO: see multiplier in update_period def
         // update state with UPDATE_PERIOD_MS
         // updateState(STEP, t / MULTIPLIER);
-        updTimeAcc -= Engine.UPDATE_PERIOD_MS;
+        updTimeAcc -= AppWorker.UPDATE_PERIOD_MS;
         updateCnt++;
       }
     };
@@ -267,8 +267,8 @@ Date.now() - initStart
 
     const render = () => {
       renderTimeAcc += avgTimeLastFrame;
-      if (renderTimeAcc >= Engine.RENDER_PERIOD_MS) {
-        renderTimeAcc %= Engine.RENDER_PERIOD_MS;
+      if (renderTimeAcc >= AppWorker.RENDER_PERIOD_MS) {
+        renderTimeAcc %= AppWorker.RENDER_PERIOD_MS;
         // this.syncWorkers();
         // this.waitWorkers();
         this.wasmEngine.render();
@@ -279,8 +279,8 @@ Date.now() - initStart
     const stats = () => {
       ++frameCnt;
       statsTimeAcc += timeSinceLastFrame;
-      if (statsTimeAcc >= Engine.STATS_PERIOD_MS) {
-        statsTimeAcc = statsTimeAcc % Engine.STATS_PERIOD_MS;
+      if (statsTimeAcc >= AppWorker.STATS_PERIOD_MS) {
+        statsTimeAcc = statsTimeAcc % AppWorker.STATS_PERIOD_MS;
         // const tspent = (tnow - start_time) / App.MILLI_IN_SEC;
         const now = performance.now();
         const elapsed = now - lastStatsTime;
@@ -306,7 +306,7 @@ Date.now() - initStart
           [StatsNameEnum.UFPS]: avgUfps,
         };
         postMessage({
-          command: AppCommandsEnum.UPDATE_STATS,
+          command: AppCommandEnum.UPDATE_STATS,
           params: stats,
         });
       }
@@ -323,14 +323,14 @@ Date.now() - initStart
   }
 
   private syncWorkers() {
-    for (let i = 1; i <= this.auxWorkers.length; ++i) {
+    for (let i = 1; i <= this.engineWorkers.length; ++i) {
       Atomics.store(this.syncArray, i, 1);
       Atomics.notify(this.syncArray, i);
     }
   }
 
   private waitWorkers() {
-    for (let i = 1; i <= this.auxWorkers.length; ++i) {
+    for (let i = 1; i <= this.engineWorkers.length; ++i) {
       Atomics.wait(this.syncArray, i, 1);
     }
   }
@@ -344,32 +344,31 @@ Date.now() - initStart
   }
 }
 
-let engine: Engine;
+let appWorker: AppWorker;
 
-const enum EngineCommandsEnum {
-  INIT = 'main_engine_worker_init',
-  RUN = 'main_engine_worker_run',
-  KEY_DOWN = 'main_engine_worker_keydown',
-  KEY_UP = 'main_engine_worker_keyup',
+const enum AppWorkerCommandEnum {
+  INIT = 'app_worker_init',
+  RUN = 'app_worker_run',
+  KEY_DOWN = 'app_worker_key_down',
+  KEY_UP = 'app_worker_key_up',
 }
 
-
 const commands = {
-  [EngineCommandsEnum.INIT]: async (params: EngineParams) => {
-    engine = new Engine();
-    await engine.init(params);
+  [AppWorkerCommandEnum.INIT]: async (params: AppWorkerParams) => {
+    appWorker = new AppWorker();
+    await appWorker.init(params);
     postMessage({
-      command: AppCommandsEnum.INIT,
+      command: AppCommandEnum.INIT,
     });
   },
-  [EngineCommandsEnum.RUN]: () => {
-    engine.run();
+  [AppWorkerCommandEnum.RUN]: () => {
+    appWorker.run();
   },
-  [EngineCommandsEnum.KEY_DOWN]: (inputEvent: InputEvent) => {
-    engine.onKeyDown(inputEvent);
+  [AppWorkerCommandEnum.KEY_DOWN]: (inputEvent: InputEvent) => {
+    appWorker.onKeyDown(inputEvent);
   },
-  [EngineCommandsEnum.KEY_UP]: (inputEvent: InputEvent) => {
-    engine.onKeyUp(inputEvent);
+  [AppWorkerCommandEnum.KEY_UP]: (inputEvent: InputEvent) => {
+    appWorker.onKeyUp(inputEvent);
   },
 };
 
@@ -383,5 +382,5 @@ self.onmessage = ({ data: { command, params } }) => {
   }
 };
 
-export type { EngineParams };
-export { EngineCommandsEnum };
+export type { AppWorkerParams };
+export { AppWorkerCommandEnum };

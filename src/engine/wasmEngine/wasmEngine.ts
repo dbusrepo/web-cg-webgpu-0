@@ -14,7 +14,7 @@ import { WasmRun } from './wasmRun';
 import { FONT_Y_SIZE, fontChars } from '../../assets/fonts/font';
 import { stringsArrayData } from '../../assets/build/strings';
 import { EngineWorkerCommandsEnum } from '../engineWorker';
-import { AuxWorker } from '../auxWorker';
+import { EngineWorker } from '../auxWorker';
 import * as utils from './../utils';
 
 import {
@@ -30,7 +30,7 @@ type WasmEngineParams = {
   assetManager: AssetManager;
   inputManager: InputManager;
   mainWorkerIdx: number;
-  auxWorkers: AuxWorker[];
+  auxWorkers: EngineWorker[];
   runLoopInWorker: boolean;
 };
 

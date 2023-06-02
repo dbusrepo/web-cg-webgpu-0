@@ -1,6 +1,6 @@
-class AuxWorker {
+class EngineWorker {
   index: number;
   worker: Worker;
 }
 
-export { AuxWorker };
+export { EngineWorker };

@@ -1,4 +1,4 @@
-enum AppCommandsEnum {
+enum AppCommandEnum {
   INIT = 'init',
   UPDATE_STATS = 'updateStats',
   EVENT = 'event',
@@ -19,4 +19,4 @@ enum KeyEventsEnum {
 type KeyEvent = `${KeyEventsEnum}`;
 
 export type { KeyEvent, PanelId };
-export { AppCommandsEnum, PanelIdEnum, KeyEventsEnum };
+export { AppCommandEnum, PanelIdEnum, KeyEventsEnum };
