@@ -270,7 +270,7 @@ Date.now() - initStart
         renderTimeAcc %= AppWorker.RENDER_PERIOD_MS;
         // this.syncWorkers();
         // this.waitWorkers();
-        this.wasmEngine.render();
+        // this.wasmEngine.render();
         saveFrameTime();
       }
     };

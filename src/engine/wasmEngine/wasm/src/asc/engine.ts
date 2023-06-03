@@ -31,7 +31,7 @@ import { SArray, newSArray } from './sarray';
 import { test } from './test/test';
 import { PTR_T, SIZE_T } from './memUtils';
 
-// import { MYIMG, IMG1 } from './_genImportImages';
+import { MYIMG, IMG1 } from './_importImages';
 
 import {
   imagesIndexPtr,
@@ -42,7 +42,7 @@ import {
 } from './importVars';
 import { stringsDataPtr, stringsDataSize } from './importVars';
 import { FONT_Y_SIZE, fontCharsPtr, fontCharsSize } from './importVars';
-// import * as strings from './_genImportStrings';
+// import * as strings from './_importStrings';
 
 // import { inputKeysPtr } from './genImportVars';
 
@@ -55,6 +55,7 @@ const MAIN_THREAD_IDX = mainWorkerIdx;
 
 let images: SArray<BitImage> | null = null;
 
+// @ts-ignore: decorator
 @inline function align<T>(): SIZE_T {
   return alignof<T>();
 }
@@ -70,7 +71,17 @@ function init(): void {
     // store<u64>(hrTimerPtr, t1 - t0);
   }
   initMemManager();
-  images = initImages();
+  let images = initImages();
+  // logi(MYIMG);
+
+  // myAssert(images != null);
+  const image = images.at(0);
+  logi(image.width as i32);
+
+  // const width = image.width;
+  // const height = image.height;
+
+  // logi(height as i32);
   // test();
 }
 
@@ -90,12 +101,30 @@ function render(): void {
 
   // logi(workerIdx);
 
+  // ts-ignore
+  // if (images) {
+    // const image = images.at(0);
+  // }
+
+  // logi(<i32>pixels);
+  //   const byte = load<u8>(pixels);
+  //   logi(byte);
+  //   logi(images.at(i).width);
+  //   logi(images.at(i).height);
+  // // }
+  //
+  // const images = initImages();
+  // const image = images.at(0);
+
+  // const width = image.width;
+  // const height = image.height;
+
   // // // logi(image.height);
-  // if (workerIdx == 1) {
+  // if (workerIdx == MAIN_THREAD_IDX) {
   //   for (let i = s; i != e; ++i) {
-  //     let screenPtr: PTR_T = frameBufferPtr + i * frameWidth * 4;
-  //     const pixels: PTR_T = image.pixels + i * image.width * 4;
-  //     memory.copy(screenPtr, pixels, frameWidth * 4);
+  //     let screenPtr: PTR_T = rgbaSurface0ptr + i * rgbaSurface0width * 4;
+  //     // const pixels: PTR_T = image.pixels + i * image.width * 4;
+  //     // memory.copy(screenPtr, pixels, rgbaSurface0width * 4);
   //   }
   // }
 

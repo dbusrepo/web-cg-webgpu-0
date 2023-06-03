@@ -24,7 +24,6 @@ import {
   PAGE_SIZE_BYTES,
 } from '../../common';
 
-
 type WasmEngineParams = {
   engineCanvas: OffscreenCanvas;
   assetManager: AssetManager;
@@ -189,6 +188,7 @@ class WasmEngine {
     const { width: engineImageWidth, height: engineImageHeight } = this.engineImageData
 
     this.wasmRun = new WasmRun();
+
     this.wasmRunParams = {
       wasmMem: this.wasmMem,
       wasmMemRegionsSizes: this.wasmRegionsSizes,

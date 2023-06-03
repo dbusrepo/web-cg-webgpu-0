@@ -70,7 +70,7 @@ class WasmRun {
       wasmMemRegionsOffsets: memOffsets,
       wasmWorkerHeapSize: workerHeapSize,
       surface0sizes,
-      surface1sizes,
+      // surface1sizes,
       mainWorkerIdx,
       numWorkers,
       numImages,

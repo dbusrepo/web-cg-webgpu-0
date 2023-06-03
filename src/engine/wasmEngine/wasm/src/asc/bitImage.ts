@@ -13,8 +13,8 @@ const IMG_WH_SIZE = sizeof<IMG_SIZE_T>();
 
 // index sections: offsets, widths, heights
 const imgPtrsPtr: PTR_T = imagesIndexPtr;
-const imgWidths = imgPtrsPtr + <usize>numImages * IMG_OFF_SIZE;
-const imgHeights = imgWidths + <usize>numImages * IMG_WH_SIZE;
+const imgWidthsPtr = imgPtrsPtr + <usize>numImages * IMG_OFF_SIZE;
+const imgHeightsPtr = imgWidthsPtr + <usize>numImages * IMG_WH_SIZE;
 
 const imageDataPtr: PTR_T = imagesDataPtr;
 
@@ -25,6 +25,10 @@ const imageDataPtr: PTR_T = imagesDataPtr;
 
   init(idx: usize): void {
     myAssert(idx >= 0 && idx < numImages);
+    // logi(imagesIndexPtr);
+    // logi(imgWidths);
+    // logi(load<IMG_SIZE_T>(imgWidthsPtr + <usize>0 * IMG_WH_SIZE));
+    // logi(load<IMG_SIZE_T>(imgWidths + <usize>1 * IMG_WH_SIZE));
     this.imgIdx = idx;
   }
 
@@ -34,11 +38,11 @@ const imageDataPtr: PTR_T = imagesDataPtr;
   }
 
   @inline get width(): SIZE_T {
-    return load<IMG_SIZE_T>(imgWidths + <usize>this.imgIdx * IMG_WH_SIZE);
+    return load<IMG_SIZE_T>(imgWidthsPtr + <usize>this.imgIdx * IMG_WH_SIZE);
   }
 
   @inline get height(): SIZE_T {
-    return load<IMG_SIZE_T>(imgHeights + <usize>this.imgIdx * IMG_WH_SIZE);
+    return load<IMG_SIZE_T>(imgHeightsPtr + <usize>this.imgIdx * IMG_WH_SIZE);
   }
 }
 
