@@ -75,8 +75,8 @@ function init(): void {
   // logi(MYIMG);
 
   // myAssert(images != null);
-  const image = images.at(0);
-  logi(image.width as i32);
+  // const image = images.at(0);
+  // logi(image.width as i32);
 
   // const width = image.width;
   // const height = image.height;
