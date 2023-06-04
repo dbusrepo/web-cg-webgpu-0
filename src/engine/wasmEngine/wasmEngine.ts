@@ -231,6 +231,7 @@ class WasmEngine {
           },
         });
         return new Promise<void>((resolve/*, reject*/) => {
+          // remap onmessage
           engineWorker.worker.onmessage = ({ data: _ }) => {
             // TODO: no check for data.status
             resolve();
