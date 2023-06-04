@@ -32,16 +32,16 @@ const imageDataPtr: PTR_T = imagesDataPtr;
     this.imgIdx = idx;
   }
 
-  @inline get pixels(): PTR_T {
+  @inline get Ptr(): PTR_T {
     // logi(load<IMG_OFF_T>(imgPtrsPtr + <usize>this._imgIdx * IMG_OFF_SIZE));
     return imageDataPtr + load<IMG_OFF_T>(imgPtrsPtr + <usize>this.imgIdx * IMG_OFF_SIZE);
   }
 
-  @inline get width(): SIZE_T {
+  @inline get Width(): SIZE_T {
     return load<IMG_SIZE_T>(imgWidthsPtr + <usize>this.imgIdx * IMG_WH_SIZE);
   }
 
-  @inline get height(): SIZE_T {
+  @inline get Height(): SIZE_T {
     return load<IMG_SIZE_T>(imgHeightsPtr + <usize>this.imgIdx * IMG_WH_SIZE);
   }
 }
