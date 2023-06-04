@@ -32,8 +32,8 @@ import { SArray, newSArray } from './sarray';
 import { test } from './test/test';
 import { PTR_T, SIZE_T, NULL_PTR } from './memUtils';
 
-import { MYIMG, IMG1 } from './_importImages';
-import * as strings from './_importStrings';
+import { MYIMG, IMG1 } from './gen_importImages';
+import * as strings from './gen_importStrings';
 
 import {
   imagesIndexPtr,

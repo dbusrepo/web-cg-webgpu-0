@@ -18,7 +18,7 @@ IMAGES_OUT_TS := $(BUILD_DIR)/images.ts
 STRINGS_OUT_TS := $(BUILD_DIR)/strings.ts
 
 # prefix for generated asc files
-ASC_GEN_PREFIX := _
+ASC_GEN_PREFIX := gen_
 
 IMAGES_OUT_ASC := $(ASC_DIR)/${ASC_GEN_PREFIX}importImages.ts
 STRINGS_OUT_ASC := $(ASC_DIR)/${ASC_GEN_PREFIX}importStrings.ts
