@@ -144,6 +144,7 @@ Date.now() - initStart
   private async initWasmEngine() {
     this.wasmEngine = new WasmEngine();
     const wasmEngineParams: WasmEngineParams = {
+      engineDataSize: 0,
       engineCanvas: this.params.engineCanvas,
       assetManager: this.assetManager,
       inputManager: this.inputManager,
