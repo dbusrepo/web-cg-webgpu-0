@@ -48,9 +48,9 @@ function newRef<T>(ptr: PTR_T = NULL_PTR): Ref<T> {
   if (changetype<PTR_T>(refAllocator) == NULL_PTR) {
     initRefAllocator();
   }
-  const ref = refAllocator.new();
+  const ref = changetype<Ref<T>>(refAllocator.new());
   ref.init(ptr);
-  return changetype<Ref<T>>(ref);
+  return ref;
 }
 
 function deleteRef<T>(ref: Ref<T>): void {

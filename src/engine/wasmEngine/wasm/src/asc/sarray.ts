@@ -6,9 +6,10 @@ import { Pointer } from './pointer';
 import { logi } from './importVars';
 
 // SArray: a contigous block of memory: header + data
-// start address | ... | HEADER | ... | objects data
+// start address | ... | HEADER | ... | objects data (with value objects, no references)
 //                     |<- the SArray starts here
 // header and obj sizes are rounded to the next power of two (with alignment for the objects)
+// for set see comment in DArray file
 
 // @ts-ignore: decorator
 @final @unmanaged class Header {
@@ -40,13 +41,16 @@ const HEADER_SIZE = getTypeSize<Header>() + HEADER_ALIGN_MASK;
     return this.idx2Ptr(idx);
   }
 
+  // returns a reference if T is a reference type, otherwise returns a value
   @inline at(idx: SIZE_T): T {
     const ptr = this.idx2Ptr(idx);
     return new Pointer<T>(ptr).value;
   }
 
+  // copies the input value bytes (shallow copy for ref types) in array memory (no reference)
   @inline set(idx: SIZE_T, value: T): void {
     const ptr = this.idx2Ptr(idx);
+    // TODO: add copy constructor for ref types ?
     new Pointer<T>(ptr).value = value;
   }
 
