@@ -67,16 +67,16 @@ function init(): void {
     // const t1 = <u64>process.hrtime();
     // store<u64>(hrTimerPtr, t1 - t0);
   }
-  initMemManager();
-  images = initImages();
   // logi(workerIdx as i32);
 
-  // logi(MYIMG);
+  initMemManager();
+  images = initImages();
 
   // myAssert(images != null);
   // const image = images.at(0);
   // logi(image.Width as i32);
   // logi(image.Height as i32);
+
   // test();
 }
 
