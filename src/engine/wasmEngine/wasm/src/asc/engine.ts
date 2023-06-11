@@ -70,14 +70,14 @@ function init(): void {
   // logi(workerIdx as i32);
 
   initMemManager();
-  // images = initImages();
+  images = initImages();
 
   // myAssert(images != null);
   // const image = images.at(0);
   // logi(image.Width as i32);
   // logi(image.Height as i32);
 
-  test();
+  // test();
 }
 
 function render(): void {
