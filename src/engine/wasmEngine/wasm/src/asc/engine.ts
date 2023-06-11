@@ -5,7 +5,8 @@ import {
   alloc,
   free,
 } from './workerHeapManager';
-// import { ObjectAllocator } from './objectAllocator';
+import { ArenaAlloc, newArena } from './arenaAlloc';
+import { ObjectAllocator } from './objectAllocator';
 import * as utils from './utils';
 import * as draw from './draw';
 import {
@@ -29,6 +30,7 @@ import { initImages } from './initImages';
 // import { DArray, newDArray, deleteDArray } from './darray';
 import { Pointer } from './pointer';
 import { SArray, newSArray } from './sarray';
+import { DArray, newDArray } from './darray';
 import { test } from './test/test';
 import { PTR_T, SIZE_T, NULL_PTR } from './memUtils';
 
@@ -70,14 +72,15 @@ function init(): void {
   // logi(workerIdx as i32);
 
   initMemManager();
-  images = initImages();
+  // images = initImages();
 
   // myAssert(images != null);
   // const image = images.at(0);
   // logi(image.Width as i32);
   // logi(image.Height as i32);
 
-  // test();
+  // const arr = newDArray<u32>(1);
+  test();
 }
 
 function render(): void {

@@ -16,7 +16,9 @@ import { TestClass, newTestClass, deleteTestClass } from './testClass';
 function refTest(): void {
   logi(-8);
 
-  // const testObj = newTestClass<u32>();
+  const testObj = newTestClass<u32>();
+
+
   // const ref = newRef<TestClass<u32>>(GET_PTR(testObj));
   // logi(ref.Ptr);
   // ref.Deref.a = 12;
