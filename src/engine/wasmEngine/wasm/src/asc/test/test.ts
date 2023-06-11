@@ -8,8 +8,8 @@ function test(): void {
   // memManagerTest();
   // arenaAllocTest();
   // refTest();
-  sarrayTest();
-  // darrayTest();
+  // sarrayTest();
+  darrayTest();
 }
 
 export { test };

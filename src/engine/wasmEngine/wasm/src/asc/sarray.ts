@@ -83,6 +83,7 @@ function newSArray<T>(length: SIZE_T, objAlignLg2: SIZE_T = alignof<T>()): SArra
   myAssert(arrayPtr != NULL_PTR);
   const headerPtr = (arrayPtr + HEADER_ALIGN_MASK) & ~HEADER_ALIGN_MASK;
   const dataPtr = (headerPtr + HEADER_SIZE + objAlignMask) & ~objAlignMask;
+  myAssert((dataPtr & objAlignMask) === 0);
   const header = changetype<Header>(headerPtr);
   header.arrayPtr = arrayPtr;
   header.dataPtr = dataPtr;
