@@ -7,10 +7,10 @@ import { logi, logf } from '../importVars';
 import {alloc} from '../workerHeapManager';
 import { Ref } from '../ref';
 
-@final @unmanaged class MyArrayType {
-  x: u32;
-  y: u32;
-}
+// @final @unmanaged class MyArrayType {
+//   x: u32;
+//   y: u32;
+// }
 
 function sarrayTest(): void {
   logi(-7);
