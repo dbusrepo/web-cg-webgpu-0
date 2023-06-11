@@ -72,7 +72,7 @@ function init(): void {
   // logi(workerIdx as i32);
 
   initMemManager();
-  // images = initImages();
+  images = initImages();
 
   // myAssert(images != null);
   // const image = images.at(0);
@@ -80,7 +80,7 @@ function init(): void {
   // logi(image.Height as i32);
 
   // const arr = newDArray<u32>(1);
-  test();
+  // test();
 }
 
 function render(): void {
