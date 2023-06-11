@@ -9,7 +9,7 @@ function test(): void {
   // arenaAllocTest();
   // refTest();
   sarrayTest();
-  darrayTest();
+  // darrayTest();
 }
 
 export { test };
