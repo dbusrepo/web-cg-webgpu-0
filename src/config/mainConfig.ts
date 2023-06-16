@@ -7,12 +7,13 @@ const mainConfig = {
   numEngineWorkers: 0,
 
   wasmMemStartOffset: 0,
-  wasmMemStartPages: 64,
+  wasmMemStartPages: 320,
+  wasmMemMaxPages: 320,
+
   wasmWorkerHeapPages: 1,
   // 0 -> it can expand freely after the previous mem regions
   // TODO case != 0 not supported for now
   wasmSharedHeapSize: 0,
-  wasmMemMaxPages: 1000,
 
   targetRPS: 60,
   targetUPS: 80,
