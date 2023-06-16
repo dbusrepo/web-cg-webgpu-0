@@ -1,7 +1,7 @@
 const PAGE_SIZE = 65536;
 
 const startOffset = 0;
-const initialMemoryPages = 320;
+const initialMemoryPages = 320; // 20 MB
 const maximumMemoryPages = 320;
 
 // bound memoryBase to all memory
