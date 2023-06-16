@@ -12,6 +12,7 @@ ASC_BINDINGS := esm
 
 ASC_CONFIG_FILE := asconfig.json
 ASC_COMPILE_SCRIPT := compile_asc.mjs
+ASC_COMPILE_SCRIPT_DEP := wasmConfig.mjs
 
 SOURCE_DIR := src
 BUILD_DIR := build
@@ -71,7 +72,7 @@ ifeq (,$(findstring clean,$(MAKECMDGOALS)))
 endif
 
 ## compile with asc from node script
-$(ASC_BUILD_DIR)/%.wasm: $(ASC_SOURCE_DIR)/%.ts build_flags $(ASC_COMPILE_SCRIPT)
+$(ASC_BUILD_DIR)/%.wasm: $(ASC_SOURCE_DIR)/%.ts build_flags $(ASC_COMPILE_SCRIPT) $(ASC_COMPILE_SCRIPT_DEP)
 	$(info GEN $@)
 	@time node ./compile_asc.mjs $< $@ $(ASC_BINDINGS) $(TARGET)
 
