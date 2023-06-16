@@ -1,5 +1,5 @@
 import { myAssert } from './myAssert';
-import { initSharedHeap } from './heapAlloc';
+import { initSharedHeap, heapAlloc, heapFree } from './heapAlloc';
 import {
   initMemManager,
   alloc,
@@ -83,6 +83,8 @@ function init(): void {
   // test();
 }
 
+let c = 0;
+
 function render(): void {
 
   const r = utils.range(workerIdx, numWorkers, rgbaSurface0height);
@@ -92,6 +94,10 @@ function render(): void {
 
   // const t0 = <u64>process.hrtime();
   draw.clearBg(s, e, 0xff_ff_00_00); // ABGR
+
+  // logi(c++);
+  // heapAlloc(1024*1024);
+
   // const t1 = <u64>process.hrtime();
   // store<u64>(hrTimerPtr, t1 - t0);
 
