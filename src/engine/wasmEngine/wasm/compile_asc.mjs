@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as fsExtra from "fs-extra";
 import asc from 'assemblyscript/dist/asc.js';
+import { initialMemoryPages, maximumMemoryPages, memoryBase } from './wasmConfig.mjs';
 
 const args = process.argv.slice(2);
 // console.log(args);
@@ -39,6 +40,7 @@ const buildDir = './build/asc';
 const wasmFile = out;
 const textFile = path.format({ ...path.parse(out), base: '', ext: '.wat' });
 
+
 console.log(`\nCompiling ${src}:`);
 console.log(`Base dir: ${baseDir}`);
 console.log(`Build dir: ${buildDir}`);
@@ -47,19 +49,11 @@ console.log(`Wasm file: ${wasmFile}`);
 console.log(`Bindings: ${bindings}`);
 console.log(`Mode: ${mode}`);
 console.log(`Target: ${target}`);
+console.log('Initial memory pages:', initialMemoryPages);
+console.log('Maximum memory pages:', maximumMemoryPages);
+console.log('Memory base:', memoryBase);
 // process.stdout.write('\n');
-process.exit(0);
-
-const PAGE_SIZE = 65536;
-
-// const initialMemoryPages = 64;
-// const maximumMemoryPages = 64;
-
-const initialMemoryPages = 320;
-const maximumMemoryPages = 320;
-
-// bound memoryBase to all memory
-const memoryBase = initialMemoryPages * PAGE_SIZE;
+// process.exit(0);
 
 // see also cli/options.json in asc source
 const options = [

@@ -1,14 +1,15 @@
 import { StartViewMode, panelConfig } from './panelConfig';
 import { enginePanelConfig } from './enginePanelConfig';
 import { viewPanelConfig } from './viewPanelConfig';
+import { startOffset, initialMemoryPages, maximumMemoryPages, memoryBase } from '../engine/wasmEngine/wasm/wasmConfig.mjs';
 
 const mainConfig = {
 
   numEngineWorkers: 0,
 
-  wasmMemStartOffset: 0,
-  wasmMemStartPages: 320,
-  wasmMemMaxPages: 320,
+  wasmMemStartOffset: startOffset,
+  wasmMemStartPages: initialMemoryPages,
+  wasmMemMaxPages: maximumMemoryPages,
 
   wasmWorkerHeapPages: 1,
   // 0 -> it can expand freely after the previous mem regions
