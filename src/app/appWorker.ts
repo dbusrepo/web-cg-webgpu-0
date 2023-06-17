@@ -149,7 +149,7 @@ Date.now() - initStart
       inputManager: this.inputManager,
       engineWorkers: this.engineWorkers,
       mainWorkerIdx: MAIN_WORKER_IDX,
-      runWasmLoopEngineWorkers: true,
+      runEngineWorkersLoop: true,
     };
     await this.wasmEngine.init(wasmEngineParams);
   }
