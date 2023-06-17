@@ -125,6 +125,10 @@ class WasmRun {
   get WasmModules(): WasmModules {
     return this.wasmModules;
   }
+
+  get WasmMem(): WebAssembly.Memory {
+    return this.params.wasmMem;
+  }
 }
 
 export type { WasmRunParams };
