@@ -13,8 +13,8 @@ import type { InputEvent } from './events';
 import { AppCommandEnum, PanelIdEnum, KeyEventsEnum } from '../app/appTypes';
 import type { KeyHandler, Key } from '../input/inputManager';
 import { InputManager, keys } from '../input/inputManager';
-import type { EngineWorkerParams } from '../engine/engineWorker';
-import { EngineWorkerCommandEnum, EngineWorkerDesc } from '../engine/engineWorker';
+import type { AuxAppWorkerParams } from './auxAppWorker';
+import { AuxAppWorkerCommandEnum, AuxAppWorkerDesc } from './auxAppWorker';
 import type { WasmEngineParams } from '../engine/wasmEngine/wasmEngine';
 import { WasmEngine } from '../engine/wasmEngine/wasmEngine';
 import * as utils from '../engine/utils';
@@ -22,8 +22,6 @@ import * as utils from '../engine/utils';
 type AppWorkerParams = {
   engineCanvas: OffscreenCanvas;
 };
-
-const MAIN_WORKER_IDX = 0;
 
 class AppWorker {
   private static readonly RENDER_PERIOD_MS = MILLI_IN_SEC / mainConfig.targetRPS;
@@ -42,7 +40,7 @@ class AppWorker {
   private assetManager: AssetManager;
   private inputManager: InputManager;
 
-  private engineWorkers: EngineWorkerDesc[];
+  private auxAppWorkers: AuxAppWorkerDesc[];
   private syncArray: Int32Array;
   private sleepArray: Int32Array;
 
@@ -52,18 +50,10 @@ class AppWorker {
     this.params = params;
     await this.initAssetManager();
     this.initInput();
-    const numEngineWorkers = mainConfig.numEngineWorkers;
-    console.log(`Using 1 main worker and ${numEngineWorkers} aux workers`);
-    const numTotalWorkers = numEngineWorkers + 1;
-    this.syncArray = new Int32Array(new SharedArrayBuffer(numTotalWorkers * Int32Array.BYTES_PER_ELEMENT));
-    this.sleepArray = new Int32Array(new SharedArrayBuffer(numTotalWorkers * Int32Array.BYTES_PER_ELEMENT));
-    this.engineWorkers = [];
-    if (numEngineWorkers) {
-      await this.initEngineWorkers(numEngineWorkers);
-    }
     await this.initWasmEngine();
+    await this.runAuxAppWorkers();
   }
-  
+
   private initInput() {
     this.initInputManager();
   }
@@ -80,64 +70,89 @@ class AppWorker {
     await this.assetManager.init();
   }
 
-  private async initEngineWorkers(numEngineWorkers: number) {
-    assert(numEngineWorkers > 0);
+  private async runAuxAppWorkers() {
+    const numWorkers = mainConfig.numAuxAppWorkers;
+    console.log(`num aux app workers: ${numWorkers}`);
+    const numTotalWorkers = numWorkers + 1;
+    this.sleepArray = new Int32Array(new SharedArrayBuffer(numTotalWorkers * Int32Array.BYTES_PER_ELEMENT));
+    Atomics.store(this.sleepArray, 0, 0); // main worker idx 0
+    this.auxAppWorkers = [];
+    if (numWorkers) {
+      this.syncArray = new Int32Array(new SharedArrayBuffer(numTotalWorkers * Int32Array.BYTES_PER_ELEMENT));
+      Atomics.store(this.syncArray, 0, 0);
+      await this.initAuxAppWorkers(numWorkers);
+      for (let i = 0; i < this.auxAppWorkers.length; ++i) {
+        const { index: workerIdx } = this.auxAppWorkers[i];
+        Atomics.store(this.sleepArray, workerIdx, 0);
+        Atomics.store(this.syncArray, workerIdx, 0);
+      }
+      this.auxAppWorkers.forEach(({ worker }) => {
+        worker.postMessage({
+          command: AuxAppWorkerCommandEnum.RUN,
+        });
+      });
+    }
+  }
+
+  private async initAuxAppWorkers(numAuxAppWorkers: number) {
+    assert(numAuxAppWorkers > 0);
     const initStart = Date.now();
     try {
-      let nextWorkerIdx = 0;
-      const getWorkerIdx = () => {
-        if (nextWorkerIdx === MAIN_WORKER_IDX) {
-          nextWorkerIdx++;
-        }
+      let nextWorkerIdx = 1; // start from 1, 0 is for the main worker
+      const genWorkerIdx = () => {
         return nextWorkerIdx++;
       };
-      let remWorkers = numEngineWorkers;
+      let remWorkers = numAuxAppWorkers;
       await new Promise<void>((resolve, reject) => {
-        for (let i = 0; i < numEngineWorkers; ++i) {
-          const workerIndex = getWorkerIdx();
+        for (let i = 0; i < numAuxAppWorkers; ++i) {
+          const workerIndex = genWorkerIdx();
           const engineWorker = {
             index: workerIndex,
             worker: new Worker(
-              new URL('../engine/engineWorker.ts', import.meta.url),
+              new URL('./auxAppWorker.ts', import.meta.url),
               {
-                name: `engine-worker-${workerIndex}`,
+                name: `aux-app-worker-${workerIndex}`,
                 type: 'module',
               },
             )
           };
-          this.engineWorkers.push(engineWorker);
-          const workerParams: EngineWorkerParams = {
+          this.auxAppWorkers.push(engineWorker);
+          const workerParams: AuxAppWorkerParams = {
             workerIndex,
-            numWorkers: numEngineWorkers,
+            numWorkers: numAuxAppWorkers,
             syncArray: this.syncArray,
             sleepArray: this.sleepArray,
+            wasmRunParams: {
+              ...this.wasmEngine.WasmRunParams,
+              workerIdx: workerIndex,
+            },
           };
           engineWorker.worker.postMessage({
-            command: EngineWorkerCommandEnum.INIT,
+            command: AuxAppWorkerCommandEnum.INIT,
             params: workerParams,
           });
           engineWorker.worker.onmessage = ({ data }) => {
             --remWorkers;
             console.log(
-              `Worker id=${workerIndex} init, left count=${remWorkers}, time=${
+              `Aux app worker id=${workerIndex} init, left count=${remWorkers}, time=${
 Date.now() - initStart
 }ms with data = ${JSON.stringify(data)}`,
             );
             if (remWorkers === 0) {
               console.log(
-                `Workers init done. After ${Date.now() - initStart}ms`,
+                `Aux app workers init done. After ${Date.now() - initStart}ms`,
               );
               resolve();
             }
           };
           engineWorker.worker.onerror = (error) => {
-            console.log(`Worker id=${workerIndex} error: ${error.message}\n`);
+            console.log(`Aux app worker id=${workerIndex} error: ${error.message}\n`);
             reject(error);
           };
         }
       });
     } catch (error) {
-      console.error(`Error during workers init: ${JSON.stringify(error)}`);
+      console.error(`Error during aux app workers init: ${JSON.stringify(error)}`);
     }
   }
 
@@ -147,9 +162,7 @@ Date.now() - initStart
       engineCanvas: this.params.engineCanvas,
       assetManager: this.assetManager,
       inputManager: this.inputManager,
-      engineWorkers: this.engineWorkers,
-      mainWorkerIdx: MAIN_WORKER_IDX,
-      runEngineWorkersLoop: true,
+      numAuxWorkers: mainConfig.numAuxWasmWorkers,
     };
     await this.wasmEngine.init(wasmEngineParams);
   }
@@ -268,9 +281,9 @@ Date.now() - initStart
       renderTimeAcc += avgTimeLastFrame;
       if (renderTimeAcc >= AppWorker.RENDER_PERIOD_MS) {
         renderTimeAcc %= AppWorker.RENDER_PERIOD_MS;
-        // this.syncWorkers();
-        // this.waitWorkers();
+        this.syncWorkers();
         this.wasmEngine.render();
+        this.waitWorkers();
         saveFrameTime();
       }
     };
@@ -322,15 +335,17 @@ Date.now() - initStart
   }
 
   private syncWorkers() {
-    for (let i = 1; i <= this.engineWorkers.length; ++i) {
-      Atomics.store(this.syncArray, i, 1);
-      Atomics.notify(this.syncArray, i);
+    for (let i = 0; i < this.auxAppWorkers.length; ++i) {
+      const { index: workerIdx } = this.auxAppWorkers[i];
+      Atomics.store(this.syncArray, workerIdx, 1);
+      Atomics.notify(this.syncArray, workerIdx);
     }
   }
 
   private waitWorkers() {
-    for (let i = 1; i <= this.engineWorkers.length; ++i) {
-      Atomics.wait(this.syncArray, i, 1);
+    for (let i = 0; i < this.auxAppWorkers.length; ++i) {
+      const { index: workerIdx } = this.auxAppWorkers[i];
+      Atomics.wait(this.syncArray, workerIdx, 1);
     }
   }
 

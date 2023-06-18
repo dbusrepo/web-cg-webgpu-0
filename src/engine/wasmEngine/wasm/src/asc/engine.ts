@@ -95,7 +95,9 @@ function render(): void {
   // logi(r as i32);
 
   // const t0 = <u64>process.hrtime();
-  draw.clearBg(s, e, 0xff_00_00_00); // ABGR
+  // if (workerIdx == MAIN_THREAD_IDX) {
+    draw.clearBg(s, e, 0xff_00_00_00); // ABGR
+  // }
 
   // logi(c++);
   // heapAlloc(1024*1024);

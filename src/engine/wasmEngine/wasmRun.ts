@@ -3,8 +3,7 @@ import * as WasmUtils from './wasmMemUtils';
 import type { WasmViews } from './wasmViews';
 import type { WasmModules, WasmImports } from './wasmLoader';
 import { loadWasmModules } from './wasmLoader';
-import { syncStore } from './../utils';
-// import { syncStore, randColor, sleep } from './utils';
+import { randColor, sleep } from '../utils';
 // import { BitImageRGBA } from './assets/images/bitImageRGBA';
 // import { PngDecoderRGBA } from './assets/images/vivaxy-png/PngDecoderRGBA';
 import {
@@ -35,14 +34,7 @@ class WasmRun {
   public async init(params: WasmRunParams, wasmViews: WasmViews) {
     this.params = params;
     this.wasmViews = wasmViews;
-    this.initSyncStore();
     await this.loadWasmModules();
-  }
-
-  private initSyncStore() {
-    const { workerIdx } = this.params;
-    syncStore(this.wasmViews.syncArr, workerIdx, 0);
-    syncStore(this.wasmViews.sleepArr, workerIdx, 0);
   }
 
   private buildWasmImports(): WasmImports {
