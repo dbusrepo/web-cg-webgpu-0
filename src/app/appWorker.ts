@@ -36,6 +36,9 @@ class AppWorker {
 
   private static readonly STATS_PERIOD_MS = 100; // MILLI_IN_SEC;
 
+  private ctx2d: OffscreenCanvasRenderingContext2D;
+  private imageData: ImageData;
+
   private params: AppWorkerParams;
   private assetManager: AssetManager;
   private inputManager: InputManager;
@@ -48,10 +51,29 @@ class AppWorker {
 
   public async init(params: AppWorkerParams): Promise<void> {
     this.params = params;
+    this.initGfx();
     await this.initAssetManager();
     this.initInput();
     await this.initWasmEngine();
     await this.runAuxAppWorkers();
+  }
+
+  private initGfx() {
+    this.ctx2d = this.get2dCtxFromCanvas(this.params.engineCanvas);
+    this.imageData = this.ctx2d.createImageData(
+      this.params.engineCanvas.width,
+      this.params.engineCanvas.height);
+  }
+
+  private get2dCtxFromCanvas(canvas: OffscreenCanvas) {
+    const ctx = <OffscreenCanvasRenderingContext2D>(
+      canvas.getContext('2d', {
+        alpha: false,
+        desynchronized: true,
+      })
+    );
+    ctx.imageSmoothingEnabled = false; // no blur, keep the pixels sharpness
+    return ctx;
   }
 
   private initInput() {
@@ -159,10 +181,11 @@ Date.now() - initStart
   private async initWasmEngine() {
     this.wasmEngine = new WasmEngine();
     const wasmEngineParams: WasmEngineParams = {
-      engineCanvas: this.params.engineCanvas,
+      imageWidth: this.imageData.width,
+      imageHeight: this.imageData.height,
       assetManager: this.assetManager,
       inputManager: this.inputManager,
-      numAuxWorkers: mainConfig.numAuxWasmWorkers,
+      numAuxWasmWorkers: mainConfig.numAuxWasmWorkers,
     };
     await this.wasmEngine.init(wasmEngineParams);
   }
@@ -283,6 +306,7 @@ Date.now() - initStart
         renderTimeAcc %= AppWorker.RENDER_PERIOD_MS;
         this.syncWorkers();
         this.wasmEngine.render();
+        this.drawWasmFrame();
         this.waitWorkers();
         saveFrameTime();
       }
@@ -347,6 +371,11 @@ Date.now() - initStart
       const { index: workerIdx } = this.auxAppWorkers[i];
       Atomics.wait(this.syncArray, workerIdx, 1);
     }
+  }
+
+  public drawWasmFrame() {
+    this.imageData.data.set(this.wasmEngine.WasmRun.WasmViews.rgbaSurface0);
+    this.ctx2d.putImageData(this.imageData, 0, 0);
   }
 
   public onKeyDown(inputEvent: InputEvent) {
