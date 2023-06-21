@@ -2,7 +2,7 @@ import assert from 'assert';
 import type { WasmViews } from '../engine/wasmEngine/wasmViews';
 import { buildWasmMemViews } from '../engine/wasmEngine/wasmViews';
 import type { WasmRunParams } from '../engine/wasmEngine/wasmRun';
-import { WasmRun } from '../engine/wasmEngine/wasmRun';
+import { WasmRun, gWasmRun } from '../engine/wasmEngine/wasmRun';
 
 const enum AuxAppWorkerCommandEnum {
   INIT = 'aux_app_worker_init',
@@ -35,7 +35,7 @@ class AuxAppWorker {
 
   async run() {
     const { syncArray, workerIndex } = this.params;
-    console.log(`Worker ${workerIndex} running`);
+    console.log(`Aux app worker ${workerIndex} running`);
     try {
       while (true) {
         Atomics.wait(syncArray, workerIndex, 0);
@@ -56,7 +56,7 @@ const commands = {
   [AuxAppWorkerCommandEnum.INIT]: async (params: AuxAppWorkerParams) => {
     auxAppWorker = new AuxAppWorker();
     await auxAppWorker.init(params);
-    postMessage({ status: `aux app worker ${params.workerIndex} init completed` });
+    postMessage({ status: `Aux app worker ${params.workerIndex} init completed` });
   },
   [AuxAppWorkerCommandEnum.RUN]: async () => {
     await auxAppWorker.run();

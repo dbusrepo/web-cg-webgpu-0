@@ -26,6 +26,8 @@ type WasmRunParams = {
   surface1sizes: [number, number];
 };
 
+let gWasmRun: WasmRun;
+
 class WasmRun {
   protected params: WasmRunParams;
   protected wasmModules: WasmModules;
@@ -35,6 +37,7 @@ class WasmRun {
     this.params = params;
     this.wasmViews = wasmViews;
     await this.loadWasmModules();
+    gWasmRun = this;
   }
 
   private buildWasmImports(): WasmImports {
@@ -124,4 +127,4 @@ class WasmRun {
 }
 
 export type { WasmRunParams };
-export { WasmRun };
+export { WasmRun, gWasmRun };
