@@ -1,6 +1,7 @@
 import { MemRegionsEnum, WasmMemRegionsData } from './wasmMemUtils';
 
 type WasmViews = {
+  view: DataView;
   memUI8: Uint8Array;
   memUIC8: Uint8ClampedArray;
   memUI16: Uint16Array;
@@ -33,6 +34,7 @@ function buildWasmMemViews(
   const startSize = memSizes[MemRegionsEnum.START_MEM];
   const startOffset = memOffsets[MemRegionsEnum.START_MEM];
   const wasmTotalStartSize = startOffset + startSize;
+  const view = new DataView(wasmMem.buffer, 0, wasmTotalStartSize);
   const memUI8 = new Uint8Array(wasmMem.buffer, 0, wasmTotalStartSize);
   const memUIC8 = new Uint8ClampedArray(wasmMem.buffer, 0, wasmTotalStartSize);
   const memUI16 = new Uint16Array(wasmMem.buffer, 0, wasmTotalStartSize / Uint16Array.BYTES_PER_ELEMENT);
@@ -112,6 +114,7 @@ function buildWasmMemViews(
   );
 
   const memViews: WasmViews = {
+      view,
       memUI8,
       memUIC8,
       memUI16,
