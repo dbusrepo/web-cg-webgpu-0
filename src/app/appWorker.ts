@@ -43,7 +43,7 @@ class AppWorker {
   private assetManager: AssetManager;
   private inputManager: InputManager;
 
-  private auxAppWorkers: AuxAppWorkerDesc[];
+  private auxWorkers: AuxAppWorkerDesc[];
   private syncArray: Int32Array;
   private sleepArray: Int32Array;
 
@@ -93,22 +93,22 @@ class AppWorker {
   }
 
   private async runAuxAppWorkers() {
-    const numWorkers = mainConfig.numAuxAppWorkers;
+    const numWorkers = mainConfig.numAuxWorkers;
     console.log(`num aux app workers: ${numWorkers}`);
     const numTotalWorkers = numWorkers + 1;
     this.sleepArray = new Int32Array(new SharedArrayBuffer(numTotalWorkers * Int32Array.BYTES_PER_ELEMENT));
     Atomics.store(this.sleepArray, 0, 0); // main worker idx 0
-    this.auxAppWorkers = [];
+    this.auxWorkers = [];
     if (numWorkers) {
       this.syncArray = new Int32Array(new SharedArrayBuffer(numTotalWorkers * Int32Array.BYTES_PER_ELEMENT));
       Atomics.store(this.syncArray, 0, 0);
       await this.initAuxAppWorkers(numWorkers);
-      for (let i = 0; i < this.auxAppWorkers.length; ++i) {
-        const { index: workerIdx } = this.auxAppWorkers[i];
+      for (let i = 0; i < this.auxWorkers.length; ++i) {
+        const { index: workerIdx } = this.auxWorkers[i];
         Atomics.store(this.sleepArray, workerIdx, 0);
         Atomics.store(this.syncArray, workerIdx, 0);
       }
-      this.auxAppWorkers.forEach(({ worker }) => {
+      this.auxWorkers.forEach(({ worker }) => {
         worker.postMessage({
           command: AuxAppWorkerCommandEnum.RUN,
         });
@@ -138,7 +138,7 @@ class AppWorker {
               },
             )
           };
-          this.auxAppWorkers.push(engineWorker);
+          this.auxWorkers.push(engineWorker);
           const workerParams: AuxAppWorkerParams = {
             workerIndex,
             numWorkers: numAuxAppWorkers,
@@ -181,17 +181,16 @@ Date.now() - initStart
   private async initWasmEngine() {
     this.wasmEngine = new WasmEngine();
     const wasmEngineParams: WasmEngineParams = {
-      imageWidth: this.imageData.width,
-      imageHeight: this.imageData.height,
-      assetManager: this.assetManager,
-      inputManager: this.inputManager,
-      numAuxWasmWorkers: mainConfig.numAuxWasmWorkers,
+        imageWidth: this.imageData.width,
+        imageHeight: this.imageData.height,
+        assetManager: this.assetManager,
+        inputManager: this.inputManager,
+        numWorkers: mainConfig.numAuxWorkers,
     };
     await this.wasmEngine.init(wasmEngineParams);
   }
 
   public run(): void {
-
     let lastFrameStartTime: number;
     // let last_render_t: number;
     let updTimeAcc: number;
@@ -305,7 +304,7 @@ Date.now() - initStart
       if (renderTimeAcc >= AppWorker.RENDER_PERIOD_MS) {
         renderTimeAcc %= AppWorker.RENDER_PERIOD_MS;
         this.syncWorkers();
-        this.wasmEngine.render();
+        this.wasmEngine.WasmRun.WasmModules.engine.render();
         this.drawWasmFrame();
         this.waitWorkers();
         saveFrameTime();
@@ -359,18 +358,20 @@ Date.now() - initStart
   }
 
   private syncWorkers() {
-    for (let i = 0; i < this.auxAppWorkers.length; ++i) {
-      const { index: workerIdx } = this.auxAppWorkers[i];
+    for (let i = 0; i < this.auxWorkers.length; ++i) {
+      const { index: workerIdx } = this.auxWorkers[i];
       Atomics.store(this.syncArray, workerIdx, 1);
       Atomics.notify(this.syncArray, workerIdx);
     }
+    // this.wasmEngine.syncWorkers(this.auxWorkers);
   }
 
   private waitWorkers() {
-    for (let i = 0; i < this.auxAppWorkers.length; ++i) {
-      const { index: workerIdx } = this.auxAppWorkers[i];
+    for (let i = 0; i < this.auxWorkers.length; ++i) {
+      const { index: workerIdx } = this.auxWorkers[i];
       Atomics.wait(this.syncArray, workerIdx, 1);
     }
+    // this.wasmEngine.waitWorkers(this.auxWorkers);
   }
 
   public drawWasmFrame() {

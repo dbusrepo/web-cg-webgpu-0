@@ -39,6 +39,7 @@ class AuxAppWorker {
     try {
       while (true) {
         Atomics.wait(syncArray, workerIndex, 0);
+        // this.wasmRun.WasmModules.engine.render();
         // TODO:
         Atomics.store(syncArray, workerIndex, 0);
         Atomics.notify(syncArray, workerIndex);

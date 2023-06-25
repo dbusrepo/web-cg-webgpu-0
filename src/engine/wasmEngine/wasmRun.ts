@@ -78,7 +78,7 @@ class WasmRun {
       numWorkers,
       workersHeapPtr: memOffsets[WasmUtils.MemRegionsEnum.WORKERS_HEAPS],
       workerHeapSize,
-      heapPtr: memOffsets[WasmUtils.MemRegionsEnum.HEAP],
+      sharedHeapPtr: memOffsets[WasmUtils.MemRegionsEnum.HEAP],
       bgColor: 0xff_00_00_00, // randColor(),
       // usePalette: this._config.usePalette ? 1 : 0,
       // usePalette: 0,
