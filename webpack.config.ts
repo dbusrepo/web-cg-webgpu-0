@@ -8,7 +8,7 @@ import * as webpack from 'webpack'; // TODO
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { ProvidePlugin } from 'webpack';
-const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+// const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const CircularDependencyPlugin = require('circular-dependency-plugin')
 // import MiniCssExtractPlugin from "mini-css-extract-plugin";
 // import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
@@ -142,7 +142,7 @@ const config: webpack.Configuration = {
     ],
   },
   plugins: [
-    new ForkTsCheckerWebpackPlugin(),
+    // new ForkTsCheckerWebpackPlugin(),
     new HtmlWebpackPlugin({
       template: './src/index.html',
     }),
