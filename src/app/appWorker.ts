@@ -9,7 +9,7 @@ import { mainConfig } from '../config/mainConfig';
 import type { StatsValues } from '../ui/stats/stats';
 import { StatsNameEnum } from '../ui/stats/stats';
 import { AssetManager } from '../engine/assets/assetManager';
-import type { InputEvent } from './events';
+import type { InputEvent, CanvasDisplayResizeEvent } from './events';
 import { AppCommandEnum, PanelIdEnum, KeyEventsEnum } from '../app/appTypes';
 import type { KeyHandler, Key } from '../input/inputManager';
 import { InputManager, keys } from '../input/inputManager';
@@ -386,6 +386,10 @@ Date.now() - initStart
   public onKeyUp(inputEvent: InputEvent) {
     this.inputManager.onKeyUp(inputEvent.code);
   }
+
+  public onCanvasDisplayResize(displayWidth: number, displayHeight: number) {
+      // console.log('onCanvasDisplayResize', displayWidth, displayHeight);
+  }
 }
 
 let appWorker: AppWorker;
@@ -395,6 +399,7 @@ const enum AppWorkerCommandEnum {
   RUN = 'app_worker_run',
   KEY_DOWN = 'app_worker_key_down',
   KEY_UP = 'app_worker_key_up',
+  RESIZE_CANVAS_DISPLAY_SIZE = 'app_worker_resize_canvas_display_size',
 }
 
 const commands = {
@@ -414,6 +419,10 @@ const commands = {
   [AppWorkerCommandEnum.KEY_UP]: (inputEvent: InputEvent) => {
     appWorker.onKeyUp(inputEvent);
   },
+  [AppWorkerCommandEnum.RESIZE_CANVAS_DISPLAY_SIZE]: (resizeEvent: CanvasDisplayResizeEvent) => {
+    const { width, height } = resizeEvent;
+    appWorker.onCanvasDisplayResize(width, height);
+  }
 };
 
 self.onmessage = ({ data: { command, params } }) => {
