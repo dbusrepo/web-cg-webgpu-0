@@ -89,6 +89,8 @@ let c = 0;
 
 function render(): void {
 
+  utils.sleep(sleepLoc, 1);
+
   const r = utils.range(workerIdx, numWorkers, rgbaSurface0height);
   const s = <usize>(r >> 32);
   const e = <usize>r;
