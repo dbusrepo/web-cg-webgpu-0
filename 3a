@@ -44,30 +44,26 @@ function copyTextures2WasmMem(
   assert(texDescIndexSize !== undefined);
   const { length: numTextures } = textures;
   const texsIndexView = new DataView(texturesIndex.buffer);
-  let nextTexDescAddr = 0;
   let nextFirstMipDescAddr = texDescIndexSize;
   let nextMipPixelsAddr = 0;
   for (let i = 0; i < numTextures; ++i) {
     const texture = textures[i];
     const { Levels: levels } = texture;
     const numMips = levels.length;
+    const nextTexDescAddr = i * TEX_DESC_SIZE;
     texsIndexView.setUint32(nextTexDescAddr, numMips, true);
     texsIndexView.setUint32(nextTexDescAddr + NUM_MIPS_FIELD_SIZE, nextFirstMipDescAddr, true);
     const mipDescView = new DataView(texturesIndex.buffer, nextFirstMipDescAddr);
-    let nextMipDescFieldOffset = 0;
     for (let j = 0; j < numMips; ++j) {
       const level = levels[j];
       const { Width: width, Height: height, Buf8: buf8 } = level;
-      mipDescView.setUint32(nextMipDescFieldOffset, width, true);
-      nextMipDescFieldOffset += WIDTH_FIELD_SIZE;
-      mipDescView.setUint32(nextMipDescFieldOffset, height, true);
-      nextMipDescFieldOffset += HEIGHT_FIELD_SIZE;
-      mipDescView.setUint32(nextMipDescFieldOffset, nextMipPixelsAddr, true);
-      nextMipDescFieldOffset += OFFSET_TO_MIP_DATA_FIELD_SIZE;
+      const mipDescStartOffset = j * MIP_DESC_SIZE;
+      mipDescView.setUint32(mipDescStartOffset, width, true);
+      mipDescView.setUint32(mipDescStartOffset + WIDTH_FIELD_SIZE, height, true);
+      mipDescView.setUint32(mipDescStartOffset + WIDTH_FIELD_SIZE + HEIGHT_FIELD_SIZE, nextMipPixelsAddr, true);
       texturesPixels.set(buf8, nextMipPixelsAddr);
       nextMipPixelsAddr += buf8.length;
     }
-    nextTexDescAddr += TEX_DESC_SIZE;
     nextFirstMipDescAddr += numMips * MIP_DESC_SIZE;
   }
 }
