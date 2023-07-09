@@ -25,7 +25,6 @@ import {
   inputKeysPtr,
   hrTimerPtr,
 } from './importVars';
-import { BitImageRGBA } from './bitImageRGBA';
 import { Texture } from './texture';
 import { initTextures } from './initTextures';
 // import { DArray, newDArray, deleteDArray } from './darray';
@@ -35,24 +34,12 @@ import { DArray, newDArray } from './darray';
 import { test } from './test/test';
 import { PTR_T, SIZE_T, NULL_PTR } from './memUtils';
 
-// import { MYIMG, IMG1 } from './gen_importImages';
-// import * as strings from './gen_importStrings';
-
-import {
-  texturesIndexPtr,
-  texturesIndexSize,
-  texturesPixelsSize,
-  numTextures,
-} from './importVars';
-import { stringsDataPtr, stringsDataSize } from './importVars';
-import { FONT_Y_SIZE, fontCharsPtr, fontCharsSize } from './importVars';
-
 const syncLoc = utils.getArrElPtr<i32>(syncArrayPtr, workerIdx);
 const sleepLoc = utils.getArrElPtr<i32>(sleepArrayPtr, workerIdx);
 
 const MAIN_THREAD_IDX = mainWorkerIdx;
 
-let textures = changetype<SArray<BitImageRGBA>>(NULL_PTR);
+let textures = changetype<SArray<Texture>>(NULL_PTR);
 
 // @ts-ignore: decorator
 @inline function align<T>(): SIZE_T {
@@ -85,7 +72,7 @@ function init(): void {
   // test();
 }
 
-let c = 0;
+// let c = 0;
 
 function render(): void {
 

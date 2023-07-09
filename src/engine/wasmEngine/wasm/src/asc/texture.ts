@@ -35,10 +35,11 @@ const MIP_DESC_SIZE = WIDTH_FIELD_SIZE + HEIGHT_FIELD_SIZE + OFFSET_TO_MIP_DATA_
   init(texIdx: SIZE_T): void {
     myAssert(texIdx >= 0 && texIdx < numTextures);
     const numMipmaps = load<u32>(texturesIndexPtr + texIdx * TEX_DESC_SIZE);
+    myAssert(numMipmaps > 0);
     const mipMapDescOffs = load<u32>(texturesIndexPtr + texIdx * TEX_DESC_SIZE + NUM_MIPS_FIELD_SIZE);
     let nextMipDescPtr = texturesIndexPtr + mipMapDescOffs; // next mip map descriptor ptr
     this.mipmaps = newSArray<BitImageRGBA>(numMipmaps);
-    for (let i = 0; i < numMipmaps; i++) {
+    for (let i: u32 = 0; i < numMipmaps; i++) {
       const bitImageRgba = this.mipmaps.at(i);
       bitImageRgba.init(nextMipDescPtr);
       nextMipDescPtr += MIP_DESC_SIZE;
