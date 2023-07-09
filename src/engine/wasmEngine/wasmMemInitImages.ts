@@ -43,7 +43,7 @@ function copyTextures2WasmMem(
 ) {
   assert(texDescIndexSize !== undefined);
   const { length: numTextures } = textures;
-  const texsIndexView = new DataView(texturesIndex.buffer);
+  const texsIndexView = new DataView(texturesIndex.buffer, texturesIndex.byteOffset);
   let nextTexDescOffs = 0;
   let nextFirstMipDescOffs = texDescIndexSize;
   let nextMipPixelsOffs = 0;
@@ -53,7 +53,7 @@ function copyTextures2WasmMem(
     const numMips = levels.length;
     texsIndexView.setUint32(nextTexDescOffs, numMips, true);
     texsIndexView.setUint32(nextTexDescOffs + NUM_MIPS_FIELD_SIZE, nextFirstMipDescOffs, true);
-    const mipDescView = new DataView(texturesIndex.buffer, nextFirstMipDescOffs);
+    const mipDescView = new DataView(texturesIndex.buffer, texturesIndex.byteOffset + nextFirstMipDescOffs);
     let nextMipDescFieldOffset = 0;
     for (let j = 0; j < numMips; ++j) {
       const level = levels[j];
