@@ -184,7 +184,7 @@ class WasmEngine {
       mainWorkerIdx: 0, // main worker idx 0
       workerIdx: 0,
       numWorkers: this.NumTotalWorkers,
-      numImages: this.params.assetManager.NumTextures, // TODO: rename
+      numTextures: this.params.assetManager.NumTextures, // TODO: rename
       surface0sizes: [imageWidth, imageHeight],
       surface1sizes: [0, 0], // not used
     };

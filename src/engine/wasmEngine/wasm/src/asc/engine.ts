@@ -25,8 +25,9 @@ import {
   inputKeysPtr,
   hrTimerPtr,
 } from './importVars';
-import { BitImage } from './bitImage';
-import { initImages } from './initImages';
+import { BitImageRGBA } from './bitImageRGBA';
+import { Texture } from './texture';
+import { initTextures } from './initTextures';
 // import { DArray, newDArray, deleteDArray } from './darray';
 import { Pointer } from './pointer';
 import { SArray, newSArray } from './sarray';
@@ -38,11 +39,10 @@ import { PTR_T, SIZE_T, NULL_PTR } from './memUtils';
 // import * as strings from './gen_importStrings';
 
 import {
-  imagesIndexPtr,
-  imagesIndexSize,
-  imagesDataSize,
-  imagesDataPtr,
-  numImages,
+  texturesIndexPtr,
+  texturesIndexSize,
+  texturesPixelsSize,
+  numTextures,
 } from './importVars';
 import { stringsDataPtr, stringsDataSize } from './importVars';
 import { FONT_Y_SIZE, fontCharsPtr, fontCharsSize } from './importVars';
@@ -52,7 +52,7 @@ const sleepLoc = utils.getArrElPtr<i32>(sleepArrayPtr, workerIdx);
 
 const MAIN_THREAD_IDX = mainWorkerIdx;
 
-let images = changetype<SArray<BitImage>>(NULL_PTR);
+let textures = changetype<SArray<BitImageRGBA>>(NULL_PTR);
 
 // @ts-ignore: decorator
 @inline function align<T>(): SIZE_T {
@@ -72,7 +72,7 @@ function init(): void {
   // logi(workerIdx as i32);
 
   initMemManager();
-  images = initImages();
+  textures = initTextures();
 
   // logi(memory.size());
 
@@ -179,19 +179,10 @@ function run(): void {
 //   // logi(fontCharsPtr);
 //   // logi(fontCharsSize);
 //
-//   // logi(usePalette);
-//   // logi(imagesIndexPtr);
-//   // logi(imagesIndexSize);
-//   // logi(imagesDataPtr);
-//   // logi(imagesDataSize);
-//   // logi(numImages);
-//
 //   // logi(MYIMG);
-//   // logi(imagesIndexSize);
 //
 //   // test();
 //   // test images loading
-//   // logi(numImages);
 //   // const images = initImages();
 //   // for (let i = 0; i < images.length(); ++i) {
 //   //   const pixels = images.at(i).pixels;

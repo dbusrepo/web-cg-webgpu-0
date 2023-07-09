@@ -21,7 +21,7 @@ type WasmRunParams = {
   mainWorkerIdx: number;
   workerIdx: number;
   numWorkers: number;
-  numImages: number;
+  numTextures: number;
   surface0sizes: [number, number];
   surface1sizes: [number, number];
 };
@@ -50,7 +50,7 @@ class WasmRun {
       // surface1sizes,
       mainWorkerIdx,
       numWorkers,
-      numImages,
+      numTextures,
       workerIdx,
     } = this.params;
 
@@ -84,11 +84,11 @@ class WasmRun {
       // usePalette: 0,
       fontCharsPtr: memOffsets[WasmUtils.MemRegionsEnum.FONT_CHARS],
       fontCharsSize: memSizes[WasmUtils.MemRegionsEnum.FONT_CHARS],
-      numImages,
-      imagesIndexSize: memSizes[WasmUtils.MemRegionsEnum.TEXTURES_INDEX],
-      imagesIndexPtr: memOffsets[WasmUtils.MemRegionsEnum.TEXTURES_INDEX],
+      numTextures,
+      texturesIndexPtr: memOffsets[WasmUtils.MemRegionsEnum.TEXTURES_INDEX],
+      texturesIndexSize: memSizes[WasmUtils.MemRegionsEnum.TEXTURES_INDEX],
       imagesDataPtr: memOffsets[WasmUtils.MemRegionsEnum.TEXTURES],
-      imagesDataSize: memSizes[WasmUtils.MemRegionsEnum.TEXTURES],
+      texturesPixelsSize: memSizes[WasmUtils.MemRegionsEnum.TEXTURES],
       stringsDataPtr: memOffsets[WasmUtils.MemRegionsEnum.STRINGS],
       stringsDataSize: memSizes[WasmUtils.MemRegionsEnum.STRINGS],
       workersMemCountersPtr: memOffsets[WasmUtils.MemRegionsEnum.MEM_COUNTERS],
