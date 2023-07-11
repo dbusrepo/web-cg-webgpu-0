@@ -86,7 +86,7 @@ class WasmRun {
       numTextures,
       texturesIndexPtr: memOffsets[WasmUtils.MemRegionsEnum.TEXTURES_INDEX],
       texturesIndexSize: memSizes[WasmUtils.MemRegionsEnum.TEXTURES_INDEX],
-      imagesDataPtr: memOffsets[WasmUtils.MemRegionsEnum.TEXTURES],
+      texturesPixelsPtr: memOffsets[WasmUtils.MemRegionsEnum.TEXTURES],
       texturesPixelsSize: memSizes[WasmUtils.MemRegionsEnum.TEXTURES],
       stringsDataPtr: memOffsets[WasmUtils.MemRegionsEnum.STRINGS],
       stringsDataSize: memSizes[WasmUtils.MemRegionsEnum.STRINGS],
