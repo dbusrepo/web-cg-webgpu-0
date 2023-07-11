@@ -26,7 +26,7 @@ class AssetManager {
   private async loadTextures() {
     const imageBuffers = await this.loadImagesBuffers();
     const bitImagesRGBA = await decodePNGs(imageBuffers);
-    const bitImageRGBA2TextureAssetRGBA = (image: BitImageRGBA) => 
+    const bitImageRGBA2TextureAssetRGBA = (image: BitImageRGBA) =>
       new AssetTextureRGBA(image, {
         generateMipmaps: this.params.generateMipmaps,
         rotate: this.params.rotateTextures,
