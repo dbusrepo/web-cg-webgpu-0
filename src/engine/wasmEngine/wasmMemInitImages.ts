@@ -25,6 +25,17 @@ const PITCH_LG2_FIELD_SIZE = Uint32Array.BYTES_PER_ELEMENT;
 const OFFSET_TO_MIP_DATA_FIELD_SIZE = Uint32Array.BYTES_PER_ELEMENT;
 const MIP_DESC_SIZE = WIDTH_FIELD_SIZE + HEIGHT_FIELD_SIZE + PITCH_LG2_FIELD_SIZE + OFFSET_TO_MIP_DATA_FIELD_SIZE;
 
+const wasmTexFieldSizes = {
+  NUM_MIPS_FIELD_SIZE,
+  PTR_TO_FIRST_MIP_DESC_FIELD_SIZE,
+  TEX_DESC_SIZE,
+  WIDTH_FIELD_SIZE,
+  HEIGHT_FIELD_SIZE,
+  PITCH_LG2_FIELD_SIZE,
+  OFFSET_TO_MIP_DATA_FIELD_SIZE,
+  MIP_DESC_SIZE,
+};
+
 let texDescIndexSize: number; // first index level size
 
 function calcWasmTexturesIndexSize(assetTextures: AssetTextureRGBA[]) {
@@ -75,4 +86,9 @@ function copyTextures2WasmMem(
   }
 }
 
-export { copyTextures2WasmMem, calcWasmTexturesIndexSize };
+
+export {
+  copyTextures2WasmMem,
+  calcWasmTexturesIndexSize,
+  wasmTexFieldSizes,
+};
