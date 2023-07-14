@@ -82,7 +82,6 @@ class ConsolePanel extends React.Component<
       if (key === this.props.hotkey) {
         event.preventDefault();
         this.setOpen(!this.state.open);
-        return;
       }
     };
 
@@ -332,7 +331,7 @@ class ConsolePanel extends React.Component<
 
   private onInputKeyChange(event: React.ChangeEvent<HTMLInputElement>) {
     event.preventDefault();
-    const inputEl = this.inputRef; //event.target as HTMLInputElement;
+    const inputEl = this.inputRef; // event.target as HTMLInputElement;
     const { prompt } = this.props;
     const input = inputEl.value;
     const line = this.props.prompt + input.substring(prompt.length);
@@ -442,7 +441,7 @@ class ConsolePanel extends React.Component<
         </div>
 
         <input
-          spellcheck={false}
+          spellCheck={false}
           className="console-input"
           style={inputStyle}
           ref={(el) => {

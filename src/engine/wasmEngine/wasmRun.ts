@@ -3,7 +3,7 @@ import * as WasmUtils from './wasmMemUtils';
 import type { WasmViews } from './wasmViews';
 import type { WasmModules, WasmImports } from './wasmLoader';
 import { loadWasmModules } from './wasmLoader';
-import { randColor, sleep } from '../utils';
+// import { randColor, sleep } from '../utils';
 // import { BitImageRGBA } from './assets/images/bitImageRGBA';
 // import { PngDecoderRGBA } from './assets/images/vivaxy-png/PngDecoderRGBA';
 import {

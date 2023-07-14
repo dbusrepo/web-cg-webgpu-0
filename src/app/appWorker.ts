@@ -10,9 +10,9 @@ import type { StatsValues } from '../ui/stats/stats';
 import { StatsNameEnum } from '../ui/stats/stats';
 import { AssetManager } from '../engine/assets/assetManager';
 import type { InputEvent, CanvasDisplayResizeEvent } from './events';
-import { AppCommandEnum, PanelIdEnum, KeyEventsEnum } from '../app/appTypes';
-import type { KeyHandler, Key } from '../input/inputManager';
-import { InputManager, keys } from '../input/inputManager';
+import { AppCommandEnum } from './appTypes';
+// import type { KeyHandler, Key } from '../input/inputManager';
+import { InputManager } from '../input/inputManager';
 import type { AuxAppWorkerParams } from './auxAppWorker';
 import { AuxAppWorkerCommandEnum, AuxAppWorkerDesc } from './auxAppWorker';
 import type { WasmEngineParams } from '../engine/wasmEngine/wasmEngine';
@@ -128,9 +128,7 @@ class AppWorker {
     const initStart = Date.now();
     try {
       let nextWorkerIdx = 1; // start from 1, 0 is for the main worker
-      const genWorkerIdx = () => {
-        return nextWorkerIdx++;
-      };
+      const genWorkerIdx = () => nextWorkerIdx++;
       let remWorkers = numAuxAppWorkers;
       await new Promise<void>((resolve, reject) => {
         for (let i = 0; i < numAuxAppWorkers; ++i) {
@@ -160,9 +158,10 @@ class AppWorker {
           engineWorker.worker.onmessage = ({ data }) => {
             --remWorkers;
             console.log(
-              `Aux app worker id=${workerIndex} init, left count=${remWorkers}, time=${
-                Date.now() - initStart
-              }ms with data = ${JSON.stringify(data)}`,
+              `Aux app worker id=${workerIndex} init, 
+               left count=${remWorkers}, time=${
+                 Date.now() - initStart
+               }ms with data = ${JSON.stringify(data)}`,
             );
             if (remWorkers === 0) {
               console.log(
@@ -325,7 +324,7 @@ class AppWorker {
       ++frameCnt;
       statsTimeAcc += timeSinceLastFrame;
       if (statsTimeAcc >= AppWorker.STATS_PERIOD_MS) {
-        statsTimeAcc = statsTimeAcc % AppWorker.STATS_PERIOD_MS;
+        statsTimeAcc %= AppWorker.STATS_PERIOD_MS;
         // const tspent = (tnow - start_time) / App.MILLI_IN_SEC;
         const now = performance.now();
         const elapsed = now - lastStatsTime;
@@ -345,7 +344,7 @@ class AppWorker {
         const avgFrameTime = utils.arrAvg(frameTimeArr, renderCnt);
         const avgUfps = MILLI_IN_SEC / avgFrameTime;
         // console.log(`avgUfps = ${avgUfps}, avgFrameTime = ${avgFrameTime}`);
-        const stats: StatsValues = {
+        const statsValues: StatsValues = {
           [StatsNameEnum.FPS]: avgFps,
           [StatsNameEnum.RPS]: avgRps,
           [StatsNameEnum.UPS]: avgUps,
@@ -353,7 +352,7 @@ class AppWorker {
         };
         postMessage({
           command: AppCommandEnum.UPDATE_STATS,
-          params: stats,
+          params: statsValues,
         });
       }
     };

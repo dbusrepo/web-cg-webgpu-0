@@ -137,7 +137,7 @@ class App {
   }
 
   private initAppWorkerMsgHandlers() {
-    let enginePanel = this.enginePanel;
+    let { enginePanel } = this;
 
     let resolveInit: (value: void | PromiseLike<void>) => void;
 

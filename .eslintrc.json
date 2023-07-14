@@ -57,6 +57,7 @@
     "class-methods-use-this": "off",
     "no-param-reassign": "off",
     "no-lone-blocks": "off",
+    "import/no-mutable-exports": "off",
     "import/no-cycle": "off",
     "import/prefer-default-export": "off",
     "react/jsx-filename-extension": [2, { "extensions": [".tsx", ".ts", ".js", ".jsx"] }],
@@ -87,6 +88,7 @@
     "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/no-inferrable-types": "warn",
     "@typescript-eslint/no-this-alias": "off",
-    "@typescript-eslint/no-shadow": ["error"]
+    "@typescript-eslint/no-shadow": ["error"],
+    "@typescript-eslint/ban-ts-comment": "off"
   }
 }

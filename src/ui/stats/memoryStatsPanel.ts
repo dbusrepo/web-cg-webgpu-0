@@ -1,5 +1,5 @@
 import { StatsPanel } from './statsPanel';
-import { StatsNameEnum, StatsValues } from '../stats/stats';
+import { StatsNameEnum, StatsValues } from './stats';
 
 // TODO not used
 // const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];

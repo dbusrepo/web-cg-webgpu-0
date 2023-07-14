@@ -38,7 +38,7 @@ class AuxAppWorker {
     const { syncArray, workerIndex } = this.params;
     console.log(`Aux app worker ${workerIndex} running`);
     try {
-      while (true) {
+      for (;;) {
         Atomics.wait(syncArray, workerIndex, 0);
         // this.wasmRun.WasmModules.engine.render();
         // TODO:

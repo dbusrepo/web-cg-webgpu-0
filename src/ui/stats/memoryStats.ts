@@ -57,7 +57,7 @@ class MemoryStats {
   // sampled with a Poisson process. It ensures that on
   // average there is one measurement every ....
   private measurementInterval(): number {
-    const MEAN_INTERVAL_IN_MS = 1000; //5 * 60 * 1000;
+    const MEAN_INTERVAL_IN_MS = 1000; // 5 * 60 * 1000;
     return -Math.log(Math.random()) * MEAN_INTERVAL_IN_MS;
   }
 }

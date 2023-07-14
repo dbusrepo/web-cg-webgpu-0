@@ -62,7 +62,7 @@ class AssetTextureRGBA {
   private levels: BitImageRGBA[];
 
   constructor(image: BitImageRGBA, params: AssetTextureRGBAParams) {
-    this.levels = new Array();
+    this.levels = [];
     this.levels.push(image);
     if (params.generateMipmaps) {
       this.generateMipmaps();
