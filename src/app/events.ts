@@ -4,7 +4,7 @@ import { PanelId } from '../app/appTypes';
 type InputEvent = {
   code: Key;
   panelId: PanelId;
-}
+};
 
 type CanvasDisplayResizeEvent = {
   width: number;

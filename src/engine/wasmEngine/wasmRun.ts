@@ -58,7 +58,8 @@ class WasmRun {
       workerIdx,
     } = this.params;
 
-    const logf = (f: number) => console.log(`[wasm] Worker [${workerIdx}]: ${f}`);
+    const logf = (f: number) =>
+      console.log(`[wasm] Worker [${workerIdx}]: ${f}`);
 
     const logi = (i: number) => {
       console.log(`[wasm] Worker [${workerIdx}]: ${i}`);

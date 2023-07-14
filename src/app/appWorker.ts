@@ -24,7 +24,8 @@ type AppWorkerParams = {
 };
 
 class AppWorker {
-  private static readonly RENDER_PERIOD_MS = MILLI_IN_SEC / mainConfig.targetRPS;
+  private static readonly RENDER_PERIOD_MS =
+    MILLI_IN_SEC / mainConfig.targetRPS;
   private static readonly UPDATE_PERIOD_MS =
     (mainConfig.multiplier * MILLI_IN_SEC) / mainConfig.targetUPS;
 
@@ -38,7 +39,6 @@ class AppWorker {
 
   private ctx2d: OffscreenCanvasRenderingContext2D;
   private imageData: ImageData;
-
 
   private params: AppWorkerParams;
   private assetManager: AssetManager;
@@ -63,16 +63,15 @@ class AppWorker {
     this.ctx2d = this.get2dCtxFromCanvas(this.params.engineCanvas);
     this.imageData = this.ctx2d.createImageData(
       this.params.engineCanvas.width,
-      this.params.engineCanvas.height);
+      this.params.engineCanvas.height,
+    );
   }
 
   private get2dCtxFromCanvas(canvas: OffscreenCanvas) {
-    const ctx = <OffscreenCanvasRenderingContext2D>(
-      canvas.getContext('2d', {
-        alpha: false,
-        desynchronized: true,
-      })
-    );
+    const ctx = <OffscreenCanvasRenderingContext2D>canvas.getContext('2d', {
+      alpha: false,
+      desynchronized: true,
+    });
     ctx.imageSmoothingEnabled = false; // no blur, keep the pixels sharpness
     return ctx;
   }
@@ -100,11 +99,15 @@ class AppWorker {
     const numWorkers = mainConfig.numAuxWorkers;
     console.log(`num aux app workers: ${numWorkers}`);
     const numTotalWorkers = numWorkers + 1;
-    this.sleepArray = new Int32Array(new SharedArrayBuffer(numTotalWorkers * Int32Array.BYTES_PER_ELEMENT));
+    this.sleepArray = new Int32Array(
+      new SharedArrayBuffer(numTotalWorkers * Int32Array.BYTES_PER_ELEMENT),
+    );
     Atomics.store(this.sleepArray, 0, 0); // main worker idx 0
     this.auxWorkers = [];
     if (numWorkers) {
-      this.syncArray = new Int32Array(new SharedArrayBuffer(numTotalWorkers * Int32Array.BYTES_PER_ELEMENT));
+      this.syncArray = new Int32Array(
+        new SharedArrayBuffer(numTotalWorkers * Int32Array.BYTES_PER_ELEMENT),
+      );
       Atomics.store(this.syncArray, 0, 0);
       await this.initAuxAppWorkers(numWorkers);
       for (let i = 0; i < this.auxWorkers.length; ++i) {
@@ -134,13 +137,10 @@ class AppWorker {
           const workerIndex = genWorkerIdx();
           const engineWorker = {
             index: workerIndex,
-            worker: new Worker(
-              new URL('./auxAppWorker.ts', import.meta.url),
-              {
-                name: `aux-app-worker-${workerIndex}`,
-                type: 'module',
-              },
-            )
+            worker: new Worker(new URL('./auxAppWorker.ts', import.meta.url), {
+              name: `aux-app-worker-${workerIndex}`,
+              type: 'module',
+            }),
           };
           this.auxWorkers.push(engineWorker);
           const workerParams: AuxAppWorkerParams = {
@@ -161,8 +161,8 @@ class AppWorker {
             --remWorkers;
             console.log(
               `Aux app worker id=${workerIndex} init, left count=${remWorkers}, time=${
-Date.now() - initStart
-}ms with data = ${JSON.stringify(data)}`,
+                Date.now() - initStart
+              }ms with data = ${JSON.stringify(data)}`,
             );
             if (remWorkers === 0) {
               console.log(
@@ -172,24 +172,28 @@ Date.now() - initStart
             }
           };
           engineWorker.worker.onerror = (error) => {
-            console.log(`Aux app worker id=${workerIndex} error: ${error.message}\n`);
+            console.log(
+              `Aux app worker id=${workerIndex} error: ${error.message}\n`,
+            );
             reject(error);
           };
         }
       });
     } catch (error) {
-      console.error(`Error during aux app workers init: ${JSON.stringify(error)}`);
+      console.error(
+        `Error during aux app workers init: ${JSON.stringify(error)}`,
+      );
     }
   }
 
   private async initWasmEngine() {
     this.wasmEngine = new WasmEngine();
     const wasmEngineParams: WasmEngineParams = {
-        imageWidth: this.imageData.width,
-        imageHeight: this.imageData.height,
-        assetManager: this.assetManager,
-        inputManager: this.inputManager,
-        numWorkers: mainConfig.numAuxWorkers,
+      imageWidth: this.imageData.width,
+      imageHeight: this.imageData.height,
+      assetManager: this.assetManager,
+      inputManager: this.inputManager,
+      numWorkers: mainConfig.numAuxWorkers,
     };
     await this.wasmEngine.init(wasmEngineParams);
   }
@@ -242,7 +246,7 @@ Date.now() - initStart
       statsCnt = 0;
       resync = false;
       updateCnt = 0;
-      renderCnt  = 0;
+      renderCnt = 0;
       isRunning = true;
       isPaused = false;
       requestAnimationFrame(frame);
@@ -254,13 +258,20 @@ Date.now() - initStart
       frameStartTime = performance.now();
       timeSinceLastFrame = frameStartTime - lastFrameStartTime;
       lastFrameStartTime = frameStartTime;
-      timeSinceLastFrame = Math.min(timeSinceLastFrame, AppWorker.UPDATE_TIME_MAX);
+      timeSinceLastFrame = Math.min(
+        timeSinceLastFrame,
+        AppWorker.UPDATE_TIME_MAX,
+      );
       timeSinceLastFrame = Math.max(timeSinceLastFrame, 0);
-      timeSinceLastFrameArr[timeLastFrameCnt++ % timeSinceLastFrameArr.length] = timeSinceLastFrame;
+      timeSinceLastFrameArr[timeLastFrameCnt++ % timeSinceLastFrameArr.length] =
+        timeSinceLastFrame;
       // avgTimeSinceLastFrame = timeSinceLastFrame;
       // console.log(`avgTimeSinceLastFrame = ${avgTimeSinceLastFrame}`);
-      avgTimeSinceLastFrame = utils.arrAvg(timeSinceLastFrameArr, timeLastFrameCnt,);
-    }
+      avgTimeSinceLastFrame = utils.arrAvg(
+        timeSinceLastFrameArr,
+        timeLastFrameCnt,
+      );
+    };
 
     const frame = () => {
       requestAnimationFrame(frame);
@@ -388,7 +399,7 @@ Date.now() - initStart
   }
 
   public onCanvasDisplayResize(displayWidth: number, displayHeight: number) {
-      // console.log('onCanvasDisplayResize', displayWidth, displayHeight);
+    // console.log('onCanvasDisplayResize', displayWidth, displayHeight);
   }
 }
 
@@ -419,10 +430,12 @@ const commands = {
   [AppWorkerCommandEnum.KEY_UP]: (inputEvent: InputEvent) => {
     appWorker.onKeyUp(inputEvent);
   },
-  [AppWorkerCommandEnum.RESIZE_CANVAS_DISPLAY_SIZE]: (resizeEvent: CanvasDisplayResizeEvent) => {
+  [AppWorkerCommandEnum.RESIZE_CANVAS_DISPLAY_SIZE]: (
+    resizeEvent: CanvasDisplayResizeEvent,
+  ) => {
     const { width, height } = resizeEvent;
     appWorker.onCanvasDisplayResize(width, height);
-  }
+  },
 };
 
 self.onmessage = ({ data: { command, params } }) => {

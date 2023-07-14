@@ -35,27 +35,28 @@ class App {
   }
 
   private addKeyListener(panel: Panel) {
-
     const keyEvent2cmd = {
       [KeyEventsEnum.KEY_DOWN]: AppWorkerCommandEnum.KEY_DOWN,
       [KeyEventsEnum.KEY_UP]: AppWorkerCommandEnum.KEY_UP,
     };
 
-    const addKeyListener = (keyEvent: KeyEvent) => (
+    const addKeyListener = (keyEvent: KeyEvent) =>
       panel.InputElement.addEventListener(keyEvent, (event) => {
-        if (!panel.InputKeys.has(event.code) || panel.ignoreInputKey(event.code)) {
+        if (
+          !panel.InputKeys.has(event.code) ||
+          panel.ignoreInputKey(event.code)
+        ) {
           return;
         }
         this.appWorker.postMessage({
           command: keyEvent2cmd[keyEvent],
-          params: { 
+          params: {
             code: event.code,
             panelId: panel.Id,
-          }
+          },
         });
-      })
-    );
-    
+      });
+
     (Object.values(KeyEventsEnum) as KeyEventsEnum[]).forEach(addKeyListener);
   }
 
@@ -106,14 +107,14 @@ class App {
             params: {
               width,
               height,
-            }
+            },
           });
         }
       }
     };
 
     const resizeObserver = new ResizeObserver(onResize);
-    resizeObserver.observe(this.enginePanel.Canvas, {box: 'content-box'});
+    resizeObserver.observe(this.enginePanel.Canvas, { box: 'content-box' });
   }
 
   async initAppWorker() {
@@ -140,7 +141,7 @@ class App {
 
     let resolveInit: (value: void | PromiseLike<void>) => void;
 
-    const initPromise =  new Promise<void>((resolve) => {
+    const initPromise = new Promise<void>((resolve) => {
       resolveInit = resolve;
     });
 
@@ -173,7 +174,7 @@ class App {
 
   run() {
     this.appWorker.postMessage({
-      command: AppWorkerCommandEnum.RUN
+      command: AppWorkerCommandEnum.RUN,
     });
   }
 
@@ -186,10 +187,30 @@ class App {
       // isVisible: false,
     };
     stats.init(cfg);
-    const fpsPanel = new StatsPanel({ title: StatsNameEnum.FPS, fg: '#0ff', bg: '#022', graphHeight: 200 });
-    const rpsPanel = new StatsPanel({ title: StatsNameEnum.RPS, fg: '#f80', bg: '#022', graphHeight: 200 });
-    const upsPanel = new StatsPanel({ title: StatsNameEnum.UPS, fg: '#0f0', bg: '#020', graphHeight: 200 });
-    const ufpsPanel = new StatsPanel({ title: StatsNameEnum.UFPS, fg: '#f50', bg: '#110', graphHeight: 1000 });
+    const fpsPanel = new StatsPanel({
+      title: StatsNameEnum.FPS,
+      fg: '#0ff',
+      bg: '#022',
+      graphHeight: 200,
+    });
+    const rpsPanel = new StatsPanel({
+      title: StatsNameEnum.RPS,
+      fg: '#f80',
+      bg: '#022',
+      graphHeight: 200,
+    });
+    const upsPanel = new StatsPanel({
+      title: StatsNameEnum.UPS,
+      fg: '#0f0',
+      bg: '#020',
+      graphHeight: 200,
+    });
+    const ufpsPanel = new StatsPanel({
+      title: StatsNameEnum.UFPS,
+      fg: '#f50',
+      bg: '#110',
+      graphHeight: 1000,
+    });
     // const unlockedFpsPanel = new StatsPanel(StatsNames.FPSU, '#f50', '#110');
     // const wasmHeapMem = new StatsPanel(StatsNames.WASM_HEAP, '#0b0', '#030');
     // this.mem_panel = new StatsPanel('MEM', '#ff0', '#330');
@@ -216,10 +237,7 @@ class App {
     this.enginePanel = this.buildEnginePanel(board, row0);
   }
 
-  private buildEnginePanel(
-    board: HTMLDivElement,
-    parentNode: HTMLDivElement,
-  ) {
+  private buildEnginePanel(board: HTMLDivElement, parentNode: HTMLDivElement) {
     const { enginePanelConfig } = mainConfig;
     // parentNode.style.zIndex = '1'; // TODO:
     const panelConfig: EnginePanelConfig = {

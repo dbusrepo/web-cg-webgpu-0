@@ -30,10 +30,7 @@ function randColor(): number {
   return color;
 }
 
-const arrAvg = (
-  values: Float32Array | Float64Array,
-  count: number,
-) => {
+const arrAvg = (values: Float32Array | Float64Array, count: number) => {
   let acc = 0;
   const numIter = Math.min(count, values.length);
   if (numIter === 0) return 0;

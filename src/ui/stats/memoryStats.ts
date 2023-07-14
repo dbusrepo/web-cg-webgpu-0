@@ -15,7 +15,9 @@ class MemoryStats {
 
   constructor(stats: Stats) {
     if (!performance.measureUserAgentSpecificMemory) {
-      console.log('performance.measureUserAgentSpecificMemory is not available.');
+      console.log(
+        'performance.measureUserAgentSpecificMemory is not available.',
+      );
       return; // TODO ?
     }
     this.stats = stats;
@@ -49,7 +51,7 @@ class MemoryStats {
     this.panel.update(result.bytes);
     // 3. Schedule the next measurement.
     this.scheduleMeasurement();
-  };
+  }
 
   // Returns a random interval in milliseconds that is
   // sampled with a Poisson process. It ensures that on
