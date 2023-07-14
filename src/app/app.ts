@@ -226,12 +226,15 @@ class App {
 
   private initPanels() {
     const board = <HTMLDivElement>document.querySelector('#board');
+
     const row0 = document.createElement('div');
     row0.classList.add('row', 'row0');
-    const row1 = document.createElement('div');
-    row1.classList.add('row', 'row1');
     board.appendChild(row0);
-    board.appendChild(row1);
+
+    // const row1 = document.createElement('div');
+    // row1.classList.add('row', 'row1');
+    // board.appendChild(row1);
+
     // board.style.display = 'none';
 
     this.enginePanel = this.buildEnginePanel(board, row0);

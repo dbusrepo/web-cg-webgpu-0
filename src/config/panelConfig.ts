@@ -11,8 +11,8 @@ const panelConfig = {
 
   startViewMode: StartViewMode.WIN as StartViewMode,
 
-  canvasWidth: 320,
-  canvasHeight: 200,
+  // canvasWidth: 320,
+  // canvasHeight: 200,
 
   // canvasWidth: 400,
   // canvasHeight: 300,
@@ -23,8 +23,8 @@ const panelConfig = {
   // canvasWidth: 640,
   // canvasHeight: 480,
 
-  // canvasWidth: 800,
-  // canvasHeight: 600,
+  canvasWidth: 800,
+  canvasHeight: 600,
 
   // canvasWidth: 1024,
   // canvasHeight: 768,
@@ -38,11 +38,11 @@ const panelConfig = {
   // canvasDisplayWidthWinMode: 512,
   // canvasDisplayHeightWinMode: 384,
 
-  canvasDisplayWidthWinMode: 800,
-  canvasDisplayHeightWinMode: 600,
+  // canvasDisplayWidthWinMode: 800,
+  // canvasDisplayHeightWinMode: 600,
 
-  // canvasDisplayWidthWinMode: 1024,
-  // canvasDisplayHeightWinMode: 768,
+  canvasDisplayWidthWinMode: 1024,
+  canvasDisplayHeightWinMode: 768,
 
   // canvasDisplayWidthWinMode: 1280,
   // canvasDisplayHeightWinMode: 1024,
