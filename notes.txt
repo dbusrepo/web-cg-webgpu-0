@@ -241,13 +241,12 @@ https://stackoverflow.com/questions/47074126/log2-of-an-integer-that-is-a-power-
 
 -how to link another remote:
 
-for ex. from a specific project that wants to link this as another remote:
+for ex. to link the base proj in a new proj:
 
-git remote add base-origin https://github.com/dbusrepo/web-cg-base.git
-gco base-origin/main -> switch to main branch of base proj
-gcob base-origin-main -> create a local branch on it
-git branch -u base-origin/main  <- set tracking with remote branch
-git pull base-origin main (or simply git pull after the prev cmd) <- we pull from the main branch of base proj
+git remote add origin-web-cg-base git@github.com:dbusrepo/web-cg-base.git
+gco origin-web-cg-base/main
+gcob base-main -> create a local branch on it
+git branch --set-upstream-to=origin-web-cg-base/main <- set tracking with remote branch
 
 similarly if we want to add to this proj another remote from a specifi proj:
 
