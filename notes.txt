@@ -247,6 +247,7 @@ git remote add origin-web-cg-base git@github.com:dbusrepo/web-cg-base.git
 gco origin-web-cg-base/main
 gcob base-main -> create a local branch on it
 git branch --set-upstream-to=origin-web-cg-base/main <- set tracking with remote branch
+git config push.default upstream <- to allow pushing to a branch with a different name
 
 similarly if we want to add to this proj another remote from a specifi proj:
 
