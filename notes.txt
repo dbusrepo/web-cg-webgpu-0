@@ -243,7 +243,7 @@ https://stackoverflow.com/questions/47074126/log2-of-an-integer-that-is-a-power-
 
 for ex. from a specific project that wants to link this as another remote:
 
-git remote add base-origin https://github.com/dbusrepo/web-graphics-base.git
+git remote add base-origin https://github.com/dbusrepo/web-cg-base.git
 gco base-origin/main -> switch to main branch of base proj
 gcob base-origin-main -> create a local branch on it
 git branch -u base-origin/main  <- set tracking with remote branch
