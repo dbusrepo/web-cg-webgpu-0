@@ -248,6 +248,7 @@ gco origin-web-cg-base/main
 gcob base-main -> create a local branch on it
 git branch --set-upstream-to=origin-web-cg-base/main <- set tracking with remote branch
 git config push.default upstream <- to allow pushing to a branch with a different name
+// see https://git-scm.com/docs/git-config#Documentation/git-config.txt-pushdefault
 
 similarly if we want to add to this proj another remote from a specifi proj:
 
