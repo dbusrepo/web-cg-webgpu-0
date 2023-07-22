@@ -32,6 +32,13 @@ import { SArray, newSArray } from './sarray';
 import { DArray, newDArray } from './darray';
 import { test } from './test/test';
 import { PTR_T, SIZE_T, NULL_PTR } from './memUtils';
+import {
+  FrameColorRGBA, 
+  newFrameColorRGBA,
+  // deleteFrameColorRGBA, 
+  MAX_LIGHT_LEVELS,
+  BPP_RGBA
+} from './frameColorRGBA';
 
 const syncLoc = utils.getArrElPtr<i32>(syncArrayPtr, workerIdx);
 const sleepLoc = utils.getArrElPtr<i32>(sleepArrayPtr, workerIdx);
@@ -39,6 +46,7 @@ const sleepLoc = utils.getArrElPtr<i32>(sleepArrayPtr, workerIdx);
 const MAIN_THREAD_IDX = mainWorkerIdx;
 
 let textures = changetype<SArray<Texture>>(NULL_PTR);
+let frameColorRGBA = changetype<FrameColorRGBA>(NULL_PTR);
 
 // @ts-ignore: decorator
 @inline function align<T>(): SIZE_T {
@@ -54,11 +62,15 @@ function init(): void {
     // draw.clearBg(0, frameHeight, 0xff_00_00_00);
     // const t1 = <u64>process.hrtime();
     // store<u64>(hrTimerPtr, t1 - t0);
+
+
   }
   // logi(workerIdx as i32);
 
   initMemManager();
   textures = initTextures();
+
+  frameColorRGBA = newFrameColorRGBA();
 
   // logi(memory.size());
 
@@ -73,6 +85,16 @@ function init(): void {
 
 // let c = 0;
 
+function drawQuad(x: i32, y: i32, w: i32, h: i32, colorARGB: u32): void {
+  for (let i = 0; i < h; ++i) {
+    const rowPtr = rgbaSurface0ptr + (y + i) * rgbaSurface0width * BPP_RGBA
+    for (let j = 0; j < w; ++j) {
+      const screenPtr = rowPtr + (x + j) * BPP_RGBA;
+      store<u32>(screenPtr, colorARGB);
+    }
+  }
+}
+
 function render(): void {
 
   utils.sleep(sleepLoc, 1);
@@ -85,6 +107,13 @@ function render(): void {
   // const t0 = <u64>process.hrtime();
   // if (workerIdx == MAIN_THREAD_IDX) {
   draw.clearBg(s, e, 0xff_00_00_00); // ABGR
+  // }
+
+  // const color1 = FrameColorRGBA.colorABGR(0xff, 0, 0, 0xff);
+  // for (let l = 0; l < MAX_LIGHT_LEVELS; ++l) {
+  //   const color2 = frameColorRGBA.lightColorABGR(color1, l);
+  //   // const color2 = frameColorRGBA.fogColorABGR(color1, l);
+  //   drawQuad(0, l * 2, 100, 2, color2);
   // }
 
   // logi(c++);

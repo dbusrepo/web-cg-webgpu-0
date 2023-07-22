@@ -14,11 +14,25 @@ function range(workerIdx: number, numWorkers: number, numTasks: number): Range {
   return [start, end];
 }
 
-function randColor(): number {
+function colorABGR(r: number, g: number, b: number, a = 0xff): number {
+  return (a << 24) | (b << 16) | (g << 8) | r;
+}
+
+// RGBA -> ABGR
+function colorRGBAtoABGR(color: number): number {
+  const r = (color >> 24) & 0xff;
+  const g = (color >> 16) & 0xff;
+  const b = (color >> 8) & 0xff;
+  const a = color & 0xff;
+  return colorABGR(r, g, b, a);
+}
+
+// TODO:
+function randColorABGR(): number {
   const r = (Math.random() * 255) | 0;
   const g = (Math.random() * 255) | 0;
   const b = (Math.random() * 255) | 0;
-  const color = (0xff << 24) | (b << 16) | (g << 8) | r; // abgr
+  const color = colorABGR(r, g, b);
   return color;
 }
 
@@ -52,7 +66,9 @@ export {
   arrAvg,
   range,
   Range,
-  randColor,
+  randColorABGR,
+  colorRGBAtoABGR,
+  colorABGR,
   sleep,
   isPowerOf2,
   nextPowerOf2,
