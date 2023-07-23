@@ -37,7 +37,13 @@ import {
   newFrameColorRGBA,
   // deleteFrameColorRGBA, 
   MAX_LIGHT_LEVELS,
-  BPP_RGBA
+  BPP_RGBA,
+  getRedLightTablePtr,
+  getGreenLightTablePtr,
+  getBlueLightTablePtr,
+  getRedFogTablePtr,
+  getGreenFogTablePtr,
+  getBlueFogTablePtr,
 } from './frameColorRGBA';
 
 const syncLoc = utils.getArrElPtr<i32>(syncArrayPtr, workerIdx);
@@ -47,6 +53,10 @@ const MAIN_THREAD_IDX = mainWorkerIdx;
 
 let textures = changetype<SArray<Texture>>(NULL_PTR);
 let frameColorRGBA = changetype<FrameColorRGBA>(NULL_PTR);
+
+function getFrameColorRGBAPtr(): PTR_T {
+  return changetype<PTR_T>(frameColorRGBA);
+}
 
 // @ts-ignore: decorator
 @inline function align<T>(): SIZE_T {
@@ -251,4 +261,13 @@ function run(): void {
 //   draw.clearBg(s, e, 0xff_00_00_00); // ABGR
 // }
 
-export { init, render, run };
+export { 
+  init, render, run,
+  getFrameColorRGBAPtr,
+  getRedLightTablePtr,
+  getGreenLightTablePtr,
+  getBlueLightTablePtr,
+  getRedFogTablePtr,
+  getGreenFogTablePtr,
+  getBlueFogTablePtr,
+};

@@ -6,6 +6,8 @@ import {
   logf,
 } from './importVars';
 
+const BPP_RGBA: u8 = 4;
+
 const RGBA_ALPHA_MASK: u32 = 0xff000000;
 const RGBA_BLUE_MASK: u32 = 0x00ff0000;
 const RGBA_GREEN_MASK: u32 = 0x0000ff00;
@@ -25,8 +27,6 @@ const ABGR_ALPHA_SHIFT = 24;
 const ABGR_BLUE_SHIFT = 16;
 const ABGR_GREEN_SHIFT = 8;
 const ABGR_RED_SHIFT = 0;
-
-const BPP_RGBA: u8 = 4;
 
 const RED_MAX: u8 = 255;
 const GREEN_MAX: u8 = 255;
@@ -83,7 +83,12 @@ const MAX_LIGHT_LEVELS = 255;
   }
 
   static colorABGR(a: u32, b: u32, g: u32, r: u32): u32 {
-    return (a << ABGR_ALPHA_SHIFT) | (b << ABGR_BLUE_SHIFT) | (g << ABGR_GREEN_SHIFT) | r;
+    return (
+      (a << ABGR_ALPHA_SHIFT) |
+      (b << ABGR_BLUE_SHIFT) |
+      (g << ABGR_GREEN_SHIFT) |
+      r
+    );
   }
 
   static colorRGBAtoABGR(color: u32): u32 {
@@ -91,7 +96,7 @@ const MAX_LIGHT_LEVELS = 255;
     const g = (color >> RGBA_GREEN_SHIFT) & 0xff;
     const b = (color >> RGBA_BLUE_SHIFT) & 0xff;
     const a = (color >> RGBA_ALPHA_SHIFT) & 0xff;
-    return FrameColorRGBA.colorABGR(r, g, b, a);
+    return FrameColorRGBA.colorABGR(a, b, g, r);
   }
 
   lightColorABGR(colorABGR: u32, intensity: u32): u32 {
@@ -134,8 +139,8 @@ const MAX_LIGHT_LEVELS = 255;
 
   lightPixel(pColor: PTR_T, intensity: u32): void {
     // TODO:
-    // assert pColor u32 aligned ?
-    // assert intensity <= MAX_LIGHT_LEVELS
+    // assert(pColor % 4 == 0); // u32 aligned
+    // assert(intensity <= MAX_LIGHT_LEVELS);
 
     // assume color is stored as RGBA, so when loaded bytes are reversed 
     const colorABGR = load<u32>(pColor);
@@ -146,8 +151,8 @@ const MAX_LIGHT_LEVELS = 255;
 
   fogPixel(pColor: PTR_T, intensity: u32): void {
     // TODO:
-    // assert pColor u32 aligned ?
-    // assert intensity <= MAX_LIGHT_LEVELS
+    // assert(pColor % 4 == 0); // u32 aligned
+    // assert(intensity <= MAX_LIGHT_LEVELS);
 
     // assume color is stored as RGBA, so when loaded bytes are reversed 
     const colorABGR = load<u32>(pColor);
@@ -166,7 +171,31 @@ const MAX_LIGHT_LEVELS = 255;
     const rt = <u32>((1 - ratio) * rs1 + ratio * rs2);
     const gt = <u32>((1 - ratio) * gs1 + ratio * gs2);
     const bt = <u32>((1 - ratio) * bs1 + ratio * bs2);
-    return FrameColorRGBA.colorABGR(rt, gt, bt, 0xFF);
+    return FrameColorRGBA.colorABGR(0xff, bt, gt, rt);
+  }
+
+  get RedLightTable(): SArray<u8> {
+    return this.redLightTable;
+  }
+
+  get GreenLightTable(): SArray<u8> {
+    return this.greenLightTable;
+  }
+
+  get BlueLightTable(): SArray<u8> {
+    return this.blueLightTable;
+  }
+
+  get RedFogTable(): SArray<u8> {
+    return this.redFogTable;
+  }
+
+  get GreenFogTable(): SArray<u8> {
+    return this.greenFogTable;
+  }
+
+  get BlueFogTable(): SArray<u8> {
+    return this.blueFogTable;
   }
 }
 
@@ -189,10 +218,46 @@ function deleteFrameColorRGBA(frameColorRGBA: FrameColorRGBA): void {
   frameColorAllocator.delete(frameColorRGBA);
 }
 
+function getRedLightTablePtr(frameColorRGBAPtr: PTR_T): PTR_T {
+  const frameColorRGBA = changetype<FrameColorRGBA>(frameColorRGBAPtr);
+  return frameColorRGBA.RedLightTable.DataPtr;
+}
+
+function getGreenLightTablePtr(frameColorRGBAPtr: PTR_T): PTR_T {
+  const frameColorRGBA = changetype<FrameColorRGBA>(frameColorRGBAPtr);
+  return frameColorRGBA.GreenLightTable.DataPtr;
+}
+
+function getBlueLightTablePtr(frameColorRGBAPtr: PTR_T): PTR_T {
+  const frameColorRGBA = changetype<FrameColorRGBA>(frameColorRGBAPtr);
+  return frameColorRGBA.BlueLightTable.DataPtr;
+}
+
+function getRedFogTablePtr(frameColorRGBAPtr: PTR_T): PTR_T {
+  const frameColorRGBA = changetype<FrameColorRGBA>(frameColorRGBAPtr);
+  return frameColorRGBA.RedFogTable.DataPtr;
+}
+
+function getGreenFogTablePtr(frameColorRGBAPtr: PTR_T): PTR_T {
+  const frameColorRGBA = changetype<FrameColorRGBA>(frameColorRGBAPtr);
+  return frameColorRGBA.GreenFogTable.DataPtr;
+}
+
+function getBlueFogTablePtr(frameColorRGBAPtr: PTR_T): PTR_T {
+  const frameColorRGBA = changetype<FrameColorRGBA>(frameColorRGBAPtr);
+  return frameColorRGBA.BlueFogTable.DataPtr;
+}
+
 export { 
   FrameColorRGBA, 
   newFrameColorRGBA,
   deleteFrameColorRGBA, 
   MAX_LIGHT_LEVELS,
-  BPP_RGBA
+  BPP_RGBA,
+  getRedLightTablePtr,
+  getGreenLightTablePtr,
+  getBlueLightTablePtr,
+  getRedFogTablePtr,
+  getGreenFogTablePtr,
+  getBlueFogTablePtr,
 };

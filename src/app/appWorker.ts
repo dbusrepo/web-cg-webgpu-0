@@ -1,9 +1,5 @@
 import assert from 'assert';
-import {
-  // BPP_PAL,
-  // BPP_RGBA,
-  MILLI_IN_SEC,
-} from '../common';
+import { MILLI_IN_SEC } from '../common';
 
 import { mainConfig } from '../config/mainConfig';
 import type { StatsValues } from '../ui/stats/stats';
@@ -17,7 +13,15 @@ import type { AuxAppWorkerParams } from './auxAppWorker';
 import { AuxAppWorkerCommandEnum, AuxAppWorkerDesc } from './auxAppWorker';
 import type { WasmEngineParams } from '../engine/wasmEngine/wasmEngine';
 import { WasmEngine } from '../engine/wasmEngine/wasmEngine';
+import type {
+  WasmModules,
+  WasmEngineModule,
+} from '../engine/wasmEngine/wasmLoader';
 import * as utils from '../engine/utils';
+import {
+  FrameColorRGBAWasm,
+  getFrameColorRGBAWasmView,
+} from '../engine/wasmEngine/frameColorRGBAWasm';
 
 type AppWorkerParams = {
   engineCanvas: OffscreenCanvas;
@@ -49,6 +53,8 @@ class AppWorker {
   private sleepArray: Int32Array;
 
   private wasmEngine: WasmEngine;
+  private wasmEngineModule: WasmEngineModule;
+  private frameColorRGBAWasm: FrameColorRGBAWasm;
 
   public async init(params: AppWorkerParams): Promise<void> {
     this.params = params;
@@ -195,6 +201,8 @@ class AppWorker {
       numWorkers: mainConfig.numAuxWorkers,
     };
     await this.wasmEngine.init(wasmEngineParams);
+    this.wasmEngineModule = this.wasmEngine.WasmRun.WasmModules.engine;
+    this.frameColorRGBAWasm = getFrameColorRGBAWasmView(this.wasmEngineModule);
   }
 
   public run(): void {
@@ -309,7 +317,7 @@ class AppWorker {
       if (renderTimeAcc >= AppWorker.RENDER_PERIOD_MS) {
         renderTimeAcc %= AppWorker.RENDER_PERIOD_MS;
         this.syncWorkers();
-        this.wasmEngine.WasmRun.WasmModules.engine.render();
+        this.wasmEngineModule.render();
         this.waitWorkers();
         this.drawWasmFrame();
         saveFrameTime();
