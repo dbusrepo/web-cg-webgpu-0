@@ -16,15 +16,12 @@ type wasmBuilderFunc<T> = (
 
 type WasmImports = {
   memory: WebAssembly.Memory;
-
   rgbaSurface0ptr: number;
   rgbaSurface0width: number;
   rgbaSurface0height: number;
-
   // rgbaSurface1ptr: number;
   // rgbaSurface1width: number;
   // rgbaSurface1height: number;
-
   syncArrayPtr: number;
   sleepArrayPtr: number;
   workersHeapPtr: number;
@@ -54,6 +51,8 @@ type WasmImports = {
 
   logi: (v: number) => void;
   logf: (v: number) => void;
+
+  frameColorRGBAPtr: number;
 };
 
 type WasmModules = {

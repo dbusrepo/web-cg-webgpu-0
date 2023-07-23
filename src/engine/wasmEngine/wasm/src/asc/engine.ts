@@ -23,6 +23,7 @@ import {
   sleepArrayPtr,
   inputKeysPtr,
   hrTimerPtr,
+  frameColorRGBAPtr,
 } from './importVars';
 import { Texture } from './texture';
 import { initTextures } from './initTextures';
@@ -58,9 +59,14 @@ function getFrameColorRGBAPtr(): PTR_T {
   return changetype<PTR_T>(frameColorRGBA);
 }
 
-// @ts-ignore: decorator
-@inline function align<T>(): SIZE_T {
-  return alignof<T>();
+function initData(): void {
+  if (workerIdx == MAIN_THREAD_IDX) {
+    frameColorRGBA = newFrameColorRGBA();
+  } else {
+    frameColorRGBA = changetype<FrameColorRGBA>(frameColorRGBAPtr);
+  }
+
+  textures = initTextures();
 }
 
 function init(): void {
@@ -72,37 +78,11 @@ function init(): void {
     // draw.clearBg(0, frameHeight, 0xff_00_00_00);
     // const t1 = <u64>process.hrtime();
     // store<u64>(hrTimerPtr, t1 - t0);
-
-
   }
+
   // logi(workerIdx as i32);
-
   initMemManager();
-  textures = initTextures();
-
-  frameColorRGBA = newFrameColorRGBA();
-
-  // logi(memory.size());
-
-  // myAssert(images != null);
-  // const image = images.at(0);
-  // logi(image.Width as i32);
-  // logi(image.Height as i32);
-
-  // const arr = newDArray<u32>(1);
-  // test();
-}
-
-// let c = 0;
-
-function drawQuad(x: i32, y: i32, w: i32, h: i32, colorARGB: u32): void {
-  for (let i = 0; i < h; ++i) {
-    const rowPtr = rgbaSurface0ptr + (y + i) * rgbaSurface0width * BPP_RGBA
-    for (let j = 0; j < w; ++j) {
-      const screenPtr = rowPtr + (x + j) * BPP_RGBA;
-      store<u32>(screenPtr, colorARGB);
-    }
-  }
+  initData();
 }
 
 function render(): void {
@@ -115,16 +95,18 @@ function render(): void {
   // logi(r as i32);
 
   // const t0 = <u64>process.hrtime();
+
+  draw.clearBg(s, e, 0xff_ff_00_00); // ABGR
+
   // if (workerIdx == MAIN_THREAD_IDX) {
-  draw.clearBg(s, e, 0xff_00_00_00); // ABGR
+    // const color1 = FrameColorRGBA.colorABGR(0xff, 0, 0, 0xff);
+    // for (let l = 0; l < MAX_LIGHT_LEVELS; ++l) {
+    //   const color2 = frameColorRGBA.lightColorABGR(color1, l);
+    //   // const color2 = frameColorRGBA.fogColorABGR(color1, l);
+    //   drawQuad(0, l * 2, 100, 2, color2);
+    // }
   // }
 
-  // const color1 = FrameColorRGBA.colorABGR(0xff, 0, 0, 0xff);
-  // for (let l = 0; l < MAX_LIGHT_LEVELS; ++l) {
-  //   const color2 = frameColorRGBA.lightColorABGR(color1, l);
-  //   // const color2 = frameColorRGBA.fogColorABGR(color1, l);
-  //   drawQuad(0, l * 2, 100, 2, color2);
-  // }
 
   // logi(c++);
   // heapAlloc(1024*1024);
@@ -260,6 +242,16 @@ function run(): void {
 //
 //   draw.clearBg(s, e, 0xff_00_00_00); // ABGR
 // }
+
+function drawQuad(x: i32, y: i32, w: i32, h: i32, colorARGB: u32): void {
+  for (let i = 0; i < h; ++i) {
+    const rowPtr = rgbaSurface0ptr + (y + i) * rgbaSurface0width * BPP_RGBA
+    for (let j = 0; j < w; ++j) {
+      const screenPtr = rowPtr + (x + j) * BPP_RGBA;
+      store<u32>(screenPtr, colorARGB);
+    }
+  }
+}
 
 export { 
   init, render, run,

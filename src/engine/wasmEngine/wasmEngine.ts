@@ -201,6 +201,7 @@ class WasmEngine {
       numTextures: this.params.assetManager.NumTextures, // TODO: rename
       surface0sizes: [imageWidth, imageHeight],
       surface1sizes: [0, 0], // not used
+      frameColorRGBAPtr: 0, // main thread init this in wasm engine
     };
 
     await this.wasmRun.init(this.wasmRunParams, this.wasmViews);

@@ -155,6 +155,7 @@ class AppWorker {
             wasmRunParams: {
               ...this.wasmEngine.WasmRunParams,
               workerIdx: workerIndex,
+              frameColorRGBAPtr: this.wasmEngineModule.getFrameColorRGBAPtr(),
             },
           };
           engineWorker.worker.postMessage({
