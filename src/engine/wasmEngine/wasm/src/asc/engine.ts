@@ -118,21 +118,21 @@ function render(): void {
   // logi(tex.NumMipMaps);
 
   // const image = images.at(IMG1);
-  const image = mipmaps.at(1);
-  // const image = mipmaps.at(2);
+  // const image = mipmaps.at(0);
+  // const image = mipmaps.at(1);
   // const byte = load<u8>(image.Ptr);
   // logi(<i32>byte);
 
-  if (workerIdx == MAIN_THREAD_IDX) {
-    const minWidth = <SIZE_T>Math.min(image.Width, rgbaSurface0width);
-    const minHeight = <SIZE_T>Math.min(image.Height, e - s);
-    // const imagePitch = <SIZE_T>(1 << image.PitchLg2);
-    for (let i = s; i != s + minHeight; ++i) {
-      let screenPtr: PTR_T = rgbaSurface0ptr + i * rgbaSurface0width * BPP_RGBA;
-      const imgRowPixels: PTR_T = image.Ptr + ((i - s) << image.PitchLg2) * BPP_RGBA;
-      memory.copy(screenPtr, imgRowPixels, image.Width * 4);
-    }
-  }
+  // if (workerIdx == MAIN_THREAD_IDX) {
+  //   const minWidth = <SIZE_T>Math.min(image.Width, rgbaSurface0width);
+  //   const minHeight = <SIZE_T>Math.min(image.Height, e - s);
+  //   // const imagePitch = <SIZE_T>(1 << image.PitchLg2);
+  //   for (let i = s; i != s + minHeight; ++i) {
+  //     let screenPtr: PTR_T = rgbaSurface0ptr + i * rgbaSurface0width * BPP_RGBA;
+  //     const imgRowPixels: PTR_T = image.Ptr + ((i - s) << image.PitchLg2) * BPP_RGBA;
+  //     memory.copy(screenPtr, imgRowPixels, image.Width * 4);
+  //   }
+  // }
 
   // draw mipmaps
 

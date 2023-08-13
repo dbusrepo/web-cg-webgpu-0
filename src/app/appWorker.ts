@@ -13,10 +13,12 @@ import type { AuxAppWorkerParams } from './auxAppWorker';
 import { AuxAppWorkerCommandEnum, AuxAppWorkerDesc } from './auxAppWorker';
 import type { WasmEngineParams } from '../engine/wasmEngine/wasmEngine';
 import { WasmEngine } from '../engine/wasmEngine/wasmEngine';
+import { Texture, initTextureWasm } from '../engine/wasmEngine/texture';
 import type {
   WasmModules,
   WasmEngineModule,
 } from '../engine/wasmEngine/wasmLoader';
+import { ascImportImages } from '../../assets/build/images';
 import * as utils from '../engine/utils';
 import {
   FrameColorRGBAWasm,
@@ -56,6 +58,8 @@ class AppWorker {
   private wasmEngineModule: WasmEngineModule;
   private frameColorRGBAWasm: FrameColorRGBAWasm;
 
+  private textures: Texture[];
+
   public async init(params: AppWorkerParams): Promise<void> {
     this.params = params;
     this.initGfx();
@@ -63,6 +67,8 @@ class AppWorker {
     this.initInput();
     await this.initWasmEngine();
     await this.runAuxAppWorkers();
+    this.initTextures();
+    // this.wasmEngineModule.render();
   }
 
   private initGfx() {
@@ -98,6 +104,17 @@ class AppWorker {
     await this.assetManager.init({
       generateMipmaps: true,
       rotateTextures: true,
+    });
+  }
+
+  private initTextures() {
+    const wasmTexturesImport = Object.entries(ascImportImages);
+    let mipMapBaseIdx = 0;
+    this.textures = [];
+    wasmTexturesImport.forEach(([texName, texIdx]) => {
+      const texture = initTextureWasm(texName, texIdx, mipMapBaseIdx);
+      this.textures.push(texture);
+      mipMapBaseIdx += texture.NumMipmaps;
     });
   }
 
