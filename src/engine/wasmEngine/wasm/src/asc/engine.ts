@@ -25,8 +25,7 @@ import {
   hrTimerPtr,
   frameColorRGBAPtr,
 } from './importVars';
-import { Texture } from './texture';
-import { initTextures } from './initTextures';
+import { Texture, initTextures, textures, mipmaps } from './texture';
 // import { DArray, newDArray, deleteDArray } from './darray';
 import { Pointer } from './pointer';
 import { SArray, newSArray } from './sarray';
@@ -52,7 +51,6 @@ const sleepLoc = utils.getArrElPtr<i32>(sleepArrayPtr, workerIdx);
 
 const MAIN_THREAD_IDX = mainWorkerIdx;
 
-let textures = changetype<SArray<Texture>>(NULL_PTR);
 let frameColorRGBA = changetype<FrameColorRGBA>(NULL_PTR);
 
 function getFrameColorRGBAPtr(): PTR_T {
@@ -66,7 +64,7 @@ function initData(): void {
     frameColorRGBA = changetype<FrameColorRGBA>(frameColorRGBAPtr);
   }
 
-  textures = initTextures();
+  initTextures();
 }
 
 function init(): void {
@@ -115,18 +113,28 @@ function render(): void {
   // store<u64>(hrTimerPtr, t1 - t0);
 
   // render image test
-  // const image = images.at(IMG1);
-  // // const byte = load<u8>(image.Ptr);
-  // // logi(<i32>byte);
 
-  // if (workerIdx == MAIN_THREAD_IDX) {
-  // const minWidth = <usize>Math.min(image.Width, rgbaSurface0width);
-  // for (let i = s; i != e; ++i) {
-  //   let screenPtr: PTR_T = rgbaSurface0ptr + i * rgbaSurface0width * 4;
-  //   const pixels: PTR_T = image.Ptr + i * image.Width * 4;
-  //   memory.copy(screenPtr, pixels, minWidth * 4);
-  // }
-  // }
+  // const tex = textures.at(0);
+  // logi(tex.NumMipMaps);
+
+  // const image = images.at(IMG1);
+  const image = mipmaps.at(1);
+  // const image = mipmaps.at(2);
+  // const byte = load<u8>(image.Ptr);
+  // logi(<i32>byte);
+
+  if (workerIdx == MAIN_THREAD_IDX) {
+    const minWidth = <SIZE_T>Math.min(image.Width, rgbaSurface0width);
+    const minHeight = <SIZE_T>Math.min(image.Height, e - s);
+    // const imagePitch = <SIZE_T>(1 << image.PitchLg2);
+    for (let i = s; i != s + minHeight; ++i) {
+      let screenPtr: PTR_T = rgbaSurface0ptr + i * rgbaSurface0width * BPP_RGBA;
+      const imgRowPixels: PTR_T = image.Ptr + ((i - s) << image.PitchLg2) * BPP_RGBA;
+      memory.copy(screenPtr, imgRowPixels, image.Width * 4);
+    }
+  }
+
+  // draw mipmaps
 
   // if (workerIdx == MAIN_THREAD_IDX) {
     // draw.drawText(strings.SENT2, 10, 10, 1, 0xFF_00_00_FF);
