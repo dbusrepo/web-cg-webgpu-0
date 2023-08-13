@@ -5,7 +5,7 @@ import { dragElement } from '../drag';
 
 enum StatsNameEnum {
   FPS = 'FPS',
-  RPS = 'RPS',
+  // RPS = 'RPS',
   UPS = 'UPS',
   UFPS = 'UFPS',
   // MEM = 'MEM',

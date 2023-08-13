@@ -30,16 +30,14 @@ type AppWorkerParams = {
 };
 
 class AppWorker {
-  private static readonly RENDER_PERIOD_MS =
-    MILLI_IN_SEC / mainConfig.targetRPS;
   private static readonly UPDATE_PERIOD_MS =
     (mainConfig.multiplier * MILLI_IN_SEC) / mainConfig.targetUPS;
 
   private static readonly UPDATE_TIME_MAX = AppWorker.UPDATE_PERIOD_MS * 8;
 
   private static readonly STATS_ARR_LEN = 10; // fps, rps, ups
-  private static readonly FRAME_TIMES_ARR_LEN = 1; // used for ufps
-  private static readonly TIMES_SINCE_LAST_FRAME_ARR_LEN = 1; // update, render
+  private static readonly FRAME_TIMES_ARR_LEN = 15; // used for ufps
+  private static readonly TIMES_SINCE_LAST_FRAME_ARR_LEN = 5; // update, render
 
   private static readonly STATS_PERIOD_MS = 100; // MILLI_IN_SEC;
 
@@ -331,16 +329,12 @@ class AppWorker {
     };
 
     const render = () => {
-      renderTimeAcc += avgTimeSinceLastFrame;
-      if (renderTimeAcc >= AppWorker.RENDER_PERIOD_MS) {
-        renderTimeAcc %= AppWorker.RENDER_PERIOD_MS;
-        this.syncWorkers();
-        this.wasmEngineModule.render();
-        this.waitWorkers();
-        this.drawWasmFrame();
-        saveFrameTime();
-        renderCnt++;
-      }
+      this.syncWorkers();
+      this.wasmEngineModule.render();
+      this.waitWorkers();
+      this.drawWasmFrame();
+      saveFrameTime();
+      renderCnt++;
     };
 
     const saveFrameTime = () => {
@@ -367,14 +361,12 @@ class AppWorker {
         rpsArr[stat_idx] = rps;
         upsArr[stat_idx] = ups;
         const avgFps = utils.arrAvg(fpsArr, statsCnt);
-        const avgRps = utils.arrAvg(rpsArr, statsCnt);
         const avgUps = utils.arrAvg(upsArr, statsCnt);
         const avgFrameTime = utils.arrAvg(frameTimeArr, frameTimeCnt);
         const avgUfps = MILLI_IN_SEC / avgFrameTime;
         // console.log(`avgUfps = ${avgUfps}, avgFrameTime = ${avgFrameTime}`);
         const statsValues: StatsValues = {
           [StatsNameEnum.FPS]: avgFps,
-          [StatsNameEnum.RPS]: avgRps,
           [StatsNameEnum.UPS]: avgUps,
           [StatsNameEnum.UFPS]: avgUfps,
         };
