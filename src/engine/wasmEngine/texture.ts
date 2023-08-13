@@ -7,12 +7,12 @@ import { wasmTexFieldSizes } from './wasmMemInitImages';
 class Mipmap {
   // eslint-disable-next-line no-useless-constructor
   constructor(
-    private mipMapIdx: number, // wasm index in mipmaps array
+    private mipMapWasmIdx: number, // wasm index in mipmaps array
     private image: BitImageRGBA,
   ) {}
 
-  get MipMapWasmIdx(): number {
-    return this.mipMapIdx;
+  get WasmIdx(): number {
+    return this.mipMapWasmIdx;
   }
 
   get Image(): BitImageRGBA {
@@ -29,17 +29,21 @@ class Texture {
     private mipmaps: Mipmap[],
   ) {}
 
-  getMipmap(lvl: number): BitImageRGBA {
+  getMipmap(lvl: number): Mipmap {
     // assert(lvl >= 0 && lvl < this.mipmaps.length);
-    return this.mipmaps[lvl].Image;
+    return this.mipmaps[lvl];
   }
 
   get NumMipmaps(): number {
     return this.mipmaps.length;
   }
 
-  get TexWasmIdx(): number {
+  get WasmIdx(): number {
     return this.texIdx;
+  }
+
+  get Name(): string {
+    return this.texName;
   }
 
   makeDarker() {
@@ -119,4 +123,4 @@ const initTextureWasm = (
   return texture;
 };
 
-export { Texture, initTextureWasm };
+export { Texture, Mipmap, initTextureWasm };
