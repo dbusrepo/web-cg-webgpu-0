@@ -35,7 +35,7 @@ class AppWorker {
 
   private static readonly UPDATE_TIME_MAX = AppWorker.UPDATE_PERIOD_MS * 8;
 
-  private static readonly STATS_ARR_LEN = 10; // fps, rps, ups
+  private static readonly STATS_ARR_LEN = 15; // fps, ups
   private static readonly FRAME_TIMES_ARR_LEN = 15; // used for ufps
   private static readonly TIMES_SINCE_LAST_FRAME_ARR_LEN = 5; // update, render
 
@@ -245,7 +245,6 @@ class AppWorker {
     let frameTimeArr: Float64Array;
     let timeSinceLastFrameArr: Float64Array;
     let fpsArr: Float32Array;
-    let rpsArr: Float32Array;
     let upsArr: Float32Array;
 
     let resync: boolean;
@@ -266,7 +265,6 @@ class AppWorker {
       timeLastFrameCnt = 0;
       statsTimeAcc = 0;
       fpsArr = new Float32Array(AppWorker.STATS_ARR_LEN);
-      rpsArr = new Float32Array(AppWorker.STATS_ARR_LEN);
       upsArr = new Float32Array(AppWorker.STATS_ARR_LEN);
       statsCnt = 0;
       resync = false;
@@ -354,11 +352,9 @@ class AppWorker {
         elapsedTimeMs += elapsed;
         const oneOverElapsed = MILLI_IN_SEC / elapsedTimeMs;
         const fps = frameCnt * oneOverElapsed;
-        const rps = renderCnt * oneOverElapsed;
         const ups = updateCnt * oneOverElapsed;
         const stat_idx = statsCnt++ % fpsArr.length;
         fpsArr[stat_idx] = fps;
-        rpsArr[stat_idx] = rps;
         upsArr[stat_idx] = ups;
         const avgFps = utils.arrAvg(fpsArr, statsCnt);
         const avgUps = utils.arrAvg(upsArr, statsCnt);
