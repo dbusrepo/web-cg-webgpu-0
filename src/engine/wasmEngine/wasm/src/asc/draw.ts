@@ -58,7 +58,7 @@ function drawText(textOffs: usize, x: u32, y: u32, scale: f32, color: u32): void
   myAssert(y >= 0 && y < rgbaSurface0height);
   myAssert(scale > 0);
   myAssert(FONT_X_SIZE == 8);
-  let rowPtr: usize = rgbaSurface0ptr + x * PIX_OFFS + y * FRAME_STRIDE;
+  let rowPtr: usize = rgbaSurface0ptr + x * BPP_RGBA + y * FRAME_STRIDE;
   let startNextRow: usize = rgbaSurface0ptr + (y + 1) * FRAME_STRIDE;
   const step_y = f32(1) / scale;
   let inc_y = f32(0);
@@ -88,7 +88,7 @@ function drawText(textOffs: usize, x: u32, y: u32, scale: f32, color: u32): void
           myAssert(pixPtr < LIMIT);
           store<u32>(pixPtr, color);
         }
-        pixPtr += PIX_OFFS;
+        pixPtr += BPP_RGBA;
         inc_x += step_x;
         while (inc_x >= 1) {
           inc_x -= 1;
@@ -99,7 +99,7 @@ function drawText(textOffs: usize, x: u32, y: u32, scale: f32, color: u32): void
       if (skipRow) {
         break;
       }
-      pixPtr += FONT_SPACING * PIX_OFFS;
+      pixPtr += FONT_SPACING * BPP_RGBA;
     }
     rowPtr += FRAME_STRIDE;
     startNextRow += FRAME_STRIDE;
