@@ -35,8 +35,8 @@ class AppWorker {
 
   private static readonly UPDATE_TIME_MAX = AppWorker.UPDATE_PERIOD_MS * 8;
 
-  private static readonly STATS_ARR_LEN = 15; // fps, ups
-  private static readonly FRAME_TIMES_ARR_LEN = 15; // used for ufps
+  private static readonly STATS_ARR_LEN = 10; // fps, ups
+  private static readonly FRAME_TIMES_ARR_LEN = 10; // used for ufps
   private static readonly TIMES_SINCE_LAST_FRAME_ARR_LEN = 5; // update, render
 
   private static readonly STATS_PERIOD_MS = 100; // MILLI_IN_SEC;
@@ -55,6 +55,8 @@ class AppWorker {
   private wasmEngine: WasmEngine;
   private wasmEngineModule: WasmEngineModule;
   private frameColorRGBAWasm: FrameColorRGBAWasm;
+  private frameBuf32: Uint32Array;
+  private frameStride: number;
 
   private textures: Texture[];
 
@@ -66,7 +68,18 @@ class AppWorker {
     await this.initWasmEngine();
     await this.runAuxAppWorkers();
     this.initTextures();
+    this.initRender();
     // this.wasmEngineModule.render();
+  }
+
+  private initRender() {
+    const { rgbaSurface0: frameBuf8 } = this.wasmEngine.WasmRun.WasmViews;
+    this.frameBuf32 = new Uint32Array(
+      frameBuf8.buffer,
+      0,
+      frameBuf8.byteLength / Uint32Array.BYTES_PER_ELEMENT,
+    );
+    this.frameStride = this.wasmEngine.WasmRun.FrameStride;
   }
 
   private initGfx() {
@@ -328,6 +341,7 @@ class AppWorker {
 
     const render = () => {
       this.syncWorkers();
+      // this.clearBg();
       this.wasmEngineModule.render();
       this.waitWorkers();
       this.drawWasmFrame();
@@ -381,6 +395,14 @@ class AppWorker {
     //     params: Math.floor(Math.random() * 100),
     //   });
     // }, 2000);
+  }
+
+  private clearBg() {
+    this.frameBuf32.fill(0xff_00_00_00);
+
+    // for (let i = 0; i < this.frameBuf32.length; ++i) {
+    //   this.frameBuf32[i] = 0xff_00_00_00;
+    // }
   }
 
   private syncWorkers() {

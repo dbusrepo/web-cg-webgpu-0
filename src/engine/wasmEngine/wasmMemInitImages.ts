@@ -92,7 +92,7 @@ function copyTextures2WasmMem(
   );
   let curTexDescOffs = 0;
   let curFirstMipDescOffs = texDescIndexSize; // start of second mips desc index just after first textures desc index
-  let curMipTexelsOffs = 0;
+  let curMipTexelsOffs = 0; // start from 0, offsets to texels are relative to the start of the texels region
   for (let i = 0; i < numTextures; ++i) {
     const texture = textures[i];
     const { Levels: levels } = texture;
@@ -111,6 +111,8 @@ function copyTextures2WasmMem(
       texturesIndex.buffer,
       texturesIndex.byteOffset + curFirstMipDescOffs,
     );
+    let curMipDescOffs = 0;
+    // fill mipmaps descs index
     for (let j = 0; j < numMips; ++j) {
       const level = levels[j];
       const {
@@ -119,17 +121,31 @@ function copyTextures2WasmMem(
         Lg2Pitch: lg2Pitch,
         Buf8: buf8,
       } = level;
-      mipDescView.setUint32(MIPMAP_WIDTH_FIELD_OFFSET, width, true);
-      mipDescView.setUint32(MIPMAP_HEIGHT_FIELD_OFFSET, height, true);
-      mipDescView.setUint32(MIPMAP_LG2_PITCH_FIELD_OFFSET, lg2Pitch, true);
       mipDescView.setUint32(
-        MIPMAP_OFFSET_TO_TEXELS_FIELD_OFFSET,
+        curMipDescOffs + MIPMAP_WIDTH_FIELD_OFFSET,
+        width,
+        true,
+      );
+      mipDescView.setUint32(
+        curMipDescOffs + MIPMAP_HEIGHT_FIELD_OFFSET,
+        height,
+        true,
+      );
+      mipDescView.setUint32(
+        curMipDescOffs + MIPMAP_LG2_PITCH_FIELD_OFFSET,
+        lg2Pitch,
+        true,
+      );
+      mipDescView.setUint32(
+        curMipDescOffs + MIPMAP_OFFSET_TO_TEXELS_FIELD_OFFSET,
         curMipTexelsOffs,
         true,
       );
       texturesPixels.set(buf8, curMipTexelsOffs);
       curMipTexelsOffs += buf8.length;
+      curMipDescOffs += MIPMAP_DESC_SIZE;
     }
+    // move to next texture and mipmaps descs
     curTexDescOffs += TEX_DESC_SIZE;
     curFirstMipDescOffs += numMips * MIPMAP_DESC_SIZE;
   }

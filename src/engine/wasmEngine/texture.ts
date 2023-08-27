@@ -77,8 +77,8 @@ function wasmMipmap2BitImageRGBAView(mipmapOffs: number): BitImageRGBA {
   );
 
   const imageBuf8 = new Uint8Array(
-    gWasmViews.texturesPixels.buffer,
-    gWasmViews.texturesPixels.byteOffset + texelsOffs,
+    gWasmViews.texels.buffer,
+    gWasmViews.texels.byteOffset + texelsOffs,
     height * pitch * BPP_RGBA,
   );
 

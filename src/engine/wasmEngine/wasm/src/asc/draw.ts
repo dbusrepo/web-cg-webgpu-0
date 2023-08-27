@@ -1,12 +1,13 @@
 import { myAssert } from './myAssert';
+import { PTR_T, SIZE_T, NULL_PTR } from './memUtils';
 import { rgbaSurface0ptr, rgbaSurface0width, rgbaSurface0height } from './importVars';
 // import { rgbaSurface1ptr, rgbaSurface1width, rgbaSurface1height } from './importVars';
 import { logi, logf } from './importVars';
 import { FONT_X_SIZE, FONT_Y_SIZE, FONT_SPACING } from './importVars';
 import { stringsDataPtr, fontCharsPtr } from './importVars';
+import { BPP_RGBA } from './frameColorRGBA';
 
-const PIX_OFFS = 4;
-const FRAME_ROW_LEN = rgbaSurface0width * PIX_OFFS;
+const FRAME_ROW_LEN = rgbaSurface0width * BPP_RGBA;
 const LIMIT = rgbaSurface0ptr + rgbaSurface0height * FRAME_ROW_LEN;
 
 function clearBg(
@@ -15,31 +16,31 @@ function clearBg(
   color: u32,
 ): void {
 
-  const startOff: usize = rgbaSurface0ptr + start * FRAME_ROW_LEN;
-  const endOff: usize = rgbaSurface0ptr + end * FRAME_ROW_LEN;
+  const startPtr: PTR_T = rgbaSurface0ptr + start * FRAME_ROW_LEN;
+  const endPtr: PTR_T = rgbaSurface0ptr + end * FRAME_ROW_LEN;
+  const numPixels = FRAME_ROW_LEN * (end - start);
 
-  // const startOff1: usize = rgbaSurface1ptr + start * FRAME_ROW_LEN;
-  // const endOff1: usize = rgbaSurface1ptr + end * FRAME_ROW_LEN;
+  // // const numPixels16 = numPixels / 16;
+  const value = v128.splat<i32>(color);
+  for (let framePtr = startPtr; framePtr < endPtr; framePtr += 16) {
+    v128.store(framePtr, value);
+  }
 
-  // let value = v128.splat<i32>(color);
-  // TODO check bounds ?
-  // for (let i = startOff; i < endOff; i += 32) {
-  //   v128.store(i, value);
-  //   v128.store(i + 16, value);
+  // // const numPixels = FRAME_ROW_LEN * (end - start);
+  // // const numPixels32 = numPixels / 32;
+  // const value = v128.splat<i32>(color);
+  // for (let framePtr = startPtr; framePtr < endPtr; framePtr += 32) {
+  //   v128.store(framePtr, value);
+  //   v128.store(framePtr + 16, value);
   // }
 
-  // TODO handle remainder elements here ?
-
-  // let ptr1 = startOff1;
-  for (let ptr = startOff; ptr < endOff; ptr += PIX_OFFS) {
-    store<u32>(ptr, color);
-    // store<u32>(ptr1, 0xff_00_ff_00);
-    // ptr1 += PIX_OFFS;
-  }
+  // for (let framePtr = startPtr; framePtr < endPtr; framePtr += BPP_RGBA) {
+  //   store<u32>(framePtr, color);
+  // }
 
   // test first and last pixel
   // store<u32>(rgbaSurface0ptr, 0xFF_00_00_FF);
-  // store<u32>(rgbaSurface0ptr + (pixelCount-1)*4, 0xFF_00_00_FF);
+  // store<u32>(rgbaSurface0ptr + endPtr - BPP_RGBA, 0xFF_00_00_FF);
 }
 
 // export function clearCanvasVec(rgbaSurface0ptr: i32): void {

@@ -85,7 +85,7 @@ function init(): void {
 
 function render(): void {
 
-  utils.sleep(sleepLoc, 1);
+  // utils.sleep(sleepLoc, 1);
 
   const r = utils.range(workerIdx, numWorkers, rgbaSurface0height);
   const s = <usize>(r >> 32);
@@ -105,36 +105,30 @@ function render(): void {
     // }
   // }
 
-
-  // logi(c++);
   // heapAlloc(1024*1024);
 
   // const t1 = <u64>process.hrtime();
   // store<u64>(hrTimerPtr, t1 - t0);
 
-  // render image test
-
+  // render tex mips test
   // const tex = textures.at(0);
-  // logi(tex.NumMipMaps);
-
-  // const image = images.at(IMG1);
-  // const image = mipmaps.at(0);
-  // const image = mipmaps.at(1);
-  // const byte = load<u8>(image.Ptr);
-  // logi(<i32>byte);
+  // // const image = mipmaps.at(0);
+  // // const byte = load<u8>(image.Ptr);
+  // // logi(<i32>byte);
 
   // if (workerIdx == MAIN_THREAD_IDX) {
-  //   const minWidth = <SIZE_T>Math.min(image.Width, rgbaSurface0width);
-  //   const minHeight = <SIZE_T>Math.min(image.Height, e - s);
+  //   const mip = mipmaps.at(tex.gMipIdx(0));
+  //   const minWidth = <SIZE_T>Math.min(mip.Width, rgbaSurface0width);
+  //   const minHeight = <SIZE_T>Math.min(mip.Height, e - s);
   //   // const imagePitch = <SIZE_T>(1 << image.PitchLg2);
+  //   // logi(minWidth as i32);
+  //   // logi(minHeight as i32);
   //   for (let i = s; i != s + minHeight; ++i) {
   //     let screenPtr: PTR_T = rgbaSurface0ptr + i * rgbaSurface0width * BPP_RGBA;
-  //     const imgRowPixels: PTR_T = image.Ptr + ((i - s) << image.PitchLg2) * BPP_RGBA;
-  //     memory.copy(screenPtr, imgRowPixels, image.Width * 4);
+  //     const texelsRowPtr: PTR_T = mip.Ptr + ((i - s) << mip.Lg2Pitch) * BPP_RGBA;
+  //     memory.copy(screenPtr, texelsRowPtr, mip.Width * 4);
   //   }
   // }
-
-  // draw mipmaps
 
   // if (workerIdx == MAIN_THREAD_IDX) {
     // draw.drawText(strings.SENT2, 10, 10, 1, 0xFF_00_00_FF);
