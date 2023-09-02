@@ -56,6 +56,8 @@ type WasmImports = {
   logf: (v: number) => void;
 
   frameColorRGBAPtr: number;
+  texturesPtr: number;
+  mipmapsPtr: number;
 };
 
 type WasmModules = {

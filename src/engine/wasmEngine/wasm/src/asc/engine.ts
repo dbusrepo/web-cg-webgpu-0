@@ -24,6 +24,8 @@ import {
   inputKeysPtr,
   hrTimerPtr,
   frameColorRGBAPtr,
+  texturesPtr,
+  mipmapsPtr,
 } from './importVars';
 import { Texture, initTextures, initMipMaps } from './texture';
 import { BitImageRGBA } from './bitImageRGBA';
@@ -61,15 +63,24 @@ function getFrameColorRGBAPtr(): PTR_T {
   return changetype<PTR_T>(frameColorRGBA);
 }
 
+function getTexturesPtr(): PTR_T {
+  return changetype<PTR_T>(textures);
+}
+
+function getMipMapsPtr(): PTR_T {
+  return changetype<PTR_T>(mipmaps);
+}
+
 function initData(): void {
   if (workerIdx == MAIN_THREAD_IDX) {
     frameColorRGBA = newFrameColorRGBA();
+    textures = initTextures();
+    mipmaps = initMipMaps(textures);
   } else {
     frameColorRGBA = changetype<FrameColorRGBA>(frameColorRGBAPtr);
+    textures = changetype<SArray<Texture>>(texturesPtr);
+    mipmaps = changetype<SArray<BitImageRGBA>>(mipmapsPtr);
   }
-
-  textures = initTextures();
-  mipmaps = initMipMaps(textures);
 }
 
 function init(): void {
@@ -121,7 +132,9 @@ function render(): void {
   // // const byte = load<u8>(image.Ptr);
   // // logi(<i32>byte);
 
+  // const tex = textures.at(0);
   // if (workerIdx == MAIN_THREAD_IDX) {
+  // // if (workerIdx == 1) {
   //   const mip = mipmaps.at(tex.gMipIdx(0));
   //   const minWidth = <SIZE_T>Math.min(mip.Width, rgbaSurface0width);
   //   const minHeight = <SIZE_T>Math.min(mip.Height, e - s);
@@ -269,4 +282,7 @@ export {
   getRedFogTablePtr,
   getGreenFogTablePtr,
   getBlueFogTablePtr,
+
+  getTexturesPtr,
+  getMipMapsPtr,
 };

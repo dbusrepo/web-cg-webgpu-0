@@ -184,6 +184,8 @@ class AppWorker {
               ...this.wasmEngine.WasmRunParams,
               workerIdx: workerIndex,
               frameColorRGBAPtr: this.wasmEngineModule.getFrameColorRGBAPtr(),
+              texturesPtr: this.wasmEngineModule.getTexturesPtr(),
+              mipmapsPtr: this.wasmEngineModule.getMipMapsPtr(),
             },
           };
           engineWorker.worker.postMessage({
