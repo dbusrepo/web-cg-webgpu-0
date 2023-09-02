@@ -25,7 +25,8 @@ import {
   hrTimerPtr,
   frameColorRGBAPtr,
 } from './importVars';
-import { Texture, initTextures, textures, mipmaps } from './texture';
+import { Texture, initTextures, initMipMaps } from './texture';
+import { BitImageRGBA } from './bitImageRGBA';
 // import { DArray, newDArray, deleteDArray } from './darray';
 import { Pointer } from './pointer';
 import { SArray, newSArray } from './sarray';
@@ -53,6 +54,9 @@ const MAIN_THREAD_IDX = mainWorkerIdx;
 
 let frameColorRGBA = changetype<FrameColorRGBA>(NULL_PTR);
 
+let textures = changetype<SArray<Texture>>(NULL_PTR);
+let mipmaps = changetype<SArray<BitImageRGBA>>(NULL_PTR);
+
 function getFrameColorRGBAPtr(): PTR_T {
   return changetype<PTR_T>(frameColorRGBA);
 }
@@ -64,7 +68,8 @@ function initData(): void {
     frameColorRGBA = changetype<FrameColorRGBA>(frameColorRGBAPtr);
   }
 
-  initTextures();
+  textures = initTextures();
+  mipmaps = initMipMaps(textures);
 }
 
 function init(): void {
