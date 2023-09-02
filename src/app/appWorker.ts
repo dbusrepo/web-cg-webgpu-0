@@ -13,7 +13,7 @@ import type { AuxAppWorkerParams } from './auxAppWorker';
 import { AuxAppWorkerCommandEnum, AuxAppWorkerDesc } from './auxAppWorker';
 import type { WasmEngineParams } from '../engine/wasmEngine/wasmEngine';
 import { WasmEngine } from '../engine/wasmEngine/wasmEngine';
-import { Texture, initTextureWasm } from '../engine/wasmEngine/texture';
+import { Texture, initTextureWasmView } from '../engine/wasmEngine/texture';
 import type {
   WasmModules,
   WasmEngineModule,
@@ -123,7 +123,7 @@ class AppWorker {
     let mipMapBaseIdx = 0;
     this.textures = [];
     wasmTexturesImport.forEach(([texName, texIdx]) => {
-      const texture = initTextureWasm(texName, texIdx, mipMapBaseIdx);
+      const texture = initTextureWasmView(texName, texIdx, mipMapBaseIdx);
       this.textures.push(texture);
       mipMapBaseIdx += texture.NumMipmaps;
     });
