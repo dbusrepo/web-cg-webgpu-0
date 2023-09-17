@@ -87,11 +87,10 @@ class AppWorker {
   }
 
   private initGfx() {
-    this.ctx2d = this.get2dCtxFromCanvas(this.params.engineCanvas);
-    this.imageData = this.ctx2d.createImageData(
-      this.params.engineCanvas.width,
-      this.params.engineCanvas.height,
-    );
+    const { engineCanvas } = this.params;
+    this.ctx2d = this.get2dCtxFromCanvas(engineCanvas);
+    const { width, height } = engineCanvas;
+    this.imageData = this.ctx2d.createImageData(width, height);
   }
 
   private get2dCtxFromCanvas(canvas: OffscreenCanvas) {
