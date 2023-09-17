@@ -340,3 +340,20 @@ circular dependency webpack:
 https://stackoverflow.com/questions/73157442/webpack-warning-using-webworker-circular-dependency-between-chunks-with-runtime
 
 https://stackoverflow.com/questions/73499449/webpack-dev-server-not-reloading
+
+private syncWorkers() {
+  for (let i = 0; i < this.auxWorkers.length; ++i) {
+    const { index: workerIdx } = this.auxWorkers[i];
+    Atomics.store(this.syncArray, workerIdx, 1);
+    Atomics.notify(this.syncArray, workerIdx);
+  }
+  // this.wasmEngine.syncWorkers(this.auxWorkers);
+}
+
+private waitWorkers() {
+  for (let i = 0; i < this.auxWorkers.length; ++i) {
+    const { index: workerIdx } = this.auxWorkers[i];
+    Atomics.wait(this.syncArray, workerIdx, 1);
+  }
+  // this.wasmEngine.waitWorkers(this.auxWorkers);
+}

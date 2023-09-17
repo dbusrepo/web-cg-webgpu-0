@@ -17,7 +17,6 @@ import type { WasmViews } from './wasmViews';
 import { buildWasmMemViews } from './wasmViews';
 import { FONT_Y_SIZE, fontChars } from '../../../assets/fonts/font';
 import { stringsArrayData } from '../../../assets/build/strings';
-import { AuxAppWorkerDesc } from '../../app/auxAppWorker';
 import { mainConfig } from '../../config/mainConfig';
 import {
   // BPP_PAL,
@@ -227,20 +226,6 @@ class WasmEngine {
   //   // console.log(views.hrTimer[0]);
   // }
 
-  public syncWorkers(auxWorkers: AuxAppWorkerDesc[]) {
-    for (let i = 0; i < auxWorkers.length; ++i) {
-      const { index: workerIdx } = auxWorkers[i];
-      Atomics.store(this.wasmViews.syncArr, workerIdx, 1);
-      Atomics.notify(this.wasmViews.syncArr, workerIdx);
-    }
-  }
-
-  public waitWorkers(auxWorkers: AuxAppWorkerDesc[]) {
-    for (let i = 0; i < auxWorkers.length; ++i) {
-      const { index: workerIdx } = auxWorkers[i];
-      Atomics.wait(this.wasmViews.syncArr, workerIdx, 1);
-    }
-  }
 
   public get WasmRun(): WasmRun {
     return this.wasmRun;

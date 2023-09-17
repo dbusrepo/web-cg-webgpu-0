@@ -9,10 +9,12 @@ import type { InputEvent, CanvasDisplayResizeEvent } from './events';
 import { AppCommandEnum } from './appTypes';
 // import type { KeyHandler, Key } from '../input/inputManager';
 import { InputManager } from '../input/inputManager';
-import type { AuxAppWorkerParams } from './auxAppWorker';
-import { AuxAppWorkerCommandEnum, AuxAppWorkerDesc } from './auxAppWorker';
+import type { AuxAppWorkerParams, AuxAppWorkerDesc } from './auxAppWorker';
+import { AuxAppWorkerCommandEnum } from './auxAppWorker';
 import type { WasmEngineParams } from '../engine/wasmEngine/wasmEngine';
 import { WasmEngine } from '../engine/wasmEngine/wasmEngine';
+import { WasmRun } from '../engine/wasmEngine/wasmRun';
+import type { WasmViews } from '../engine/wasmEngine/wasmViews';
 import { Texture, initTextureWasmView } from '../engine/wasmEngine/texture';
 import type {
   WasmModules,
@@ -24,6 +26,8 @@ import {
   FrameColorRGBAWasm,
   getFrameColorRGBAWasmView,
 } from '../engine/wasmEngine/frameColorRGBAWasm';
+
+const MAIN_WORKER_IDX = 0;
 
 type AppWorkerParams = {
   engineCanvas: OffscreenCanvas;
@@ -48,13 +52,15 @@ class AppWorker {
   private assetManager: AssetManager;
   private inputManager: InputManager;
 
-  private auxWorkers: AuxAppWorkerDesc[];
-  private syncArray: Int32Array;
-  private sleepArray: Int32Array;
+  private numWorkers: number; // 1 main + N aux
+  private auxWorkers: AuxAppWorkerDesc[]; // N aux
 
   private wasmEngine: WasmEngine;
+  private wasmRun: WasmRun;
   private wasmEngineModule: WasmEngineModule;
+  private wasmViews: WasmViews;
   private frameColorRGBAWasm: FrameColorRGBAWasm;
+
   private frameBuf32: Uint32Array;
   private frameStride: number;
 
@@ -66,7 +72,7 @@ class AppWorker {
     await this.initAssetManager();
     this.initInput();
     await this.initWasmEngine();
-    await this.runAuxAppWorkers();
+    await this.initAuxWorkers();
     this.initTextures();
     this.initRender();
     // this.wasmEngineModule.render();
@@ -129,60 +135,39 @@ class AppWorker {
     });
   }
 
-  private async runAuxAppWorkers() {
-    const numWorkers = mainConfig.numAuxWorkers;
-    console.log(`num aux app workers: ${numWorkers}`);
-    const numTotalWorkers = numWorkers + 1;
-    this.sleepArray = new Int32Array(
-      new SharedArrayBuffer(numTotalWorkers * Int32Array.BYTES_PER_ELEMENT),
-    );
-    Atomics.store(this.sleepArray, 0, 0); // main worker idx 0
-    this.auxWorkers = [];
-    if (numWorkers) {
-      this.syncArray = new Int32Array(
-        new SharedArrayBuffer(numTotalWorkers * Int32Array.BYTES_PER_ELEMENT),
-      );
-      Atomics.store(this.syncArray, 0, 0);
-      await this.initAuxAppWorkers(numWorkers);
-      for (let i = 0; i < this.auxWorkers.length; ++i) {
-        const { index: workerIdx } = this.auxWorkers[i];
-        Atomics.store(this.sleepArray, workerIdx, 0);
-        Atomics.store(this.syncArray, workerIdx, 0);
-      }
-      this.auxWorkers.forEach(({ worker }) => {
-        worker.postMessage({
-          command: AuxAppWorkerCommandEnum.RUN,
-        });
-      });
-    }
-  }
-
-  private async initAuxAppWorkers(numAuxAppWorkers: number) {
-    assert(numAuxAppWorkers > 0);
-    const initStart = Date.now();
+  private async initAuxWorkers() {
     try {
-      let nextWorkerIdx = 1; // start from 1, 0 is for the main worker
-      const genWorkerIdx = () => nextWorkerIdx++;
+      const numAuxAppWorkers = mainConfig.numAuxWorkers;
+      this.numWorkers = 1 + numAuxAppWorkers;
+      console.log(`num total workers: ${this.numWorkers}`);
+      const genWorkerIdx = (() => {
+        let nextWorkerIdx = MAIN_WORKER_IDX + 1;
+        return () => nextWorkerIdx++;
+      })();
+      this.auxWorkers = new Array<AuxAppWorkerDesc>(numAuxAppWorkers);
       let remWorkers = numAuxAppWorkers;
+      const initStart = Date.now();
       await new Promise<void>((resolve, reject) => {
+        if (numAuxAppWorkers === 0) {
+          resolve();
+          return;
+        }
         for (let i = 0; i < numAuxAppWorkers; ++i) {
-          const workerIndex = genWorkerIdx();
+          const workerIdx = genWorkerIdx();
           const engineWorker = {
-            index: workerIndex,
+            workerIdx,
             worker: new Worker(new URL('./auxAppWorker.ts', import.meta.url), {
-              name: `aux-app-worker-${workerIndex}`,
+              name: `aux-app-worker-${workerIdx}`,
               type: 'module',
             }),
           };
-          this.auxWorkers.push(engineWorker);
+          this.auxWorkers[i] = engineWorker;
           const workerParams: AuxAppWorkerParams = {
-            workerIndex,
+            workerIdx,
             numWorkers: numAuxAppWorkers,
-            syncArray: this.syncArray,
-            sleepArray: this.sleepArray,
             wasmRunParams: {
               ...this.wasmEngine.WasmRunParams,
-              workerIdx: workerIndex,
+              workerIdx,
               frameColorRGBAPtr: this.wasmEngineModule.getFrameColorRGBAPtr(),
               texturesPtr: this.wasmEngineModule.getTexturesPtr(),
               mipmapsPtr: this.wasmEngineModule.getMipMapsPtr(),
@@ -195,7 +180,7 @@ class AppWorker {
           engineWorker.worker.onmessage = ({ data }) => {
             --remWorkers;
             console.log(
-              `Aux app worker id=${workerIndex} init, 
+              `Aux app worker id=${workerIdx} initd,
                left count=${remWorkers}, time=${
                  Date.now() - initStart
                }ms with data = ${JSON.stringify(data)}`,
@@ -209,7 +194,7 @@ class AppWorker {
           };
           engineWorker.worker.onerror = (error) => {
             console.log(
-              `Aux app worker id=${workerIndex} error: ${error.message}\n`,
+              `Aux app worker id=${workerIdx} error: ${error.message}\n`,
             );
             reject(error);
           };
@@ -232,11 +217,21 @@ class AppWorker {
       numWorkers: mainConfig.numAuxWorkers,
     };
     await this.wasmEngine.init(wasmEngineParams);
-    this.wasmEngineModule = this.wasmEngine.WasmRun.WasmModules.engine;
+    this.wasmRun = this.wasmEngine.WasmRun;
+    this.wasmEngineModule = this.wasmRun.WasmModules.engine;
+    this.wasmViews = this.wasmRun.WasmViews;
     this.frameColorRGBAWasm = getFrameColorRGBAWasmView(this.wasmEngineModule);
   }
 
-  public run(): void {
+  private async runAuxWorkers() {
+    this.auxWorkers.forEach(({ worker }) => {
+      worker.postMessage({
+        command: AuxAppWorkerCommandEnum.RUN,
+      });
+    });
+  }
+
+  public async run(): Promise<void> {
     let lastFrameStartTime: number;
     // let last_render_t: number;
     let updTimeAcc: number;
@@ -289,8 +284,6 @@ class AppWorker {
       isPaused = false;
       requestAnimationFrame(frame);
     };
-
-    requestAnimationFrame(mainLoopInit);
 
     const begin = () => {
       frameStartTime = performance.now();
@@ -389,6 +382,9 @@ class AppWorker {
       }
     };
 
+    await this.runAuxWorkers();
+    requestAnimationFrame(mainLoopInit);
+
     // TODO: test events
     // setInterval(() => {
     //   // console.log('sending...');
@@ -399,33 +395,29 @@ class AppWorker {
     // }, 2000);
   }
 
-  private clearBg() {
-    this.frameBuf32.fill(0xff_00_00_00);
-
-    // for (let i = 0; i < this.frameBuf32.length; ++i) {
-    //   this.frameBuf32[i] = 0xff_00_00_00;
-    // }
-  }
-
   private syncWorkers() {
     for (let i = 0; i < this.auxWorkers.length; ++i) {
-      const { index: workerIdx } = this.auxWorkers[i];
-      Atomics.store(this.syncArray, workerIdx, 1);
-      Atomics.notify(this.syncArray, workerIdx);
+      const { workerIdx } = this.auxWorkers[i];
+      Atomics.store(this.wasmViews.syncArr, workerIdx, 1);
+      Atomics.notify(this.wasmViews.syncArr, workerIdx);
     }
-    // this.wasmEngine.syncWorkers(this.auxWorkers);
   }
 
   private waitWorkers() {
     for (let i = 0; i < this.auxWorkers.length; ++i) {
-      const { index: workerIdx } = this.auxWorkers[i];
-      Atomics.wait(this.syncArray, workerIdx, 1);
+      Atomics.wait(this.wasmViews.syncArr, this.auxWorkers[i].workerIdx, 1);
     }
-    // this.wasmEngine.waitWorkers(this.auxWorkers);
   }
 
+  // private clearBg() {
+  //   this.frameBuf32.fill(0xff_00_00_00);
+  //   // for (let i = 0; i < this.frameBuf32.length; ++i) {
+  //   //   this.frameBuf32[i] = 0xff_00_00_00;
+  //   // }
+  // }
+
   public drawWasmFrame() {
-    this.imageData.data.set(this.wasmEngine.WasmRun.WasmViews.rgbaSurface0);
+    this.imageData.data.set(this.wasmViews.rgbaSurface0);
     this.ctx2d.putImageData(this.imageData, 0, 0);
   }
 
@@ -460,8 +452,8 @@ const commands = {
       command: AppCommandEnum.INIT,
     });
   },
-  [AppWorkerCommandEnum.RUN]: () => {
-    appWorker.run();
+  [AppWorkerCommandEnum.RUN]: async () => {
+    await appWorker.run();
   },
   [AppWorkerCommandEnum.KEY_DOWN]: (inputEvent: InputEvent) => {
     appWorker.onKeyDown(inputEvent);
