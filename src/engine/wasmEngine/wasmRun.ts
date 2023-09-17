@@ -137,6 +137,10 @@ class WasmRun {
     return this.params.surface0sizes[1];
   }
 
+  get FrameStride(): number {
+    return this.FrameWidth;
+  }
+
   get FrameStrideBytes(): number {
     return this.FrameWidth * BPP_RGBA;
   }

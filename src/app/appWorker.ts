@@ -68,15 +68,15 @@ class AppWorker {
     this.params = params;
     this.initGfx();
     await this.initAssetManager();
-    this.initInput();
+    this.initInputManager();
     await this.initWasmEngine();
     await this.initAuxWorkers();
     this.initTextures();
-    this.initRender();
+    this.initFrameBuf();
     // this.wasmEngineModule.render();
   }
 
-  private initRender() {
+  private initFrameBuf() {
     const { rgbaSurface0: frameBuf8 } = this.wasmViews;
     this.frameBuf32 = new Uint32Array(
       frameBuf8.buffer,
@@ -101,10 +101,6 @@ class AppWorker {
     });
     ctx.imageSmoothingEnabled = false; // no blur, keep the pixels sharpness
     return ctx;
-  }
-
-  private initInput() {
-    this.initInputManager();
   }
 
   private initInputManager() {
