@@ -22,6 +22,7 @@ type AuxAppWorkerParams = {
 class AuxAppWorker {
   private params: AuxAppWorkerParams;
   private wasmRun: WasmRun;
+  private wasmViews: WasmViews;
   private wasmEngineModule: WasmEngineModule;
 
   async init(params: AuxAppWorkerParams): Promise<void> {
@@ -34,19 +35,19 @@ class AuxAppWorker {
   private async initWasmRun() {
     const { wasmRunParams } = this.params;
     this.wasmRun = new WasmRun();
-    const wasmViews = buildWasmMemViews(
+    this.wasmViews = buildWasmMemViews(
       wasmRunParams.wasmMem,
       wasmRunParams.wasmMemRegionsOffsets,
       wasmRunParams.wasmMemRegionsSizes,
     );
-    await this.wasmRun.init(wasmRunParams, wasmViews);
+    await this.wasmRun.init(wasmRunParams, this.wasmViews);
     this.wasmEngineModule = this.wasmRun.WasmModules.engine;
   }
 
   async run() {
     const { workerIdx } = this.params;
-    const { WasmViews: wasmViews } = this.wasmRun;
     console.log(`Aux app worker ${workerIdx} running`);
+    const { wasmViews } = this;
     try {
       for (;;) {
         Atomics.wait(wasmViews.syncArr, workerIdx, 0);

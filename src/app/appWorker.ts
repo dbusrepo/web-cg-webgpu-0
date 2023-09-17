@@ -27,8 +27,6 @@ import {
   getFrameColorRGBAWasmView,
 } from '../engine/wasmEngine/frameColorRGBAWasm';
 
-const MAIN_WORKER_IDX = 0;
-
 type AppWorkerParams = {
   engineCanvas: OffscreenCanvas;
 };
@@ -141,7 +139,7 @@ class AppWorker {
       this.numWorkers = 1 + numAuxAppWorkers;
       console.log(`num total workers: ${this.numWorkers}`);
       const genWorkerIdx = (() => {
-        let nextWorkerIdx = MAIN_WORKER_IDX + 1;
+        let nextWorkerIdx = 1;
         return () => nextWorkerIdx++;
       })();
       this.auxWorkers = new Array<AuxAppWorkerDesc>(numAuxAppWorkers);
