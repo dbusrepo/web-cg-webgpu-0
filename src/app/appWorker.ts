@@ -62,7 +62,7 @@ class AppWorker {
   private frameColorRGBAWasm: FrameColorRGBAWasm;
 
   private frameBuf32: Uint32Array;
-  private frameStride: number;
+  private frameStrideBytes: number;
 
   private textures: Texture[];
 
@@ -79,13 +79,13 @@ class AppWorker {
   }
 
   private initRender() {
-    const { rgbaSurface0: frameBuf8 } = this.wasmEngine.WasmRun.WasmViews;
+    const { rgbaSurface0: frameBuf8 } = this.wasmViews;
     this.frameBuf32 = new Uint32Array(
       frameBuf8.buffer,
       0,
       frameBuf8.byteLength / Uint32Array.BYTES_PER_ELEMENT,
     );
-    this.frameStride = this.wasmEngine.WasmRun.FrameStride;
+    this.frameStrideBytes = this.wasmRun.FrameStrideBytes;
   }
 
   private initGfx() {
