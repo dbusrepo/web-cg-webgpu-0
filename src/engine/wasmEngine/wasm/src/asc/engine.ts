@@ -1,5 +1,5 @@
 import { myAssert } from './myAssert';
-import { initSharedHeap, heapAlloc, heapFree } from './heapAlloc';
+import { initSharedHeap } from './sharedHeapAlloc';
 import {
   initMemManager,
   alloc,
@@ -120,8 +120,6 @@ function render(): void {
     //   drawQuad(0, l * 2, 100, 2, color2);
     // }
   // }
-
-  // heapAlloc(1024*1024);
 
   // const t1 = <u64>process.hrtime();
   // store<u64>(hrTimerPtr, t1 - t0);
