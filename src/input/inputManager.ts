@@ -1,5 +1,5 @@
 import type { Key } from '../app/keys';
-import { keys, keyOffsets } from '../app/keys';
+import { EnginePanelInputKeysEnum } from '../app/keys';
 
 type KeyHandler = () => void;
 
@@ -38,4 +38,4 @@ class InputManager {
 }
 
 export type { KeyHandler, Key };
-export { InputManager, keys, keyOffsets };
+export { InputManager, EnginePanelInputKeysEnum };

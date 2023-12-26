@@ -7,8 +7,7 @@ import { StatsNameEnum } from '../ui/stats/stats';
 import { AssetManager } from '../engine/assets/assetManager';
 import type { InputEvent, CanvasDisplayResizeEvent } from './events';
 import { AppCommandEnum } from './appTypes';
-// import type { KeyHandler, Key } from '../input/inputManager';
-import { InputManager } from '../input/inputManager';
+import { InputManager, EnginePanelInputKeysEnum } from '../input/inputManager';
 import type { AuxAppWorkerParams, AuxAppWorkerDesc } from './auxAppWorker';
 import { AuxAppWorkerCommandEnum } from './auxAppWorker';
 import type { WasmEngineParams } from '../engine/wasmEngine/wasmEngine';
@@ -104,7 +103,19 @@ class AppWorker {
 
   private initInputManager() {
     this.inputManager = new InputManager();
-    // this.inputManager.addKeyHandlers(keys.KEY_A, () => { console.log('A down') }, () => { console.log('A up') });
+
+    this.inputManager.addKeyHandlers(
+      EnginePanelInputKeysEnum.KEY_A,
+      () => {
+        console.log('A down');
+      },
+      () => {
+        console.log('A up');
+      },
+    );
+
+    // this.inputManager.addKeyHandlers(EnginePanelInputKeysEnum.KEY_W, () => { console.log('A down') }, () => { console.log('A up'); });
+
     // this.inputManager.addKeyHandlers(keys.KEY_S, () => { console.log('S down') }, () => { console.log('S up') });
     // this.inputManager.addKeyHandlers(keys.KEY_D, () => { console.log('D down') }, () => { console.log('D up') });
   }
@@ -206,7 +217,6 @@ class AppWorker {
       imageWidth: this.imageData.width,
       imageHeight: this.imageData.height,
       assetManager: this.assetManager,
-      inputManager: this.inputManager,
       numWorkers: mainConfig.numAuxWorkers,
     };
     await this.wasmEngine.init(wasmEngineParams);
