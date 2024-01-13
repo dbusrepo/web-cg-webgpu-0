@@ -41,7 +41,7 @@ class App {
   }
 
   private initKeyListeners(panel: Panel) {
-    const keyEvent2cmd = {
+    const keyEventCmd = {
       [KeyEventsEnum.KEY_DOWN]: AppWorkerCommandEnum.KEY_DOWN,
       [KeyEventsEnum.KEY_UP]: AppWorkerCommandEnum.KEY_UP,
     };
@@ -53,7 +53,7 @@ class App {
           !panel.ignoreInputKey(event.code)
         ) {
           this.appWorker.postMessage({
-            command: keyEvent2cmd[keyEvent],
+            command: keyEventCmd[keyEvent],
             params: {
               code: event.code,
               panelId: panel.Id,

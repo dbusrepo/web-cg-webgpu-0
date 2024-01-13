@@ -8,6 +8,7 @@ import { AssetManager } from '../engine/assets/assetManager';
 import type { InputEvent, CanvasDisplayResizeEvent } from './events';
 import { AppCommandEnum } from './appTypes';
 import { InputManager, EnginePanelInputKeysEnum } from '../input/inputManager';
+import { InputAction, InputActionBehavior } from '../input/inputAction';
 import type { AuxAppWorkerParams, AuxAppWorkerDesc } from './auxAppWorker';
 import { AuxAppWorkerCommandEnum } from './auxAppWorker';
 import type { WasmEngineParams } from '../engine/wasmEngine/wasmEngine';
@@ -63,11 +64,13 @@ class AppWorker {
 
   private textures: Texture[];
 
+  private pressA: InputAction;
+
   public async init(params: AppWorkerParams): Promise<void> {
     this.params = params;
     this.initGfx();
     await this.initAssetManager();
-    this.initInputManager();
+    this.initInputHandling();
     await this.initWasmEngine();
     await this.initAuxWorkers();
     this.initTextures();
@@ -101,23 +104,23 @@ class AppWorker {
     return ctx;
   }
 
+  private initInputHandling() {
+    this.initInputActions();
+    this.initInputManager();
+  }
+
+  private initInputActions() {
+    this.pressA = new InputAction('A', InputActionBehavior.NORMAL);
+    // this.pressA = new InputAction('A', InputActionBehavior.DETECT_INITAL_PRESS_ONLY);
+  }
+
   private initInputManager() {
     this.inputManager = new InputManager();
 
-    this.inputManager.addKeyHandlers(
+    this.inputManager.mapKeyToAction(
       EnginePanelInputKeysEnum.KEY_A,
-      () => {
-        console.log('A down');
-      },
-      () => {
-        console.log('A up');
-      },
+      this.pressA,
     );
-
-    // this.inputManager.addKeyHandlers(EnginePanelInputKeysEnum.KEY_W, () => { console.log('A down') }, () => { console.log('A up'); });
-
-    // this.inputManager.addKeyHandlers(keys.KEY_S, () => { console.log('S down') }, () => { console.log('S up') });
-    // this.inputManager.addKeyHandlers(keys.KEY_D, () => { console.log('D down') }, () => { console.log('D up') });
   }
 
   private async initAssetManager() {
@@ -234,6 +237,12 @@ class AppWorker {
     });
   }
 
+  private checkInput() {
+    if (this.pressA.isPressed()) {
+      console.log('A pressed');
+    }
+  }
+
   public async run(): Promise<void> {
     let lastFrameStartTime: number;
     // let last_render_t: number;
@@ -328,6 +337,9 @@ class AppWorker {
         updTimeAcc = 0; // TODO
         // delta_time = App.UPD_PERIOD;
       }
+
+      this.checkInput();
+
       while (updTimeAcc >= AppWorker.UPDATE_PERIOD_MS) {
         // TODO: see multiplier in update_period def
         // update state with UPDATE_PERIOD_MS
@@ -342,7 +354,7 @@ class AppWorker {
       // this.clearBg();
       this.wasmEngineModule.render();
       this.waitWorkers();
-      this.drawWasmFrame();
+      this.drawFrame();
       saveFrameTime();
       renderCnt++;
     };
@@ -419,7 +431,7 @@ class AppWorker {
   //   // }
   // }
 
-  public drawWasmFrame() {
+  public drawFrame() {
     this.imageData.data.set(this.wasmViews.rgbaSurface0);
     this.ctx2d.putImageData(this.imageData, 0, 0);
   }
@@ -433,6 +445,7 @@ class AppWorker {
   }
 
   public onCanvasDisplayResize(displayWidth: number, displayHeight: number) {
+    // TODO:
     // console.log('onCanvasDisplayResize', displayWidth, displayHeight);
   }
 }
@@ -484,3 +497,4 @@ self.onmessage = ({ data: { command, params } }) => {
 
 export type { AppWorkerParams };
 export { AppWorkerCommandEnum };
+

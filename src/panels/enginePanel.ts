@@ -3,7 +3,6 @@ import { EnginePanelConfig } from '../config/mainConfig';
 import { Stats, StatsNameEnum, StatsValues } from '../ui/stats/stats';
 import { Panel } from './panel';
 import { EnginePanelGui } from './enginePanelGui';
-import type { EnginePanelInputKey } from './enginePanelTypes';
 import { EnginePanelInputKeysEnum } from './enginePanelTypes';
 
 class EnginePanel extends Panel {
