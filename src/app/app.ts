@@ -1,24 +1,26 @@
 // import assert from 'assert';
+import type { AppWorkerParams } from './appWorker';
+import type { KeyEvent, PanelId } from './appTypes';
+import type {
+  KeyCode,
+  KeyInputEvent,
+  MouseMoveEvent,
+  // CanvasDisplayResizeEvent,
+} from './events';
 import {
   StartViewMode,
   EnginePanelConfig,
   ViewPanelConfig,
   mainConfig,
 } from '../config/mainConfig';
-import {
-  requestPointerLock,
-  // requestPointerLockWithoutUnadjustedMovement,
-  // requestPointerLockWithUnadjustedMovement,
-} from './pointerlock';
+import { requestPointerLock } from './pointerlock';
 import { statsConfig } from '../ui/stats/statsConfig';
-import type { AppWorkerParams } from './appWorker';
 import { AppWorkerCommandEnum } from './appWorker';
 import { Stats, StatsNameEnum, StatsValues } from '../ui/stats/stats';
 import { StatsPanel } from '../ui/stats/statsPanel';
 import { Panel } from '../panels/panel';
 import { EnginePanel } from '../panels/enginePanel';
 // import { ViewPanel } from '../panels/viewPanel';
-import type { KeyEvent, PanelId } from './appTypes';
 import { AppCommandEnum, PanelIdEnum, KeyEventsEnum } from './appTypes';
 
 class App {
@@ -52,12 +54,13 @@ class App {
           panel.InputKeys.has(event.code) &&
           !panel.ignoreInputKey(event.code)
         ) {
+          const keyInputEvent: KeyInputEvent = {
+            code: event.code as KeyCode,
+            panelId: panel.Id,
+          };
           this.appWorker.postMessage({
             command: keyEventCmd[keyEvent],
-            params: {
-              code: event.code,
-              panelId: panel.Id,
-            },
+            params: keyInputEvent,
           });
         }
       });
@@ -66,40 +69,38 @@ class App {
   }
 
   private initPointerLock(enginePanel: EnginePanel) {
-    const element = this.enginePanel.Canvas;
+    const canvasEl = this.enginePanel.Canvas;
 
-    let requestingPointerLock = false;
+    let reqPtrLock = false;
 
-    element.addEventListener('click', async (event: MouseEvent) => {
-      if (event.target !== element) {
+    canvasEl.addEventListener('click', async (event: MouseEvent) => {
+      if (event.target !== canvasEl) {
         return;
       }
       const canRequestPointerLock = !(
         document.pointerLockElement ||
-        requestingPointerLock ||
+        reqPtrLock ||
         this.enginePanel.isConsoleOpen
       );
       if (canRequestPointerLock) {
-        // requestPointerLockWithUnadjustedMovement(element);
-        requestingPointerLock = true;
-        await requestPointerLock(element);
-        requestingPointerLock = false;
+        reqPtrLock = true;
+        await requestPointerLock(canvasEl);
+        reqPtrLock = false;
       }
     });
 
     const mouseMoveHandler = (event: MouseEvent) => {
-      // this.appWorker.postMessage({
-      //   command: AppWorkerCommandEnum.MOUSE_MOVE,
-      //   params: {
-      //     movementX: event.movementX,
-      //     movementY: event.movementY,
-      //   },
-      // });
-      // console.log('mouse move', event.movementX, event.movementY);
+      this.appWorker.postMessage({
+        command: AppWorkerCommandEnum.MOUSE_MOVE,
+        params: {
+          dx: event.movementX,
+          dy: event.movementY,
+        },
+      });
     };
 
     const pointerLockChangeHandler = () => {
-      if (document.pointerLockElement === element) {
+      if (document.pointerLockElement === canvasEl) {
         // console.log('pointer lock acquired');
         // this.appWorker.postMessage({
         //   command: AppWorkerCommandEnum.POINTER_LOCK_CHANGE,
@@ -107,9 +108,8 @@ class App {
         //     isLocked: true,
         //   },
         // });
-        document.addEventListener('mousemove', mouseMoveHandler, false);
+        canvasEl.addEventListener('mousemove', mouseMoveHandler, false);
       } else {
-        // pointerLockDeactivatedAt = performance.now();
         // console.log('pointer lock lost');
         // this.appWorker.postMessage({
         //   command: AppWorkerCommandEnum.POINTER_LOCK_CHANGE,
@@ -117,7 +117,7 @@ class App {
         //     isLocked: false,
         //   },
         // });
-        document.removeEventListener('mousemove', mouseMoveHandler, false);
+        canvasEl.removeEventListener('mousemove', mouseMoveHandler, false);
       }
     };
 

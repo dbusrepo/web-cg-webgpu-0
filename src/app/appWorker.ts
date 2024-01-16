@@ -1,25 +1,32 @@
 import assert from 'assert';
-import { MILLI_IN_SEC } from '../common';
-
-import { mainConfig } from '../config/mainConfig';
 import type { StatsValues } from '../ui/stats/stats';
-import { StatsNameEnum } from '../ui/stats/stats';
-import { AssetManager } from '../engine/assets/assetManager';
-import type { InputEvent, CanvasDisplayResizeEvent } from './events';
-import { AppCommandEnum } from './appTypes';
-import { InputManager, EnginePanelInputKeysEnum } from '../input/inputManager';
-import { InputAction, InputActionBehavior } from '../input/inputAction';
+import type {
+  KeyInputEvent,
+  MouseMoveEvent,
+  CanvasDisplayResizeEvent,
+} from './events';
 import type { AuxAppWorkerParams, AuxAppWorkerDesc } from './auxAppWorker';
-import { AuxAppWorkerCommandEnum } from './auxAppWorker';
 import type { WasmEngineParams } from '../engine/wasmEngine/wasmEngine';
-import { WasmEngine } from '../engine/wasmEngine/wasmEngine';
-import { WasmRun } from '../engine/wasmEngine/wasmRun';
 import type { WasmViews } from '../engine/wasmEngine/wasmViews';
-import { Texture, initTextureWasmView } from '../engine/wasmEngine/texture';
 import type {
   WasmModules,
   WasmEngineModule,
 } from '../engine/wasmEngine/wasmLoader';
+import { mainConfig } from '../config/mainConfig';
+import { MILLI_IN_SEC } from '../common';
+import { StatsNameEnum } from '../ui/stats/stats';
+import { AssetManager } from '../engine/assets/assetManager';
+import { AppCommandEnum } from './appTypes';
+import {
+  InputManager,
+  MouseCodeEnum,
+  EnginePanelInputKeyCodeEnum,
+} from '../input/inputManager';
+import { InputAction, InputActionBehavior } from '../input/inputAction';
+import { AuxAppWorkerCommandEnum } from './auxAppWorker';
+import { WasmEngine } from '../engine/wasmEngine/wasmEngine';
+import { WasmRun } from '../engine/wasmEngine/wasmRun';
+import { Texture, initTextureWasmView } from '../engine/wasmEngine/texture';
 import { ascImportImages } from '../../assets/build/images';
 import * as utils from '../engine/utils';
 import {
@@ -65,6 +72,11 @@ class AppWorker {
   private textures: Texture[];
 
   private pressA: InputAction;
+
+  private mouseMoveLeft: InputAction;
+  private mouseMoveRight: InputAction;
+  private mouseMoveUp: InputAction;
+  private mouseMoveDown: InputAction;
 
   public async init(params: AppWorkerParams): Promise<void> {
     this.params = params;
@@ -112,15 +124,30 @@ class AppWorker {
   private initInputActions() {
     this.pressA = new InputAction('A', InputActionBehavior.NORMAL);
     // this.pressA = new InputAction('A', InputActionBehavior.DETECT_INITAL_PRESS_ONLY);
+    this.mouseMoveLeft = new InputAction(
+      'MouseLeft',
+      InputActionBehavior.NORMAL,
+    );
+    this.mouseMoveRight = new InputAction(
+      'MouseRight',
+      InputActionBehavior.NORMAL,
+    );
+    this.mouseMoveUp = new InputAction('MouseUp', InputActionBehavior.NORMAL);
+    this.mouseMoveDown = new InputAction(
+      'MouseDown',
+      InputActionBehavior.NORMAL,
+    );
   }
 
   private initInputManager() {
     this.inputManager = new InputManager();
 
-    this.inputManager.mapKeyToAction(
-      EnginePanelInputKeysEnum.KEY_A,
-      this.pressA,
-    );
+    this.inputManager.mapToKey(EnginePanelInputKeyCodeEnum.KEY_A, this.pressA);
+
+    this.inputManager.mapToMouse(MouseCodeEnum.MOVE_LEFT, this.mouseMoveLeft);
+    this.inputManager.mapToMouse(MouseCodeEnum.MOVE_RIGHT, this.mouseMoveRight);
+    this.inputManager.mapToMouse(MouseCodeEnum.MOVE_UP, this.mouseMoveUp);
+    this.inputManager.mapToMouse(MouseCodeEnum.MOVE_DOWN, this.mouseMoveDown);
   }
 
   private async initAssetManager() {
@@ -240,6 +267,18 @@ class AppWorker {
   private checkInput() {
     if (this.pressA.isPressed()) {
       console.log('A pressed');
+    }
+    if (this.mouseMoveLeft.isPressed()) {
+      console.log('Mouse move left');
+    }
+    if (this.mouseMoveRight.isPressed()) {
+      console.log('Mouse move right');
+    }
+    if (this.mouseMoveUp.isPressed()) {
+      console.log('Mouse move up');
+    }
+    if (this.mouseMoveDown.isPressed()) {
+      console.log('Mouse move down');
     }
   }
 
@@ -436,12 +475,16 @@ class AppWorker {
     this.ctx2d.putImageData(this.imageData, 0, 0);
   }
 
-  public onKeyDown(inputEvent: InputEvent) {
-    this.inputManager.onKeyDown(inputEvent.code);
+  public onKeyDown(event: KeyInputEvent) {
+    this.inputManager.onKeyDown(event);
   }
 
-  public onKeyUp(inputEvent: InputEvent) {
-    this.inputManager.onKeyUp(inputEvent.code);
+  public onKeyUp(event: KeyInputEvent) {
+    this.inputManager.onKeyUp(event);
+  }
+
+  public onMouseMove(inputEvent: MouseMoveEvent) {
+    this.inputManager.onMouseMove(inputEvent);
   }
 
   public onCanvasDisplayResize(displayWidth: number, displayHeight: number) {
@@ -457,6 +500,7 @@ const enum AppWorkerCommandEnum {
   RUN = 'app_worker_run',
   KEY_DOWN = 'app_worker_key_down',
   KEY_UP = 'app_worker_key_up',
+  MOUSE_MOVE = 'app_worker_mouse_move',
   RESIZE_CANVAS_DISPLAY_SIZE = 'app_worker_resize_canvas_display_size',
 }
 
@@ -471,11 +515,14 @@ const commands = {
   [AppWorkerCommandEnum.RUN]: async () => {
     await appWorker.run();
   },
-  [AppWorkerCommandEnum.KEY_DOWN]: (inputEvent: InputEvent) => {
+  [AppWorkerCommandEnum.KEY_DOWN]: (inputEvent: KeyInputEvent) => {
     appWorker.onKeyDown(inputEvent);
   },
-  [AppWorkerCommandEnum.KEY_UP]: (inputEvent: InputEvent) => {
+  [AppWorkerCommandEnum.KEY_UP]: (inputEvent: KeyInputEvent) => {
     appWorker.onKeyUp(inputEvent);
+  },
+  [AppWorkerCommandEnum.MOUSE_MOVE]: (inputEvent: MouseMoveEvent) => {
+    appWorker.onMouseMove(inputEvent);
   },
   [AppWorkerCommandEnum.RESIZE_CANVAS_DISPLAY_SIZE]: (
     resizeEvent: CanvasDisplayResizeEvent,
@@ -497,4 +544,3 @@ self.onmessage = ({ data: { command, params } }) => {
 
 export type { AppWorkerParams };
 export { AppWorkerCommandEnum };
-

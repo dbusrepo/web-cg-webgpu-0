@@ -6,7 +6,7 @@ enum AppCommandEnum {
 }
 
 enum PanelIdEnum {
-  ENGINE = 0,
+  ENGINE = 'engine_panel',
 }
 
 type PanelId = `${PanelIdEnum}`;

@@ -3,7 +3,7 @@ import { EnginePanelConfig } from '../config/mainConfig';
 import { Stats, StatsNameEnum, StatsValues } from '../ui/stats/stats';
 import { Panel } from './panel';
 import { EnginePanelGui } from './enginePanelGui';
-import { EnginePanelInputKeysEnum } from './enginePanelTypes';
+import { EnginePanelInputKeyCodeEnum } from './enginePanelTypes';
 
 class EnginePanel extends Panel {
   protected menuGui: EnginePanelGui;
@@ -14,7 +14,7 @@ class EnginePanel extends Panel {
   }
 
   private initInput() {
-    this.inputKeys = new Set(Object.values(EnginePanelInputKeysEnum));
+    this.inputKeys = new Set(Object.values(EnginePanelInputKeyCodeEnum));
   }
 
   get config(): EnginePanelConfig {
