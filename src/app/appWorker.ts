@@ -265,21 +265,21 @@ class AppWorker {
   }
 
   private checkInput() {
-    if (this.pressA.isPressed()) {
-      console.log('A pressed');
-    }
-    if (this.mouseMoveLeft.isPressed()) {
-      console.log('Mouse move left');
-    }
-    if (this.mouseMoveRight.isPressed()) {
-      console.log('Mouse move right');
-    }
-    if (this.mouseMoveUp.isPressed()) {
-      console.log('Mouse move up');
-    }
-    if (this.mouseMoveDown.isPressed()) {
-      console.log('Mouse move down');
-    }
+    // if (this.pressA.isPressed()) {
+    //   console.log('A pressed');
+    // }
+    // if (this.mouseMoveLeft.isPressed()) {
+    //   console.log('Mouse move left');
+    // }
+    // if (this.mouseMoveRight.isPressed()) {
+    //   console.log('Mouse move right');
+    // }
+    // if (this.mouseMoveUp.isPressed()) {
+    //   console.log('Mouse move up');
+    // }
+    // if (this.mouseMoveDown.isPressed()) {
+    //   console.log('Mouse move down');
+    // }
   }
 
   public async run(): Promise<void> {
