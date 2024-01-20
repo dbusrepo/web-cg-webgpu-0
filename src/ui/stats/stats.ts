@@ -58,7 +58,6 @@ class Stats {
   }
 
   update(stats: StatsValues) {
-    console.log('stats update', stats);
     for (const [k, v] of Object.entries(stats)) {
       const panel = this.panels.get(k as StatsEnum);
       if (panel) {
