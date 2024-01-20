@@ -16,7 +16,7 @@ import {
 import { requestPointerLock } from './pointerlock';
 import { statsConfig } from '../ui/stats/statsConfig';
 import { AppWorkerCommandEnum } from './appWorker';
-import { Stats, StatsNameEnum, StatsValues } from '../ui/stats/stats';
+import { Stats, StatsEnum, StatsValues } from '../ui/stats/stats';
 import { StatsPanel } from '../ui/stats/statsPanel';
 import { Panel } from '../panels/panel';
 import { EnginePanel } from '../panels/enginePanel';
@@ -71,23 +71,21 @@ class App {
   private initPointerLock(enginePanel: EnginePanel) {
     const canvasEl = this.enginePanel.Canvas;
 
-    let reqPtrLock = false;
-
-    canvasEl.addEventListener('click', async (event: MouseEvent) => {
+    const handleClick = async (event: MouseEvent) => {
       if (event.target !== canvasEl) {
         return;
       }
       const canRequestPointerLock = !(
-        document.pointerLockElement ||
-        reqPtrLock ||
-        this.enginePanel.isConsoleOpen
+        document.pointerLockElement || this.enginePanel.isConsoleOpen
       );
       if (canRequestPointerLock) {
-        reqPtrLock = true;
+        canvasEl.removeEventListener('click', handleClick);
         await requestPointerLock(canvasEl);
-        reqPtrLock = false;
+        canvasEl.addEventListener('click', handleClick);
       }
-    });
+    };
+
+    canvasEl.addEventListener('click', handleClick);
 
     const mouseMoveHandler = (event: MouseEvent) => {
       this.appWorker.postMessage({
@@ -220,7 +218,7 @@ class App {
       },
       [AppCommandEnum.UPDATE_STATS]: (values: StatsValues) => {
         enginePanel.Stats.update(values);
-        enginePanel.MenuGui.updateFps(values[StatsNameEnum.UFPS]);
+        enginePanel.MenuGui.updateFps(values[StatsEnum.UFPS] || 0);
       },
       [AppCommandEnum.EVENT]: (msg: string) => {
         enginePanel.EventLog?.log('event ' + msg, 'Hello ' + msg);
@@ -257,7 +255,8 @@ class App {
     };
     stats.init(cfg);
     const fpsPanel = new StatsPanel({
-      title: StatsNameEnum.FPS,
+      id: StatsEnum.FPS,
+      title: 'FPS',
       fg: '#0ff',
       bg: '#022',
       graphHeight: 200,
@@ -269,16 +268,26 @@ class App {
     //   graphHeight: 200,
     // });
     const upsPanel = new StatsPanel({
-      title: StatsNameEnum.UPS,
-      fg: '#0f0',
-      bg: '#020',
+      id: StatsEnum.UPS,
+      title: 'UPS',
+      // yellow
+      fg: '#ff0',
+      bg: '#220',
       graphHeight: 200,
     });
     const ufpsPanel = new StatsPanel({
-      title: StatsNameEnum.UFPS,
+      id: StatsEnum.UFPS,
+      title: 'UFPS',
       fg: '#f50',
       bg: '#110',
       graphHeight: 1000,
+    });
+    const frameTimeMsPanel = new StatsPanel({
+      id: StatsEnum.FRAME_TIME_MS,
+      title: 'MS',
+      fg: '#0f0',
+      bg: '#020',
+      graphHeight: 100,
     });
     // const unlockedFpsPanel = new StatsPanel(StatsNames.FPSU, '#f50', '#110');
     // const wasmHeapMem = new StatsPanel(StatsNames.WASM_HEAP, '#0b0', '#030');
@@ -287,6 +296,7 @@ class App {
     // stats.addPanel(rpsPanel);
     stats.addPanel(upsPanel);
     stats.addPanel(ufpsPanel);
+    stats.addPanel(frameTimeMsPanel);
     // this._stats.addPanel(wasmHeapMem);
     // add mem stats panel
     // const memPanel = new MemoryStats(this._stats);

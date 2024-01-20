@@ -1,6 +1,6 @@
 // import assert from 'assert';
 import { EnginePanelConfig } from '../config/mainConfig';
-import { Stats, StatsNameEnum, StatsValues } from '../ui/stats/stats';
+import { Stats } from '../ui/stats/stats';
 import { Panel } from './panel';
 import { EnginePanelGui } from './enginePanelGui';
 import { EnginePanelInputKeyCodeEnum } from './enginePanelTypes';

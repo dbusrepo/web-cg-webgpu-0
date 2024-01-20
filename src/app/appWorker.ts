@@ -14,7 +14,7 @@ import type {
 } from '../engine/wasmEngine/wasmLoader';
 import { mainConfig } from '../config/mainConfig';
 import { MILLI_IN_SEC } from '../common';
-import { StatsNameEnum } from '../ui/stats/stats';
+import { StatsEnum } from '../ui/stats/stats';
 import { AssetManager } from '../engine/assets/assetManager';
 import { AppCommandEnum } from './appTypes';
 import {
@@ -289,9 +289,9 @@ class AppWorker {
     let renderTimeAcc: number;
     let elapsedTimeMs: number;
     let renderThen: number;
-    let timeSinceLastFrame: number;
+    let timeSinceLastFrameMs: number;
     let avgTimeSinceLastFrame: number;
-    let frameStartTime: number;
+    let frameStartTimeMs: number;
 
     let timeLastFrameCnt: number;
     let frameCnt: number;
@@ -303,8 +303,8 @@ class AppWorker {
     let lastStatsTime: number;
     let statsTimeAcc: number;
 
-    let frameTimeArr: Float64Array;
-    let timeSinceLastFrameArr: Float64Array;
+    let frameTimeMsArr: Float64Array;
+    let timeMsSinceLastFrameArr: Float64Array;
     let fpsArr: Float32Array;
     let upsArr: Float32Array;
 
@@ -314,11 +314,11 @@ class AppWorker {
 
     const mainLoopInit = () => {
       lastFrameStartTime = lastStatsTime = renderThen = performance.now();
-      frameTimeArr = new Float64Array(AppWorker.FRAME_TIMES_ARR_LEN);
+      frameTimeMsArr = new Float64Array(AppWorker.FRAME_TIMES_ARR_LEN);
       updTimeAcc = 0;
       renderTimeAcc = 0;
       elapsedTimeMs = 0;
-      timeSinceLastFrameArr = new Float64Array(
+      timeMsSinceLastFrameArr = new Float64Array(
         AppWorker.TIMES_SINCE_LAST_FRAME_ARR_LEN,
       );
       frameCnt = 0;
@@ -337,20 +337,21 @@ class AppWorker {
     };
 
     const begin = () => {
-      frameStartTime = performance.now();
-      timeSinceLastFrame = frameStartTime - lastFrameStartTime;
-      lastFrameStartTime = frameStartTime;
-      timeSinceLastFrame = Math.min(
-        timeSinceLastFrame,
+      frameStartTimeMs = performance.now();
+      timeSinceLastFrameMs = frameStartTimeMs - lastFrameStartTime;
+      lastFrameStartTime = frameStartTimeMs;
+      timeSinceLastFrameMs = Math.min(
+        timeSinceLastFrameMs,
         AppWorker.UPDATE_TIME_MAX,
       );
-      timeSinceLastFrame = Math.max(timeSinceLastFrame, 0);
-      timeSinceLastFrameArr[timeLastFrameCnt++ % timeSinceLastFrameArr.length] =
-        timeSinceLastFrame;
+      timeSinceLastFrameMs = Math.max(timeSinceLastFrameMs, 0);
+      timeMsSinceLastFrameArr[
+        timeLastFrameCnt++ % timeMsSinceLastFrameArr.length
+      ] = timeSinceLastFrameMs;
       // avgTimeSinceLastFrame = timeSinceLastFrame;
       // console.log(`avgTimeSinceLastFrame = ${avgTimeSinceLastFrame}`);
       avgTimeSinceLastFrame = utils.arrAvg(
-        timeSinceLastFrameArr,
+        timeMsSinceLastFrameArr,
         timeLastFrameCnt,
       );
     };
@@ -399,13 +400,13 @@ class AppWorker {
     };
 
     const saveFrameTime = () => {
-      const frameTime = performance.now() - frameStartTime;
-      frameTimeArr[frameTimeCnt++ % frameTimeArr.length] = frameTime;
+      const frameTimeMs = performance.now() - frameStartTimeMs;
+      frameTimeMsArr[frameTimeCnt++ % frameTimeMsArr.length] = frameTimeMs;
     };
 
     const stats = () => {
       ++frameCnt;
-      statsTimeAcc += timeSinceLastFrame;
+      statsTimeAcc += timeSinceLastFrameMs;
       if (statsTimeAcc >= AppWorker.STATS_PERIOD_MS) {
         statsTimeAcc %= AppWorker.STATS_PERIOD_MS;
         // const tspent = (tnow - start_time) / App.MILLI_IN_SEC;
@@ -421,13 +422,14 @@ class AppWorker {
         upsArr[stat_idx] = ups;
         const avgFps = utils.arrAvg(fpsArr, statsCnt);
         const avgUps = utils.arrAvg(upsArr, statsCnt);
-        const avgFrameTime = utils.arrAvg(frameTimeArr, frameTimeCnt);
-        const avgUfps = MILLI_IN_SEC / avgFrameTime;
+        const avgFrameTimeMs = utils.arrAvg(frameTimeMsArr, frameTimeCnt);
+        const avgUfps = MILLI_IN_SEC / avgFrameTimeMs;
         // console.log(`avgUfps = ${avgUfps}, avgFrameTime = ${avgFrameTime}`);
         const statsValues: StatsValues = {
-          [StatsNameEnum.FPS]: avgFps,
-          [StatsNameEnum.UPS]: avgUps,
-          [StatsNameEnum.UFPS]: avgUfps,
+          [StatsEnum.FPS]: avgFps,
+          [StatsEnum.UPS]: avgUps,
+          [StatsEnum.UFPS]: avgUfps,
+          [StatsEnum.FRAME_TIME_MS]: avgFrameTimeMs,
         };
         postMessage({
           command: AppCommandEnum.UPDATE_STATS,
