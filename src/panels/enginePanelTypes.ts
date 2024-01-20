@@ -3,6 +3,7 @@ enum EnginePanelInputKeyCodeEnum {
   KEY_A = 'KeyA',
   KEY_S = 'KeyS',
   KEY_D = 'KeyD',
+  KEY_B = 'KeyB',
 }
 
 type EnginePanelInputKeyCode = `${EnginePanelInputKeyCodeEnum}`;

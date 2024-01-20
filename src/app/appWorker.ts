@@ -16,7 +16,7 @@ import { mainConfig } from '../config/mainConfig';
 import { MILLI_IN_SEC } from '../common';
 import { StatsEnum } from '../ui/stats/stats';
 import { AssetManager } from '../engine/assets/assetManager';
-import { AppCommandEnum } from './appTypes';
+import { AppCommandEnum, EventLog } from './appTypes';
 import {
   InputManager,
   MouseCodeEnum,
@@ -72,6 +72,7 @@ class AppWorker {
   private textures: Texture[];
 
   private pressA: InputAction;
+  private pressB: InputAction;
 
   private mouseMoveLeft: InputAction;
   private mouseMoveRight: InputAction;
@@ -123,7 +124,17 @@ class AppWorker {
 
   private initInputActions() {
     this.pressA = new InputAction('A', InputActionBehavior.NORMAL);
-    // this.pressA = new InputAction('A', InputActionBehavior.DETECT_INITAL_PRESS_ONLY);
+    // this.pressA = new InputAction(
+    //   'A',
+    //   InputActionBehavior.DETECT_INITAL_PRESS_ONLY,
+    // );
+
+    this.pressB = new InputAction('B', InputActionBehavior.NORMAL);
+    // this.pressB = new InputAction(
+    //   'B',
+    //   InputActionBehavior.DETECT_INITAL_PRESS_ONLY,
+    // );
+
     this.mouseMoveLeft = new InputAction(
       'MouseLeft',
       InputActionBehavior.NORMAL,
@@ -143,6 +154,7 @@ class AppWorker {
     this.inputManager = new InputManager();
 
     this.inputManager.mapToKey(EnginePanelInputKeyCodeEnum.KEY_A, this.pressA);
+    this.inputManager.mapToKey(EnginePanelInputKeyCodeEnum.KEY_B, this.pressB);
 
     this.inputManager.mapToMouse(MouseCodeEnum.MOVE_LEFT, this.mouseMoveLeft);
     this.inputManager.mapToMouse(MouseCodeEnum.MOVE_RIGHT, this.mouseMoveRight);
@@ -266,8 +278,26 @@ class AppWorker {
 
   private checkInput() {
     // if (this.pressA.isPressed()) {
-    //   console.log('A pressed');
+    // console.log('A pressed');
+    // postMessage({
+    //   command: AppCommandEnum.EVENT,
+    //   params: {
+    //     event: 'A pressed',
+    //     msg: 'ahooo',
+    //   } as EventLog,
+    // });
     // }
+    // if (this.pressB.isPressed()) {
+    // console.log('B pressed');
+    // postMessage({
+    //   command: AppCommandEnum.EVENT,
+    //   params: {
+    //     event: 'B pressed',
+    //     msg: 'bahooo',
+    //   } as EventLog,
+    // });
+    // }
+
     // if (this.mouseMoveLeft.isPressed()) {
     //   console.log('Mouse move left');
     // }
@@ -445,7 +475,7 @@ class AppWorker {
     // setInterval(() => {
     //   // console.log('sending...');
     //   postMessage({
-    //     command: PanelCommands.EVENT,
+    //     command: AppCommandEnum.EVENT,
     //     params: Math.floor(Math.random() * 100),
     //   });
     // }, 2000);

@@ -1,6 +1,6 @@
 // import assert from 'assert';
 import type { AppWorkerParams } from './appWorker';
-import type { KeyEvent, PanelId } from './appTypes';
+import type { KeyEvent, PanelId, EventLog } from './appTypes';
 import type {
   KeyCode,
   KeyInputEvent,
@@ -220,8 +220,8 @@ class App {
         enginePanel.Stats.update(values);
         enginePanel.MenuGui.updateFps(values[StatsEnum.UFPS] || 0);
       },
-      [AppCommandEnum.EVENT]: (msg: string) => {
-        enginePanel.EventLog?.log('event ' + msg, 'Hello ' + msg);
+      [AppCommandEnum.EVENT]: (eventObj: EventLog) => {
+        enginePanel.EventLog?.log(`event ${eventObj.event}`, eventObj.msg);
       },
     };
 
