@@ -1,24 +1,26 @@
 // import assert from 'assert';
+import type { AppWorkerParams } from './appWorker';
+import type { KeyEvent, PanelId, EventLog } from './appTypes';
+import type {
+  KeyCode,
+  KeyInputEvent,
+  MouseMoveEvent,
+  // CanvasDisplayResizeEvent,
+} from './events';
 import {
   StartViewMode,
   EnginePanelConfig,
   ViewPanelConfig,
   mainConfig,
 } from '../config/mainConfig';
-import {
-  requestPointerLock,
-  // requestPointerLockWithoutUnadjustedMovement,
-  // requestPointerLockWithUnadjustedMovement,
-} from './pointerlock';
+import { requestPointerLock } from './pointerlock';
 import { statsConfig } from '../ui/stats/statsConfig';
-import type { AppWorkerParams } from './appWorker';
 import { AppWorkerCommandEnum } from './appWorker';
-import { Stats, StatsNameEnum, StatsValues } from '../ui/stats/stats';
+import { Stats, StatsEnum, StatsValues } from '../ui/stats/stats';
 import { StatsPanel } from '../ui/stats/statsPanel';
 import { Panel } from '../panels/panel';
 import { EnginePanel } from '../panels/enginePanel';
 // import { ViewPanel } from '../panels/viewPanel';
-import type { KeyEvent, PanelId } from './appTypes';
 import { AppCommandEnum, PanelIdEnum, KeyEventsEnum } from './appTypes';
 
 class App {
@@ -41,7 +43,7 @@ class App {
   }
 
   private initKeyListeners(panel: Panel) {
-    const keyEvent2cmd = {
+    const keyEventCmd = {
       [KeyEventsEnum.KEY_DOWN]: AppWorkerCommandEnum.KEY_DOWN,
       [KeyEventsEnum.KEY_UP]: AppWorkerCommandEnum.KEY_UP,
     };
@@ -52,12 +54,13 @@ class App {
           panel.InputKeys.has(event.code) &&
           !panel.ignoreInputKey(event.code)
         ) {
+          const keyInputEvent: KeyInputEvent = {
+            code: event.code as KeyCode,
+            panelId: panel.Id,
+          };
           this.appWorker.postMessage({
-            command: keyEvent2cmd[keyEvent],
-            params: {
-              code: event.code,
-              panelId: panel.Id,
-            },
+            command: keyEventCmd[keyEvent],
+            params: keyInputEvent,
           });
         }
       });
@@ -66,40 +69,36 @@ class App {
   }
 
   private initPointerLock(enginePanel: EnginePanel) {
-    const element = this.enginePanel.Canvas;
+    const canvasEl = this.enginePanel.Canvas;
 
-    let requestingPointerLock = false;
-
-    element.addEventListener('click', async (event: MouseEvent) => {
-      if (event.target !== element) {
+    const handleClick = async (event: MouseEvent) => {
+      if (event.target !== canvasEl) {
         return;
       }
       const canRequestPointerLock = !(
-        document.pointerLockElement ||
-        requestingPointerLock ||
-        this.enginePanel.isConsoleOpen
+        document.pointerLockElement || this.enginePanel.isConsoleOpen
       );
       if (canRequestPointerLock) {
-        // requestPointerLockWithUnadjustedMovement(element);
-        requestingPointerLock = true;
-        await requestPointerLock(element);
-        requestingPointerLock = false;
+        canvasEl.removeEventListener('click', handleClick);
+        await requestPointerLock(canvasEl);
+        canvasEl.addEventListener('click', handleClick);
       }
-    });
+    };
+
+    canvasEl.addEventListener('click', handleClick);
 
     const mouseMoveHandler = (event: MouseEvent) => {
-      // this.appWorker.postMessage({
-      //   command: AppWorkerCommandEnum.MOUSE_MOVE,
-      //   params: {
-      //     movementX: event.movementX,
-      //     movementY: event.movementY,
-      //   },
-      // });
-      // console.log('mouse move', event.movementX, event.movementY);
+      this.appWorker.postMessage({
+        command: AppWorkerCommandEnum.MOUSE_MOVE,
+        params: {
+          dx: event.movementX,
+          dy: event.movementY,
+        },
+      });
     };
 
     const pointerLockChangeHandler = () => {
-      if (document.pointerLockElement === element) {
+      if (document.pointerLockElement === canvasEl) {
         // console.log('pointer lock acquired');
         // this.appWorker.postMessage({
         //   command: AppWorkerCommandEnum.POINTER_LOCK_CHANGE,
@@ -107,9 +106,8 @@ class App {
         //     isLocked: true,
         //   },
         // });
-        document.addEventListener('mousemove', mouseMoveHandler, false);
+        canvasEl.addEventListener('mousemove', mouseMoveHandler, false);
       } else {
-        // pointerLockDeactivatedAt = performance.now();
         // console.log('pointer lock lost');
         // this.appWorker.postMessage({
         //   command: AppWorkerCommandEnum.POINTER_LOCK_CHANGE,
@@ -117,7 +115,7 @@ class App {
         //     isLocked: false,
         //   },
         // });
-        document.removeEventListener('mousemove', mouseMoveHandler, false);
+        canvasEl.removeEventListener('mousemove', mouseMoveHandler, false);
       }
     };
 
@@ -220,10 +218,10 @@ class App {
       },
       [AppCommandEnum.UPDATE_STATS]: (values: StatsValues) => {
         enginePanel.Stats.update(values);
-        enginePanel.MenuGui.updateFps(values[StatsNameEnum.UFPS]);
+        enginePanel.MenuGui.updateFps(values[StatsEnum.UFPS] || 0);
       },
-      [AppCommandEnum.EVENT]: (msg: string) => {
-        enginePanel.EventLog?.log('event ' + msg, 'Hello ' + msg);
+      [AppCommandEnum.EVENT]: (eventObj: EventLog) => {
+        enginePanel.EventLog?.log(`event ${eventObj.event}`, eventObj.msg);
       },
     };
 
@@ -257,7 +255,8 @@ class App {
     };
     stats.init(cfg);
     const fpsPanel = new StatsPanel({
-      title: StatsNameEnum.FPS,
+      id: StatsEnum.FPS,
+      title: 'FPS',
       fg: '#0ff',
       bg: '#022',
       graphHeight: 200,
@@ -269,16 +268,26 @@ class App {
     //   graphHeight: 200,
     // });
     const upsPanel = new StatsPanel({
-      title: StatsNameEnum.UPS,
-      fg: '#0f0',
-      bg: '#020',
+      id: StatsEnum.UPS,
+      title: 'UPS',
+      // yellow
+      fg: '#ff0',
+      bg: '#220',
       graphHeight: 200,
     });
     const ufpsPanel = new StatsPanel({
-      title: StatsNameEnum.UFPS,
+      id: StatsEnum.UFPS,
+      title: 'UFPS',
       fg: '#f50',
       bg: '#110',
       graphHeight: 1000,
+    });
+    const frameTimeMsPanel = new StatsPanel({
+      id: StatsEnum.FRAME_TIME_MS,
+      title: 'MS',
+      fg: '#0f0',
+      bg: '#020',
+      graphHeight: 100,
     });
     // const unlockedFpsPanel = new StatsPanel(StatsNames.FPSU, '#f50', '#110');
     // const wasmHeapMem = new StatsPanel(StatsNames.WASM_HEAP, '#0b0', '#030');
@@ -287,6 +296,7 @@ class App {
     // stats.addPanel(rpsPanel);
     stats.addPanel(upsPanel);
     stats.addPanel(ufpsPanel);
+    stats.addPanel(frameTimeMsPanel);
     // this._stats.addPanel(wasmHeapMem);
     // add mem stats panel
     // const memPanel = new MemoryStats(this._stats);

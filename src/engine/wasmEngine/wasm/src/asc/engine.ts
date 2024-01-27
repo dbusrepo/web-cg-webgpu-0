@@ -21,7 +21,6 @@ import {
   rgbaSurface0height,
   syncArrayPtr,
   sleepArrayPtr,
-  inputKeysPtr,
   hrTimerPtr,
   frameColorRGBAPtr,
   texturesPtr,
@@ -156,8 +155,6 @@ function render(): void {
     //   s++;
     // }
   // }
-
-  // logi(load<u8>(inputKeysPtr));
 }
 
 function run(): void {
