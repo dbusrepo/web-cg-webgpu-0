@@ -83,7 +83,7 @@ class AppWorker {
     this.params = params;
     this.initGfx();
     await this.initAssetManager();
-    this.initInputHandling();
+    this.initInput();
     await this.initWasmEngine();
     await this.initAuxWorkers();
     this.initTextures();
@@ -117,9 +117,9 @@ class AppWorker {
     return ctx;
   }
 
-  private initInputHandling() {
+  private initInput() {
+    this.inputManager = new InputManager();
     this.initInputActions();
-    this.initInputManager();
   }
 
   private initInputActions() {
@@ -128,12 +128,14 @@ class AppWorker {
     //   'A',
     //   InputActionBehavior.DETECT_INITAL_PRESS_ONLY,
     // );
+    this.inputManager.mapToKey(EnginePanelInputKeyCodeEnum.KEY_A, this.pressA);
 
     this.pressB = new InputAction('B', InputActionBehavior.NORMAL);
     // this.pressB = new InputAction(
     //   'B',
     //   InputActionBehavior.DETECT_INITAL_PRESS_ONLY,
     // );
+    this.inputManager.mapToKey(EnginePanelInputKeyCodeEnum.KEY_B, this.pressB);
 
     this.mouseMoveLeft = new InputAction(
       'MouseLeft',
@@ -148,13 +150,6 @@ class AppWorker {
       'MouseDown',
       InputActionBehavior.NORMAL,
     );
-  }
-
-  private initInputManager() {
-    this.inputManager = new InputManager();
-
-    this.inputManager.mapToKey(EnginePanelInputKeyCodeEnum.KEY_A, this.pressA);
-    this.inputManager.mapToKey(EnginePanelInputKeyCodeEnum.KEY_B, this.pressB);
 
     this.inputManager.mapToMouse(MouseCodeEnum.MOVE_LEFT, this.mouseMoveLeft);
     this.inputManager.mapToMouse(MouseCodeEnum.MOVE_RIGHT, this.mouseMoveRight);
@@ -297,7 +292,6 @@ class AppWorker {
     //   } as EventLog,
     // });
     // }
-
     // if (this.mouseMoveLeft.isPressed()) {
     //   console.log('Mouse move left');
     // }
