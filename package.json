@@ -8,6 +8,7 @@
   "author": "",
   "scripts": {
     "v": "node -v",
+    "eslint_v": "eslint -v",
     "type-check": "tsc --noemit",
     "install-dependencies": "npm i",
     "lint": "eslint src/**/*.{ts,tsx}",
