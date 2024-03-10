@@ -20,9 +20,13 @@
     "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/recommended-requiring-type-checking",
+    "plugin:eslint-comments/recommended",
     "plugin:import/recommended",
     "plugin:import/typescript",
+    "plugin:promise/recommended",
     "airbnb",
+    "airbnb-typescript",
     "prettier"
   ],
   "parser": "@typescript-eslint/parser",
@@ -90,6 +94,7 @@
     "@typescript-eslint/no-inferrable-types": "warn",
     "@typescript-eslint/no-this-alias": "off",
     "@typescript-eslint/no-shadow": ["error"],
-    "@typescript-eslint/ban-ts-comment": "off"
+    "@typescript-eslint/ban-ts-comment": "off",
+    "@typescript-eslint/lines-between-class-members": "off"
   }
 }

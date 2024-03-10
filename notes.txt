@@ -357,3 +357,5 @@ private waitWorkers() {
   }
   // this.wasmEngine.waitWorkers(this.auxWorkers);
 }
+
+https://github.com/iamturns/create-exposed-app/blob/master/package.json
