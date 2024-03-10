@@ -94,6 +94,7 @@
     "@typescript-eslint/no-inferrable-types": "warn",
     "@typescript-eslint/no-this-alias": "off",
     "@typescript-eslint/no-shadow": ["error"],
-    "@typescript-eslint/ban-ts-comment": "off"
+    "@typescript-eslint/ban-ts-comment": "off",
+    "@typescript-eslint/lines-between-class-members": "off"
   }
 }
