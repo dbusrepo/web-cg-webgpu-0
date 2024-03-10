@@ -100,7 +100,7 @@ abstract class PanelGui {
 
     // to make overflow scroll work
     if (this.tweakPane.element.clientHeight > container.clientHeight) {
-      this.tweakPane.element.style.height = container.clientHeight + 'px';
+      this.tweakPane.element.style.height = `${container.clientHeight}px`;
     }
   }
 
@@ -127,18 +127,22 @@ abstract class PanelGui {
       title: 'Stats',
       expanded: false,
     });
-    this.statsInput = statsFolder.addInput(
+
+    this.statsInput = statsFolder.addBinding(
       this.tweakOptions,
       PanelTweakOptionsKeys.STATS,
-    );
+    ) as InputBindingApi<unknown, boolean>;
+
     this.statsInput.on('change', (ev) => {
       this.panel.setStatsVisible(ev.value);
       PanelGui.updateStatsOptPanels(this);
     });
+
     const btn = statsFolder.addButton({
       title: 'Move top-left',
       // label: '',   // optional
     });
+
     btn.on('click', () => {
       this.panel.Stats.setPos(0, 0);
     });
@@ -150,7 +154,7 @@ abstract class PanelGui {
       expanded: false,
     });
 
-    const eventLogPosInput = eventsFolder.addInput(
+    const eventLogPosInput = eventsFolder.addBinding(
       this.tweakOptions,
       PanelTweakOptionsKeys.EVENTS,
       {
@@ -181,10 +185,11 @@ abstract class PanelGui {
     });
   }
 
-  public static updateStatsOptPanels(originPanel: PanelGui): void {
+  public static updateStatsOptPanels(sourcePanelGui: PanelGui): void {
     for (let panelGui of PanelGui.panelGuiList) {
-      if (panelGui !== originPanel) {
-        panelGui.tweakOptions.stats = originPanel.tweakOptions.stats;
+      if (panelGui !== sourcePanelGui) {
+        panelGui.tweakOptions[PanelTweakOptionsKeys.STATS] =
+          sourcePanelGui.tweakOptions[PanelTweakOptionsKeys.STATS];
         // panelGui._tweakPane.refresh();
         panelGui.statsInput.refresh();
       }
