@@ -15,12 +15,12 @@ type PanelGuiConfig = {
 };
 
 enum PanelTweakOptionsKeys {
-  STATS = 'stats',
+  STATS_ENABLED = 'stats_enabled',
   EVENTS = 'events',
 }
 
 type PanelTweakOptions = {
-  [PanelTweakOptionsKeys.STATS]: boolean;
+  [PanelTweakOptionsKeys.STATS_ENABLED]: boolean;
   [PanelTweakOptionsKeys.EVENTS]: EventLogVis;
 };
 
@@ -115,7 +115,7 @@ abstract class PanelGui {
 
   protected initTweakPaneOptionsObj(): void {
     this.tweakOptions = {
-      [PanelTweakOptionsKeys.STATS]: this.panel.isStatsVisible,
+      [PanelTweakOptionsKeys.STATS_ENABLED]: this.panel.isStatsVisible,
       [PanelTweakOptionsKeys.EVENTS]: this.getEventLogVisState(),
     };
   }
@@ -130,7 +130,7 @@ abstract class PanelGui {
 
     this.statsInput = statsFolder.addBinding(
       this.tweakOptions,
-      PanelTweakOptionsKeys.STATS,
+      PanelTweakOptionsKeys.STATS_ENABLED,
     ) as InputBindingApi<unknown, boolean>;
 
     this.statsInput.on('change', (ev) => {
@@ -188,8 +188,8 @@ abstract class PanelGui {
   public static updateStatsOptPanels(sourcePanelGui: PanelGui): void {
     for (let panelGui of PanelGui.panelGuiList) {
       if (panelGui !== sourcePanelGui) {
-        panelGui.tweakOptions[PanelTweakOptionsKeys.STATS] =
-          sourcePanelGui.tweakOptions[PanelTweakOptionsKeys.STATS];
+        panelGui.tweakOptions[PanelTweakOptionsKeys.STATS_ENABLED] =
+          sourcePanelGui.tweakOptions[PanelTweakOptionsKeys.STATS_ENABLED];
         // panelGui._tweakPane.refresh();
         panelGui.statsInput.refresh();
       }
