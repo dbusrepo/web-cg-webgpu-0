@@ -38,7 +38,7 @@ class AuxAppWorker {
     this.params = params;
     await this.initWasmRun();
     this.frameColorRGBAWasm = getFrameColorRGBAWasmView(this.wasmEngineModule);
-    await this.initFrameBuf();
+    this.initFrameBuf();
   }
 
   private async initWasmRun() {
@@ -98,13 +98,21 @@ const commands = {
   },
 };
 
-self.addEventListener('message', async ({ data: { command, params } }) => {
-  if (commands.hasOwnProperty(command)) {
+// self.addEventListener('message', async ({ data: { command, params } }) => {
+self.onmessage = ({ data: { command, params } }) => {
+  const commandKey = command as keyof typeof commands;
+  if (commands.hasOwnProperty(commandKey)) {
     try {
-      commands[command as keyof typeof commands](params);
-    } catch (err) {}
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      commands[commandKey](params) as unknown as void;
+    } catch (ex) {
+      console.error(
+        'error executing command in aux app worker message handler',
+      );
+      console.error(ex);
+    }
   }
-});
+};
 
 type AuxAppWorkerDesc = {
   workerIdx: number;
