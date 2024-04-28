@@ -235,7 +235,7 @@ class App {
       if (commands.hasOwnProperty(commandKey)) {
         try {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          commands[command as keyof typeof commands]!(params);
+          commands[commandKey](params);
         } catch (ex) {
           console.error('error executing command in appWorker message handler');
           console.error(ex);
