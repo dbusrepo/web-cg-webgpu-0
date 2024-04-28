@@ -71,17 +71,22 @@ class App {
   private initPointerLock(enginePanel: EnginePanel) {
     const canvasEl = this.enginePanel.Canvas;
 
-    const handleClick = async (event: MouseEvent) => {
+    const handleClick = (event: MouseEvent) => {
       if (event.target !== canvasEl) {
         return;
       }
       const canRequestPointerLock = !(
-        document.pointerLockElement || this.enginePanel.isConsoleOpen
+        document.pointerLockElement || enginePanel.isConsoleOpen
       );
       if (canRequestPointerLock) {
         canvasEl.removeEventListener('click', handleClick);
-        await requestPointerLock(canvasEl);
-        canvasEl.addEventListener('click', handleClick);
+        const addEventListener = () =>
+          canvasEl.addEventListener('click', handleClick);
+        requestPointerLock(canvasEl)
+          .then(addEventListener)
+          .catch(() => {
+            console.error('pointer lock error');
+          });
       }
     };
 
@@ -226,11 +231,13 @@ class App {
     };
 
     this.appWorker.onmessage = ({ data: { command, params } }) => {
-      if (commands.hasOwnProperty(command)) {
+      const commandKey = command as keyof typeof commands;
+      if (commands.hasOwnProperty(commandKey)) {
         try {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           commands[command as keyof typeof commands]!(params);
         } catch (ex) {
-          console.error('error in engine panel message handler');
+          console.error('error executing command in appWorker message handler');
           console.error(ex);
         }
       }
