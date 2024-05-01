@@ -1,3 +1,3 @@
 # Graphics web project
 
-Base project for graphics experiments with web techs
+Project for graphics experiments with WebGPU
