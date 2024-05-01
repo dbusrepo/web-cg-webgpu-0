@@ -99,12 +99,7 @@ abstract class Renderer {
     };
   }
 
-  // private async createResources() {}
-
-  protected createRenderPipelineDescriptor(
-    input: RenderPipelineInput,
-  ): GPURenderPipelineDescriptor {
-
+  protected createRenderPipelineDescriptor(input: RenderPipelineInput): GPURenderPipelineDescriptor {
     input.frontFace = input.frontFace ?? 'ccw';
     input.primitiveType = input.primitiveType ?? 'triangle-list';
     input.cullMode = input.cullMode ?? 'none';
@@ -160,11 +155,13 @@ abstract class Renderer {
       count: this.renderInit.msaaCount,
     };
 
-    const depthStencil: GPUDepthStencilState | undefined = input.isDepthStencil ? {
-      depthWriteEnabled: true,
-      depthCompare: 'less',
-      format: 'depth24plus-stencil8',
-    } : undefined;
+    const depthStencil: GPUDepthStencilState | undefined = input.isDepthStencil
+      ? {
+          depthWriteEnabled: true,
+          depthCompare: 'less',
+          format: 'depth24plus-stencil8',
+        }
+      : undefined;
 
     let descriptor: GPURenderPipelineDescriptor = {
       layout: 'auto',

@@ -71,7 +71,6 @@
     "react/jsx-filename-extension": [2, { "extensions": [".tsx", ".ts", ".js", ".jsx"] }],
     "react/jsx-props-no-spreading": "off",
     "semi": [2, "always"],
-    "max-len": ["warn", { "code": 80 }],
     "no-console": "off",
     "no-return-assign": "off",
     "import/extensions": [

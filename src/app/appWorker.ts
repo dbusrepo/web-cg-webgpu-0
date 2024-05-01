@@ -1,41 +1,29 @@
 // import assert from 'assert';
 import type { StatsValues } from '../ui/stats/stats';
-import type {
-  KeyInputEvent,
-  MouseMoveEvent,
-  CanvasDisplayResizeEvent,
-} from './events';
+import type { KeyInputEvent, MouseMoveEvent, CanvasDisplayResizeEvent } from './events';
 import type { AuxAppWorkerParams, AuxAppWorkerDesc } from './auxAppWorker';
 import type { WasmEngineParams } from '../engine/wasmEngine/wasmEngine';
 import type { WasmViews } from '../engine/wasmEngine/wasmViews';
-import type {
-  WasmModules,
-  WasmEngineModule,
-} from '../engine/wasmEngine/wasmLoader';
+import type { WasmModules, WasmEngineModule } from '../engine/wasmEngine/wasmLoader';
 import { mainConfig } from '../config/mainConfig';
 import { MILLI_IN_SEC } from '../common';
 import { StatsEnum } from '../ui/stats/stats';
 import { AppCommandEnum, EventLog } from './appTypes';
-import {
-  InputManager,
-  MouseCodeEnum,
-  EnginePanelInputKeyCodeEnum,
-} from '../input/inputManager';
+import { InputManager, MouseCodeEnum, EnginePanelInputKeyCodeEnum } from '../input/inputManager';
 import { InputAction, InputActionBehavior } from '../input/inputAction';
 import { AuxAppWorkerCommandEnum } from './auxAppWorker';
 import { WasmEngine } from '../engine/wasmEngine/wasmEngine';
 import { WasmRun } from '../engine/wasmEngine/wasmRun';
 import * as utils from '../engine/utils';
-import type { WebGPUInitInput } from './renderer';
-import { Renderer } from './renderer';
+import type { WebGPUInitInput } from '../engine/render/renderer';
+import { Renderer } from '../engine/render/renderer';
 
 type AppWorkerParams = {
   engineCanvas: OffscreenCanvas;
 };
 
 class AppWorker {
-  private static readonly UPDATE_PERIOD_MS =
-    (mainConfig.multiplier * MILLI_IN_SEC) / mainConfig.targetUPS;
+  private static readonly UPDATE_PERIOD_MS = (mainConfig.multiplier * MILLI_IN_SEC) / mainConfig.targetUPS;
 
   private static readonly UPDATE_TIME_MAX = AppWorker.UPDATE_PERIOD_MS * 8;
 
@@ -111,19 +99,10 @@ class AppWorker {
     // );
     this.inputManager.mapToKey(EnginePanelInputKeyCodeEnum.KEY_B, this.pressB);
 
-    this.mouseMoveLeft = new InputAction(
-      'MouseLeft',
-      InputActionBehavior.NORMAL,
-    );
-    this.mouseMoveRight = new InputAction(
-      'MouseRight',
-      InputActionBehavior.NORMAL,
-    );
+    this.mouseMoveLeft = new InputAction('MouseLeft', InputActionBehavior.NORMAL);
+    this.mouseMoveRight = new InputAction('MouseRight', InputActionBehavior.NORMAL);
     this.mouseMoveUp = new InputAction('MouseUp', InputActionBehavior.NORMAL);
-    this.mouseMoveDown = new InputAction(
-      'MouseDown',
-      InputActionBehavior.NORMAL,
-    );
+    this.mouseMoveDown = new InputAction('MouseDown', InputActionBehavior.NORMAL);
 
     this.inputManager.mapToMouse(MouseCodeEnum.MOVE_LEFT, this.mouseMoveLeft);
     this.inputManager.mapToMouse(MouseCodeEnum.MOVE_RIGHT, this.mouseMoveRight);
@@ -175,29 +154,21 @@ class AppWorker {
             --remWorkers;
             console.log(
               `Aux app worker id=${workerIdx} initd,
-               left count=${remWorkers}, time=${
-                 Date.now() - initStart
-               }ms with data = ${JSON.stringify(data)}`,
+               left count=${remWorkers}, time=${Date.now() - initStart}ms with data = ${JSON.stringify(data)}`,
             );
             if (remWorkers === 0) {
-              console.log(
-                `Aux app workers init done. After ${Date.now() - initStart}ms`,
-              );
+              console.log(`Aux app workers init done. After ${Date.now() - initStart}ms`);
               resolve();
             }
           };
           engineWorker.worker.onerror = (error) => {
-            console.log(
-              `Aux app worker id=${workerIdx} error: ${error.message}\n`,
-            );
+            console.log(`Aux app worker id=${workerIdx} error: ${error.message}\n`);
             reject(error);
           };
         }
       });
     } catch (error) {
-      console.error(
-        `Error during aux app workers init: ${JSON.stringify(error)}`,
-      );
+      console.error(`Error during aux app workers init: ${JSON.stringify(error)}`);
     }
   }
 
@@ -289,20 +260,12 @@ class AppWorker {
       frameStartTimeMs = performance.now();
       timeSinceLastFrameMs = frameStartTimeMs - lastFrameStartTime;
       lastFrameStartTime = frameStartTimeMs;
-      timeSinceLastFrameMs = Math.min(
-        timeSinceLastFrameMs,
-        AppWorker.UPDATE_TIME_MAX,
-      );
+      timeSinceLastFrameMs = Math.min(timeSinceLastFrameMs, AppWorker.UPDATE_TIME_MAX);
       timeSinceLastFrameMs = Math.max(timeSinceLastFrameMs, 0);
-      timeMsSinceLastFrameArr[
-        timeLastFrameCnt++ % timeMsSinceLastFrameArr.length
-      ] = timeSinceLastFrameMs;
+      timeMsSinceLastFrameArr[timeLastFrameCnt++ % timeMsSinceLastFrameArr.length] = timeSinceLastFrameMs;
       // avgTimeSinceLastFrame = timeSinceLastFrame;
       // console.log(`avgTimeSinceLastFrame = ${avgTimeSinceLastFrame}`);
-      avgTimeSinceLastFrame = utils.arrAvg(
-        timeMsSinceLastFrameArr,
-        timeLastFrameCnt,
-      );
+      avgTimeSinceLastFrame = utils.arrAvg(timeMsSinceLastFrameArr, timeLastFrameCnt);
     };
 
     const update = () => {
@@ -392,9 +355,7 @@ class AppWorker {
       updTimeAcc = 0;
       renderTimeAcc = 0;
       elapsedTimeMs = 0;
-      timeMsSinceLastFrameArr = new Float64Array(
-        AppWorker.TIMES_SINCE_LAST_FRAME_ARR_LEN,
-      );
+      timeMsSinceLastFrameArr = new Float64Array(AppWorker.TIMES_SINCE_LAST_FRAME_ARR_LEN);
       frameCnt = 0;
       frameTimeCnt = 0;
       timeLastFrameCnt = 0;
@@ -490,9 +451,7 @@ const commands = {
   [AppWorkerCommandEnum.MOUSE_MOVE]: (inputEvent: MouseMoveEvent) => {
     appWorker.onMouseMove(inputEvent);
   },
-  [AppWorkerCommandEnum.RESIZE_CANVAS_DISPLAY_SIZE]: (
-    resizeEvent: CanvasDisplayResizeEvent,
-  ) => {
+  [AppWorkerCommandEnum.RESIZE_CANVAS_DISPLAY_SIZE]: (resizeEvent: CanvasDisplayResizeEvent) => {
     const { width, height } = resizeEvent;
     appWorker.onCanvasDisplayResize(width, height);
   },
