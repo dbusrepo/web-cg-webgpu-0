@@ -401,7 +401,7 @@ class AppWorker {
   }
 
   public drawFrame() {
-    // TODO:
+    this.triangleVertexColor.render();
   }
 
   public onKeyDown(event: KeyInputEvent) {

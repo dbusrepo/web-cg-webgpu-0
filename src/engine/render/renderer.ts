@@ -105,7 +105,7 @@ abstract class Renderer {
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     });
 
-    const background = { r: 1.009, g: 0.0125, b: 0.0164, a: 1.0 };
+    const background = { r: 0, g: 0, b: 0, a: 1.0 };
 
     this.renderInit = {
       device,
@@ -236,7 +236,8 @@ abstract class Renderer {
   }
 
   protected abstract createRenderPipeline(input: RenderPipelineInput): Promise<RenderPipeline>;
-  protected abstract render(): void;
+
+  public abstract render(): void;
 }
 
 export type { RenderInitInput, RenderInit, RenderPipelineInput, RenderPipeline };

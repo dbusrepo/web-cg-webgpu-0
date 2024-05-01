@@ -28,7 +28,7 @@ class TriangleVertexColor extends Renderer {
     return renderPipeline;
   }
 
-  protected render(): void {
+  public render(): void {
     const commandEncoder = this.renderInit.device.createCommandEncoder();
     const renderPassInput = {};
     const renderPassDesc = this.createRenderPassDescriptor(renderPassInput);
