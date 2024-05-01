@@ -1,3 +1,5 @@
+import assert from 'assert';
+
 type RenderInitInput = {
   canvas: OffscreenCanvas;
   format?: GPUTextureFormat;
@@ -13,6 +15,23 @@ type RenderInit = {
   msaaCount: number;
 };
 
+type RenderPipelineInput = {
+  // device: GPUDevice,
+  // format?: GPUTextureFormat,
+  frontFace?: GPUFrontFace;
+  primitiveType?: GPUPrimitiveTopology;
+  indexFormat?: GPUIndexFormat;
+  cullMode?: GPUCullMode;
+  // msaaCount?: number,
+  isDepthStencil?: boolean;
+  buffers?: Iterable<GPUVertexBufferLayout>;
+  shader?: string;
+  vsShader?: string;
+  fsShader?: string;
+  vsEntry?: string;
+  fsEntry?: string;
+};
+
 type RenderPipeline = {
   pipelines?: GPURenderPipeline[];
   csPipelines?: GPUComputePipeline[];
@@ -26,26 +45,14 @@ type RenderPipeline = {
   msaaCount?: number;
 };
 
-type RenderPipelineInput = {
-  // device: GPUDevice,
-  // format?: GPUTextureFormat,
-  frontFace?: GPUFrontFace;
-  primitiveType?: GPUPrimitiveTopology;
-  indexFormat?: GPUIndexFormat;
-  cullMode?: GPUCullMode;
-  // msaaCount?: number,
-  isDepthStencil?: boolean;
-  buffers?: Iterable<GPUVertexBufferLayout>;
-  shader?: string;
-  vsShader: string;
-  fsShader: string;
-  vsEntry?: string;
-  fsEntry?: string;
+type RenderPassInput = {
+  textureView?: GPUTextureView;
+  depthView?: GPUTextureView;
 };
 
 abstract class Renderer {
-  private params: RenderInitInput;
-  private renderInit: RenderInit;
+  protected params: RenderInitInput;
+  protected renderInit: RenderInit;
 
   public async init(params: RenderInitInput) {
     this.params = params;
@@ -70,6 +77,17 @@ abstract class Renderer {
       throw new Error('No adapter found');
     }
     const device = await adapter.requestDevice();
+
+// device.lost.then((info) => {
+//     console.error(`WebGPU device was lost: ${info.message}`);
+//     // 'reason' will be 'destroyed' if we intentionally destroy the device.
+//     if (info.reason !== 'destroyed') {
+//       // try again
+//       start();
+//     }
+//   });
+
+
     const context = this.params.canvas.getContext('webgpu') as GPUCanvasContext;
 
     // const pixelRatio = window.devicePixelRatio || 1;
@@ -122,10 +140,12 @@ abstract class Renderer {
 
     const { device } = this.renderInit;
 
-    const vsmDesc = { code: input.vsShader };
+    // assert(input.vsShader);
+    const vsmDesc = { code: input.vsShader! };
     const vertModule = device.createShaderModule(vsmDesc);
 
-    const fsmDesc = { code: input.fsShader };
+    // assert(input.fsShader);
+    const fsmDesc = { code: input.fsShader! };
     const fragModule = device.createShaderModule(fsmDesc);
 
     const vertex: GPUVertexState = {
@@ -159,6 +179,7 @@ abstract class Renderer {
       ? {
           depthWriteEnabled: true,
           depthCompare: 'less',
+          // format: 'depth24plus',
           format: 'depth24plus-stencil8',
         }
       : undefined;
@@ -175,7 +196,46 @@ abstract class Renderer {
     return descriptor;
   }
 
-  protected abstract createRenderPipeline(input: RenderPipelineInput): RenderPipeline;
+  protected createRenderPassDescriptor(input: RenderPassInput, withColorAttachment = true): GPURenderPassDescriptor {
+    const colorAttachmentView =
+      this.renderInit.msaaCount > 1 ? input.textureView : this.renderInit.context.getCurrentTexture().createView();
+
+    const colorAttachmentResolveTarget =
+      this.renderInit.msaaCount > 1 ? this.renderInit.context.getCurrentTexture().createView() : undefined;
+
+    assert(colorAttachmentView);
+
+    const colorAttachment: GPURenderPassColorAttachment | undefined = withColorAttachment
+      ? {
+          view: colorAttachmentView,
+          resolveTarget: colorAttachmentResolveTarget,
+          clearValue: this.renderInit.background,
+          loadOp: 'clear',
+          storeOp: 'store',
+        }
+      : undefined;
+
+    const depthAttachment: GPURenderPassDepthStencilAttachment | undefined = input.depthView
+      ? {
+          view: input.depthView,
+          depthClearValue: 1,
+          depthLoadOp: 'clear',
+          depthStoreOp: 'store',
+          stencilClearValue: 0,
+          stencilLoadOp: 'clear',
+          stencilStoreOp: 'store',
+        }
+      : undefined;
+
+    const renderPassDesc: GPURenderPassDescriptor = {
+      colorAttachments: colorAttachment ? [colorAttachment] : [],
+      depthStencilAttachment: depthAttachment,
+    };
+
+    return renderPassDesc;
+  }
+
+  protected abstract createRenderPipeline(input: RenderPipelineInput): Promise<RenderPipeline>;
   protected abstract render(): void;
 }
 

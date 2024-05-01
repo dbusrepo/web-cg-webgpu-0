@@ -167,7 +167,7 @@ const config: webpack.Configuration = {
       //   loader: 'file-loader',
       // },
       {
-        test: /\.wgsl/,
+        test: /\.(wgsl|glsl|vs|fs)$/,
         type: 'asset/source',
       },
       {

@@ -15,6 +15,15 @@ declare module '*.txt' {
   export default content;
 }
 
+declare module '*.wgsl' {
+  const content: string;
+  export default content;
+}
+
+// declare module '*.glsl';
+// declare module '*.vs';
+// declare module '*.fs';
+
 // declare module '*.res' {
 //   const content: string;
 //   export default content;
