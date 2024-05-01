@@ -79,6 +79,7 @@
     "@types/webpack": "^5.28.5",
     "@typescript-eslint/eslint-plugin": "^5.8.1",
     "@typescript-eslint/parser": "^5.8.1",
+    "@types/circular-dependency-plugin": "5.0.8",
     "as-big": "^0.2.3",
     "as-bignum": "^0.3.0",
     "assemblyscript": "^0.27.25",

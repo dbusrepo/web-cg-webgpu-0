@@ -179,5 +179,5 @@ abstract class Renderer {
   protected abstract render(): void;
 }
 
-export type { RenderInitInput as WebGPUInitInput, RenderInit as WebGPUInit };
+export type { RenderInitInput, RenderInit, RenderPipelineInput, RenderPipeline };
 export { Renderer };

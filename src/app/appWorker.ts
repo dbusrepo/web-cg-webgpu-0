@@ -15,8 +15,8 @@ import { AuxAppWorkerCommandEnum } from './auxAppWorker';
 import { WasmEngine } from '../engine/wasmEngine/wasmEngine';
 import { WasmRun } from '../engine/wasmEngine/wasmRun';
 import * as utils from '../engine/utils';
-import type { WebGPUInitInput } from '../engine/render/renderer';
-import { Renderer } from '../engine/render/renderer';
+import type { RenderInit } from '../engine/render/triangleVertexColor';
+// import { Renderer } from '../engine/render/renderer';
 
 type AppWorkerParams = {
   engineCanvas: OffscreenCanvas;
@@ -52,7 +52,7 @@ class AppWorker {
   private mouseMoveUp: InputAction;
   private mouseMoveDown: InputAction;
 
-  private renderer: Renderer;
+  private triangleVertexColor: RenderInitInput;
 
   public async init(params: AppWorkerParams): Promise<void> {
     this.params = params;

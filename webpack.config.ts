@@ -3,31 +3,34 @@
 // https://survivejs.com/webpack/building/source-maps/
 // const HtmlWebpackPlugin = require('html-webpack-plugin');
 // const path = require('path');
-import * as os from 'os'
+// import * as os from 'os';
 import path from 'path';
 import * as webpack from 'webpack'; // TODO
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { ProvidePlugin } from 'webpack';
 import Dotenv from 'dotenv-webpack';
-const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-const CircularDependencyPlugin = require('circular-dependency-plugin')
-const ESLintPlugin = require('eslint-webpack-plugin')
+import 'webpack-dev-server';
+import { argv } from 'process';
+
+// const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
+// const CircularDependencyPlugin = require('circular-dependency-plugin');
+// import CircularDependencyPlugin from 'circular-dependency-plugin';
+// const ESLintPlugin = require('eslint-webpack-plugin');
+
 // import MiniCssExtractPlugin from "mini-css-extract-plugin";
 // import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 // import TerserPlugin from "terser-webpack-plugin";
 // in case you run into any typescript error when configuring `devServer`
-import 'webpack-dev-server';
-import { argv } from 'process';
 
-let env = process.env['NODE_ENV'];
+let env = process.env.NODE_ENV;
 
 // const isProduction = process.env.NODE_ENV == 'production';
 let isProduction =
-    (env && env.match(/production/)) ||
-    argv.reduce((prev, cur) => prev || cur === '--production', false);
+  (env && env.match(/production/)) || argv.reduce((prev, cur) => prev || cur === '--production', false);
 
-let numCyclesDetected = 0;
+// let numCyclesDetected = 0;
 
 const config: webpack.Configuration = {
   entry: './src/main.ts',
@@ -70,13 +73,13 @@ const config: webpack.Configuration = {
   resolve: {
     // Add `.ts` and `.tsx` as a resolvable extension.
     extensions: [
-        '.js',
-        '.jsx',
-        '.ts',
-        '.tsx',
-        '.css',
-        '.json',
-        // '.mjs',
+      '.js',
+      '.jsx',
+      '.ts',
+      '.tsx',
+      '.css',
+      '.json',
+      // '.mjs',
     ],
     alias: {
       images: path.resolve(__dirname, 'src/asset/images/'),
@@ -86,13 +89,13 @@ const config: webpack.Configuration = {
       'react/jsx-runtime': 'preact/jsx-runtime',
     },
     fallback: {
-      stream: require.resolve('stream-browserify')
-    }
+      stream: require.resolve('stream-browserify'),
+    },
   },
   performance: {
-      hints: false,
-      maxEntrypointSize: 51200,
-      maxAssetSize: 51200
+    hints: false,
+    maxEntrypointSize: 51200,
+    maxAssetSize: 51200,
   },
   module: {
     rules: [
@@ -101,7 +104,7 @@ const config: webpack.Configuration = {
         exclude: /node_modules/,
         use: [
           {
-            loader: "ts-loader",
+            loader: 'ts-loader',
             // https://stackoverflow.com/questions/73499449/webpack-dev-server-not-reloading
             options: {
               transpileOnly: true,
@@ -164,6 +167,10 @@ const config: webpack.Configuration = {
       //   loader: 'file-loader',
       // },
       {
+        test: /\.wgsl/,
+        type: 'asset/source',
+      },
+      {
         test: /.txt$/i,
         type: 'asset/source',
       },
@@ -183,7 +190,7 @@ const config: webpack.Configuration = {
     // https://stackoverflow.com/questions/72133210/react-unhandledschemeerror-nodebuffer-is-not-handled-by-plugins
     // see also https://gist.github.com/ef4/d2cf5672a93cf241fd47c020b9b3066a
     new webpack.NormalModuleReplacementPlugin(/node:/, (resource) => {
-      resource.request = resource.request.replace(/^node:/, "");
+      resource.request = resource.request.replace(/^node:/, '');
     }),
     // https://github.com/TypeStrong/ts-loader#transpileonly
     new ForkTsCheckerWebpackPlugin({
@@ -231,17 +238,17 @@ const config: webpack.Configuration = {
     // })
   ],
   optimization: {
-      moduleIds: 'deterministic',
-      runtimeChunk: 'single',
-      minimize: isProduction ? true : false,
-      // minimizer: [
-      //     new TerserPlugin({ test: /\.js(\?.*)?$/i }),
-      //     new CssMinimizerPlugin({})
-      // ]
-      splitChunks: {
-        // include all types of chunks
-        chunks: 'all',
-      },
+    moduleIds: 'deterministic',
+    runtimeChunk: 'single',
+    minimize: !!isProduction,
+    // minimizer: [
+    //     new TerserPlugin({ test: /\.js(\?.*)?$/i }),
+    //     new CssMinimizerPlugin({})
+    // ]
+    splitChunks: {
+      // include all types of chunks
+      chunks: 'all',
+    },
   },
   watchOptions: {
     // for some systems, watching many files can result in a lot of CPU or memory usage
