@@ -26,7 +26,7 @@ import { AuxAppWorkerCommandEnum } from './auxAppWorker';
 import { WasmEngine } from '../engine/wasmEngine/wasmEngine';
 import { WasmRun } from '../engine/wasmEngine/wasmRun';
 import * as utils from '../engine/utils';
-import type { RendererParams } from './renderer';
+import type { WebGPUInitInput } from './renderer';
 import { Renderer } from './renderer';
 
 type AppWorkerParams = {
@@ -76,11 +76,11 @@ class AppWorker {
   }
 
   private async initRenderer() {
-    const rendererParams: RendererParams = {
+    const rendererParams: WebGPUInitInput = {
       canvas: this.params.engineCanvas,
     };
-    this.renderer = new Renderer();
-    await this.renderer.init(rendererParams);
+    // this.renderer = new Renderer();
+    // await this.renderer.init(rendererParams);
   }
 
   private async initGfx() {
