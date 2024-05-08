@@ -7,6 +7,7 @@ type RenderInitInput = {
 };
 
 type RenderInit = {
+  adapter: GPUAdapter;
   device: GPUDevice;
   context: GPUCanvasContext;
   format: GPUTextureFormat;
@@ -57,6 +58,7 @@ abstract class Renderer {
   public async init(params: RenderInitInput) {
     this.params = params;
     await this.initWebGPU();
+    await this.printGPUInfo();
   }
 
   private async initWebGPU() {
@@ -111,6 +113,7 @@ abstract class Renderer {
     const background = { r: 0, g: 0, b: 0, a: 1.0 };
 
     this.renderInit = {
+      adapter,
       device,
       context,
       format: this.params.format,
@@ -118,6 +121,36 @@ abstract class Renderer {
       background,
       msaaCount: this.params.msaaCount,
     };
+  }
+
+  protected async printGPUInfo(): Promise<void> {
+    const { adapter } = this.renderInit;
+
+    const info = await adapter.requestAdapterInfo();
+
+    const gpuInfo = `GPU Info:
+Vendor: ${info.vendor}
+Architecture: ${info.architecture}
+Description: ${info.description}
+Device: ${info.device}`;
+
+    console.log(gpuInfo);
+
+    {
+      console.log('GPU Supported Limits:');
+      let i: keyof GPUSupportedLimits;
+      // eslint-disable-next-line guard-for-in
+      for (i in adapter.limits) {
+        console.log(i, adapter.limits[i]);
+      }
+    }
+
+    {
+      console.log('GPU Features:');
+      for (const item of adapter.features) {
+        console.log(item);
+      }
+    }
   }
 
   protected createRenderPipelineDescriptor(input: RenderPipelineInput): GPURenderPipelineDescriptor {
