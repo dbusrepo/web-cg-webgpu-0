@@ -73,6 +73,7 @@
     "no-console": "off",
     "no-return-assign": "off",
     "no-unused-expressions": "off",
+    "promise/always-return": "off",
     "import/extensions": [
       "error",
       "ignorePackages",
