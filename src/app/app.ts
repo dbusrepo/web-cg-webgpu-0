@@ -25,7 +25,7 @@ import { AppCommandEnum, PanelIdEnum, KeyEventsEnum } from './appTypes';
 class App {
   private stats: Stats;
   private enginePanel: EnginePanel;
-  // private appWorker: Worker;
+  private appWorker: Worker;
 
   constructor() {
   }
@@ -34,8 +34,8 @@ class App {
     this.stats = this.initStatsPanel();
     this.initPanels();
     this.initEventListeners();
-    // await this.initAppWorker();
-    // this.initObservers();
+    await this.initAppWorker();
+    this.initObservers();
     this.enginePanel.showInit();
   }
 
@@ -60,10 +60,10 @@ class App {
             code: event.code as KeyCode,
             panelId: panel.Id,
           };
-          // this.appWorker.postMessage({
-          //   command: keyEventCmd[keyEvent],
-          //   params: keyInputEvent,
-          // });
+          this.appWorker.postMessage({
+            command: keyEventCmd[keyEvent],
+            params: keyInputEvent,
+          });
         }
       });
 
@@ -95,13 +95,13 @@ class App {
     canvasEl.addEventListener('click', handleClick);
 
     const mouseMoveHandler = (event: MouseEvent) => {
-      // this.appWorker.postMessage({
-      //   command: AppWorkerCommandEnum.MOUSE_MOVE,
-      //   params: {
-      //     dx: event.movementX,
-      //     dy: event.movementY,
-      //   },
-      // });
+      this.appWorker.postMessage({
+        command: AppWorkerCommandEnum.MOUSE_MOVE,
+        params: {
+          dx: event.movementX,
+          dy: event.movementY,
+        },
+      });
     };
 
     const pointerLockChangeHandler = () => {
@@ -134,127 +134,126 @@ class App {
     document.addEventListener('pointerlockerror', pointerLockErrorHandler);
   }
   //
-  // // private buildAppWorkerParams() {
-  // //   const params: AppWorkerParams = {
-  // //     engineCanvas: this.enginePanel.Canvas.transferControlToOffscreen(),
-  // //   };
-  // //
-  // //   return {
-  // //     params,
-  // //     transferables: [params.engineCanvas],
-  // //   };
-  // // }
-  //
-  // private onResize(entry: ResizeObserverEntry): [number, number] {
-  //   let width;
-  //   let height;
-  //   let dpr = window.devicePixelRatio;
-  //   let dprSupport = false;
-  //   if (entry.devicePixelContentBoxSize) {
-  //     // NOTE: Only this path gives the correct answer
-  //     // The other paths are an imperfect fallback
-  //     // for browsers that don't provide anyway to do this
-  //     width = entry.devicePixelContentBoxSize[0].inlineSize;
-  //     height = entry.devicePixelContentBoxSize[0].blockSize;
-  //     dpr = 1; // it's already in width and height
-  //     dprSupport = true;
-  //   } else if (entry.contentBoxSize?.[0]) {
-  //     width = entry.contentBoxSize[0].inlineSize;
-  //     height = entry.contentBoxSize[0].blockSize;
-  //   } else {
-  //     // legacy
-  //     width = entry.contentRect.width;
-  //     height = entry.contentRect.height;
-  //   }
-  //   const displayWidth = Math.round(width * dpr);
-  //   const displayHeight = Math.round(height * dpr);
-  //   return [displayWidth, displayHeight];
-  // }
-  //
-  // private initObservers() {
-  //   const onResize = (entries: ResizeObserverEntry[]) => {
-  //     for (const entry of entries) {
-  //       if (entry.target === this.enginePanel.Canvas) {
-  //         const [width, height] = this.onResize(entry);
-  //         this.appWorker.postMessage({
-  //           command: AppWorkerCommandEnum.RESIZE_CANVAS_DISPLAY_SIZE,
-  //           params: {
-  //             width,
-  //             height,
-  //           },
-  //         });
-  //       }
-  //     }
-  //   };
-  //
-  //   const resizeObserver = new ResizeObserver(onResize);
-  //   resizeObserver.observe(this.enginePanel.Canvas, { box: 'content-box' });
-  // }
-  //
-  // // async initAppWorker() {
-  // //   // this.appWorker = new Worker(
-  // //   //   new URL('./appWorker.ts', import.meta.url),
-  // //   //   { type: 'module' }
-  // //   // ) as Worker;
-  // //   const initPromise = this.initAppWorkerMsgHandlers();
-  // //   this.sendInitMsgToAppWorker();
-  // //   await initPromise;
-  // // }
-  //
-  // // private sendInitMsgToAppWorker() {
-  // //   const { params, transferables } = this.buildAppWorkerParams();
-  // //
-  // //   this.appWorker.postMessage(
-  // //     {
-  // //       command: AppWorkerCommandEnum.INIT,
-  // //       params,
-  // //     },
-  // //     transferables,
-  // //   );
-  // // }
-  //
-  // private initAppWorkerMsgHandlers() {
-  //   let { enginePanel } = this;
-  //
-  //   let resolveInit: (value: void | PromiseLike<void>) => void;
-  //
-  //   const initPromise = new Promise<void>((resolve) => {
-  //     resolveInit = resolve;
-  //   });
-  //
-  //   const commands = {
-  //     [AppCommandEnum.INIT]: () => {
-  //       resolveInit();
-  //     },
-  //     [AppCommandEnum.UPDATE_STATS]: (values: StatsValues) => {
-  //       enginePanel.Stats.update(values);
-  //       enginePanel.MenuGui.updateFps(values[StatsEnum.UFPS] || 0);
-  //     },
-  //     [AppCommandEnum.EVENT]: (eventObj: EventLog) => {
-  //       enginePanel.EventLog?.log(`event ${eventObj.event}`, eventObj.msg);
-  //     },
-  //   };
-  //
-  //   this.appWorker.onmessage = ({ data: { command, params } }) => {
-  //     const commandKey = command as keyof typeof commands;
-  //     if (commands.hasOwnProperty(commandKey)) {
-  //       try {
-  //         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  //         commands[commandKey](params);
-  //       } catch (ex) {
-  //         console.error('error executing command in appWorker message handler');
-  //         console.error(ex);
-  //       }
-  //     }
-  //   };
-  //
-  //   return initPromise;
-  // }
+  private buildAppWorkerParams() {
+    const params: AppWorkerParams = {
+      engineCanvas: this.enginePanel.Canvas.transferControlToOffscreen(),
+    };
+
+    return {
+      params,
+      transferables: [params.engineCanvas],
+    };
+  }
+
+  private onResize(entry: ResizeObserverEntry): [number, number] {
+    let width;
+    let height;
+    let dpr = window.devicePixelRatio;
+    let dprSupport = false;
+    if (entry.devicePixelContentBoxSize) {
+      // NOTE: Only this path gives the correct answer
+      // The other paths are an imperfect fallback
+      // for browsers that don't provide anyway to do this
+      width = entry.devicePixelContentBoxSize[0].inlineSize;
+      height = entry.devicePixelContentBoxSize[0].blockSize;
+      dpr = 1; // it's already in width and height
+      dprSupport = true;
+    } else if (entry.contentBoxSize?.[0]) {
+      width = entry.contentBoxSize[0].inlineSize;
+      height = entry.contentBoxSize[0].blockSize;
+    } else {
+      // legacy
+      width = entry.contentRect.width;
+      height = entry.contentRect.height;
+    }
+    const displayWidth = Math.round(width * dpr);
+    const displayHeight = Math.round(height * dpr);
+    return [displayWidth, displayHeight];
+  }
+
+  private initObservers() {
+    const onResize = (entries: ResizeObserverEntry[]) => {
+      for (const entry of entries) {
+        if (entry.target === this.enginePanel.Canvas) {
+          const [width, height] = this.onResize(entry);
+          this.appWorker.postMessage({
+            command: AppWorkerCommandEnum.RESIZE_CANVAS_DISPLAY_SIZE,
+            params: {
+              width,
+              height,
+            },
+          });
+        }
+      }
+    };
+
+    const resizeObserver = new ResizeObserver(onResize);
+    resizeObserver.observe(this.enginePanel.Canvas, { box: 'content-box' });
+  }
+
+  async initAppWorker() {
+    this.appWorker = new Worker(
+      new URL('./appWorker.ts', import.meta.url),
+      { type: 'module' }
+    ) as Worker;
+    const initPromise = this.initAppWorkerMsgHandlers();
+    this.sendInitMsgToAppWorker();
+    await initPromise;
+  }
+
+  private sendInitMsgToAppWorker() {
+    const { params, transferables } = this.buildAppWorkerParams();
+    this.appWorker.postMessage(
+      {
+        command: AppWorkerCommandEnum.INIT,
+        params,
+      },
+      transferables,
+    );
+  }
+
+  private initAppWorkerMsgHandlers() {
+    let { enginePanel } = this;
+
+    let resolveInit: (value: void | PromiseLike<void>) => void;
+
+    const initPromise = new Promise<void>((resolve) => {
+      resolveInit = resolve;
+    });
+
+    const commands = {
+      [AppCommandEnum.INIT]: () => {
+        resolveInit();
+      },
+      [AppCommandEnum.UPDATE_STATS]: (values: StatsValues) => {
+        enginePanel.Stats.update(values);
+        enginePanel.MenuGui.updateFps(values[StatsEnum.UFPS] || 0);
+      },
+      [AppCommandEnum.EVENT]: (eventObj: EventLog) => {
+        enginePanel.EventLog?.log(`event ${eventObj.event}`, eventObj.msg);
+      },
+    };
+
+    this.appWorker.onmessage = ({ data: { command, params } }) => {
+      const commandKey = command as keyof typeof commands;
+      if (commands.hasOwnProperty(commandKey)) {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          commands[commandKey](params);
+        } catch (ex) {
+          console.error('error executing command in appWorker message handler');
+          console.error(ex);
+        }
+      }
+    };
+
+    return initPromise;
+  }
   //
   run() {
-    // this.appWorker.postMessage({
-    //   command: AppWorkerCommandEnum.RUN,
-    // });
+    this.appWorker.postMessage({
+      command: AppWorkerCommandEnum.RUN,
+    });
   }
 
   private initStatsPanel() {
