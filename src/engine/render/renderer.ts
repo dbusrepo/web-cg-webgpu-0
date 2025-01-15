@@ -52,9 +52,9 @@ type RenderPassInput = {
 };
 
 abstract class Renderer {
-  protected params: RenderInitInput;
-  protected renderInit: RenderInit;
-
+//   protected params: RenderInitInput;
+//   protected renderInit: RenderInit;
+//
 //   public async init(params: RenderInitInput) {
 //     this.params = params;
 //     await this.initWebGPU();
@@ -177,6 +177,7 @@ abstract class Renderer {
 //     const { device } = this.renderInit;
 //
 //     // assert(input.vsShader);
+//
 //     const vsmDesc = { code: input.vsShader! };
 //     const vertModule = device.createShaderModule(vsmDesc);
 //

@@ -4,8 +4,8 @@ import { Renderer } from './renderer';
 import shader from './triangleVertexColor.wgsl';
 
 class TriangleVertexColor extends Renderer {
-  private trianglePipeline: RenderPipeline;
-
+  // private trianglePipeline: RenderPipeline;
+  //
   // public async init(params: RenderInitInput) {
   //   await super.init(params);
   //   await this.initPipeline();

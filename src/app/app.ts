@@ -33,106 +33,106 @@ class App {
   async init() {
     this.stats = this.initStatsPanel();
     this.initPanels();
-    // this.initEventListeners();
+    this.initEventListeners();
     // await this.initAppWorker();
     // this.initObservers();
-    // this.enginePanel.showInit();
+    this.enginePanel.showInit();
   }
 
-  // private initEventListeners() {
-  //   this.initKeyListeners(this.enginePanel);
-  //   this.initPointerLock(this.enginePanel);
-  // }
+  private initEventListeners() {
+    this.initKeyListeners(this.enginePanel);
+    this.initPointerLock(this.enginePanel);
+  }
 
-  // private initKeyListeners(panel: Panel) {
-  //   const keyEventCmd = {
-  //     [KeyEventsEnum.KEY_DOWN]: AppWorkerCommandEnum.KEY_DOWN,
-  //     [KeyEventsEnum.KEY_UP]: AppWorkerCommandEnum.KEY_UP,
-  //   };
-  //
-  //   const addKeyListener = (keyEvent: KeyEvent) =>
-  //     panel.InputElement.addEventListener(keyEvent, (event) => {
-  //       if (
-  //         panel.InputKeys.has(event.code) &&
-  //         !panel.ignoreInputKey(event.code)
-  //       ) {
-  //         const keyInputEvent: KeyInputEvent = {
-  //           code: event.code as KeyCode,
-  //           panelId: panel.Id,
-  //         };
-  //         this.appWorker.postMessage({
-  //           command: keyEventCmd[keyEvent],
-  //           params: keyInputEvent,
-  //         });
-  //       }
-  //     });
-  //
-  //   (Object.values(KeyEventsEnum) as KeyEventsEnum[]).forEach(addKeyListener);
-  // }
-  //
-  // private initPointerLock(enginePanel: EnginePanel) {
-  //   const canvasEl = this.enginePanel.Canvas;
-  //
-  //   const handleClick = (event: MouseEvent) => {
-  //     if (event.target !== canvasEl) {
-  //       return;
-  //     }
-  //     const canRequestPointerLock = !(
-  //       document.pointerLockElement || enginePanel.isConsoleOpen
-  //     );
-  //     if (canRequestPointerLock) {
-  //       canvasEl.removeEventListener('click', handleClick);
-  //       const addEventListener = () =>
-  //         canvasEl.addEventListener('click', handleClick);
-  //       requestPointerLock(canvasEl)
-  //         .then(addEventListener)
-  //         .catch(() => {
-  //           console.error('pointer lock error');
-  //         });
-  //     }
-  //   };
-  //
-  //   canvasEl.addEventListener('click', handleClick);
-  //
-  //   const mouseMoveHandler = (event: MouseEvent) => {
-  //     this.appWorker.postMessage({
-  //       command: AppWorkerCommandEnum.MOUSE_MOVE,
-  //       params: {
-  //         dx: event.movementX,
-  //         dy: event.movementY,
-  //       },
-  //     });
-  //   };
-  //
-  //   const pointerLockChangeHandler = () => {
-  //     if (document.pointerLockElement === canvasEl) {
-  //       // console.log('pointer lock acquired');
-  //       // this.appWorker.postMessage({
-  //       //   command: AppWorkerCommandEnum.POINTER_LOCK_CHANGE,
-  //       //   params: {
-  //       //     isLocked: true,
-  //       //   },
-  //       // });
-  //       canvasEl.addEventListener('mousemove', mouseMoveHandler, false);
-  //     } else {
-  //       // console.log('pointer lock lost');
-  //       // this.appWorker.postMessage({
-  //       //   command: AppWorkerCommandEnum.POINTER_LOCK_CHANGE,
-  //       //   params: {
-  //       //     isLocked: false,
-  //       //   },
-  //       // });
-  //       canvasEl.removeEventListener('mousemove', mouseMoveHandler, false);
-  //     }
-  //   };
-  //
-  //   const pointerLockErrorHandler = () => {
-  //     // console.error('Pointer lock error');
-  //   };
-  //
-  //   document.addEventListener('pointerlockchange', pointerLockChangeHandler);
-  //   document.addEventListener('pointerlockerror', pointerLockErrorHandler);
-  // }
+  private initKeyListeners(panel: Panel) {
+    const keyEventCmd = {
+      [KeyEventsEnum.KEY_DOWN]: AppWorkerCommandEnum.KEY_DOWN,
+      [KeyEventsEnum.KEY_UP]: AppWorkerCommandEnum.KEY_UP,
+    };
+
+    const addKeyListener = (keyEvent: KeyEvent) =>
+      panel.InputElement.addEventListener(keyEvent, (event) => {
+        if (
+          panel.InputKeys.has(event.code) &&
+          !panel.ignoreInputKey(event.code)
+        ) {
+          const keyInputEvent: KeyInputEvent = {
+            code: event.code as KeyCode,
+            panelId: panel.Id,
+          };
+          // this.appWorker.postMessage({
+          //   command: keyEventCmd[keyEvent],
+          //   params: keyInputEvent,
+          // });
+        }
+      });
+
+    (Object.values(KeyEventsEnum) as KeyEventsEnum[]).forEach(addKeyListener);
+  }
+
+  private initPointerLock(enginePanel: EnginePanel) {
+    const canvasEl = this.enginePanel.Canvas;
+
+    const handleClick = (event: MouseEvent) => {
+      if (event.target !== canvasEl) {
+        return;
+      }
+      const canRequestPointerLock = !(
+        document.pointerLockElement || enginePanel.isConsoleOpen
+      );
+      if (canRequestPointerLock) {
+        canvasEl.removeEventListener('click', handleClick);
+        const addEventListener = () =>
+          canvasEl.addEventListener('click', handleClick);
+        requestPointerLock(canvasEl)
+          .then(addEventListener)
+          .catch(() => {
+            console.error('pointer lock error');
+          });
+      }
+    };
+
+    canvasEl.addEventListener('click', handleClick);
+
+    const mouseMoveHandler = (event: MouseEvent) => {
+      // this.appWorker.postMessage({
+      //   command: AppWorkerCommandEnum.MOUSE_MOVE,
+      //   params: {
+      //     dx: event.movementX,
+      //     dy: event.movementY,
+      //   },
+      // });
+    };
+
+    const pointerLockChangeHandler = () => {
+      if (document.pointerLockElement === canvasEl) {
+        // console.log('pointer lock acquired');
+        // this.appWorker.postMessage({
+        //   command: AppWorkerCommandEnum.POINTER_LOCK_CHANGE,
+        //   params: {
+        //     isLocked: true,
+        //   },
+        // });
+        canvasEl.addEventListener('mousemove', mouseMoveHandler, false);
+      } else {
+        // console.log('pointer lock lost');
+        // this.appWorker.postMessage({
+        //   command: AppWorkerCommandEnum.POINTER_LOCK_CHANGE,
+        //   params: {
+        //     isLocked: false,
+        //   },
+        // });
+        canvasEl.removeEventListener('mousemove', mouseMoveHandler, false);
+      }
+    };
+
+    const pointerLockErrorHandler = () => {
+      // console.error('Pointer lock error');
+    };
+
+    document.addEventListener('pointerlockchange', pointerLockChangeHandler);
+    document.addEventListener('pointerlockerror', pointerLockErrorHandler);
+  }
   //
   // // private buildAppWorkerParams() {
   // //   const params: AppWorkerParams = {
