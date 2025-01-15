@@ -1,4 +1,3 @@
-// import assert from 'assert';
 import { EnginePanelConfig } from '../config/mainConfig';
 import { Stats } from '../ui/stats/stats';
 import { Panel } from './panel';

@@ -15,8 +15,8 @@ import { AppCommandEnum, EventLog } from './appTypes';
 import { InputManager, MouseCodeEnum, EnginePanelInputKeyCodeEnum } from '../input/inputManager';
 import { InputAction, InputActionBehavior } from '../input/inputAction';
 import * as utils from '../engine/utils';
-import type { RenderInitInput } from '../engine/render/triangleVertexColor';
-import { TriangleVertexColor } from '../engine/render/triangleVertexColor';
+// import type { RenderInitInput } from '../engine/render/triangleVertexColor';
+// import { TriangleVertexColor } from '../engine/render/triangleVertexColor';
 
 type AppWorkerParams = {
   engineCanvas: OffscreenCanvas;
@@ -52,7 +52,7 @@ class AppWorker {
   private mouseMoveUp: InputAction;
   private mouseMoveDown: InputAction;
 
-  private triangleVertexColor: TriangleVertexColor;
+  // private triangleVertexColor: TriangleVertexColor;
 
   public async init(params: AppWorkerParams): Promise<void> {
     this.params = params;
@@ -64,13 +64,13 @@ class AppWorker {
   }
 
   private async initRenderer() {
-    const renderParams: RenderInitInput = {
-      canvas: this.params.engineCanvas,
-      // format: 'bgra8unorm',
-      // msaaCount: 1,
-    };
-    this.triangleVertexColor = new TriangleVertexColor();
-    await this.triangleVertexColor.init(renderParams);
+    // const renderParams: RenderInitInput = {
+    //   canvas: this.params.engineCanvas,
+    //   // format: 'bgra8unorm',
+    //   // msaaCount: 1,
+    // };
+    // this.triangleVertexColor = new TriangleVertexColor();
+    // await this.triangleVertexColor.init(renderParams);
   }
 
   private async initGfx() {
@@ -403,7 +403,7 @@ class AppWorker {
   // }
 
   public drawFrame() {
-    this.triangleVertexColor.render();
+    // this.triangleVertexColor.render();
   }
 
   public onKeyDown(event: KeyInputEvent) {

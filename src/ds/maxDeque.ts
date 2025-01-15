@@ -1,4 +1,4 @@
-import assert from 'assert';
+// import assert from 'assert';
 
 class MaxDeque {
   private values: number[] = [];
@@ -10,10 +10,10 @@ class MaxDeque {
   }
 
   public push(value: number): void {
-    assert(this.counters.length === this.values.length);
-    assert(this.counters.length <= this.bufferSize);
+    // assert(this.counters.length === this.values.length);
+    // assert(this.counters.length <= this.bufferSize);
     for (let i = 0; i < this.counters.length; i++) {
-      assert(this.counters[i] < this.bufferSize);
+      // assert(this.counters[i] < this.bufferSize);
       this.counters[i]++;
     }
     if (this.counters.length && this.counters[0] >= this.bufferSize) {

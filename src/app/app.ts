@@ -1,4 +1,3 @@
-// import assert from 'assert';
 import type { AppWorkerParams } from './appWorker';
 import type { KeyEvent, PanelId, EventLog } from './appTypes';
 import type {
@@ -19,23 +18,21 @@ import { AppWorkerCommandEnum } from './appWorker';
 import { Stats, StatsEnum, StatsValues } from '../ui/stats/stats';
 import { StatsPanel } from '../ui/stats/statsPanel';
 import { Panel } from '../panels/panel';
-// import { EnginePanel } from '../panels/enginePanel';
+import { EnginePanel } from '../panels/enginePanel';
 // // import { ViewPanel } from '../panels/viewPanel';
-// import { AppCommandEnum, PanelIdEnum, KeyEventsEnum } from './appTypes';
+import { AppCommandEnum, PanelIdEnum, KeyEventsEnum } from './appTypes';
 
 class App {
-  // private stats: Stats;
-  // private enginePanel: EnginePanel;
+  private stats: Stats;
+  private enginePanel: EnginePanel;
   // private appWorker: Worker;
 
   constructor() {
-    console.log('App init');
   }
 
-
   async init() {
-    // this.stats = this.initStatsPanel();
-    // this.initPanels();
+    this.stats = this.initStatsPanel();
+    this.initPanels();
     // this.initEventListeners();
     // await this.initAppWorker();
     // this.initObservers();
@@ -254,11 +251,11 @@ class App {
   //   return initPromise;
   // }
   //
-  // run() {
-  //   // this.appWorker.postMessage({
-  //   //   command: AppWorkerCommandEnum.RUN,
-  //   // });
-  // }
+  run() {
+    // this.appWorker.postMessage({
+    //   command: AppWorkerCommandEnum.RUN,
+    // });
+  }
 
   private initStatsPanel() {
     const stats = new Stats();
@@ -318,42 +315,42 @@ class App {
     return stats;
   }
 
-  // private initPanels() {
-  //   const board = <HTMLDivElement>document.querySelector('#board');
-  //
-  //   const row0 = document.createElement('div');
-  //   row0.classList.add('row', 'row0');
-  //   board.appendChild(row0);
-  //
-  //   // const row1 = document.createElement('div');
-  //   // row1.classList.add('row', 'row1');
-  //   // board.appendChild(row1);
-  //
-  //   // board.style.display = 'none';
-  //
-  //   this.enginePanel = this.buildEnginePanel(board, row0);
-  // }
+  private initPanels() {
+    const board = <HTMLDivElement>document.querySelector('#board');
 
-  // private buildEnginePanel(board: HTMLDivElement, parentNode: HTMLDivElement) {
-  //   const { enginePanelConfig } = mainConfig;
-  //   // parentNode.style.zIndex = '1'; // TODO:
-  //   const panelConfig: EnginePanelConfig = {
-  //     ...enginePanelConfig,
-  //     // startViewMode: StartViewMode.FULL_WIN,
-  //     startViewMode: StartViewMode.WIN,
-  //     title: 'Engine view',
-  //     id: PanelIdEnum.ENGINE,
-  //     focusOnStart: true,
-  //     eventLogConfig: {
-  //       ...enginePanelConfig.eventLogConfig,
-  //       isVisible: true,
-  //       isBelowCanvas: true,
-  //     },
-  //   };
-  //   const enginePanel = new EnginePanel(board, parentNode);
-  //   enginePanel.init(panelConfig, this.stats);
-  //   return enginePanel;
-  // }
+    const row0 = document.createElement('div');
+    row0.classList.add('row', 'row0');
+    board.appendChild(row0);
+
+    // const row1 = document.createElement('div');
+    // row1.classList.add('row', 'row1');
+    // board.appendChild(row1);
+
+    // board.style.display = 'none';
+
+    this.enginePanel = this.buildEnginePanel(board, row0);
+  }
+
+  private buildEnginePanel(board: HTMLDivElement, parentNode: HTMLDivElement) {
+    const { enginePanelConfig } = mainConfig;
+    // parentNode.style.zIndex = '1'; // TODO:
+    const panelConfig: EnginePanelConfig = {
+      ...enginePanelConfig,
+      // startViewMode: StartViewMode.FULL_WIN,
+      startViewMode: StartViewMode.WIN,
+      title: 'Engine view',
+      id: PanelIdEnum.ENGINE,
+      focusOnStart: true,
+      eventLogConfig: {
+        ...enginePanelConfig.eventLogConfig,
+        isVisible: true,
+        isBelowCanvas: true,
+      },
+    };
+    const enginePanel = new EnginePanel(board, parentNode);
+    enginePanel.init(panelConfig, this.stats);
+    return enginePanel;
+  }
 
   // // private buildViewPanel(
   // //   board: HTMLDivElement,
