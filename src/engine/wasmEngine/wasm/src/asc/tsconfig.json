@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "strictPropertyInitialization": false
+    // "strictNullChecks": false,
+    // "noUnusedLocals": false
+    // "experimentalDecorators": true
+  },
+  "extends": "assemblyscript/std/assembly.json",
+  "include": [
+    "./**/*.ts"
+  ]
+}

@@ -1,5 +1,6 @@
 {
   "name": "test-canvas-worker-wasm",
+  "type": "module",
   "version": "1.0.0",
   "private": true,
   "description": "",
@@ -67,6 +68,7 @@
     "vite-plugin-wasm": "^3.4.1",
     "vite-raw-plugin": "^1.0.2",
     "wabt": "^1.0.32",
-    "wasm-opt": "^1.4.0"
+    "wasm-opt": "^1.4.0",
+    "assemblyscript": "^0.27.25"
   }
 }

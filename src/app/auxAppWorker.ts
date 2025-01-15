@@ -1,12 +1,12 @@
-import assert from 'assert';
-// import type { WasmViews } from '../engine/wasmEngine/wasmViews';
-// import type {
-//   WasmModules,
-//   WasmEngineModule,
-// } from '../engine/wasmEngine/wasmLoader';
-// import { buildWasmMemViews } from '../engine/wasmEngine/wasmViews';
-// import type { WasmRunParams } from '../engine/wasmEngine/wasmRun';
-// import { WasmRun, gWasmRun } from '../engine/wasmEngine/wasmRun';
+// import assert from 'assert';
+import type { WasmViews } from '../engine/wasmEngine/wasmViews';
+import type {
+  WasmModules,
+  WasmEngineModule,
+} from '../engine/wasmEngine/wasmLoader';
+import { buildWasmMemViews } from '../engine/wasmEngine/wasmViews';
+import type { WasmRunParams } from '../engine/wasmEngine/wasmRun';
+import { WasmRun, gWasmRun } from '../engine/wasmEngine/wasmRun';
 
 const enum AuxAppWorkerCommandEnum {
   INIT = 'aux_app_worker_init',
@@ -22,9 +22,9 @@ type AuxAppWorkerParams = {
 class AuxAppWorker {
   private params: AuxAppWorkerParams;
 
-  // private wasmRun: WasmRun;
-  // private wasmViews: WasmViews;
-  // private wasmEngineModule: WasmEngineModule;
+  private wasmRun: WasmRun;
+  private wasmViews: WasmViews;
+  private wasmEngineModule: WasmEngineModule;
 
   async init(params: AuxAppWorkerParams): Promise<void> {
     const { workerIdx } = params;

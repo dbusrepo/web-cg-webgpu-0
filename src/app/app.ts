@@ -251,9 +251,9 @@ class App {
   }
   //
   run() {
-    this.appWorker.postMessage({
-      command: AppWorkerCommandEnum.RUN,
-    });
+    // this.appWorker.postMessage({
+    //   command: AppWorkerCommandEnum.RUN,
+    // });
   }
 
   private initStatsPanel() {

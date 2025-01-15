@@ -3,11 +3,11 @@ import type { StatsValues } from '../ui/stats/stats';
 import type { KeyInputEvent, MouseMoveEvent, CanvasDisplayResizeEvent } from './events';
 import type { AuxAppWorkerParams, AuxAppWorkerDesc } from './auxAppWorker';
 import { AuxAppWorkerCommandEnum } from './auxAppWorker';
-// import type { WasmEngineParams } from '../engine/wasmEngine/wasmEngine';
-// import type { WasmViews } from '../engine/wasmEngine/wasmViews';
-// import type { WasmModules, WasmEngineModule } from '../engine/wasmEngine/wasmLoader';
-// import { WasmEngine } from '../engine/wasmEngine/wasmEngine';
-// import { WasmRun } from '../engine/wasmEngine/wasmRun';
+import type { WasmEngineParams } from '../engine/wasmEngine/wasmEngine';
+import type { WasmViews } from '../engine/wasmEngine/wasmViews';
+import type { WasmModules, WasmEngineModule } from '../engine/wasmEngine/wasmLoader';
+import { WasmEngine } from '../engine/wasmEngine/wasmEngine';
+import { WasmRun } from '../engine/wasmEngine/wasmRun';
 import { mainConfig } from '../config/mainConfig';
 import { MILLI_IN_SEC } from '../common';
 import { StatsEnum } from '../ui/stats/stats';
@@ -39,10 +39,10 @@ class AppWorker {
   private numWorkers: number; // 1 main + N aux
   private auxWorkers: AuxAppWorkerDesc[]; // N aux
 
-  // private wasmEngine: WasmEngine;
-  // private wasmRun: WasmRun;
-  // private wasmEngineModule: WasmEngineModule;
-  // private wasmViews: WasmViews;
+  private wasmEngine: WasmEngine;
+  private wasmRun: WasmRun;
+  private wasmEngineModule: WasmEngineModule;
+  private wasmViews: WasmViews;
 
   private pressA: InputAction;
   private pressB: InputAction;
@@ -56,11 +56,11 @@ class AppWorker {
 
   public async init(params: AppWorkerParams): Promise<void> {
     this.params = params;
-    // await this.initWasmEngine();
+    await this.initWasmEngine();
     await this.initAuxWorkers();
     await this.initGfx();
     this.initInput();
-    // this.wasmEngineModule.render();
+    // // this.wasmEngineModule.render();
   }
 
   private async initRenderer() {
@@ -175,16 +175,16 @@ class AppWorker {
     }
   }
 
-  // private async initWasmEngine() {
-  //   this.wasmEngine = new WasmEngine();
-  //   const wasmEngineParams: WasmEngineParams = {
-  //     numWorkers: mainConfig.numAuxWorkers,
-  //   };
-  //   await this.wasmEngine.init(wasmEngineParams);
-  //   this.wasmRun = this.wasmEngine.WasmRun;
-  //   this.wasmEngineModule = this.wasmRun.WasmModules.engine;
-  //   this.wasmViews = this.wasmRun.WasmViews;
-  // }
+  private async initWasmEngine() {
+    this.wasmEngine = new WasmEngine();
+    const wasmEngineParams: WasmEngineParams = {
+      numWorkers: mainConfig.numAuxWorkers,
+    };
+    await this.wasmEngine.init(wasmEngineParams);
+    this.wasmRun = this.wasmEngine.WasmRun;
+    this.wasmEngineModule = this.wasmRun.WasmModules.engine;
+    this.wasmViews = this.wasmRun.WasmViews;
+  }
 
   private async runAuxWorkers() {
     this.auxWorkers.forEach(({ worker }) => {
