@@ -1,11 +1,11 @@
 // import assert from 'assert';
 import type { StatsValues } from '../ui/stats/stats';
 import type { KeyInputEvent, MouseMoveEvent, CanvasDisplayResizeEvent } from './events';
-// import type { AuxAppWorkerParams, AuxAppWorkerDesc } from './auxAppWorker';
+import type { AuxAppWorkerParams, AuxAppWorkerDesc } from './auxAppWorker';
+import { AuxAppWorkerCommandEnum } from './auxAppWorker';
 // import type { WasmEngineParams } from '../engine/wasmEngine/wasmEngine';
 // import type { WasmViews } from '../engine/wasmEngine/wasmViews';
 // import type { WasmModules, WasmEngineModule } from '../engine/wasmEngine/wasmLoader';
-// import { AuxAppWorkerCommandEnum } from './auxAppWorker';
 // import { WasmEngine } from '../engine/wasmEngine/wasmEngine';
 // import { WasmRun } from '../engine/wasmEngine/wasmRun';
 import { mainConfig } from '../config/mainConfig';
@@ -37,7 +37,7 @@ class AppWorker {
   private inputManager: InputManager;
 
   private numWorkers: number; // 1 main + N aux
-  // private auxWorkers: AuxAppWorkerDesc[]; // N aux
+  private auxWorkers: AuxAppWorkerDesc[]; // N aux
 
   // private wasmEngine: WasmEngine;
   // private wasmRun: WasmRun;
@@ -112,68 +112,68 @@ class AppWorker {
     this.inputManager.mapToMouse(MouseCodeEnum.MOVE_DOWN, this.mouseMoveDown);
   }
 
-  // private async initAuxWorkers() {
-  //   try {
-  //     const numAuxAppWorkers = mainConfig.numAuxWorkers;
-  //     this.numWorkers = 1 + numAuxAppWorkers;
-  //     console.log(`num total workers: ${this.numWorkers}`);
-  //     const genWorkerIdx = (() => {
-  //       let nextWorkerIdx = 1;
-  //       return () => nextWorkerIdx++;
-  //     })();
-  //     this.auxWorkers = new Array<AuxAppWorkerDesc>(numAuxAppWorkers);
-  //     let remWorkers = numAuxAppWorkers;
-  //     const initStart = Date.now();
-  //     await new Promise<void>((resolve, reject) => {
-  //       if (numAuxAppWorkers === 0) {
-  //         resolve();
-  //         return;
-  //       }
-  //       for (let i = 0; i < numAuxAppWorkers; ++i) {
-  //         const workerIdx = genWorkerIdx();
-  //         const engineWorker = {
-  //           workerIdx,
-  //           worker: null,
-  //           // worker: new Worker(new URL('./auxAppWorker.ts', import.meta.url), {
-  //           //   name: `aux-app-worker-${workerIdx}`,
-  //           //   type: 'module',
-  //           // }),
-  //         };
-  //         // this.auxWorkers[i] = engineWorker;
-  //         // const workerParams: AuxAppWorkerParams = {
-  //         //   workerIdx,
-  //         //   numWorkers: numAuxAppWorkers,
-  //         //   wasmRunParams: {
-  //         //     ...this.wasmEngine.WasmRunParams,
-  //         //     workerIdx,
-  //         //   },
-  //         // };
-  //         // engineWorker.worker.postMessage({
-  //         //   command: AuxAppWorkerCommandEnum.INIT,
-  //         //   params: workerParams,
-  //         // });
-  //         // // eslint-disable-next-line @typescript-eslint/no-loop-func
-  //         // engineWorker.worker.onmessage = ({ data }) => {
-  //         //   --remWorkers;
-  //         //   console.log(
-  //         //     `Aux app worker id=${workerIdx} initd,
-  //         //      left count=${remWorkers}, time=${Date.now() - initStart}ms with data = ${JSON.stringify(data)}`,
-  //         //   );
-  //         //   if (remWorkers === 0) {
-  //         //     console.log(`Aux app workers init done. After ${Date.now() - initStart}ms`);
-  //         //     resolve();
-  //         //   }
-  //         // };
-  //         // engineWorker.worker.onerror = (error) => {
-  //         //   console.log(`Aux app worker id=${workerIdx} error: ${error.message}\n`);
-  //         //   reject(error);
-  //         // };
-  //       }
-  //     });
-  //   } catch (error) {
-  //     console.error(`Error during aux app workers init: ${JSON.stringify(error)}`);
-  //   }
-  // }
+  private async initAuxWorkers() {
+    try {
+      const numAuxAppWorkers = mainConfig.numAuxWorkers;
+      this.numWorkers = 1 + numAuxAppWorkers;
+      console.log(`num total workers: ${this.numWorkers}`);
+      const genWorkerIdx = (() => {
+        let nextWorkerIdx = 1;
+        return () => nextWorkerIdx++;
+      })();
+      this.auxWorkers = new Array<AuxAppWorkerDesc>(numAuxAppWorkers);
+      let remWorkers = numAuxAppWorkers;
+      const initStart = Date.now();
+      await new Promise<void>((resolve, reject) => {
+        if (numAuxAppWorkers === 0) {
+          resolve();
+          return;
+        }
+        const workerUrl = new URL('./auxAppWorker.ts', import.meta.url);
+        for (let i = 0; i < numAuxAppWorkers; ++i) {
+          const workerIdx = genWorkerIdx();
+          const engineWorker = {
+            workerIdx,
+            worker: new Worker(workerUrl, {
+              name: `aux-app-worker-${workerIdx}`,
+              type: 'module',
+            }),
+          };
+          this.auxWorkers[i] = engineWorker;
+          // const workerParams: AuxAppWorkerParams = {
+          //   workerIdx,
+          //   numWorkers: numAuxAppWorkers,
+          //   wasmRunParams: {
+          //     ...this.wasmEngine.WasmRunParams,
+          //     workerIdx,
+          //   },
+          // };
+          // engineWorker.worker.postMessage({
+          //   command: AuxAppWorkerCommandEnum.INIT,
+          //   params: workerParams,
+          // });
+          // // eslint-disable-next-line @typescript-eslint/no-loop-func
+          // engineWorker.worker.onmessage = ({ data }) => {
+          //   --remWorkers;
+          //   console.log(
+          //     `Aux app worker id=${workerIdx} initd,
+          //      left count=${remWorkers}, time=${Date.now() - initStart}ms with data = ${JSON.stringify(data)}`,
+          //   );
+          //   if (remWorkers === 0) {
+          //     console.log(`Aux app workers init done. After ${Date.now() - initStart}ms`);
+          //     resolve();
+          //   }
+          // };
+          // engineWorker.worker.onerror = (error) => {
+          //   console.log(`Aux app worker id=${workerIdx} error: ${error.message}\n`);
+          //   reject(error);
+          // };
+        }
+      });
+    } catch (error) {
+      console.error(`Error during aux app workers init: ${JSON.stringify(error)}`);
+    }
+  }
 
   // private async initWasmEngine() {
   //   this.wasmEngine = new WasmEngine();
@@ -186,13 +186,13 @@ class AppWorker {
   //   this.wasmViews = this.wasmRun.WasmViews;
   // }
 
-  // private async runAuxWorkers() {
-  //   this.auxWorkers.forEach(({ worker }) => {
-  //     worker.postMessage({
-  //       command: AuxAppWorkerCommandEnum.RUN,
-  //     });
-  //   });
-  // }
+  private async runAuxWorkers() {
+    this.auxWorkers.forEach(({ worker }) => {
+      worker.postMessage({
+        command: AuxAppWorkerCommandEnum.RUN,
+      });
+    });
+  }
 
   private checkInput() {
     // if (this.pressA.isPressed()) {
