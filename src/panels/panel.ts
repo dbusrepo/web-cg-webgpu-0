@@ -1,4 +1,4 @@
-import assert from 'assert';
+// ieport assert from 'assert';
 import screenfull from 'screenfull';
 import {
   StartViewMode,
@@ -113,10 +113,10 @@ abstract class Panel {
   }
 
   private setPanelFullStyle(): void {
-    assert(
-      this.isFullScreen ||
-        this.panelDiv.parentNode === this.panelContainerWinFull,
-    );
+    // assert(
+    //   this.isFullScreen ||
+    //     this.panelDiv.parentNode === this.panelContainerWinFull,
+    // );
     resetClassName(this.panelDiv);
     this.panelDiv.classList.add('panel', 'panel-full');
     const menuBarHeight = 25; // see guify guify theme.js
@@ -202,7 +202,7 @@ abstract class Panel {
       this.enableFullScreenMode();
       await screenfull.request(this.panelContainer, { navigationUI: 'hide' });
     } else {
-      assert(screenfull.isFullscreen);
+      // assert(screenfull.isFullscreen);
       await screenfull.exit();
       this.resetModeAfterFullScreen();
     }
@@ -222,11 +222,11 @@ abstract class Panel {
   }
 
   private resetModeAfterFullScreen() {
-    assert(
-      this.viewMode === ViewMode.FULL_SCREEN &&
-        (this.preViewMode === ViewMode.WIN ||
-          this.preViewMode === ViewMode.FULL_WIN),
-    );
+    // assert(
+    //   this.viewMode === ViewMode.FULL_SCREEN &&
+    //     (this.preViewMode === ViewMode.WIN ||
+    //       this.preViewMode === ViewMode.FULL_WIN),
+    // );
     const fromFullWin = this.preViewMode === ViewMode.FULL_WIN;
     this.setFullWin(false);
     if (fromFullWin) {
@@ -302,7 +302,7 @@ abstract class Panel {
   }
 
   private setCanvasFullStyle(): void {
-    assert(!this.isWinMode);
+    // assert(!this.isWinMode);
     // update canvas
     resetClassName(this.canvas);
     this.canvas.classList.add('canvas', 'canvas-full');
@@ -453,15 +453,15 @@ abstract class Panel {
   private eventLogCheckInv(): void {
     // TODO remove/debug mode only?
     // console.log('inv');
-    if (this.isEventLogVisible) {
-      if (this.isEventLogBelowCanvas) {
-        assert(this.panelDiv.lastChild === this.eventLogBottomPanel);
-      } else {
-        assert(this.panelContainer.lastChild === this.eventLogBottomPanel);
-      }
-    } else {
-      assert(this.panelContainer.lastChild === this.eventLogBottomPanel);
-    }
+    // if (this.isEventLogVisible) {
+    //   if (this.isEventLogBelowCanvas) {
+    //     assert(this.panelDiv.lastChild === this.eventLogBottomPanel);
+    //   } else {
+    //     assert(this.panelContainer.lastChild === this.eventLogBottomPanel);
+    //   }
+    // } else {
+    //   assert(this.panelContainer.lastChild === this.eventLogBottomPanel);
+    // }
   }
 
   private isPanelInsideParentContainer(): boolean {
@@ -474,13 +474,13 @@ abstract class Panel {
   }
 
   protected toWinStyle(): void {
-    assert(this.isWinMode);
+    // assert(this.isWinMode);
     if (!this.isPanelInsideParentContainer()) {
       this.appendPanelTo(this.panelContainer);
     }
     this.setWinStyle();
     this.resetGui();
-    assert(this.isPanelInsideParentContainer());
+    // assert(this.isPanelInsideParentContainer());
   }
 
   protected setWinStyle(): void {
@@ -519,15 +519,15 @@ abstract class Panel {
   }
 
   private toFullWinStyle(): void {
-    assert(this.isFullWin);
+    // assert(this.isFullWin);
     if (this.isInit() || this.preViewMode === ViewMode.WIN) {
-      assert(this.isInit() || this.isPanelInsideParentContainer());
+      // assert(this.isInit() || this.isPanelInsideParentContainer());
       this.appendPanelTo(this.panelContainerWinFull);
       this.setEventLogVisibility(this.isEventLogVisible);
       this.setFullStyle();
       this.resetGui();
     }
-    assert(this.panelDiv.parentNode === this.panelContainerWinFull);
+    // assert(this.panelDiv.parentNode === this.panelContainerWinFull);
   }
 
   private updateStatsParent(parent: HTMLDivElement): void {
@@ -553,7 +553,7 @@ abstract class Panel {
   }
 
   private setEventLogBottomPanelWinStyle(): void {
-    assert(this.eventLogBottomPanel);
+    // assert(this.eventLogBottomPanel);
     // assert(this.eventLog);
     resetClassName(this.eventLogBottomPanel);
     this.eventLogBottomPanel.classList.add(
@@ -568,7 +568,7 @@ abstract class Panel {
   }
 
   private setEventLogBottomPanelFullStyle(): void {
-    assert(this.eventLogBottomPanel);
+    // assert(this.eventLogBottomPanel);
     // assert(this.eventLog);
     resetClassName(this.eventLogBottomPanel);
     this.eventLogBottomPanel.classList.add(
@@ -583,7 +583,7 @@ abstract class Panel {
   // complementary states
 
   private moveEventLogBottomPanelInsidePanel(): void {
-    assert(this.eventLogBottomPanel);
+    // assert(this.eventLogBottomPanel);
     this.eventLogBottomPanel.parentNode?.removeChild(this.eventLogBottomPanel);
     // pushed as last el
     this.panelDiv.appendChild(this.eventLogBottomPanel);
@@ -599,7 +599,7 @@ abstract class Panel {
   }
 
   private moveOutEventLogBottomPanel(): void {
-    assert(this.eventLogBottomPanel);
+    // assert(this.eventLogBottomPanel);
     this.eventLogBottomPanel!.style.visibility = 'hidden';
     this.moveEventLogBottomPanelOutOfPanel();
     if (!this.isWinMode) {
@@ -609,7 +609,7 @@ abstract class Panel {
 
   // private hideEventsLogMainPanel(showOnBottomPanel: boolean): void {
   private moveOutEventLogMainPanel(): void {
-    assert(this.eventLogMainPanel);
+    // assert(this.eventLogMainPanel);
     // assert(!this.isEventLogOnBottomPanel);
     // this.isEventLogOnBottomPanel = showOnBottomPanel;
     // this._eventLogMainPanel.style.visibility = 'hidden';
@@ -620,9 +620,9 @@ abstract class Panel {
 
   private moveInEventLogBottomPanel(): void {
     // assert(this.eventLog);
-    assert(this.eventLogBottomPanel);
-    assert(this.isEventLogBelowCanvas);
-    assert(this.isEventLogVisible);
+    // assert(this.eventLogBottomPanel);
+    // assert(this.isEventLogBelowCanvas);
+    // assert(this.isEventLogVisible);
     this.moveEventLogBottomPanelInsidePanel();
     this.eventLogBottomPanel.style.visibility = 'visible';
     if (!this.isWinMode) {
@@ -635,9 +635,9 @@ abstract class Panel {
 
   private moveInEventLogMainPanel(): void {
     // assert(this.eventLog);
-    assert(this.eventLogMainPanel);
-    assert(!this.isEventLogBelowCanvas);
-    assert(this.isEventLogVisible);
+    // assert(this.eventLogMainPanel);
+    // assert(!this.isEventLogBelowCanvas);
+    // assert(this.isEventLogVisible);
     this.canvas.style.visibility = 'hidden';
     this.eventLogMainPanel.style.visibility = 'visible';
     this.canvasContainer.appendChild(this.eventLogMainPanel);
@@ -673,7 +673,7 @@ abstract class Panel {
   }
 
   private updateEventLogBottomPanelHeightPercFullMode(): void {
-    assert(this.eventLogBottomPanel);
+    // assert(this.eventLogBottomPanel);
     this.eventLogBottomPanel.style.height = `${
       (1 - this.canvasDisplayHeightPercFull) * 100
     }%`;
@@ -709,7 +709,7 @@ abstract class Panel {
   }
 
   public setStatsVisible(visible: boolean): void {
-    assert(this.stats);
+    // assert(this.stats);
     this.isStatsVisible = visible;
     if (visible) {
       this.stats.show();

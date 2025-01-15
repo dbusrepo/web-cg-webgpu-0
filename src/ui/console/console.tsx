@@ -192,5 +192,6 @@ class Console {
   // }
 }
 
-export { Console, ConsoleHandlersObjInit, ConsoleHandlerFunObj };
+export { Console };
+export type { ConsoleHandlersObjInit, ConsoleHandlerFunObj };
 export type { OnConsoleEventHandler } from './consolePanel';

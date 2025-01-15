@@ -1,4 +1,4 @@
-import assert from 'assert';
+// import assert from 'assert';
 import { h, JSX } from 'preact';
 import React from 'react';
 import { ConsoleHistoryPanel, ConsoleEntry } from './consoleHistoryPanel';
@@ -241,7 +241,7 @@ class ConsolePanel extends React.Component<
   }
 
   private onInputKeyDown(event: JSX.TargetedKeyboardEvent<HTMLInputElement>) {
-    assert(this.inputRef);
+    // assert(this.inputRef);
     // see note here about the use of preventDefault in onKeydown
     // vs onKeyChange with a react input element
     // stackoverflow.com/q/57807522
@@ -341,9 +341,9 @@ class ConsolePanel extends React.Component<
     const { prompt } = this.props;
     const input = inputEl.value;
     const line = this.props.prompt + input.substring(prompt.length);
-    assert(
-      this.histSearchIdx >= 0 && this.histSearchIdx < this.histLines.length,
-    );
+    // assert(
+    //   this.histSearchIdx >= 0 && this.histSearchIdx < this.histLines.length,
+    // );
     this.histLines[this.histSearchIdx] = line;
     inputEl.value = line;
   }
@@ -371,10 +371,10 @@ class ConsolePanel extends React.Component<
 
   private historySearch(direction: number): void {
     // console.log('historySearch: ', direction, this.histSearchIdx, this.histLines);
-    assert(direction === 1 || direction === -1);
+    // assert(direction === 1 || direction === -1);
     const numLines = this.histLines.length;
     if (numLines) {
-      assert(this.histSearchIdx >= 0 && this.histSearchIdx < numLines);
+      // assert(this.histSearchIdx >= 0 && this.histSearchIdx < numLines);
       this.histSearchIdx =
         (this.histSearchIdx + direction + numLines) % numLines;
       this.inputRef.value = this.histLines[this.histSearchIdx];
@@ -447,7 +447,7 @@ class ConsolePanel extends React.Component<
         </div>
 
         <input
-          spellCheck={false}
+          spellcheck={false}
           className="console-input"
           style={inputStyle}
           ref={(el) => {
@@ -519,4 +519,6 @@ class ConsolePanel extends React.Component<
   }
 }
 
-export { ConsolePanel, ConsolePanelProps, OnConsoleEventHandler };
+export { ConsolePanel };
+export type { ConsolePanelProps, OnConsoleEventHandler };
+

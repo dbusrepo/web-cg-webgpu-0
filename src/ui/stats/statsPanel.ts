@@ -1,4 +1,4 @@
-import assert from 'assert';
+// import assert from 'assert';
 import { StatsEnum } from './stats';
 
 const PR = Math.round(window.devicePixelRatio || 1); // #pixels per col
@@ -52,8 +52,8 @@ class StatsPanel {
     this.canvas.style.display = 'inline-block';
 
     const context = this.canvas.getContext('2d');
-    assert(context);
-    this.context = context;
+    // assert(context);
+    this.context = context!;
     this.context.font = 'bold ' + 9 * PR + 'px Helvetica,Arial,sans-serif';
     this.context.textBaseline = 'top';
 

@@ -83,4 +83,6 @@ function EventLogHistoryPanel(props: EventHistoryProps): JSX.Element {
   );
 }
 
-export { EventLogHistoryPanel, Event, EventLogEntry };
+export { EventLogHistoryPanel };
+export type { Event, EventLogEntry };
+

@@ -37,11 +37,7 @@ class EventLog {
   private panel: JSX.Element;
   // private element: Element | null; // TODO
 
-  constructor(
-    container: HTMLDivElement,
-    config: EventLogConfig,
-    handlers: { [k: string]: EventHandlerFunObj },
-  ) {
+  constructor(container: HTMLDivElement, config: EventLogConfig, handlers: { [k: string]: EventHandlerFunObj }) {
     this.cfg = config;
     this.container = container;
     this.history = [];
@@ -172,4 +168,5 @@ class EventLog {
   // }
 }
 
-export { EventLog, EventHandlerFunObj, EventHandlerInput };
+export { EventLog };
+export type { EventHandlerFunObj, EventHandlerInput };

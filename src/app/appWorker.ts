@@ -1,19 +1,19 @@
 // import assert from 'assert';
 import type { StatsValues } from '../ui/stats/stats';
 import type { KeyInputEvent, MouseMoveEvent, CanvasDisplayResizeEvent } from './events';
-import type { AuxAppWorkerParams, AuxAppWorkerDesc } from './auxAppWorker';
-import type { WasmEngineParams } from '../engine/wasmEngine/wasmEngine';
-import type { WasmViews } from '../engine/wasmEngine/wasmViews';
-import type { WasmModules, WasmEngineModule } from '../engine/wasmEngine/wasmLoader';
+// import type { AuxAppWorkerParams, AuxAppWorkerDesc } from './auxAppWorker';
+// import type { WasmEngineParams } from '../engine/wasmEngine/wasmEngine';
+// import type { WasmViews } from '../engine/wasmEngine/wasmViews';
+// import type { WasmModules, WasmEngineModule } from '../engine/wasmEngine/wasmLoader';
+// import { AuxAppWorkerCommandEnum } from './auxAppWorker';
+// import { WasmEngine } from '../engine/wasmEngine/wasmEngine';
+// import { WasmRun } from '../engine/wasmEngine/wasmRun';
 import { mainConfig } from '../config/mainConfig';
 import { MILLI_IN_SEC } from '../common';
 import { StatsEnum } from '../ui/stats/stats';
 import { AppCommandEnum, EventLog } from './appTypes';
 import { InputManager, MouseCodeEnum, EnginePanelInputKeyCodeEnum } from '../input/inputManager';
 import { InputAction, InputActionBehavior } from '../input/inputAction';
-import { AuxAppWorkerCommandEnum } from './auxAppWorker';
-import { WasmEngine } from '../engine/wasmEngine/wasmEngine';
-import { WasmRun } from '../engine/wasmEngine/wasmRun';
 import * as utils from '../engine/utils';
 import type { RenderInitInput } from '../engine/render/triangleVertexColor';
 import { TriangleVertexColor } from '../engine/render/triangleVertexColor';
@@ -37,12 +37,12 @@ class AppWorker {
   private inputManager: InputManager;
 
   private numWorkers: number; // 1 main + N aux
-  private auxWorkers: AuxAppWorkerDesc[]; // N aux
+  // private auxWorkers: AuxAppWorkerDesc[]; // N aux
 
-  private wasmEngine: WasmEngine;
-  private wasmRun: WasmRun;
-  private wasmEngineModule: WasmEngineModule;
-  private wasmViews: WasmViews;
+  // private wasmEngine: WasmEngine;
+  // private wasmRun: WasmRun;
+  // private wasmEngineModule: WasmEngineModule;
+  // private wasmViews: WasmViews;
 
   private pressA: InputAction;
   private pressB: InputAction;
@@ -56,8 +56,8 @@ class AppWorker {
 
   public async init(params: AppWorkerParams): Promise<void> {
     this.params = params;
-    await this.initWasmEngine();
-    await this.initAuxWorkers();
+    // await this.initWasmEngine();
+    // await this.initAuxWorkers();
     await this.initGfx();
     this.initInput();
     // this.wasmEngineModule.render();
@@ -112,86 +112,87 @@ class AppWorker {
     this.inputManager.mapToMouse(MouseCodeEnum.MOVE_DOWN, this.mouseMoveDown);
   }
 
-  private async initAuxWorkers() {
-    try {
-      const numAuxAppWorkers = mainConfig.numAuxWorkers;
-      this.numWorkers = 1 + numAuxAppWorkers;
-      console.log(`num total workers: ${this.numWorkers}`);
-      const genWorkerIdx = (() => {
-        let nextWorkerIdx = 1;
-        return () => nextWorkerIdx++;
-      })();
-      this.auxWorkers = new Array<AuxAppWorkerDesc>(numAuxAppWorkers);
-      let remWorkers = numAuxAppWorkers;
-      const initStart = Date.now();
-      await new Promise<void>((resolve, reject) => {
-        if (numAuxAppWorkers === 0) {
-          resolve();
-          return;
-        }
-        for (let i = 0; i < numAuxAppWorkers; ++i) {
-          const workerIdx = genWorkerIdx();
-          const engineWorker = {
-            workerIdx,
-            worker: new Worker(new URL('./auxAppWorker.ts', import.meta.url), {
-              name: `aux-app-worker-${workerIdx}`,
-              type: 'module',
-            }),
-          };
-          this.auxWorkers[i] = engineWorker;
-          const workerParams: AuxAppWorkerParams = {
-            workerIdx,
-            numWorkers: numAuxAppWorkers,
-            wasmRunParams: {
-              ...this.wasmEngine.WasmRunParams,
-              workerIdx,
-            },
-          };
-          engineWorker.worker.postMessage({
-            command: AuxAppWorkerCommandEnum.INIT,
-            params: workerParams,
-          });
-          // eslint-disable-next-line @typescript-eslint/no-loop-func
-          engineWorker.worker.onmessage = ({ data }) => {
-            --remWorkers;
-            console.log(
-              `Aux app worker id=${workerIdx} initd,
-               left count=${remWorkers}, time=${Date.now() - initStart}ms with data = ${JSON.stringify(data)}`,
-            );
-            if (remWorkers === 0) {
-              console.log(`Aux app workers init done. After ${Date.now() - initStart}ms`);
-              resolve();
-            }
-          };
-          engineWorker.worker.onerror = (error) => {
-            console.log(`Aux app worker id=${workerIdx} error: ${error.message}\n`);
-            reject(error);
-          };
-        }
-      });
-    } catch (error) {
-      console.error(`Error during aux app workers init: ${JSON.stringify(error)}`);
-    }
-  }
+  // private async initAuxWorkers() {
+  //   try {
+  //     const numAuxAppWorkers = mainConfig.numAuxWorkers;
+  //     this.numWorkers = 1 + numAuxAppWorkers;
+  //     console.log(`num total workers: ${this.numWorkers}`);
+  //     const genWorkerIdx = (() => {
+  //       let nextWorkerIdx = 1;
+  //       return () => nextWorkerIdx++;
+  //     })();
+  //     this.auxWorkers = new Array<AuxAppWorkerDesc>(numAuxAppWorkers);
+  //     let remWorkers = numAuxAppWorkers;
+  //     const initStart = Date.now();
+  //     await new Promise<void>((resolve, reject) => {
+  //       if (numAuxAppWorkers === 0) {
+  //         resolve();
+  //         return;
+  //       }
+  //       for (let i = 0; i < numAuxAppWorkers; ++i) {
+  //         const workerIdx = genWorkerIdx();
+  //         const engineWorker = {
+  //           workerIdx,
+  //           worker: null,
+  //           // worker: new Worker(new URL('./auxAppWorker.ts', import.meta.url), {
+  //           //   name: `aux-app-worker-${workerIdx}`,
+  //           //   type: 'module',
+  //           // }),
+  //         };
+  //         // this.auxWorkers[i] = engineWorker;
+  //         // const workerParams: AuxAppWorkerParams = {
+  //         //   workerIdx,
+  //         //   numWorkers: numAuxAppWorkers,
+  //         //   wasmRunParams: {
+  //         //     ...this.wasmEngine.WasmRunParams,
+  //         //     workerIdx,
+  //         //   },
+  //         // };
+  //         // engineWorker.worker.postMessage({
+  //         //   command: AuxAppWorkerCommandEnum.INIT,
+  //         //   params: workerParams,
+  //         // });
+  //         // // eslint-disable-next-line @typescript-eslint/no-loop-func
+  //         // engineWorker.worker.onmessage = ({ data }) => {
+  //         //   --remWorkers;
+  //         //   console.log(
+  //         //     `Aux app worker id=${workerIdx} initd,
+  //         //      left count=${remWorkers}, time=${Date.now() - initStart}ms with data = ${JSON.stringify(data)}`,
+  //         //   );
+  //         //   if (remWorkers === 0) {
+  //         //     console.log(`Aux app workers init done. After ${Date.now() - initStart}ms`);
+  //         //     resolve();
+  //         //   }
+  //         // };
+  //         // engineWorker.worker.onerror = (error) => {
+  //         //   console.log(`Aux app worker id=${workerIdx} error: ${error.message}\n`);
+  //         //   reject(error);
+  //         // };
+  //       }
+  //     });
+  //   } catch (error) {
+  //     console.error(`Error during aux app workers init: ${JSON.stringify(error)}`);
+  //   }
+  // }
 
-  private async initWasmEngine() {
-    this.wasmEngine = new WasmEngine();
-    const wasmEngineParams: WasmEngineParams = {
-      numWorkers: mainConfig.numAuxWorkers,
-    };
-    await this.wasmEngine.init(wasmEngineParams);
-    this.wasmRun = this.wasmEngine.WasmRun;
-    this.wasmEngineModule = this.wasmRun.WasmModules.engine;
-    this.wasmViews = this.wasmRun.WasmViews;
-  }
+  // private async initWasmEngine() {
+  //   this.wasmEngine = new WasmEngine();
+  //   const wasmEngineParams: WasmEngineParams = {
+  //     numWorkers: mainConfig.numAuxWorkers,
+  //   };
+  //   await this.wasmEngine.init(wasmEngineParams);
+  //   this.wasmRun = this.wasmEngine.WasmRun;
+  //   this.wasmEngineModule = this.wasmRun.WasmModules.engine;
+  //   this.wasmViews = this.wasmRun.WasmViews;
+  // }
 
-  private async runAuxWorkers() {
-    this.auxWorkers.forEach(({ worker }) => {
-      worker.postMessage({
-        command: AuxAppWorkerCommandEnum.RUN,
-      });
-    });
-  }
+  // private async runAuxWorkers() {
+  //   this.auxWorkers.forEach(({ worker }) => {
+  //     worker.postMessage({
+  //       command: AuxAppWorkerCommandEnum.RUN,
+  //     });
+  //   });
+  // }
 
   private checkInput() {
     // if (this.pressA.isPressed()) {
@@ -301,9 +302,9 @@ class AppWorker {
     };
 
     const render = () => {
-      this.syncWorkers();
+      // this.syncWorkers();
       // this.clearBg();
-      this.waitWorkers();
+      // this.waitWorkers();
       this.drawFrame();
       saveFrameTime();
       renderCnt++;
@@ -373,7 +374,8 @@ class AppWorker {
       requestAnimationFrame(frame);
     };
 
-    await this.runAuxWorkers();
+    // await this.runAuxWorkers();
+
     requestAnimationFrame(mainLoopInit);
 
     // TODO: test events
@@ -386,19 +388,19 @@ class AppWorker {
     // }, 2000);
   }
 
-  private syncWorkers() {
-    for (let i = 0; i < this.auxWorkers.length; ++i) {
-      const { workerIdx } = this.auxWorkers[i];
-      Atomics.store(this.wasmViews.syncArr, workerIdx, 1);
-      Atomics.notify(this.wasmViews.syncArr, workerIdx);
-    }
-  }
+  // private syncWorkers() {
+  //   for (let i = 0; i < this.auxWorkers.length; ++i) {
+  //     const { workerIdx } = this.auxWorkers[i];
+  //     Atomics.store(this.wasmViews.syncArr, workerIdx, 1);
+  //     Atomics.notify(this.wasmViews.syncArr, workerIdx);
+  //   }
+  // }
 
-  private waitWorkers() {
-    for (let i = 0; i < this.auxWorkers.length; ++i) {
-      Atomics.wait(this.wasmViews.syncArr, this.auxWorkers[i].workerIdx, 1);
-    }
-  }
+  // private waitWorkers() {
+  //   for (let i = 0; i < this.auxWorkers.length; ++i) {
+  //     Atomics.wait(this.wasmViews.syncArr, this.auxWorkers[i].workerIdx, 1);
+  //   }
+  // }
 
   public drawFrame() {
     this.triangleVertexColor.render();

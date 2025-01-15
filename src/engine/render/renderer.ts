@@ -126,7 +126,7 @@ abstract class Renderer {
   protected async printGPUInfo(): Promise<void> {
     const { adapter } = this.renderInit;
 
-    const info = await adapter.requestAdapterInfo();
+    const { info } = await adapter;
 
     const gpuInfo = `GPU Info:
 Vendor: ${info.vendor}

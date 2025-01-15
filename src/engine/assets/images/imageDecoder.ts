@@ -12,4 +12,4 @@ interface ImageDecoder {
   read(input: ArrayBuffer, outImage: BitImage): void;
 }
 
-export { ImageDecoder, ImageInfo };
+export type { ImageDecoder, ImageInfo };

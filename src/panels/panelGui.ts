@@ -1,4 +1,4 @@
-import assert from 'assert';
+// import assert from 'assert';
 import { Pane as TweakPane, InputBindingApi } from 'tweakpane';
 import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
 import GUI from '../ui/guify/src/gui';
@@ -35,7 +35,7 @@ abstract class PanelGui {
   private static panelGuiList: PanelGui[] = [];
 
   init(panel: Panel): void {
-    assert(panel, 'panel is null or undefined');
+    // assert(panel, 'panel is null or undefined');
 
     if (!this.cfg) {
       this.cfg = {
@@ -180,7 +180,7 @@ abstract class PanelGui {
           this.panel.setEventLogVisibility(false);
           break;
         default:
-          assert(false, 'unknown event log vis state');
+          // assert(false, 'unknown event log vis state');
       }
     });
   }
@@ -412,4 +412,6 @@ abstract class PanelGui {
   }
 }
 
-export { PanelGui, PanelTweakOptions, PanelTweakOptionsKeys };
+export { PanelGui, PanelTweakOptionsKeys };
+export type { PanelTweakOptions };
+

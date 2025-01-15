@@ -29,4 +29,5 @@ type ConsoleConfig = typeof consoleConfig & {
   lineHeight: number;
 };
 
-export { ConsoleConfig, consoleConfig };
+export { consoleConfig };
+export type { ConsoleConfig };

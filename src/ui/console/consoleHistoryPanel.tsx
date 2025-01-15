@@ -1,5 +1,5 @@
-import { h, JSX } from 'preact';
-import React, { useEffect } from 'react';
+import { JSX } from 'preact';
+import { useEffect } from 'react';
 
 type ConsoleEntry = {
   stmt: string;
@@ -18,9 +18,9 @@ function ConsoleHistoryPanel(props: ConsoleHistoryProps): JSX.Element {
   const els: JSX.Element[] = [];
 
   let lastStmtRef: HTMLElement | null = null;
-  let listRef: HTMLElement;
+  let _listRef: HTMLElement | null = null;
 
-  stmts.forEach((entry, idx) => {
+  stmts.forEach((entry, _idx) => {
     entry.stmt && els.push(<dt className="console-stmt">{entry.stmt}</dt>);
     entry.msg &&
       els.push(
@@ -45,7 +45,7 @@ function ConsoleHistoryPanel(props: ConsoleHistoryProps): JSX.Element {
   });
 
   return (
-    <dl ref={(el) => (listRef = el!)} className="console-history-panel">
+    <dl ref={(el) => (_listRef = el!)} className="console-history-panel">
       {els}
     </dl>
   );
@@ -53,4 +53,5 @@ function ConsoleHistoryPanel(props: ConsoleHistoryProps): JSX.Element {
   // return <>{els}</>;
 }
 
-export { ConsoleHistoryPanel, ConsoleEntry };
+export { ConsoleHistoryPanel };
+export type { ConsoleEntry };
