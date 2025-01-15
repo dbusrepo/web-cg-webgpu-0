@@ -57,7 +57,7 @@ class AppWorker {
   public async init(params: AppWorkerParams): Promise<void> {
     this.params = params;
     // await this.initWasmEngine();
-    // await this.initAuxWorkers();
+    await this.initAuxWorkers();
     await this.initGfx();
     this.initInput();
     // this.wasmEngineModule.render();
