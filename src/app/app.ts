@@ -1,34 +1,28 @@
+import { EnginePanelConfig, mainConfig, StartViewMode, ViewPanelConfig } from '../config/mainConfig';
+import { EnginePanel } from '../panels/enginePanel';
+import { Panel } from '../panels/panel';
+import { Stats, StatsEnum, StatsValues } from '../ui/stats/stats';
+import { statsConfig } from '../ui/stats/statsConfig';
+import { StatsPanel } from '../ui/stats/statsPanel';
+import type { EventLog, KeyEvent, PanelId } from './appTypes';
+// // import { ViewPanel } from '../panels/viewPanel';
+import { AppCommandEnum, KeyEventsEnum, PanelIdEnum } from './appTypes';
 import type { AppWorkerParams } from './appWorker';
-import type { KeyEvent, PanelId, EventLog } from './appTypes';
+import { AppWorkerCommandEnum } from './appWorker';
 import type {
   KeyCode,
   KeyInputEvent,
   MouseMoveEvent,
   // CanvasDisplayResizeEvent,
 } from './events';
-import {
-  StartViewMode,
-  EnginePanelConfig,
-  ViewPanelConfig,
-  mainConfig,
-} from '../config/mainConfig';
 import { requestPointerLock } from './pointerlock';
-import { statsConfig } from '../ui/stats/statsConfig';
-import { AppWorkerCommandEnum } from './appWorker';
-import { Stats, StatsEnum, StatsValues } from '../ui/stats/stats';
-import { StatsPanel } from '../ui/stats/statsPanel';
-import { Panel } from '../panels/panel';
-import { EnginePanel } from '../panels/enginePanel';
-// // import { ViewPanel } from '../panels/viewPanel';
-import { AppCommandEnum, PanelIdEnum, KeyEventsEnum } from './appTypes';
 
 class App {
   private stats: Stats;
   private enginePanel: EnginePanel;
   private appWorker: Worker;
 
-  constructor() {
-  }
+  constructor() {}
 
   async init() {
     this.stats = this.initStatsPanel();
@@ -52,10 +46,7 @@ class App {
 
     const addKeyListener = (keyEvent: KeyEvent) =>
       panel.InputElement.addEventListener(keyEvent, (event) => {
-        if (
-          panel.InputKeys.has(event.code) &&
-          !panel.ignoreInputKey(event.code)
-        ) {
+        if (panel.InputKeys.has(event.code) && !panel.ignoreInputKey(event.code)) {
           const keyInputEvent: KeyInputEvent = {
             code: event.code as KeyCode,
             panelId: panel.Id,
@@ -77,13 +68,10 @@ class App {
       if (event.target !== canvasEl) {
         return;
       }
-      const canRequestPointerLock = !(
-        document.pointerLockElement || enginePanel.isConsoleOpen
-      );
+      const canRequestPointerLock = !(document.pointerLockElement || enginePanel.isConsoleOpen);
       if (canRequestPointerLock) {
         canvasEl.removeEventListener('click', handleClick);
-        const addEventListener = () =>
-          canvasEl.addEventListener('click', handleClick);
+        const addEventListener = () => canvasEl.addEventListener('click', handleClick);
         requestPointerLock(canvasEl)
           .then(addEventListener)
           .catch(() => {
@@ -192,10 +180,7 @@ class App {
   }
 
   async initAppWorker() {
-    this.appWorker = new Worker(
-      new URL('./appWorker.ts', import.meta.url),
-      { type: 'module' }
-    ) as Worker;
+    this.appWorker = new Worker(new URL('./appWorker.ts', import.meta.url), { type: 'module' }) as Worker;
     const initPromise = this.initAppWorkerMsgHandlers();
     this.sendInitMsgToAppWorker();
     await initPromise;
