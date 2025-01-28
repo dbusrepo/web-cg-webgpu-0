@@ -8,8 +8,7 @@
   "license": "ISC",
   "author": "",
   "scripts": {
-    "dev_": "vite",
-    "dev": "run-p --race onchange:wasm onchange:assets dev",
+    "dev": "vite",
     "build": "pnpm run build:assets && pnpm run build:wasm && tsc && vite build",
     "serve": "vite preview",
     "type-check": "tsc --noemit",
@@ -20,7 +19,6 @@
     "onchange:wasm": "onchange -v -i 'src/engine/wasmEngine/wasm/compile_asc.mjs' 'src/engine/wasmEngine/wasm/wasmConfig.mjs' 'src/engine/wasmEngine/wasm/makefile' 'src/engine/wasmEngine/wasm/asconfig.json' 'src/engine/wasmEngine/wasm/src/**/*.ts' -- make --no-print-directory -C src/engine/wasmEngine/wasm ",
     "onchange:images": "onchange -v -i './assets/makefile' './assets/images/genImagesList.mjs' './assets/images/images.res' -- make --no-print-directory -C ./assets images",
     "onchange:strings": "onchange -v -i './assets/makefile' './assets/strings/genStringsList.mjs' './assets/strings/strings.res' -- make --no-print-directory -C ./assets strings",
-    "onchange:assets": "run-p --race onchange:images onchange:strings",
     "clean": "rimraf dist/ && (test -d ./assets && cd ./assets && make clean || echo 'assets directory not found') && (test -d src/engine/wasmEngine/wasm && cd src/engine/wasmEngine/wasm && make clean || echo 'wasm directory not found')",
     "lint": "pnpm run lint:tsc && pnpm run lint:eslint && pnpm run lint:ts-coverage",
     "lint:tsc": "tsc",
