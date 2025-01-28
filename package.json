@@ -1,5 +1,6 @@
 {
   "name": "web-cg-base",
+  "type": "module",
   "version": "1.0.0",
   "private": true,
   "description": "",
@@ -100,5 +101,8 @@
     "vite-tsconfig-paths": "^5.1.4",
     "wabt": "^1.0.32",
     "wasm-opt": "^1.4.0"
+  },
+  "typeCoverage": {
+    "atLeast": "100"
   }
 }
