@@ -8,7 +8,7 @@ import * as wasmImages from './wasmMemInitImages';
 import * as wasmStrings from './wasmMemInitStrings';
 import * as wasmFontChars from './wasmMemInitFontChars';
 import { AssetManager } from '../assets/assetManager';
-import { BPP_RGBA } from '../assets/images/bitImageRGBA';
+import { BPP_RGBA } from '../assets/images/bitImageRgba';
 import type { WasmRunParams } from './wasmRun';
 import { WasmRun } from './wasmRun';
 import type { WasmViews } from './wasmViews';

@@ -24,4 +24,5 @@ type EventLogConfig = typeof eventLogConfig & {
   lineHeight: number;
 };
 
-export { EventLogConfig, eventLogConfig };
+export { eventLogConfig };
+export type { EventLogConfig };

@@ -4,7 +4,7 @@ import type { WasmViews } from './wasmViews';
 import { buildWasmMemViews } from './wasmViews';
 import type { WasmModules, WasmImports } from './wasmLoader';
 import { loadWasmModules } from './wasmLoader';
-import { BPP_RGBA } from '../assets/images/bitImageRGBA';
+import { BPP_RGBA } from '../assets/images/bitImageRgba';
 // import { randColor, sleep } from '../utils';
 // import { BitImageRGBA } from './assets/images/bitImageRGBA';
 // import { PngDecoderRGBA } from './assets/images/vivaxy-png/PngDecoderRGBA';

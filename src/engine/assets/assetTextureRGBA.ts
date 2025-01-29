@@ -1,4 +1,4 @@
-import { BitImageRGBA, BPP_RGBA } from './images/bitImageRGBA';
+import { BitImageRGBA, BPP_RGBA } from './images/bitImageRgba';
 
 function genNextMipLevelRGBA(curMip: BitImageRGBA) {
   const { Width: srcWidth, Height: srcHeight, Buf8: srcBuf8 } = curMip;

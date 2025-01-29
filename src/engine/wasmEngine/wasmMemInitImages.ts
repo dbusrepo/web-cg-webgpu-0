@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { BitImageRGBA, BPP_RGBA } from '../assets/images/bitImageRGBA';
+import { BitImageRGBA, BPP_RGBA } from '../assets/images/bitImageRgba';
 import { AssetTextureRGBA } from '../assets/assetTextureRGBA';
 
 // TEXTURES INDEX LAYOUT:

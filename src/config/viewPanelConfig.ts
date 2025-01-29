@@ -1,5 +1,4 @@
-import { PanelConfig, panelConfig } from './panelConfig';
-import { EnginePanel } from '../panels/enginePanel';
+import { type PanelConfig, panelConfig } from './panelConfig';
 
 const viewPanelConfig = {
   ...panelConfig,
@@ -8,4 +7,5 @@ const viewPanelConfig = {
 
 type ViewPanelConfig = typeof viewPanelConfig & PanelConfig;
 
-export { ViewPanelConfig, viewPanelConfig };
+export { viewPanelConfig };
+export type { ViewPanelConfig };

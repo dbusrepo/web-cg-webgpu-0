@@ -1,5 +1,6 @@
+// eslint-disable-next-line import/no-nodejs-modules, unicorn/prefer-node-protocol
 import assert from 'assert';
-import { BitImageRGBA, BPP_RGBA } from '../assets/images/bitImageRGBA';
+import { BitImageRGBA, BPP_RGBA } from '../assets/images/bitImageRgba';
 import { ascImportImages } from '../../../assets/build/images';
 import { gWasmView, gWasmViews } from './wasmRun';
 import {
@@ -8,7 +9,6 @@ import {
 } from './wasmMemInitImages';
 
 class Mipmap {
-  // eslint-disable-next-line no-useless-constructor
   constructor(
     private wasmIdx: number, // wasm index in mipmaps array
     private image: BitImageRGBA,
@@ -25,14 +25,13 @@ class Mipmap {
 
 // view to wasm texture/mipmaps
 class Texture {
-  // eslint-disable-next-line no-useless-constructor
   constructor(
     private key: string,
     private wasmIdx: number,
     private mipmaps: Mipmap[],
   ) {}
 
-  getMipmap(lvl: number): Mipmap {
+  getMipmap(lvl: number): Mipmap | undefined {
     // assert(lvl >= 0 && lvl < this.mipmaps.length);
     return this.mipmaps[lvl];
   }
@@ -49,10 +48,10 @@ class Texture {
     return this.mipmaps.length;
   }
 
-  makeDarker() {
-    this.mipmaps.forEach((mipmap) => {
+  makeDarker(): void {
+    for (const mipmap of this.mipmaps) {
       mipmap.Image.makeDarker();
-    });
+    }
   }
 }
 
@@ -109,7 +108,7 @@ const initTextureWasmView = (
 
   let mipmapDescOffs = gWasmViews.texturesIndex.byteOffset + firstMipDescOffs;
 
-  const mipmaps: Mipmap[] = new Array(numMipmaps);
+  const mipmaps: Mipmap[] = Array.from({ length: numMipmaps });
   let curWasmIdx = wasmMipIdx;
 
   for (let i = 0; i < numMipmaps; i++) {

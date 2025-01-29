@@ -2,7 +2,7 @@ import assert from 'assert';
 import { fileTypeFromBuffer } from 'file-type';
 import { ImageInfo } from './imageDecoder';
 import { PngDecoderRGBA } from './vivaxy-png/PngDecoderRGBA';
-import { BitImageRGBA, BPP_RGBA } from './bitImageRGBA';
+import { BitImageRGBA, BPP_RGBA } from './bitImageRgba';
 
 async function decodePNGs(
   imageBuffers: ArrayBuffer[],

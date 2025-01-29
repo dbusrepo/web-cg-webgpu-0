@@ -6,7 +6,7 @@ import {
   getImagesUrls,
 } from '../../../assets/build/images';
 import { decodePNGs } from './images/utils';
-import { BitImageRGBA, BPP_RGBA } from './images/bitImageRGBA';
+import { BitImageRGBA, BPP_RGBA } from './images/bitImageRgba';
 import { AssetTextureRGBA, AssetTextureRGBAParams } from './assetTextureRGBA';
 
 type AssetManagerParams = {
