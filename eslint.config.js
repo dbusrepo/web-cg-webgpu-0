@@ -70,6 +70,7 @@ export default [
     },
     rules: {
       'unicorn/better-regex': 'warn',
+      // "depend/ban-dependencies": "error",
       // 'github/array-foreach': 'error',
       // 'github/async-preventdefault': 'warn',
       // 'github/no-then': 'error',
