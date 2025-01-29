@@ -90,6 +90,7 @@ export default [
           },
         },
       ],
+      'github/filenames-match-regex': ['error', '^([a-z0-9]+)([A-Z][a-z0-9]+)*$'],
       // "depend/ban-dependencies": "error",
       // 'github/array-foreach': 'error',
       // 'github/async-preventdefault': 'warn',
