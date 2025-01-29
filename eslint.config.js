@@ -1,5 +1,6 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
+import brettz9 from '@brettz9/eslint-plugin';
 import { includeIgnoreFile } from '@eslint/compat';
 import pluginJs from '@eslint/js';
 import typescriptEslintParser from '@typescript-eslint/parser';
@@ -74,6 +75,7 @@ export default [
       'no-relative-import-paths': pluginNoRelativeImports,
       'unused-imports': pluginUnusedImports,
       'brezz9': brettz9,
+      brettz9,
       prettier: pluginPrettier,
     },
     rules: {
