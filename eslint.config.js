@@ -103,6 +103,7 @@ export default [
       // 'github/async-preventdefault': 'warn',
       // 'github/no-then': 'error',
       // 'github/no-blur': 'error',
+      ...eslintConfigPrettier.rules,
       'prettier/prettier': 'warn',
       '@typescript-eslint/explicit-function-return-type': 'warn',
       '@typescript-eslint/explicit-module-boundary-types': 'warn',
