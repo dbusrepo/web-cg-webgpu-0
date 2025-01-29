@@ -1,16 +1,13 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { /* fixupConfigRules, */ fixupPluginRules, includeIgnoreFile } from '@eslint/compat';
+import { includeIgnoreFile } from '@eslint/compat';
 import pluginJs from '@eslint/js';
 import typescriptEslintParser from '@typescript-eslint/parser';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import pluginJsxA11y from 'eslint-plugin-jsx-a11y';
 import pluginNoRelativeImports from 'eslint-plugin-no-relative-import-paths';
 import pluginPrettier from 'eslint-plugin-prettier';
-// import eslintConfigPreact from 'eslint-config-preact';
-import pluginReact from 'eslint-plugin-react';
-import pluginReactHooks from 'eslint-plugin-react-hooks';
-import pluginReactRefresh from 'eslint-plugin-react-refresh';
+// import eslintConfigPreact from 'eslint-config-preact'; // TODO
 import pluginUnusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
@@ -32,7 +29,6 @@ export default [
   ...tseslint.configs.strict,
   ...tseslint.configs.stylistic,
   // ...fixupConfigRules(eslintConfigPreact),
-  pluginReact.configs.flat.recommended,
   eslintConfigPrettier,
   {
     settings: {
@@ -53,8 +49,6 @@ export default [
   {
     plugins: {
       'jsx-a11y': pluginJsxA11y,
-      'react-refresh': pluginReactRefresh,
-      'react-hooks': fixupPluginRules(pluginReactHooks),
       'no-relative-import-paths': pluginNoRelativeImports,
       'unused-imports': pluginUnusedImports,
       prettier: pluginPrettier,
@@ -70,7 +64,10 @@ export default [
       '@typescript-eslint/no-useless-escape': 'off',
       '@typescript-eslint/no-use-before-define': 'off',
       '@typescript-eslint/no-unused-expressions': 'off',
-      '@typescript-eslint/no-unused-vars': ['off', { ignoreRestSiblings: true }],
+      '@typescript-eslint/no-unused-vars': [
+        'off',
+        { ignoreRestSiblings: true },
+      ],
       '@typescript-eslint/no-inferrable-types': 'error',
       '@typescript-eslint/consistent-type-imports': [
         'error',
@@ -94,28 +91,16 @@ export default [
       'no-debugger': 'error',
       // 'no-duplicate-imports': 0,
       'no-nested-ternary': 'warn',
-      'no-relative-import-paths/no-relative-import-paths': ['error', { allowSameFolder: true, rootDir: 'src' }],
+      'no-relative-import-paths/no-relative-import-paths': [
+        'error',
+        { allowSameFolder: true, rootDir: 'src' },
+      ],
       'no-unused-vars': 'off',
       'no-unneeded-ternary': 'warn',
       'require-await': 'warn',
       'react/jsx-uses-react': 'off',
       'react/react-in-jsx-scope': 'off',
-      'react-refresh/only-export-components': 'warn',
       'react/display-name': 0,
-      'react/jsx-no-useless-fragment': ['error', { allowExpressions: true }],
-      'react/jsx-sort-props': [
-        'error',
-        {
-          callbacksLast: true,
-          shorthandFirst: true,
-          shorthandLast: true,
-          ignoreCase: true,
-          noSortAlphabetically: false,
-          reservedFirst: true,
-        },
-      ],
-      'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn',
       'react/prop-types': 'off',
       'react/require-default-props': 'off',
       'jsx-a11y/alt-text': 'warn',
