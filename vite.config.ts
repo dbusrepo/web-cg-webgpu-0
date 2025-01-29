@@ -1,13 +1,12 @@
-// 2. Create `vite.config.ts` with necessary plugins and WASM support
 import { defineConfig } from 'vite';
 // import react from '@vitejs/plugin-react';
-import preact from '@preact/preset-vite';
+import { preact } from '@preact/preset-vite';
 import glsl from 'vite-plugin-glsl';
 // import rawPlugin from 'vite-raw-plugin';
 import wasm from 'vite-plugin-wasm';
 import topLevelAwait from 'vite-plugin-top-level-await';
 import { createHtmlPlugin } from 'vite-plugin-html';
-import checker from 'vite-plugin-checker';
+import { checker } from 'vite-plugin-checker';
 
 export default defineConfig({
   plugins: [
@@ -34,7 +33,7 @@ export default defineConfig({
   ],
   worker: {
     // Not needed with vite-plugin-top-level-await >= 1.3.0
-    format: "es",
+    format: 'es',
     // plugins: [
     //   wasm(),
     //   topLevelAwait()
@@ -76,4 +75,3 @@ export default defineConfig({
     },
   },
 });
-

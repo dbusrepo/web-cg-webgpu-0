@@ -9,13 +9,13 @@ import github from 'eslint-plugin-github';
 import pluginJsxA11y from 'eslint-plugin-jsx-a11y';
 import pluginNoRelativeImports from 'eslint-plugin-no-relative-import-paths';
 import pluginPrettier from 'eslint-plugin-prettier';
-import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
+import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
+import sonarjs from 'eslint-plugin-sonarjs';
+import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 // import eslintConfigPreact from 'eslint-config-preact'; // TODO
 import pluginUnusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
-import sonarjs from 'eslint-plugin-sonarjs';
-import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,7 +28,6 @@ export default [
     ignores: ['eslint.config.js', 'src/engine/wasmEngine/wasm', 'src/ui/guify'],
   },
   { files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}'] },
-  { languageOptions: { globals: globals.browser } },
   pluginJs.configs.recommended,
   // ...tseslint.configs.recommended,
   ...tseslint.configs.strict,
@@ -42,7 +41,7 @@ export default [
   sonarjs.configs.recommended,
   // see https://github.com/sindresorhus/eslint-plugin-unicorn/issues/2546
   // eslintPluginUnicorn.configs.recommended,
-  eslintPluginUnicorn.configs["flat/recommended"],
+  eslintPluginUnicorn.configs['flat/recommended'],
   eslintConfigPrettier,
   eslintPluginPrettierRecommended,
   {
@@ -58,7 +57,14 @@ export default [
     languageOptions: {
       parser: typescriptEslintParser,
       parserOptions: { project: ['tsconfig.json'] },
-      globals: { ...globals.node, ...globals.amd, ...globals.browser },
+      globals: {
+        ...globals.node,
+        ...globals.amd,
+        ...globals.browser,
+        ...globals.worker,
+      },
+      ecmaVersion: 'latest',
+      sourceType: 'module',
     },
   },
   {
@@ -129,6 +135,68 @@ export default [
       'jsx-a11y/click-events-have-key-events': 'warn',
       'jsx-a11y/no-static-element-interactions': 'warn',
       'jsx-a11y/no-autofocus': 'warn',
+      // 'prettier/prettier': 'warn',
+      // 'import/no-unresolved': 'error',
+      // 'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
+      // 'no-shadow': 'off',
+      // 'max-classes-per-file': ['off', 1],
+      // camelcase: 'off',
+      // 'lines-between-class-members': 'off',
+      // 'no-unused-vars': 'off',
+      // 'no-bitwise': 'off',
+      // 'no-plusplus': 'off',
+      // 'no-multi-assign': 'off',
+      // 'prefer-const': 'off',
+      // 'prefer-template': 'off',
+      // 'one-var': 'off',
+      // 'no-restricted-globals': 'off',
+      // 'no-use-before-define': 'off',
+      // 'no-restricted-syntax': [0, 'ForOfStatement'],
+      // 'no-underscore-dangle': 'off',
+      // 'no-empty': 'off',
+      // 'no-empty-function': 'off',
+      // 'no-loop-func': 'off',
+      // 'no-prototype-builtins': 'off',
+      // 'class-methods-use-this': 'off',
+      // 'no-param-reassign': 'off',
+      // 'no-lone-blocks': 'off',
+      // 'import/no-mutable-exports': 'off',
+      // 'import/no-cycle': 'off',
+      // 'import/prefer-default-export': 'off',
+      // 'react/jsx-filename-extension': [
+      //   2,
+      //   { extensions: ['.tsx', '.ts', '.js', '.jsx'] },
+      // ],
+      // 'react/jsx-props-no-spreading': 'off',
+      // 'react/destructuring-assignment': 'off',
+      // 'react/sort-comp': 'off',
+      // semi: [2, 'always'],
+      // 'max-len': ['warn', { code: 80, ignoreComments: true }],
+      // 'no-console': 'off',
+      // 'no-return-assign': 'off',
+      // 'no-unused-expressions': 'off',
+      // 'import/extensions': [
+      //   'error',
+      //   'ignorePackages',
+      //   {
+      //     js: 'never',
+      //     jsx: 'never',
+      //     ts: 'never',
+      //     tsx: 'never',
+      //     mjs: 'never',
+      //   },
+      // ],
+      // '@typescript-eslint/indent': ['off'],
+      // '@typescript-eslint/no-unused-vars': 'off',
+      // '@typescript-eslint/no-explicit-any': 'off',
+      // '@typescript-eslint/no-empty-interface': 'off',
+      // '@typescript-eslint/no-empty-function': 'off',
+      // '@typescript-eslint/no-non-null-assertion': 'off',
+      // '@typescript-eslint/no-inferrable-types': 'warn',
+      // '@typescript-eslint/no-this-alias': 'off',
+      // '@typescript-eslint/no-shadow': ['error'],
+      // '@typescript-eslint/ban-ts-comment': 'off',
+      // '@typescript-eslint/lines-between-class-members': 'off',
     },
   },
 ];
