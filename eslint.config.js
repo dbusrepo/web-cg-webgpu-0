@@ -4,10 +4,10 @@ import brettz9 from '@brettz9/eslint-plugin';
 import { includeIgnoreFile } from '@eslint/compat';
 import pluginJs from '@eslint/js';
 import typescriptEslintParser from '@typescript-eslint/parser';
-import brettz9 from '@brettz9/eslint-plugin'
 import eslintConfigPrettier from 'eslint-config-prettier';
 import * as depend from 'eslint-plugin-depend';
 import github from 'eslint-plugin-github';
+import html from 'eslint-plugin-html';
 import pluginJsxA11y from 'eslint-plugin-jsx-a11y';
 import pluginNoRelativeImports from 'eslint-plugin-no-relative-import-paths';
 import pluginPrettier from 'eslint-plugin-prettier';
@@ -29,7 +29,7 @@ export default [
   {
     ignores: ['eslint.config.js', 'src/engine/wasmEngine/wasm', 'src/ui/guify'],
   },
-  { files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}'] },
+  { files: ['**/*.{html,js,mjs,cjs,ts,jsx,tsx}'] },
   pluginJs.configs.recommended,
   // ...tseslint.configs.recommended,
   ...tseslint.configs.strict,
@@ -74,8 +74,8 @@ export default [
       'jsx-a11y': pluginJsxA11y,
       'no-relative-import-paths': pluginNoRelativeImports,
       'unused-imports': pluginUnusedImports,
-      'brezz9': brettz9,
       brettz9,
+      html,
       prettier: pluginPrettier,
     },
     rules: {
@@ -94,7 +94,10 @@ export default [
           },
         },
       ],
-      'github/filenames-match-regex': ['error', '^([a-z0-9]+)([A-Z][a-z0-9]+)*$'],
+      'github/filenames-match-regex': [
+        'error',
+        '^([a-z0-9]+)([A-Z][a-z0-9]+)*$',
+      ],
       // "depend/ban-dependencies": "error",
       // 'github/array-foreach': 'error',
       // 'github/async-preventdefault': 'warn',
