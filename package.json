@@ -54,6 +54,7 @@
     "wolfy87-eventemitter": "^5.2.9"
   },
   "devDependencies": {
+    "@brettz9/eslint-plugin": "^3.0.0",
     "@eslint/compat": "^1.2.5",
     "@eslint/js": "^9.19.0",
     "@ianvs/prettier-plugin-sort-imports": "^4.4.1",

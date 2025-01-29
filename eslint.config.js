@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url';
 import { includeIgnoreFile } from '@eslint/compat';
 import pluginJs from '@eslint/js';
 import typescriptEslintParser from '@typescript-eslint/parser';
+import brettz9 from '@brettz9/eslint-plugin'
 import eslintConfigPrettier from 'eslint-config-prettier';
 import * as depend from 'eslint-plugin-depend';
 import github from 'eslint-plugin-github';
@@ -72,6 +73,7 @@ export default [
       'jsx-a11y': pluginJsxA11y,
       'no-relative-import-paths': pluginNoRelativeImports,
       'unused-imports': pluginUnusedImports,
+      'brezz9': brettz9,
       prettier: pluginPrettier,
     },
     rules: {

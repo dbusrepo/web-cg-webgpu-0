@@ -75,6 +75,9 @@ importers:
         specifier: ^5.2.9
         version: 5.2.9
     devDependencies:
+      '@brettz9/eslint-plugin':
+        specifier: ^3.0.0
+        version: 3.0.0(eslint@9.19.0)
       '@eslint/compat':
         specifier: ^1.2.5
         version: 1.2.5(eslint@9.19.0)
@@ -787,6 +790,12 @@ packages:
 
   '@blakeembrey/template@1.2.0':
     resolution: {integrity: sha512-w/63nURdkRPpg3AXbNr7lPv6HgOuVDyefTumiXsbXxtIwcuk5EXayWR5OpSwDjsQPgaYsfUSedMduaNOjAYY8A==}
+
+  '@brettz9/eslint-plugin@3.0.0':
+    resolution: {integrity: sha512-QprVr0jsyljALm5HXtXh+1IorN8v2uBYWdEjQ6bJ8Q/al7WOOy6rbne8Ruzy/fvSaEL56f1RdXMyDmMYmAb0MQ==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    peerDependencies:
+      eslint: '>=7.20.0'
 
   '@colors/colors@1.5.0':
     resolution: {integrity: sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==}
@@ -4658,6 +4667,10 @@ snapshots:
   '@blakeembrey/deque@1.0.5': {}
 
   '@blakeembrey/template@1.2.0': {}
+
+  '@brettz9/eslint-plugin@3.0.0(eslint@9.19.0)':
+    dependencies:
+      eslint: 9.19.0
 
   '@colors/colors@1.5.0':
     optional: true
