@@ -74,6 +74,7 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-no-relative-import-paths": "^1.6.1",
     "eslint-plugin-prettier": "^5.2.3",
+    "eslint-plugin-sonarjs": "^3.0.1",
     "eslint-plugin-unused-imports": "^4.1.4",
     "globals": "^15.14.0",
     "onchange": "^7.1.0",

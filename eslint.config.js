@@ -13,6 +13,7 @@ import pluginPrettier from 'eslint-plugin-prettier';
 import pluginUnusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
+import sonarjs from 'eslint-plugin-sonarjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,7 +23,7 @@ const gitignorePath = path.resolve(__dirname, '.gitignore');
 export default [
   includeIgnoreFile(gitignorePath),
   {
-    ignores: ['src/engine/wasmEngine/wasm', 'src/ui/guify'],
+    ignores: ['eslint.config.js', 'src/engine/wasmEngine/wasm', 'src/ui/guify'],
   },
   { files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}'] },
   { languageOptions: { globals: globals.browser } },
@@ -36,6 +37,7 @@ export default [
   github.getFlatConfigs().recommended,
   github.getFlatConfigs().react,
   ...github.getFlatConfigs().typescript,
+  sonarjs.configs.recommended,
   eslintConfigPrettier,
   {
     settings: {
