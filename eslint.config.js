@@ -9,6 +9,7 @@ import github from 'eslint-plugin-github';
 import pluginJsxA11y from 'eslint-plugin-jsx-a11y';
 import pluginNoRelativeImports from 'eslint-plugin-no-relative-import-paths';
 import pluginPrettier from 'eslint-plugin-prettier';
+import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
 // import eslintConfigPreact from 'eslint-config-preact'; // TODO
 import pluginUnusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
@@ -43,6 +44,7 @@ export default [
   // eslintPluginUnicorn.configs.recommended,
   eslintPluginUnicorn.configs["flat/recommended"],
   eslintConfigPrettier,
+  eslintPluginPrettierRecommended,
   {
     settings: {
       react: { version: 'detect' },
