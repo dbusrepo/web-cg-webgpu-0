@@ -1,4 +1,3 @@
-import assert from 'assert';
 import type { StatsValues } from '../ui/stats/stats';
 import type {
   KeyInputEvent,
@@ -8,15 +7,12 @@ import type {
 import type { AuxAppWorkerParams, AuxAppWorkerDesc } from './auxAppWorker';
 import type { WasmEngineParams } from '../engine/wasmEngine/wasmEngine';
 import type { WasmViews } from '../engine/wasmEngine/wasmViews';
-import type {
-  WasmModules,
-  WasmEngineModule,
-} from '../engine/wasmEngine/wasmLoader';
+import type { WasmEngineModule } from '../engine/wasmEngine/wasmLoader';
 import { mainConfig } from '../config/mainConfig';
 import { MILLI_IN_SEC } from '../common';
 import { StatsEnum } from '../ui/stats/stats';
 import { AssetManager } from '../engine/assets/assetManager';
-import { AppCommandEnum, EventLog } from './appTypes';
+import { AppCommandEnum } from './appTypes';
 import {
   InputManager,
   MouseCodeEnum,
@@ -25,18 +21,21 @@ import {
 import { InputAction, InputActionBehavior } from '../input/inputAction';
 import { AuxAppWorkerCommandEnum } from './auxAppWorker';
 import { WasmEngine } from '../engine/wasmEngine/wasmEngine';
-import { WasmRun } from '../engine/wasmEngine/wasmRun';
-import { Texture, initTextureWasmView } from '../engine/wasmEngine/texture';
-import { ascImportImages } from '../../assets/build/images';
-import * as utils from '../engine/utils';
+import { type WasmRun } from '../engine/wasmEngine/wasmRun';
 import {
-  FrameColorRGBAWasm,
+  type Texture,
+  initTextureWasmView,
+} from '../engine/wasmEngine/texture';
+import { ascImportImages } from '../../assets/build/images';
+import { arrAvg } from '../engine/utils';
+import {
+  type FrameColorRGBAWasm,
   getFrameColorRGBAWasmView,
 } from '../engine/wasmEngine/frameColorRGBAWasm';
 
-type AppWorkerParams = {
+interface AppWorkerParams {
   engineCanvas: OffscreenCanvas;
-};
+}
 
 class AppWorker {
   private static readonly UPDATE_PERIOD_MS =
@@ -91,7 +90,7 @@ class AppWorker {
     // this.wasmEngineModule.render();
   }
 
-  private initFrameBuf() {
+  private initFrameBuf(): void {
     const { rgbaSurface0: frameBuf8 } = this.wasmViews;
     this.frameBuf32 = new Uint32Array(
       frameBuf8.buffer,
@@ -101,28 +100,30 @@ class AppWorker {
     this.frameStrideBytes = this.wasmRun.FrameStrideBytes;
   }
 
-  private initGfx() {
+  private initGfx(): void {
     const { engineCanvas } = this.params;
     this.ctx2d = this.get2dCtxFromCanvas(engineCanvas);
     const { width, height } = engineCanvas;
     this.imageData = this.ctx2d.createImageData(width, height);
   }
 
-  private get2dCtxFromCanvas(canvas: OffscreenCanvas) {
-    const ctx = <OffscreenCanvasRenderingContext2D>canvas.getContext('2d', {
+  private get2dCtxFromCanvas(
+    canvas: OffscreenCanvas,
+  ): OffscreenCanvasRenderingContext2D {
+    const ctx = canvas.getContext('2d', {
       alpha: false,
       desynchronized: true,
-    });
+    }) as OffscreenCanvasRenderingContext2D;
     ctx.imageSmoothingEnabled = false; // no blur, keep the pixels sharpness
     return ctx;
   }
 
-  private initInput() {
+  private initInput(): void {
     this.inputManager = new InputManager();
     this.initInputActions();
   }
 
-  private initInputActions() {
+  private initInputActions(): void {
     this.pressA = new InputAction('A', InputActionBehavior.NORMAL);
     // this.pressA = new InputAction(
     //   'A',
@@ -157,7 +158,7 @@ class AppWorker {
     this.inputManager.mapToMouse(MouseCodeEnum.MOVE_DOWN, this.mouseMoveDown);
   }
 
-  private async initAssetManager() {
+  private async initAssetManager(): Promise<void> {
     this.assetManager = new AssetManager();
     await this.assetManager.init({
       generateMipmaps: true,
@@ -165,27 +166,27 @@ class AppWorker {
     });
   }
 
-  private initTextures() {
+  private initTextures(): void {
     const wasmTexturesImport = Object.entries(ascImportImages);
     let mipMapBaseIdx = 0;
     this.textures = [];
-    wasmTexturesImport.forEach(([texName, texIdx]) => {
+    for (const [texName, texIdx] of wasmTexturesImport) {
       const texture = initTextureWasmView(texName, texIdx, mipMapBaseIdx);
       this.textures.push(texture);
       mipMapBaseIdx += texture.NumMipmaps;
-    });
+    }
   }
 
-  private async initAuxWorkers() {
+  private async initAuxWorkers(): Promise<void> {
     try {
       const numAuxAppWorkers = mainConfig.numAuxWorkers;
       this.numWorkers = 1 + numAuxAppWorkers;
       console.log(`num total workers: ${this.numWorkers}`);
       const genWorkerIdx = (() => {
         let nextWorkerIdx = 1;
-        return () => nextWorkerIdx++;
+        return (): number => nextWorkerIdx++;
       })();
-      this.auxWorkers = new Array<AuxAppWorkerDesc>(numAuxAppWorkers);
+      this.auxWorkers = Array.from({ length: numAuxAppWorkers });
       let remWorkers = numAuxAppWorkers;
       const initStart = Date.now();
       await new Promise<void>((resolve, reject) => {
@@ -197,7 +198,7 @@ class AppWorker {
           const workerIdx = genWorkerIdx();
           const engineWorker = {
             workerIdx,
-            worker: new Worker(new URL('./auxAppWorker.ts', import.meta.url), {
+            worker: new Worker(new URL('auxAppWorker.ts', import.meta.url), {
               name: `aux-app-worker-${workerIdx}`,
               type: 'module',
             }),
@@ -218,7 +219,8 @@ class AppWorker {
             command: AuxAppWorkerCommandEnum.INIT,
             params: workerParams,
           });
-          engineWorker.worker.onmessage = ({ data }) => {
+          // engineWorker.worker.onmessage = ({ data }): void => {
+          engineWorker.worker.addEventListener('message', ({ data }): void => {
             --remWorkers;
             console.log(
               `Aux app worker id=${workerIdx} initd,
@@ -232,13 +234,13 @@ class AppWorker {
               );
               resolve();
             }
-          };
-          engineWorker.worker.onerror = (error) => {
+          });
+          engineWorker.worker.addEventListener('error', (error) => {
             console.log(
               `Aux app worker id=${workerIdx} error: ${error.message}\n`,
             );
             reject(error);
-          };
+          });
         }
       });
     } catch (error) {
@@ -248,7 +250,7 @@ class AppWorker {
     }
   }
 
-  private async initWasmEngine() {
+  private async initWasmEngine(): Promise<void> {
     this.wasmEngine = new WasmEngine();
     const wasmEngineParams: WasmEngineParams = {
       imageWidth: this.imageData.width,
@@ -263,15 +265,15 @@ class AppWorker {
     this.frameColorRGBAWasm = getFrameColorRGBAWasmView(this.wasmEngineModule);
   }
 
-  private async runAuxWorkers() {
-    this.auxWorkers.forEach(({ worker }) => {
+  private runAuxWorkers(): void {
+    for (const { worker } of this.auxWorkers) {
       worker.postMessage({
         command: AuxAppWorkerCommandEnum.RUN,
       });
-    });
+    }
   }
 
-  private checkInput() {
+  private checkInput(): void {
     // if (this.pressA.isPressed()) {
     // console.log('A pressed');
     // postMessage({
@@ -306,13 +308,13 @@ class AppWorker {
     // }
   }
 
-  public async run(): Promise<void> {
+  public run(): void {
     let lastFrameStartTime: number;
     // let last_render_t: number;
     let updTimeAcc: number;
-    let renderTimeAcc: number;
+    // let renderTimeAcc: number;
     let elapsedTimeMs: number;
-    let renderThen: number;
+    // let renderThen: number;
     let timeSinceLastFrameMs: number;
     let avgTimeSinceLastFrame: number;
     let frameStartTimeMs: number;
@@ -320,6 +322,7 @@ class AppWorker {
     let timeLastFrameCnt: number;
     let frameCnt: number;
     let frameTimeCnt: number;
+    // eslint-disable-next-line unused-imports/no-unused-vars
     let renderCnt: number;
     let updateCnt: number;
     let statsCnt: number;
@@ -333,14 +336,14 @@ class AppWorker {
     let upsArr: Float32Array;
 
     let resync: boolean;
-    let isRunning: boolean;
-    let isPaused: boolean;
+    // let isRunning: boolean;
+    // let isPaused: boolean;
 
-    const mainLoopInit = () => {
-      lastFrameStartTime = lastStatsTime = renderThen = performance.now();
+    const mainLoopInit = (): void => {
+      lastFrameStartTime = lastStatsTime /* = renderThen */ = performance.now();
       frameTimeMsArr = new Float64Array(AppWorker.FRAME_TIMES_ARR_LEN);
       updTimeAcc = 0;
-      renderTimeAcc = 0;
+      // renderTimeAcc = 0;
       elapsedTimeMs = 0;
       timeMsSinceLastFrameArr = new Float64Array(
         AppWorker.TIMES_SINCE_LAST_FRAME_ARR_LEN,
@@ -355,12 +358,12 @@ class AppWorker {
       resync = false;
       updateCnt = 0;
       renderCnt = 0;
-      isRunning = true;
-      isPaused = false;
+      // isRunning = true;
+      // isPaused = false;
       requestAnimationFrame(frame);
     };
 
-    const begin = () => {
+    const begin = (): void => {
       frameStartTimeMs = performance.now();
       timeSinceLastFrameMs = frameStartTimeMs - lastFrameStartTime;
       lastFrameStartTime = frameStartTimeMs;
@@ -374,13 +377,10 @@ class AppWorker {
       ] = timeSinceLastFrameMs;
       // avgTimeSinceLastFrame = timeSinceLastFrame;
       // console.log(`avgTimeSinceLastFrame = ${avgTimeSinceLastFrame}`);
-      avgTimeSinceLastFrame = utils.arrAvg(
-        timeMsSinceLastFrameArr,
-        timeLastFrameCnt,
-      );
+      avgTimeSinceLastFrame = arrAvg(timeMsSinceLastFrameArr, timeLastFrameCnt);
     };
 
-    const frame = () => {
+    const frame = (): void => {
       requestAnimationFrame(frame);
       begin();
       update();
@@ -388,7 +388,7 @@ class AppWorker {
       stats();
     };
 
-    const update = () => {
+    const update = (): void => {
       // if (is_paused) return; // TODO
       updTimeAcc += avgTimeSinceLastFrame;
       // handle timer anomalies
@@ -413,7 +413,7 @@ class AppWorker {
       }
     };
 
-    const render = () => {
+    const render = (): void => {
       this.syncWorkers();
       // this.clearBg();
       this.wasmEngineModule.render();
@@ -423,12 +423,12 @@ class AppWorker {
       renderCnt++;
     };
 
-    const saveFrameTime = () => {
+    const saveFrameTime = (): void => {
       const frameTimeMs = performance.now() - frameStartTimeMs;
       frameTimeMsArr[frameTimeCnt++ % frameTimeMsArr.length] = frameTimeMs;
     };
 
-    const stats = () => {
+    const stats = (): void => {
       ++frameCnt;
       statsTimeAcc += timeSinceLastFrameMs;
       if (statsTimeAcc >= AppWorker.STATS_PERIOD_MS) {
@@ -444,9 +444,9 @@ class AppWorker {
         const statIdx = statsCnt++ % fpsArr.length;
         fpsArr[statIdx] = fps;
         upsArr[statIdx] = ups;
-        const avgFps = utils.arrAvg(fpsArr, statsCnt);
-        const avgUps = utils.arrAvg(upsArr, statsCnt);
-        const avgFrameTimeMs = utils.arrAvg(frameTimeMsArr, frameTimeCnt);
+        const avgFps = arrAvg(fpsArr, statsCnt);
+        const avgUps = arrAvg(upsArr, statsCnt);
+        const avgFrameTimeMs = arrAvg(frameTimeMsArr, frameTimeCnt);
         const avgUfps = MILLI_IN_SEC / avgFrameTimeMs;
         // console.log(`avgUfps = ${avgUfps}, avgFrameTime = ${avgFrameTime}`);
         const statsValues: StatsValues = {
@@ -462,7 +462,7 @@ class AppWorker {
       }
     };
 
-    await this.runAuxWorkers();
+    this.runAuxWorkers();
     requestAnimationFrame(mainLoopInit);
 
     // TODO: test events
@@ -475,17 +475,16 @@ class AppWorker {
     // }, 2000);
   }
 
-  private syncWorkers() {
-    for (let i = 0; i < this.auxWorkers.length; ++i) {
-      const { workerIdx } = this.auxWorkers[i];
+  private syncWorkers(): void {
+    for (const { workerIdx } of this.auxWorkers) {
       Atomics.store(this.wasmViews.syncArr, workerIdx, 1);
       Atomics.notify(this.wasmViews.syncArr, workerIdx);
     }
   }
 
-  private waitWorkers() {
-    for (let i = 0; i < this.auxWorkers.length; ++i) {
-      Atomics.wait(this.wasmViews.syncArr, this.auxWorkers[i].workerIdx, 1);
+  private waitWorkers(): void {
+    for (const { workerIdx } of this.auxWorkers) {
+      Atomics.wait(this.wasmViews.syncArr, workerIdx, 1);
     }
   }
 
@@ -496,26 +495,28 @@ class AppWorker {
   //   // }
   // }
 
-  public drawFrame() {
+  public drawFrame(): void {
     this.imageData.data.set(this.wasmViews.rgbaSurface0);
     this.ctx2d.putImageData(this.imageData, 0, 0);
   }
 
-  public onKeyDown(event: KeyInputEvent) {
+  public onKeyDown(event: KeyInputEvent): void {
     this.inputManager.onKeyDown(event);
   }
 
-  public onKeyUp(event: KeyInputEvent) {
+  public onKeyUp(event: KeyInputEvent): void {
     this.inputManager.onKeyUp(event);
   }
 
-  public onMouseMove(inputEvent: MouseMoveEvent) {
+  public onMouseMove(inputEvent: MouseMoveEvent): void {
     this.inputManager.onMouseMove(inputEvent);
   }
 
-  public onCanvasDisplayResize(displayWidth: number, displayHeight: number) {
-    // TODO:
-    // console.log('onCanvasDisplayResize', displayWidth, displayHeight);
+  public onCanvasDisplayResize(
+    displayWidth: number,
+    displayHeight: number,
+  ): void {
+    console.log('onCanvasDisplayResize', displayWidth, displayHeight);
   }
 }
 
@@ -531,45 +532,50 @@ const enum AppWorkerCommandEnum {
 }
 
 const commands = {
-  [AppWorkerCommandEnum.INIT]: async (params: AppWorkerParams) => {
+  [AppWorkerCommandEnum.INIT]: async (
+    params: AppWorkerParams,
+  ): Promise<void> => {
     appWorker = new AppWorker();
     await appWorker.init(params);
     postMessage({
       command: AppCommandEnum.INIT,
     });
   },
-  [AppWorkerCommandEnum.RUN]: async () => {
-    await appWorker.run();
+  [AppWorkerCommandEnum.RUN]: (): void => {
+    appWorker.run();
   },
-  [AppWorkerCommandEnum.KEY_DOWN]: (inputEvent: KeyInputEvent) => {
+  [AppWorkerCommandEnum.KEY_DOWN]: (inputEvent: KeyInputEvent): void => {
     appWorker.onKeyDown(inputEvent);
   },
-  [AppWorkerCommandEnum.KEY_UP]: (inputEvent: KeyInputEvent) => {
+  [AppWorkerCommandEnum.KEY_UP]: (inputEvent: KeyInputEvent): void => {
     appWorker.onKeyUp(inputEvent);
   },
-  [AppWorkerCommandEnum.MOUSE_MOVE]: (inputEvent: MouseMoveEvent) => {
+  [AppWorkerCommandEnum.MOUSE_MOVE]: (inputEvent: MouseMoveEvent): void => {
     appWorker.onMouseMove(inputEvent);
   },
   [AppWorkerCommandEnum.RESIZE_CANVAS_DISPLAY_SIZE]: (
     resizeEvent: CanvasDisplayResizeEvent,
-  ) => {
+  ): void => {
     const { width, height } = resizeEvent;
     appWorker.onCanvasDisplayResize(width, height);
   },
 };
 
-self.onmessage = ({ data: { command, params } }) => {
+// eslint-disable-next-line sonarjs/post-message
+globalThis.addEventListener('message', (event): void => {
+  const {
+    data: { command, params },
+  } = event;
   const commandKey = command as keyof typeof commands;
-  if (commands.hasOwnProperty(commandKey)) {
+  if (Object.prototype.hasOwnProperty.call(commands, commandKey)) {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      commands[commandKey](params) as void;
-    } catch (ex) {
+      commands[commandKey](params);
+    } catch (error) {
       console.error('error executing command in app worker message handler');
-      console.error(ex);
+      console.error(error);
     }
   }
-};
+});
 
 export type { AppWorkerParams };
 export { AppWorkerCommandEnum };
