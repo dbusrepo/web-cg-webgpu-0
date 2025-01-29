@@ -14,6 +14,7 @@ import pluginUnusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import sonarjs from 'eslint-plugin-sonarjs';
+import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -38,6 +39,9 @@ export default [
   github.getFlatConfigs().react,
   ...github.getFlatConfigs().typescript,
   sonarjs.configs.recommended,
+  // see https://github.com/sindresorhus/eslint-plugin-unicorn/issues/2546
+  // eslintPluginUnicorn.configs.recommended,
+  eslintPluginUnicorn.configs["flat/recommended"],
   eslintConfigPrettier,
   {
     settings: {
@@ -63,6 +67,7 @@ export default [
       prettier: pluginPrettier,
     },
     rules: {
+      'unicorn/better-regex': 'warn',
       // 'github/array-foreach': 'error',
       // 'github/async-preventdefault': 'warn',
       // 'github/no-then': 'error',
