@@ -42,7 +42,9 @@
     "baseUrl": "./" /* Specify the base directory to resolve non-relative module names. */,
     "paths": {
       "react": ["node_modules/preact/compat/"],
-      "react-dom": ["node_modules/preact/compat/"],
+      "react/jsx-runtime": ["./node_modules/preact/jsx-runtime"],
+      "react-dom": ["./node_modules/preact/compat/"],
+      "react-dom/*": ["./node_modules/preact/compat/*"],
       // https://stackoverflow.com/questions/72396891/typescript-and-jquery-ui-what-am-i-doing-wrong
       "jquery": ["node_modules/@types/jquery/index"],
       "jquery-ui": ["node_modules/@types/jqueryui/index"]
