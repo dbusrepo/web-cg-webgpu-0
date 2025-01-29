@@ -4,6 +4,7 @@ import { includeIgnoreFile } from '@eslint/compat';
 import pluginJs from '@eslint/js';
 import typescriptEslintParser from '@typescript-eslint/parser';
 import eslintConfigPrettier from 'eslint-config-prettier';
+import * as depend from 'eslint-plugin-depend';
 import pluginJsxA11y from 'eslint-plugin-jsx-a11y';
 import pluginNoRelativeImports from 'eslint-plugin-no-relative-import-paths';
 import pluginPrettier from 'eslint-plugin-prettier';
@@ -30,6 +31,10 @@ export default [
   ...tseslint.configs.stylistic,
   // ...fixupConfigRules(eslintConfigPreact),
   eslintConfigPrettier,
+  {
+    ...depend.configs['flat/recommended'],
+    files: ['test/**/*.js'],
+  },
   {
     settings: {
       react: { version: 'detect' },
