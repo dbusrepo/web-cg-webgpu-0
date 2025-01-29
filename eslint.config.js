@@ -75,7 +75,11 @@ export default [
       prettier: pluginPrettier,
     },
     rules: {
+      'sonarjs/unused-import': 'warn',
+      "sonarjs/todo-tag": "off",
+      'unicorn/prevent-abbreviations': 'off',
       'unicorn/better-regex': 'warn',
+      'unicorn/consistent-function-scoping': 'off',
       // "depend/ban-dependencies": "error",
       // 'github/array-foreach': 'error',
       // 'github/async-preventdefault': 'warn',
@@ -119,7 +123,7 @@ export default [
       // 'no-duplicate-imports': 0,
       'no-nested-ternary': 'warn',
       'no-relative-import-paths/no-relative-import-paths': [
-        'error',
+        'off',
         { allowSameFolder: true, rootDir: 'src' },
       ],
       'no-unused-vars': 'off',
