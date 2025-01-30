@@ -1,6 +1,6 @@
 // import assert from 'assert';
 import engineWasm from './wasm/build/asc/engine.wasm';
-import engineExport from './wasm/build/asc/engine';
+import type engineExport from './wasm/build/asc/engine';
 import { ascImportImages } from '../../../assets/build/images';
 import { ascImportStrings } from '../../../assets/build/strings';
 import {
@@ -17,7 +17,7 @@ type wasmBuilderFunc<T> = (
 // import clear_canvas_wasm from './wasm/build/wat/clear_canvas.wasm';
 // import clear_test_wasm from './wasm/bin/clear_test.wasm';
 
-type WasmImports = {
+interface WasmImports {
   memory: WebAssembly.Memory;
   rgbaSurface0ptr: number;
   rgbaSurface0width: number;
@@ -56,11 +56,11 @@ type WasmImports = {
   frameColorRGBAPtr: number;
   texturesPtr: number;
   mipmapsPtr: number;
-};
+}
 
-type WasmModules = {
+interface WasmModules {
   engine: typeof engineExport;
-};
+}
 
 type WasmEngineModule = WasmModules['engine'];
 

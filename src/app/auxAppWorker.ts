@@ -1,14 +1,10 @@
-import assert from 'assert';
 import type { WasmViews } from '../engine/wasmEngine/wasmViews';
-import type {
-  WasmModules,
-  WasmEngineModule,
-} from '../engine/wasmEngine/wasmLoader';
+import type { WasmEngineModule } from '../engine/wasmEngine/wasmLoader';
 import { buildWasmMemViews } from '../engine/wasmEngine/wasmViews';
 import type { WasmRunParams } from '../engine/wasmEngine/wasmRun';
-import { WasmRun, gWasmRun } from '../engine/wasmEngine/wasmRun';
+import { WasmRun } from '../engine/wasmEngine/wasmRun';
 import {
-  FrameColorRGBAWasm,
+  type FrameColorRGBAWasm,
   getFrameColorRGBAWasmView,
 } from '../engine/wasmEngine/frameColorRgbaWasm';
 
@@ -17,11 +13,11 @@ const enum AuxAppWorkerCommandEnum {
   RUN = 'aux_app_worker_run',
 }
 
-type AuxAppWorkerParams = {
+interface AuxAppWorkerParams {
   workerIdx: number;
   numWorkers: number;
   wasmRunParams: WasmRunParams;
-};
+}
 
 class AuxAppWorker {
   private params: AuxAppWorkerParams;
@@ -74,11 +70,11 @@ class AuxAppWorker {
         Atomics.store(wasmViews.syncArr, workerIdx, 0);
         Atomics.notify(wasmViews.syncArr, workerIdx);
       }
-    } catch (ex) {
+    } catch (error) {
       console.log(
         `Error while running aux app worker ${this.params.workerIdx}`,
       );
-      console.error(ex);
+      console.error(error);
     }
   }
 }
@@ -99,25 +95,24 @@ const commands = {
 };
 
 // self.addEventListener('message', async ({ data: { command, params } }) => {
-self.onmessage = ({ data: { command, params } }) => {
+globalThis.onmessage = ({ data: { command, params } }) => {
   const commandKey = command as keyof typeof commands;
   if (commands.hasOwnProperty(commandKey)) {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       commands[commandKey](params) as unknown as void;
-    } catch (ex) {
+    } catch (error) {
       console.error(
         'error executing command in aux app worker message handler',
       );
-      console.error(ex);
+      console.error(error);
     }
   }
 };
 
-type AuxAppWorkerDesc = {
+interface AuxAppWorkerDesc {
   workerIdx: number;
   worker: Worker;
-};
+}
 
 export type { AuxAppWorkerParams, AuxAppWorkerDesc };
 export { AuxAppWorkerCommandEnum };

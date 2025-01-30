@@ -1,6 +1,6 @@
-import { MemRegionsEnum, WasmMemRegionsData } from './wasmMemUtils';
+import { MemRegionsEnum, type WasmMemRegionsData } from './wasmMemUtils';
 
-type WasmViews = {
+interface WasmViews {
   view: DataView;
   memUI8: Uint8Array;
   memUIC8: Uint8ClampedArray;
@@ -23,7 +23,7 @@ type WasmViews = {
   texels: Uint8Array;
   workersMemCounters: Uint32Array;
   hrTimer: BigUint64Array;
-};
+}
 
 function buildWasmMemViews(
   wasmMem: WebAssembly.Memory,

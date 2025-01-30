@@ -1,8 +1,8 @@
-import assert from 'assert';
+import assert from 'node:assert';
 
 function loadFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
   return new Promise((resolve) => {
-    let fileReader = new FileReader();
+    const fileReader = new FileReader();
     fileReader.addEventListener(
       'load',
       (e) => {

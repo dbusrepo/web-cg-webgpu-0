@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-nodejs-modules, unicorn/prefer-node-protocol
 // import assert from 'assert';
 
 class MaxDeque {

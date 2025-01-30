@@ -1,6 +1,6 @@
 // import assert from 'assert';
 
-type WasmMemParams = {
+interface WasmMemParams {
   // frameBufferPalSize: number;
   // paletteSize: number;
   startOffset: number;
@@ -17,7 +17,7 @@ type WasmMemParams = {
   stringsSize: number;
   workersMemCountersSize: number;
   hrTimerSize: number;
-};
+}
 
 // all regions have bounds except for the last part, the shared heap that can grow
 // enum for mem regions keys used to index their sizes/offsets

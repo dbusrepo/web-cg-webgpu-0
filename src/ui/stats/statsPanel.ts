@@ -1,5 +1,5 @@
-import assert from 'assert';
-import { StatsEnum } from './stats';
+import assert from 'node:assert';
+import { type StatsEnum } from './stats';
 
 const PR = Math.round(window.devicePixelRatio || 1); // #pixels per col
 
@@ -22,13 +22,13 @@ const GRAPH_HEIGHT = CSS_GRAPH_HEIGHT * PR;
 
 const BG_ALPHA = 0.9;
 
-type StatsPanelConfig = {
+interface StatsPanelConfig {
   id: StatsEnum;
   title: string;
   fg: string;
   bg: string;
   graphHeight: number;
-};
+}
 
 class StatsPanel {
   private cfg: StatsPanelConfig;
@@ -54,7 +54,7 @@ class StatsPanel {
     const context = this.canvas.getContext('2d');
     assert(context);
     this.context = context;
-    this.context.font = 'bold ' + 9 * PR + 'px Helvetica,Arial,sans-serif';
+    this.context.font = `bold ${9 * PR}px Helvetica,Arial,sans-serif`;
     this.context.textBaseline = 'top';
 
     // draw the entire canvas background
@@ -69,7 +69,7 @@ class StatsPanel {
     this.drawGraphBackground();
 
     // alloc mem for panel values and the threshold for scaling heights
-    this.values = new Array(CSS_GRAPH_WIDTH).fill(0);
+    this.values = Array.from({ length: CSS_GRAPH_WIDTH }).fill(0);
     // normalization factor to scale value to col heights in pixels
     this.heightScaleFactor = this.cfg.graphHeight;
     // this.heightRescaleThreshold = 0;
@@ -86,7 +86,7 @@ class StatsPanel {
   }
 
   appendAsChild(parent: HTMLElement): void {
-    parent.appendChild(this.canvas);
+    parent.append(this.canvas);
   }
 
   // get dom(): HTMLCanvasElement {
@@ -140,7 +140,7 @@ class StatsPanel {
     this.context.fillRect(0, 0, WIDTH, GRAPH_Y);
 
     // draw the text
-    const text = Math.round(value) + ' ' + this.cfg.title;
+    const text = `${Math.round(value)} ${this.cfg.title}`;
     // + ' ('
     // + // Math.round(this._min)
     // + // '-'

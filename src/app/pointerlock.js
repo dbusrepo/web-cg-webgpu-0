@@ -5,7 +5,9 @@ async function requestPointerLockWithoutUnadjustedMovement(element) {
     unadjustedMovement: false,
   });
 
-  if (!promise) return; // no promise version
+  if (!promise) {
+    return;
+  } // no promise version
 
   try {
     await promise;
@@ -25,7 +27,9 @@ async function requestPointerLockWithUnadjustedMovement(element) {
     unadjustedMovement: true,
   });
 
-  if (!promise) return; // no promise version
+  if (!promise) {
+    return;
+  } // no promise version
 
   try {
     await promise;

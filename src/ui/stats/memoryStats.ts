@@ -1,4 +1,4 @@
-import { Stats } from './stats';
+import { type Stats } from './stats';
 import { MemoryStatsPanel } from './memoryStatsPanel';
 
 // required to avoid ts type error with Performance
@@ -28,7 +28,7 @@ class MemoryStats {
 
   // Starts statistical sampling of the memory usage.
   private scheduleMeasurement() {
-    let interval = this.measurementInterval();
+    const interval = this.measurementInterval();
     // console.log('Scheduling memory measurement in ' +
     //     `${Math.round(interval / 1000)} seconds.`);
     setTimeout(this.performMeasurement.bind(this), interval);

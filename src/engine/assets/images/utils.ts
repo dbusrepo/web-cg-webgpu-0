@@ -1,6 +1,6 @@
-import assert from 'assert';
+import assert from 'node:assert';
 import { fileTypeFromBuffer } from 'file-type';
-import { ImageInfo } from './imageDecoder';
+import { type ImageInfo } from './imageDecoder';
 import { PngDecoderRGBA } from './vivaxy-png/PngDecoderRGBA';
 import { BitImageRGBA, BPP_RGBA } from './bitImageRgba';
 
@@ -17,17 +17,19 @@ async function decodePNGs(
       let imgInfo: ImageInfo;
       const image = new BitImageRGBA();
       switch (fileType.ext) {
-        case 'png':
+        case 'png': {
           {
             imgInfo = pngDecoder.readInfo(imgBuffer);
             pngDecoder.read(imgBuffer, image);
             assert(imgInfo.bpp === BPP_RGBA);
           }
           break;
-        default:
+        }
+        default: {
           throw new Error(
             `_loadImage does not support ${fileType.ext} loading`,
           );
+        }
       }
       return image;
     }),

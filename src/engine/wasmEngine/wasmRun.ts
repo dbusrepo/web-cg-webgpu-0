@@ -1,7 +1,6 @@
 // import assert from 'assert';
 import * as WasmUtils from './wasmMemUtils';
 import type { WasmViews } from './wasmViews';
-import { buildWasmMemViews } from './wasmViews';
 import type { WasmModules, WasmImports } from './wasmLoader';
 import { loadWasmModules } from './wasmLoader';
 import { BPP_RGBA } from '../assets/images/bitImageRgba';
@@ -14,7 +13,7 @@ import {
   FONT_SPACING,
 } from '../../../assets/fonts/font';
 
-type WasmRunParams = {
+interface WasmRunParams {
   // usePalette: boolean;
   wasmMem: WebAssembly.Memory;
   wasmMemRegionsSizes: WasmUtils.WasmMemRegionsData;
@@ -29,7 +28,7 @@ type WasmRunParams = {
   frameColorRGBAPtr: number;
   texturesPtr: number;
   mipmapsPtr: number;
-};
+}
 
 let gWasmRun: WasmRun;
 let gWasmView: DataView;

@@ -1,6 +1,6 @@
 // import assert from 'assert';
-import { StatsPanel } from './statsPanel';
-import { StatsConfig } from './statsConfig';
+import { type StatsPanel } from './statsPanel';
+import { type StatsConfig } from './statsConfig';
 import { dragElement } from '../drag';
 
 enum StatsEnum {
@@ -42,7 +42,7 @@ class Stats {
 
   setParentNode(parentNode: HTMLElement): void {
     this.container.parentNode?.removeChild(this.container);
-    parentNode.appendChild(this.container);
+    parentNode.append(this.container);
   }
 
   hide() {

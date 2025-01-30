@@ -1,10 +1,13 @@
 // import assert from 'assert';
 // import * as preact from 'preact';
-import { h, JSX } from 'preact';
+import { type JSX } from 'preact';
 import React, { useState, useEffect } from 'react';
-import { EventLogHistoryPanel, EventLogEntry } from './eventLogHistoryPanel';
+import {
+  EventLogHistoryPanel,
+  type EventLogEntry,
+} from './eventLogHistoryPanel';
 
-type EventLogPanelProps = {
+interface EventLogPanelProps {
   parentContainer: HTMLDivElement;
   history: EventLogEntry[];
   // force show the bottom of the panel, used when switching own vs main panel
@@ -13,7 +16,7 @@ type EventLogPanelProps = {
   fontSize: number;
   updateRender: (props: EventLogPanelProps) => void;
   prompt: string;
-};
+}
 
 const MIN_LENGTH_SEARCH = 0;
 const condApplyFilter = (search: string) =>
@@ -24,7 +27,7 @@ const searchFilter = (
   searchTerm: string,
 ): EventLogEntry[] => {
   const match = (str: string, query: string) =>
-    str.toLowerCase().indexOf(query.toLowerCase()) !== -1;
+    str.toLowerCase().includes(query.toLowerCase());
   const res = history.filter(
     (el) => match(el.event, searchTerm) || match(el.message, searchTerm),
   );
@@ -147,7 +150,15 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
 
     // console.log('effect');
 
-    if (!isGrabbing) {
+    if (isGrabbing) {
+      el.addEventListener('mousemove', mouseMoveHandler);
+      el.addEventListener('mouseup', mouseUpHandler);
+      setForceScrollTo(grabPos.top);
+      // return () => {
+      //   el.removeEventListener('mousemove', mouseMoveHandler);
+      //   el.removeEventListener('mouseup', mouseUpHandler);
+      // };
+    } else {
       if (scrollToBottom) {
         // fast scroll to last...
         setForceScrollTo((el.scrollHeight - el.clientHeight) as any);
@@ -158,14 +169,6 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
       }
       el.addEventListener('mousedown', mouseDownHandler);
       // return () => el.removeEventListener('mousedown', mouseDownHandler);
-    } else {
-      el.addEventListener('mousemove', mouseMoveHandler);
-      el.addEventListener('mouseup', mouseUpHandler);
-      setForceScrollTo(grabPos.top);
-      // return () => {
-      //   el.removeEventListener('mousemove', mouseMoveHandler);
-      //   el.removeEventListener('mouseup', mouseUpHandler);
-      // };
     }
 
     inputRef.value = input;
@@ -183,20 +186,24 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
     // vs onKeyChange with a react input element
     // stackoverflow.com/q/57807522 // TODO
     switch (event.key) {
-      case 'Enter':
+      case 'Enter': {
         event.preventDefault(); // TODO
         // const target = event.target as HTMLInputElement;
         // this.props.dispatch(this.inputRef.value); // TODO
         setInput(prompt);
         setAutoScrollNewItems(true);
         break;
-      case 'ArrowUp':
+      }
+      case 'ArrowUp': {
         event.preventDefault();
         break;
-      case 'ArrowDown':
+      }
+      case 'ArrowDown': {
         event.preventDefault();
         break;
-      case 'ArrowLeft': // block cursor when moving left in the prompt prefix
+      }
+      case 'ArrowLeft': {
+        // block cursor when moving left in the prompt prefix
         {
           const inputEl = event.target as HTMLInputElement;
           // inputEl.focus();
@@ -206,8 +213,9 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
           }
         }
         break;
+      }
       // avoid backspace when just after the prompt the user press bs
-      case 'Backspace':
+      case 'Backspace': {
         {
           const inputEl = event.target as HTMLInputElement;
           const { selectionStart } = inputEl;
@@ -216,17 +224,22 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
           }
         }
         break;
-      case 'Control':
+      }
+      case 'Control': {
         setCtrlDown(true);
         break;
-      case 'a': // C-a should go after the prompt prefix...
+      }
+      case 'a': {
+        // C-a should go after the prompt prefix...
         if (isCtrlDown) {
           event.preventDefault();
           const inputEl = event.target as HTMLInputElement;
           inputEl.setSelectionRange(prompt.length, prompt.length);
         }
         break;
-      case 'u': // C-u delete text before the cursor (prompt excluded)
+      }
+      case 'u': {
+        // C-u delete text before the cursor (prompt excluded)
         if (isCtrlDown) {
           console.log('C-u');
           event.preventDefault();
@@ -234,25 +247,27 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
           const { selectionStart } = inputEl;
           inputEl.value =
             prompt +
-            (selectionStart !== null
-              ? inputEl.value.substring(selectionStart)
-              : '');
+            (selectionStart === null
+              ? ''
+              : inputEl.value.slice(Math.max(0, selectionStart)));
           // force cursor position after the prompt
           inputEl.setSelectionRange(prompt.length, prompt.length);
           setInput(inputEl.value);
         }
         break;
-      default:
+      }
+      default: {
         break;
+      }
     }
   };
 
   const onInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inValue = (event.target as HTMLInputElement).value;
-    const line = prompt + inValue.substring(prompt.length);
+    const line = prompt + inValue.slice(prompt.length);
     inputRef.value = line;
     setInput(line);
-    if (!inValue.substring(prompt.length)) {
+    if (!inValue.slice(prompt.length)) {
       setAutoScrollNewItems(true);
     }
   };
@@ -270,11 +285,13 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
 
   const onInputKeyUp = (event: JSX.TargetedKeyboardEvent<HTMLInputElement>) => {
     switch (event.key) {
-      case 'Control':
+      case 'Control': {
         setCtrlDown(false);
         break;
-      default:
+      }
+      default: {
         break;
+      }
     }
   };
 
@@ -287,10 +304,9 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
 
   const logListStyle = {}; // buildHistoryStyle(parentContainer, lineHeight);
 
-  const searchTerm = input.substring(prompt.length);
+  const searchTerm = input.slice(prompt.length);
 
   return (
-    /* eslint-disable-next-line jsx-a11y/label-has-associated-control */
     <label className="event-log-label" style={labelStyle}>
       <div
         className="event-log-history"

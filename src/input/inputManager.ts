@@ -1,11 +1,7 @@
 import type { KeyCode } from '../app/keyCodes';
-import type {
-  KeyInputEvent,
-  MouseMoveEvent,
-  CanvasDisplayResizeEvent,
-} from '../app/events';
-import { EnginePanelInputKeyCodeEnum } from '../app/keyCodes';
-import { InputAction, InputActionBehavior } from './inputAction';
+import type { KeyInputEvent, MouseMoveEvent } from '../app/events';
+
+import { type InputAction } from './inputAction';
 
 type KeyHandler = () => void;
 
@@ -58,4 +54,6 @@ class InputManager {
 }
 
 // export type { KeyHandler, Key };
-export { InputManager, MouseCodeEnum, EnginePanelInputKeyCodeEnum };
+export { InputManager, MouseCodeEnum };
+
+export { EnginePanelInputKeyCodeEnum } from '../app/keyCodes';

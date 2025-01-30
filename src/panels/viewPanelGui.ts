@@ -1,6 +1,6 @@
 // import { Panel } from './panel';
-import { PanelGui, PanelTweakOptions } from './panelGui';
-import { ViewPanel } from './viewPanel';
+import { PanelGui, type PanelTweakOptions } from './panelGui';
+import { type ViewPanel } from './viewPanel';
 
 enum ViewPanelTweakOptionsKeys {
   VP_OPT = 'VP_OPT',

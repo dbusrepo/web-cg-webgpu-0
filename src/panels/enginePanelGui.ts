@@ -1,6 +1,6 @@
-import { MonitorBindingApi } from 'tweakpane';
-import { PanelGui, PanelTweakOptions } from './panelGui';
-import { EnginePanel } from './enginePanel';
+import { type MonitorBindingApi } from 'tweakpane';
+import { PanelGui, type PanelTweakOptions } from './panelGui';
+import { type EnginePanel } from './enginePanel';
 import MaxDeque from '../ds/maxDeque';
 
 enum EnginePanelTweakOptionsKeys {
