@@ -194,11 +194,12 @@ class AppWorker {
           resolve();
           return;
         }
+        const workerUrl = new URL('auxAppWorker.ts', import.meta.url);
         for (let i = 0; i < numAuxAppWorkers; ++i) {
           const workerIdx = genWorkerIdx();
           const engineWorker = {
             workerIdx,
-            worker: new Worker(new URL('auxAppWorker.ts', import.meta.url), {
+            worker: new Worker(workerUrl, {
               name: `aux-app-worker-${workerIdx}`,
               type: 'module',
             }),

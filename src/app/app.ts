@@ -184,7 +184,11 @@ class App {
   }
 
   async initAppWorker(): Promise<void> {
-    this.appWorker = new Worker(new URL('appWorker.ts', import.meta.url));
+    const workerUrl = new URL('appWorker.ts', import.meta.url);
+    this.appWorker = new Worker(workerUrl, {
+      name: 'appWorker',
+      type: 'module',
+    });
     const initPromise = this.initAppWorkerMsgHandlers();
     this.sendInitMsgToAppWorker();
     await initPromise;

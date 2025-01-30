@@ -1,5 +1,5 @@
-// eslint-disable-next-line import/no-nodejs-modules
-import assert from 'node:assert';
+// eslint-disable-next-line import/no-nodejs-modules, unicorn/prefer-node-protocol
+import assert from 'assert';
 // import * as utils from './../utils';
 // import { sleep } from '../utils';
 import type { WasmMemParams, WasmMemRegionsData } from './wasmMemUtils';

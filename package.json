@@ -9,8 +9,8 @@
   "author": "",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
     "build_": "pnpm run build:assets && pnpm run build:wasm && tsc && vite build",
+    "build": "tsc && vite build",
     "serve": "vite preview",
     "type-check": "tsc --noemit",
     "build:asc": "cd src/engine/wasmEngine/wasm && make build_asc",

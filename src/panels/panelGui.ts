@@ -1,5 +1,5 @@
-// eslint-disable-next-line import/no-nodejs-modules
-import assert from 'node:assert';
+// eslint-disable-next-line import/no-nodejs-modules, unicorn/prefer-node-protocol
+import assert from 'assert';
 import { Pane as TweakPane, type InputBindingApi } from 'tweakpane';
 // eslint-disable-next-line import/no-namespace
 import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
