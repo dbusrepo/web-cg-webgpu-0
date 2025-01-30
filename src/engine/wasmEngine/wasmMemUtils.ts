@@ -41,6 +41,7 @@ const enum MemRegionsEnum {
 
 type MemRegionKeyType = keyof typeof MemRegionsEnum;
 
+// eslint-disable-next-line @typescript-eslint/consistent-indexed-object-style
 type WasmMemRegionsData = {
   -readonly [key in MemRegionKeyType]: number;
 };

@@ -4,7 +4,7 @@ import { buildWasmMemViews } from '../engine/wasmEngine/wasmViews';
 import type { WasmRunParams } from '../engine/wasmEngine/wasmRun';
 import { WasmRun } from '../engine/wasmEngine/wasmRun';
 import {
-  type FrameColorRGBAWasm,
+  type FrameColorRgbaWasm,
   getFrameColorRGBAWasmView,
 } from '../engine/wasmEngine/frameColorRgbaWasm';
 
@@ -24,7 +24,7 @@ class AuxAppWorker {
   private wasmRun: WasmRun;
   private wasmViews: WasmViews;
   private wasmEngineModule: WasmEngineModule;
-  private frameColorRGBAWasm: FrameColorRGBAWasm;
+  private frameColorRGBAWasm: FrameColorRgbaWasm;
   private frameBuf32: Uint32Array;
   private frameStrideBytes: number;
 
@@ -37,7 +37,7 @@ class AuxAppWorker {
     this.initFrameBuf();
   }
 
-  private async initWasmRun() {
+  private async initWasmRun(): Promise<void> {
     const { wasmRunParams } = this.params;
     this.wasmRun = new WasmRun();
     this.wasmViews = buildWasmMemViews(
@@ -49,7 +49,7 @@ class AuxAppWorker {
     this.wasmEngineModule = this.wasmRun.WasmModules.engine;
   }
 
-  private initFrameBuf() {
+  private initFrameBuf(): void {
     const { rgbaSurface0: frameBuf8 } = this.wasmViews;
     this.frameBuf32 = new Uint32Array(
       frameBuf8.buffer,
@@ -59,7 +59,7 @@ class AuxAppWorker {
     this.frameStrideBytes = this.wasmRun.FrameStrideBytes;
   }
 
-  async run() {
+  run(): void {
     const { workerIdx } = this.params;
     console.log(`Aux app worker ${workerIdx} running`);
     const { wasmViews } = this;
@@ -82,24 +82,27 @@ class AuxAppWorker {
 let auxAppWorker: AuxAppWorker;
 
 const commands = {
-  [AuxAppWorkerCommandEnum.INIT]: async (params: AuxAppWorkerParams) => {
+  [AuxAppWorkerCommandEnum.INIT]: async (
+    params: AuxAppWorkerParams,
+  ): Promise<void> => {
     auxAppWorker = new AuxAppWorker();
     await auxAppWorker.init(params);
     postMessage({
       status: `Aux app worker ${params.workerIdx} init completed`,
     });
   },
-  [AuxAppWorkerCommandEnum.RUN]: async () => {
-    await auxAppWorker.run();
+  [AuxAppWorkerCommandEnum.RUN]: (): void => {
+    auxAppWorker.run();
   },
 };
 
-// self.addEventListener('message', async ({ data: { command, params } }) => {
-globalThis.onmessage = ({ data: { command, params } }) => {
+// eslint-disable-next-line sonarjs/post-message
+globalThis.addEventListener('message', (event): void => {
+  const { command, params } = event.data;
   const commandKey = command as keyof typeof commands;
-  if (commands.hasOwnProperty(commandKey)) {
+  if (Object.prototype.hasOwnProperty.call(commands, commandKey)) {
     try {
-      commands[commandKey](params) as unknown as void;
+      commands[commandKey](params);
     } catch (error) {
       console.error(
         'error executing command in aux app worker message handler',
@@ -107,7 +110,7 @@ globalThis.onmessage = ({ data: { command, params } }) => {
       console.error(error);
     }
   }
-};
+});
 
 interface AuxAppWorkerDesc {
   workerIdx: number;

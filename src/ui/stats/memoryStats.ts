@@ -4,7 +4,8 @@ import { MemoryStatsPanel } from './memoryStatsPanel';
 // required to avoid ts type error with Performance
 declare global {
   interface Performance {
-    memory: any; // eslint-disable-line
+    memory: unknown;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     measureUserAgentSpecificMemory: any;
   }
 }
@@ -27,14 +28,14 @@ class MemoryStats {
   }
 
   // Starts statistical sampling of the memory usage.
-  private scheduleMeasurement() {
+  private scheduleMeasurement(): void {
     const interval = this.measurementInterval();
     // console.log('Scheduling memory measurement in ' +
     //     `${Math.round(interval / 1000)} seconds.`);
     setTimeout(this.performMeasurement.bind(this), interval);
   }
 
-  private async performMeasurement() {
+  private async performMeasurement(): Promise<void> {
     let result;
     try {
       result = await performance.measureUserAgentSpecificMemory();
@@ -58,6 +59,7 @@ class MemoryStats {
   // average there is one measurement every ....
   private measurementInterval(): number {
     const MEAN_INTERVAL_IN_MS = 1000; // 5 * 60 * 1000;
+    // eslint-disable-next-line sonarjs/pseudo-random
     return -Math.log(Math.random()) * MEAN_INTERVAL_IN_MS;
   }
 }

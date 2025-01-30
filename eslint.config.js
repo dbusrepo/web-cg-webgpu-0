@@ -28,10 +28,13 @@ export default [
   includeIgnoreFile(gitignorePath),
   {
     ignores: [
+      'vite.config.ts',
       'eslint.config.js',
+      'src/vite-env.d.ts',
       'src/engine/wasmEngine/wasm',
       'src/ui/guify',
       'src/engine/assets/images/vivaxy-png',
+      'src/app/pointerlock.js', // TODO
     ],
   },
   { files: ['**/*.{html,js,mjs,cjs,ts,jsx,tsx}'] },

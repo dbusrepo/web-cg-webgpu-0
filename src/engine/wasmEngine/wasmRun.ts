@@ -1,5 +1,5 @@
 // import assert from 'assert';
-import * as WasmUtils from './wasmMemUtils';
+import { type WasmMemRegionsData, MemRegionsEnum } from './wasmMemUtils';
 import type { WasmViews } from './wasmViews';
 import type { WasmModules, WasmImports } from './wasmLoader';
 import { loadWasmModules } from './wasmLoader';
@@ -16,8 +16,8 @@ import {
 interface WasmRunParams {
   // usePalette: boolean;
   wasmMem: WebAssembly.Memory;
-  wasmMemRegionsSizes: WasmUtils.WasmMemRegionsData;
-  wasmMemRegionsOffsets: WasmUtils.WasmMemRegionsData;
+  wasmMemRegionsSizes: WasmMemRegionsData;
+  wasmMemRegionsOffsets: WasmMemRegionsData;
   wasmWorkerHeapSize: number;
   mainWorkerIdx: number;
   workerIdx: number;
@@ -30,8 +30,11 @@ interface WasmRunParams {
   mipmapsPtr: number;
 }
 
+// eslint-disable-next-line import/no-mutable-exports
 let gWasmRun: WasmRun;
+// eslint-disable-next-line import/no-mutable-exports
 let gWasmView: DataView;
+// eslint-disable-next-line import/no-mutable-exports
 let gWasmViews: WasmViews;
 
 class WasmRun {
@@ -39,10 +42,14 @@ class WasmRun {
   protected wasmModules: WasmModules;
   protected wasmViews: WasmViews;
 
-  public async init(params: WasmRunParams, wasmViews: WasmViews) {
+  public async init(
+    params: WasmRunParams,
+    wasmViews: WasmViews,
+  ): Promise<void> {
     this.params = params;
     this.wasmViews = wasmViews;
     await this.loadWasmModules();
+    // eslint-disable-next-line unicorn/no-this-assignment, @typescript-eslint/no-this-alias
     gWasmRun = this;
     gWasmView = this.wasmViews.view;
     gWasmViews = this.wasmViews;
@@ -65,17 +72,17 @@ class WasmRun {
       mipmapsPtr,
     } = this.params;
 
-    const logf = (f: number) =>
+    const logf = (f: number): void =>
       console.log(`[wasm] Worker [${workerIdx}]: ${f}`);
 
-    const logi = (i: number) => {
+    const logi = (i: number): void => {
       console.log(`[wasm] Worker [${workerIdx}]: ${i}`);
     };
 
     const wasmImports: WasmImports = {
       memory,
 
-      rgbaSurface0ptr: memOffsets[WasmUtils.MemRegionsEnum.RGBA_SURFACE_0],
+      rgbaSurface0ptr: memOffsets[MemRegionsEnum.RGBA_SURFACE_0],
       rgbaSurface0width: surface0sizes[0],
       rgbaSurface0height: surface0sizes[1],
 
@@ -83,28 +90,28 @@ class WasmRun {
       // rgbaSurface1width: surface1sizes[0],
       // rgbaSurface1height: surface1sizes[1],
 
-      syncArrayPtr: memOffsets[WasmUtils.MemRegionsEnum.SYNC_ARRAY],
-      sleepArrayPtr: memOffsets[WasmUtils.MemRegionsEnum.SLEEP_ARRAY],
+      syncArrayPtr: memOffsets[MemRegionsEnum.SYNC_ARRAY],
+      sleepArrayPtr: memOffsets[MemRegionsEnum.SLEEP_ARRAY],
       mainWorkerIdx,
       workerIdx,
       numWorkers,
-      workersHeapPtr: memOffsets[WasmUtils.MemRegionsEnum.WORKERS_HEAPS],
+      workersHeapPtr: memOffsets[MemRegionsEnum.WORKERS_HEAPS],
       workerHeapSize,
-      sharedHeapPtr: memOffsets[WasmUtils.MemRegionsEnum.HEAP],
+      sharedHeapPtr: memOffsets[MemRegionsEnum.HEAP],
       // usePalette: this._config.usePalette ? 1 : 0,
       // usePalette: 0,
-      fontCharsPtr: memOffsets[WasmUtils.MemRegionsEnum.FONT_CHARS],
-      fontCharsSize: memSizes[WasmUtils.MemRegionsEnum.FONT_CHARS],
+      fontCharsPtr: memOffsets[MemRegionsEnum.FONT_CHARS],
+      fontCharsSize: memSizes[MemRegionsEnum.FONT_CHARS],
       numTextures,
-      texturesIndexPtr: memOffsets[WasmUtils.MemRegionsEnum.TEXTURES_INDEX],
-      texturesIndexSize: memSizes[WasmUtils.MemRegionsEnum.TEXTURES_INDEX],
-      texelsPtr: memOffsets[WasmUtils.MemRegionsEnum.TEXTURES],
-      texelsSize: memSizes[WasmUtils.MemRegionsEnum.TEXTURES],
-      stringsDataPtr: memOffsets[WasmUtils.MemRegionsEnum.STRINGS],
-      stringsDataSize: memSizes[WasmUtils.MemRegionsEnum.STRINGS],
-      workersMemCountersPtr: memOffsets[WasmUtils.MemRegionsEnum.MEM_COUNTERS],
-      workersMemCountersSize: memSizes[WasmUtils.MemRegionsEnum.MEM_COUNTERS],
-      hrTimerPtr: memOffsets[WasmUtils.MemRegionsEnum.HR_TIMER],
+      texturesIndexPtr: memOffsets[MemRegionsEnum.TEXTURES_INDEX],
+      texturesIndexSize: memSizes[MemRegionsEnum.TEXTURES_INDEX],
+      texelsPtr: memOffsets[MemRegionsEnum.TEXTURES],
+      texelsSize: memSizes[MemRegionsEnum.TEXTURES],
+      stringsDataPtr: memOffsets[MemRegionsEnum.STRINGS],
+      stringsDataSize: memSizes[MemRegionsEnum.STRINGS],
+      workersMemCountersPtr: memOffsets[MemRegionsEnum.MEM_COUNTERS],
+      workersMemCountersSize: memSizes[MemRegionsEnum.MEM_COUNTERS],
+      hrTimerPtr: memOffsets[MemRegionsEnum.HR_TIMER],
 
       FONT_X_SIZE,
       FONT_Y_SIZE,

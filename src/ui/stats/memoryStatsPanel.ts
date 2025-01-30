@@ -26,7 +26,7 @@ class MemoryStatsPanel extends StatsPanel {
     });
   }
 
-  update(numBytes: number) {
+  update(numBytes: number): void {
     super.update(numBytes / ONE_MB);
   }
 }

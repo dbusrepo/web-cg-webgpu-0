@@ -69,6 +69,7 @@ async function loadWasm<T>(
   wasmInput: WasmImports,
   ...otherImports: object[]
 ): Promise<T> {
+  // eslint-disable-next-line unicorn/no-array-reduce
   const otherImpObj = otherImports.reduce(
     (acc, obj) => ({
       ...acc,
@@ -97,7 +98,7 @@ async function loadWasm<T>(
     },
     env: {
       memory: wasmInput.memory,
-      abort: (...args: any[]) => {
+      abort: (/*...args: any[]*/) => {
         console.log('abort!');
       },
       'performance.now': () => performance.now(),

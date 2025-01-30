@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-nodejs-modules
 import assert from 'node:assert';
 
 function loadFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
@@ -12,6 +13,7 @@ function loadFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
       },
       false,
     );
+    // eslint-disable-next-line unicorn/prefer-blob-reading-methods
     fileReader.readAsArrayBuffer(file);
   });
 }

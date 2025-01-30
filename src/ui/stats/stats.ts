@@ -22,7 +22,7 @@ class Stats {
   private container: HTMLDivElement;
   private panels = new Map<StatsEnum, StatsPanel>();
 
-  init(cfg: StatsConfig) {
+  init(cfg: StatsConfig): void {
     this.cfg = structuredClone(cfg);
     this.container = document.createElement('div');
     this.container.classList.add('stats-container');
@@ -30,34 +30,34 @@ class Stats {
     // this.schedule_mem_measure(); // TODO (re)move ?
   }
 
-  setPos(x: number, y: number) {
+  setPos(x: number, y: number): void {
     this.container.style.left = `${x}px`;
     this.container.style.top = `${y}px`;
   }
 
-  addPanel(statsPanel: StatsPanel) {
+  addPanel(statsPanel: StatsPanel): void {
     this.panels.set(statsPanel.Id, statsPanel);
     statsPanel.appendAsChild(this.container);
   }
 
   setParentNode(parentNode: HTMLElement): void {
-    this.container.parentNode?.removeChild(this.container);
+    this.container.remove();
     parentNode.append(this.container);
   }
 
-  hide() {
+  hide(): void {
     this.container.style.visibility = 'hidden';
     // this.container.style.display = 'none';
     // this.container.style.zIndex = '1';
   }
 
-  show() {
+  show(): void {
     this.container.style.visibility = 'visible';
     // this.container.style.display = 'block';
     // this.container.style.zIndex = '10000';
   }
 
-  update(stats: StatsValues) {
+  update(stats: StatsValues): void {
     for (const [k, v] of Object.entries(stats)) {
       const panel = this.panels.get(k as StatsEnum);
       if (panel) {

@@ -29,7 +29,7 @@ import {
 import { ascImportImages } from '../../assets/build/images';
 import { arrAvg } from '../engine/utils';
 import {
-  type FrameColorRGBAWasm,
+  type FrameColorRgbaWasm,
   getFrameColorRGBAWasmView,
 } from '../engine/wasmEngine/frameColorRgbaWasm';
 
@@ -63,7 +63,7 @@ class AppWorker {
   private wasmRun: WasmRun;
   private wasmEngineModule: WasmEngineModule;
   private wasmViews: WasmViews;
-  private frameColorRGBAWasm: FrameColorRGBAWasm;
+  private frameColorRGBAWasm: FrameColorRgbaWasm;
 
   private frameBuf32: Uint32Array;
   private frameStrideBytes: number;

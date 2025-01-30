@@ -14,7 +14,7 @@ class ViewPanelGui extends PanelGui {
   protected panel: ViewPanel;
   protected tweakOptions: ViewPanelTweakOptions;
 
-  init(panel: ViewPanel) {
+  init(panel: ViewPanel): void {
     super.init(panel);
   }
 
@@ -22,7 +22,7 @@ class ViewPanelGui extends PanelGui {
   //   super.initTweakPaneOptionsObj();
   // }
 
-  protected addTweakPaneOptions() {
+  protected addTweakPaneOptions(): void {
     super.addStatsOpt();
     super.addEventLogOpt();
   }

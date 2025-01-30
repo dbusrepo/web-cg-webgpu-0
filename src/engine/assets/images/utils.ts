@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-nodejs-modules
 import assert from 'node:assert';
 import { fileTypeFromBuffer } from 'file-type';
 import { type ImageInfo } from './imageDecoder';
@@ -16,6 +17,7 @@ async function decodePNGs(
       }
       let imgInfo: ImageInfo;
       const image = new BitImageRGBA();
+      // eslint-disable-next-line sonarjs/no-small-switch
       switch (fileType.ext) {
         case 'png': {
           {

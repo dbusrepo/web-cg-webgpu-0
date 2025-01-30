@@ -35,9 +35,9 @@ import { DArray, newDArray } from './darray';
 import { test } from './test/test';
 import { PTR_T, SIZE_T, NULL_PTR } from './memUtils';
 import {
-  FrameColorRGBA, 
+  FrameColorRGBA,
   newFrameColorRGBA,
-  // deleteFrameColorRGBA, 
+  // deleteFrameColorRGBA,
   MAX_LIGHT_LEVELS,
   BPP_RGBA,
   getRedLightTablePtr,
@@ -268,7 +268,7 @@ function drawQuad(x: i32, y: i32, w: i32, h: i32, colorARGB: u32): void {
   }
 }
 
-export { 
+export {
   init, render, run,
   getFrameColorRGBAPtr,
   getRedLightTablePtr,

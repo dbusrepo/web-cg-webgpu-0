@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-nodejs-modules
 import assert from 'node:assert';
 // import * as utils from './../utils';
 // import { sleep } from '../utils';
@@ -43,7 +44,7 @@ class WasmEngine {
   private wasmRun: WasmRun;
   private wasmModules: WasmModules;
 
-  public async init(params: WasmEngineParams) {
+  public async init(params: WasmEngineParams): Promise<void> {
     this.params = params;
     await this.initWasm();
   }
@@ -80,7 +81,7 @@ class WasmEngine {
     console.log(`wasm mem config start pages: ${initial}`);
   }
 
-  private get NumTotalWorkers() {
+  private get NumTotalWorkers(): number {
     return 1 + this.params.numWorkers;
   }
 
@@ -143,7 +144,7 @@ class WasmEngine {
     );
   }
 
-  private async initWasmRun() {
+  private async initWasmRun(): Promise<void> {
     this.wasmRun = new WasmRun();
 
     const { imageWidth, imageHeight } = this.params;

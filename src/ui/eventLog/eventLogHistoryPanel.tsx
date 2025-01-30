@@ -10,7 +10,7 @@ interface EventHistoryProps {
   logs: EventLogEntry[];
   getPanelRef: () => HTMLElement; // parent panel ref
   autoScrollNewItems: boolean;
-  scrollTopTo: number | null;
+  scrollTopTo: number | undefined;
   searchTerm: string;
 }
 
@@ -61,7 +61,7 @@ function EventLogHistoryPanel(props: Readonly<EventHistoryProps>): JSX.Element {
   useLayoutEffect(() => {
     const parent = getPanelRef();
     if (parent) {
-      if (scrollTopTo !== null) {
+      if (scrollTopTo) {
         parent.scrollTop = scrollTopTo;
       } else if (autoScrollNewItems) {
         lastMsgRef?.scrollIntoView({ behavior: 'auto', block: 'end' });

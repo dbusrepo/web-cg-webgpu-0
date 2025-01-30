@@ -1,7 +1,9 @@
 // import assert from 'assert';
 // import * as preact from 'preact';
+import 'preact/debug';
+import React from 'react';
 import { type JSX } from 'preact';
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'preact/hooks';
 import {
   EventLogHistoryPanel,
   type EventLogEntry,
@@ -19,14 +21,14 @@ interface EventLogPanelProps {
 }
 
 const MIN_LENGTH_SEARCH = 0;
-const condApplyFilter = (search: string) =>
+const condApplyFilter = (search: string): boolean =>
   (search || '').length > MIN_LENGTH_SEARCH;
 
 const searchFilter = (
   history: EventLogEntry[],
   searchTerm: string,
 ): EventLogEntry[] => {
-  const match = (str: string, query: string) =>
+  const match = (str: string, query: string): boolean =>
     str.toLowerCase().includes(query.toLowerCase());
   const res = history.filter(
     (el) => match(el.event, searchTerm) || match(el.message, searchTerm),
@@ -34,10 +36,10 @@ const searchFilter = (
   return res;
 };
 
-function EventLogPanel(props: EventLogPanelProps): JSX.Element {
+function EventLogPanel(props: Readonly<EventLogPanelProps>): JSX.Element {
   const {
     history,
-    parentContainer,
+    // parentContainer,
     scrollToBottom,
     fontSize,
     lineHeight,
@@ -45,7 +47,9 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
     prompt,
   } = props;
   const [autoScrollNewItems, setAutoScrollNewItems] = useState(true);
-  const [forceScrollTo, setForceScrollTo] = useState(null as number | null);
+  const [forceScrollTo, setForceScrollTo] = useState(
+    undefined as number | undefined,
+  );
   const [isGrabbing, setIsGrabbing] = useState(false);
   const [grabPos, setGrabPos] = useState({ top: 0, y: 0 });
   const [input, setInput] = useState(prompt);
@@ -56,7 +60,7 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
 
   // console.log('search:', input.substring(prompt.length));
 
-  const onWheel = (e: JSX.TargetedWheelEvent<HTMLDivElement>) => {
+  const onWheel = (e: JSX.TargetedWheelEvent<HTMLDivElement>): void => {
     // if the user is scrolling up with the mouse wheel disable auto scroll to
     // the last item
     if (e.deltaY < 0) {
@@ -64,13 +68,13 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
     }
   };
 
-  const isElBottomVisible = (el: HTMLElement) =>
+  const isElBottomVisible = (el: HTMLElement): boolean =>
     el.scrollTop >= el.scrollHeight - el.clientHeight;
 
-  const onScroll = (e: React.ChangeEvent<HTMLDivElement>) => {
+  const onScroll = (e: React.ChangeEvent<HTMLDivElement>): void => {
     if (scrollToBottom) {
       // we are scrolling, reset scrollToBottom
-      setForceScrollTo(null);
+      setForceScrollTo(undefined);
       updateRender({ ...props, scrollToBottom: false });
     }
     if (e && e.target) {
@@ -92,7 +96,7 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
   useEffect(() => {
     const el = listContRef;
 
-    const mouseDownHandler = function mouseDownHandler(e: MouseEvent) {
+    const mouseDownHandler = (e: MouseEvent): void => {
       // console.log('mouseDownHandler');
 
       // Change the cursor and prevent user from selecting the text
@@ -113,7 +117,7 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
       // el.addEventListener('mouseup', mouseUpHandler);
     };
 
-    const mouseMoveHandler = function mouseMoveHandler(e: MouseEvent) {
+    const mouseMoveHandler = (e: MouseEvent): void => {
       // console.log('mouseMoveHandler');
       // const dy = e.clientY - pos.y;
       setGrabPos((pos) => ({
@@ -126,7 +130,7 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
       // setForceScrollTo(0);
     };
 
-    const mouseUpHandler = function mouseUpHandler() {
+    const mouseUpHandler = (): void => {
       // console.log('mouseUpHandler');
       el.removeEventListener('mousemove', mouseMoveHandler);
       el.removeEventListener('mouseup', mouseUpHandler);
@@ -141,7 +145,7 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
 
     // console.log('add listener');
 
-    const releaseHandlers = () => {
+    const releaseHandlers = (): void => {
       // console.log('remove handlers');
       el.removeEventListener('mousedown', mouseDownHandler);
       el.removeEventListener('mousemove', mouseMoveHandler);
@@ -161,11 +165,11 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
     } else {
       if (scrollToBottom) {
         // fast scroll to last...
-        setForceScrollTo((el.scrollHeight - el.clientHeight) as any);
+        setForceScrollTo(el.scrollHeight - el.clientHeight);
         // set also auto scroll to new items...
         setAutoScrollNewItems(true);
       } else {
-        setForceScrollTo(null);
+        setForceScrollTo(undefined);
       }
       el.addEventListener('mousedown', mouseDownHandler);
       // return () => el.removeEventListener('mousedown', mouseDownHandler);
@@ -176,12 +180,12 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
     return releaseHandlers;
   });
 
-  const isCursorOnPrompt = (pos: number | null) =>
-    pos === 0 || (pos && pos <= prompt.length);
+  const isCursorOnPrompt = (pos: number | null): boolean =>
+    pos !== null && pos <= prompt.length;
 
   const onInputKeyDown = (
     event: JSX.TargetedKeyboardEvent<HTMLInputElement>,
-  ) => {
+  ): void => {
     // see note here about the use of preventDefault in onKeydown
     // vs onKeyChange with a react input element
     // stackoverflow.com/q/57807522 // TODO
@@ -202,22 +206,12 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
         event.preventDefault();
         break;
       }
-      case 'ArrowLeft': {
-        // block cursor when moving left in the prompt prefix
-        {
-          const inputEl = event.target as HTMLInputElement;
-          // inputEl.focus();
-          const { selectionStart } = inputEl;
-          if (isCursorOnPrompt(selectionStart)) {
-            event.preventDefault();
-          }
-        }
-        break;
-      }
-      // avoid backspace when just after the prompt the user press bs
+      // block cursor when moving left in the prompt prefix
+      case 'ArrowLeft':
       case 'Backspace': {
         {
           const inputEl = event.target as HTMLInputElement;
+          // inputEl.focus();
           const { selectionStart } = inputEl;
           if (isCursorOnPrompt(selectionStart)) {
             event.preventDefault();
@@ -262,7 +256,7 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
     }
   };
 
-  const onInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const onInputChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const inValue = (event.target as HTMLInputElement).value;
     const line = prompt + inValue.slice(prompt.length);
     inputRef.value = line;
@@ -272,7 +266,7 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
     }
   };
 
-  const onInputClick = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const onInputClick = (event: React.ChangeEvent<HTMLInputElement>): void => {
     // if the user clicks on prompt string reset cursor pos...
     event.preventDefault();
     const inputEl = event.target as HTMLInputElement;
@@ -283,7 +277,10 @@ function EventLogPanel(props: EventLogPanelProps): JSX.Element {
     }
   };
 
-  const onInputKeyUp = (event: JSX.TargetedKeyboardEvent<HTMLInputElement>) => {
+  const onInputKeyUp = (
+    event: JSX.TargetedKeyboardEvent<HTMLInputElement>,
+  ): void => {
+    // eslint-disable-next-line sonarjs/no-small-switch
     switch (event.key) {
       case 'Control': {
         setCtrlDown(false);
@@ -350,7 +347,10 @@ const LABEL_HEIGHT_PERC = 100;
 const INPUT_PADDING_TOP = 2;
 const INPUT_PADDING_BOTTOM = 2;
 
-const buildLabelStyle = (lineHeight: string, fontSize: string) => {
+const buildLabelStyle = (
+  lineHeight: string,
+  fontSize: string,
+): React.CSSProperties => {
   const labelStyle = {
     height: `${LABEL_HEIGHT_PERC}%`,
     fontSize,
@@ -360,29 +360,32 @@ const buildLabelStyle = (lineHeight: string, fontSize: string) => {
   return labelStyle;
 };
 
-const buildHistoryStyle = (
-  parentContainer: HTMLDivElement,
-  lineHeight: number,
-) => {
-  const labelHeight = (LABEL_HEIGHT_PERC / 100) * parentContainer.clientHeight;
+// const buildHistoryStyle = (
+//   parentContainer: HTMLDivElement,
+//   lineHeight: number,
+// ): CSSProperties => {
+//   const labelHeight = (LABEL_HEIGHT_PERC / 100) * parentContainer.clientHeight;
+//
+//   // calc the height of the log list part inside the event panel (it is above
+//   // the input el)
+//
+//   const inputVertPadding = INPUT_PADDING_TOP + INPUT_PADDING_BOTTOM;
+//   const inputHeightToPanel = (lineHeight + inputVertPadding) / labelHeight;
+//   const histHeightPerc = 100 * (1 - inputHeightToPanel);
+//   // const listHeightStyle = `${Math.round(listHeight
+//
+//   const historyStyle = {
+//     height: `${Math.round(histHeightPerc)}%`,
+//     // height: `${histHeightPerc}%`,
+//   };
+//
+//   return historyStyle;
+// };
 
-  // calc the height of the log list part inside the event panel (it is above
-  // the input el)
-
-  const inputVertPadding = INPUT_PADDING_TOP + INPUT_PADDING_BOTTOM;
-  const inputHeightToPanel = (lineHeight + inputVertPadding) / labelHeight;
-  const histHeightPerc = 100 * (1 - inputHeightToPanel);
-  // const listHeightStyle = `${Math.round(listHeight
-
-  const historyStyle = {
-    height: `${Math.round(histHeightPerc)}%`,
-    // height: `${histHeightPerc}%`,
-  };
-
-  return historyStyle;
-};
-
-const buildInputStyle = (lineHeight: string, fontSize: string) => {
+const buildInputStyle = (
+  lineHeight: string,
+  fontSize: string,
+): React.CSSProperties => {
   const inputStyle = {
     fontSize,
     lineHeight,

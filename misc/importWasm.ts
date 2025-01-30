@@ -5,7 +5,6 @@
 
 // ****** ASC/WASM IMPORT
 
-// wasmBuilder for https://github.com/ballercat/wasm-loader webpack loader
 // import adderWasm from './wasm/bin/wasm-adder.wasm';
 // Following the example here https://www.assemblyscript.org/loader.html#typescript-definitions
 // import type AdderModule from './wasm/assemblyscript/types-wasm-adder'

@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-nodejs-modules
 import assert from 'node:assert';
 import { type StatsEnum } from './stats';
 
@@ -69,7 +70,7 @@ class StatsPanel {
     this.drawGraphBackground();
 
     // alloc mem for panel values and the threshold for scaling heights
-    this.values = Array.from({ length: CSS_GRAPH_WIDTH }).fill(0);
+    this.values = Array.from<number>({ length: CSS_GRAPH_WIDTH }).fill(0);
     // normalization factor to scale value to col heights in pixels
     this.heightScaleFactor = this.cfg.graphHeight;
     // this.heightRescaleThreshold = 0;
@@ -128,7 +129,7 @@ class StatsPanel {
   //   console.log(this._heightScaleFactor, this.heightRescaleThreshold);
   // }
 
-  update(value = 0) {
+  update(value = 0): void {
     value = Math.max(value, 0);
 
     this.min = Math.min(this.min, value);

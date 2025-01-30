@@ -1,13 +1,8 @@
-const dragElement = (element: HTMLElement) => {
-  let pX: number;
-  let pY: number;
+const dragElement = (element: HTMLElement): void => {
+  // let pX: number;
+  // let pY: number;
 
-  const dragMouseUp = () => {
-    document.onmouseup = null;
-    document.onmousemove = null;
-  };
-
-  const dragMouseMove = (event: MouseEvent) => {
+  const dragMouseMove = (event: MouseEvent): void => {
     event.preventDefault();
 
     // //clientX/Y property returns the horz/vert coordinate of the mouse pointer
@@ -62,15 +57,20 @@ const dragElement = (element: HTMLElement) => {
     element.style.top = `${y}px`;
   };
 
-  const dragMouseDown = (event: MouseEvent) => {
+  const dragMouseUp = (): void => {
+    document.removeEventListener('mouseup', dragMouseUp);
+    document.removeEventListener('mousemove', dragMouseMove);
+  };
+
+  const dragMouseDown = (event: MouseEvent): void => {
     if (event.button !== 0) {
       return;
     }
 
     event.preventDefault();
 
-    pX = event.clientX;
-    pY = event.clientY;
+    // pX = event.clientX;
+    // pY = event.clientY;
 
     document.addEventListener('mouseup', dragMouseUp);
     document.addEventListener('mousemove', dragMouseMove);

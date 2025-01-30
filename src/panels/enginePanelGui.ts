@@ -17,7 +17,7 @@ class EnginePanelGui extends PanelGui {
   private fpsMonitor: MonitorBindingApi<number>;
   private maxDeque: MaxDeque;
 
-  init(panel: EnginePanel) {
+  init(panel: EnginePanel): void {
     super.init(panel);
   }
 
@@ -29,7 +29,7 @@ class EnginePanelGui extends PanelGui {
     };
   }
 
-  protected addTweakPaneOptions() {
+  protected addTweakPaneOptions(): void {
     super.addStatsOpt();
     super.addEventLogOpt();
     const bufferSize = 64;

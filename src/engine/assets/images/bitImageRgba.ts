@@ -1,6 +1,6 @@
 // import assert from 'assert';
 import { BitImage } from './bitImage';
-import { BPP_RGBA, FrameColorRGBA } from '../../frameColorRGBA';
+import { BPP_RGBA, FrameColorRGBA } from '../../frameColorRgba';
 import { isPowerOf2, nextPowerOf2 } from '../../utils';
 
 class BitImageRGBA extends BitImage {
@@ -89,5 +89,5 @@ class BitImageRGBA extends BitImage {
   }
 }
 
-export { BPP_RGBA } from '../../frameColorRGBA';
+export { BPP_RGBA } from '../../frameColorRgba';
 export { BitImageRGBA };

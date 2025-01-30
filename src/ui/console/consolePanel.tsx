@@ -1,5 +1,7 @@
 // eslint-disable-next-line import/no-nodejs-modules
 import assert from 'node:assert';
+import 'preact/debug';
+import React from 'react';
 import { Component, type JSX } from 'preact';
 import { ConsoleHistoryPanel, type ConsoleEntry } from './consoleHistoryPanel';
 
@@ -233,7 +235,7 @@ class ConsolePanel extends Component<ConsolePanelProps, ConsolePanelState> {
   // }
 
   private isCursorOnPrompt(pos: number | null): boolean {
-    return Boolean(pos && pos <= this.props.prompt.length);
+    return pos !== null && pos <= prompt.length;
   }
 
   private onInputKeyDown(

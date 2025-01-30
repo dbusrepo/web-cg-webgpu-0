@@ -5,7 +5,7 @@ abstract class BitImage {
 
   // constructor() {}
 
-  get Width() {
+  get Width(): number {
     return this.width;
   }
 
@@ -13,7 +13,7 @@ abstract class BitImage {
     this.width = w;
   }
 
-  get Height() {
+  get Height(): number {
     return this.height;
   }
 
@@ -21,7 +21,7 @@ abstract class BitImage {
     this.height = h;
   }
 
-  get Buf8() {
+  get Buf8(): Uint8Array {
     return this.buf8;
   }
 

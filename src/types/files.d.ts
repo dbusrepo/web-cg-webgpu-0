@@ -1,3 +1,4 @@
+// eslint-disable-next-line github/filenames-match-regex
 declare module '*.wasm' {
   function wasmBuilderFunc<T>(
     importsObject?: WebAssembly.Imports,
@@ -6,6 +7,7 @@ declare module '*.wasm' {
 }
 
 declare module '*.png' {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const content: any;
   export default content;
 }

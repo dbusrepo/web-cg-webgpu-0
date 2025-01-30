@@ -11,7 +11,7 @@ import {
   ABGR_GREEN_SHIFT,
   ABGR_RED_SHIFT,
   // BPP_RGBA,
-} from '../frameColorRGBA';
+} from '../frameColorRgba';
 
 const MAX_LIGHT_LEVELS = 255;
 const NUM_LIGHT_LEVELS = MAX_LIGHT_LEVELS + 1;
@@ -20,7 +20,7 @@ const RED_MAX = 255;
 const GREEN_MAX = 255;
 const BLUE_MAX = 255;
 
-class FrameColorRGBAWasm extends FrameColorRGBA {
+class FrameColorRgbaWasm extends FrameColorRGBA {
   private redLightTable: Uint8Array;
   private greenLightTable: Uint8Array;
   private blueLightTable: Uint8Array;
@@ -49,27 +49,27 @@ class FrameColorRGBAWasm extends FrameColorRGBA {
     blueFogTablePtr: number,
   ) {
     super();
-    this.redLightTable = FrameColorRGBAWasm.buildLightTable(
+    this.redLightTable = FrameColorRgbaWasm.buildLightTable(
       redLightTablePtr,
       RED_MAX,
     );
-    this.greenLightTable = FrameColorRGBAWasm.buildLightTable(
+    this.greenLightTable = FrameColorRgbaWasm.buildLightTable(
       greenLightTablePtr,
       GREEN_MAX,
     );
-    this.blueLightTable = FrameColorRGBAWasm.buildLightTable(
+    this.blueLightTable = FrameColorRgbaWasm.buildLightTable(
       blueLightTablePtr,
       BLUE_MAX,
     );
-    this.redFogTable = FrameColorRGBAWasm.buildLightTable(
+    this.redFogTable = FrameColorRgbaWasm.buildLightTable(
       redFogTablePtr,
       RED_MAX,
     );
-    this.greenFogTable = FrameColorRGBAWasm.buildLightTable(
+    this.greenFogTable = FrameColorRgbaWasm.buildLightTable(
       greenFogTablePtr,
       GREEN_MAX,
     );
-    this.blueFogTable = FrameColorRGBAWasm.buildLightTable(
+    this.blueFogTable = FrameColorRgbaWasm.buildLightTable(
       blueFogTablePtr,
       BLUE_MAX,
     );
@@ -120,9 +120,9 @@ class FrameColorRGBAWasm extends FrameColorRGBA {
 
 function getFrameColorRGBAWasmView(
   wasmEngineModule: WasmEngineModule,
-): FrameColorRGBAWasm {
+): FrameColorRgbaWasm {
   const frameColorRGBAPtr = wasmEngineModule.getFrameColorRGBAPtr();
-  const frameColorRGBAWasm = new FrameColorRGBAWasm(
+  const frameColorRGBAWasm = new FrameColorRgbaWasm(
     wasmEngineModule.getRedLightTablePtr(frameColorRGBAPtr),
     wasmEngineModule.getGreenLightTablePtr(frameColorRGBAPtr),
     wasmEngineModule.getBlueLightTablePtr(frameColorRGBAPtr),
@@ -133,4 +133,4 @@ function getFrameColorRGBAWasmView(
   return frameColorRGBAWasm;
 }
 
-export { FrameColorRGBAWasm, getFrameColorRGBAWasmView };
+export { FrameColorRgbaWasm, getFrameColorRGBAWasmView };
