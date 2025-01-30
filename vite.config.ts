@@ -53,6 +53,11 @@ export default defineConfig({
     // rollupOptions: {
     // },
   },
+  define: {
+    // https://prathapreddy-mudium.medium.com/vite-react-project-uncaught-referenceerror-process-is-not-defined-at-aa624e343a88
+    // https://github.com/vitejs/vite/issues/1973
+    'process.env': process.env,
+  },
   resolve: {
     alias: {
       react: 'preact/compat',
