@@ -378,4 +378,5 @@ const buildInputStyle = (lineHeight: string, fontSize: string) => {
   return inputStyle;
 };
 
-export { EventLogPanel, EventLogPanelProps };
+export { EventLogPanel };
+export type { EventLogPanelProps };

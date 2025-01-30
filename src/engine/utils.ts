@@ -1,10 +1,10 @@
-import type { Range, TypedArray } from './ctypes';
+import type { Range } from './ctypes';
 
 // split [0..numTasks-1] between [0..numWorkers-1] workers and get the index
 // range for worker workerIdx. Workers on head get one more task if needed.
 // Returns worker tasks [start, end)
 function range(workerIdx: number, numWorkers: number, numTasks: number): Range {
-  const numTaskPerWorker = (numTasks / numWorkers) | 0;
+  const numTaskPerWorker = Math.trunc(numTasks / numWorkers);
   const numTougherThreads = numTasks % numWorkers;
   const isTougher = workerIdx < numTougherThreads;
   const start = isTougher
@@ -14,18 +14,20 @@ function range(workerIdx: number, numWorkers: number, numTasks: number): Range {
   return [start, end];
 }
 
-const arrAvg = (values: Float32Array | Float64Array, count: number) => {
+const arrAvg = (values: Float32Array | Float64Array, count: number): number => {
   let acc = 0;
   const numIter = Math.min(count, values.length);
-  if (numIter === 0) return 0;
+  if (numIter === 0) {
+    return 0;
+  }
   for (let i = 0; i < numIter; i++) {
-    acc += values[i];
+    acc += values[i]!;
   }
   return acc / numIter;
 };
 
 function sleep(sleepArr: Int32Array, idx: number, timeoutMs: number): void {
-  Atomics.wait(sleepArr, idx, 0, Math.max(1, timeoutMs | 0));
+  Atomics.wait(sleepArr, idx, 0, Math.max(1, Math.trunc(timeoutMs)));
 }
 
 function isPowerOf2(value: number): boolean {
@@ -40,12 +42,6 @@ function nextGreaterPowerOf2(value: number): number {
   return 2 ** Math.ceil(Math.log2(value + 1));
 }
 
-export {
-  arrAvg,
-  range,
-  Range,
-  sleep,
-  isPowerOf2,
-  nextPowerOf2,
-  nextGreaterPowerOf2,
-};
+export { arrAvg, range, sleep, isPowerOf2, nextPowerOf2, nextGreaterPowerOf2 };
+
+export { type Range } from './ctypes';

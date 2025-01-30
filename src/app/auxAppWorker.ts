@@ -10,7 +10,7 @@ import { WasmRun, gWasmRun } from '../engine/wasmEngine/wasmRun';
 import {
   FrameColorRGBAWasm,
   getFrameColorRGBAWasmView,
-} from '../engine/wasmEngine/frameColorRGBAWasm';
+} from '../engine/wasmEngine/frameColorRgbaWasm';
 
 const enum AuxAppWorkerCommandEnum {
   INIT = 'aux_app_worker_init',

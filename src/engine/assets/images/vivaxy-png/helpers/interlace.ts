@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @since 2019-12-31 02:27
  * @author vivaxy

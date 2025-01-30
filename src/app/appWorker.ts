@@ -31,7 +31,7 @@ import { arrAvg } from '../engine/utils';
 import {
   type FrameColorRGBAWasm,
   getFrameColorRGBAWasmView,
-} from '../engine/wasmEngine/frameColorRGBAWasm';
+} from '../engine/wasmEngine/frameColorRgbaWasm';
 
 interface AppWorkerParams {
   engineCanvas: OffscreenCanvas;

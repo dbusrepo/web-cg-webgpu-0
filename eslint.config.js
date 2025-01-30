@@ -27,7 +27,12 @@ const gitignorePath = path.resolve(__dirname, '.gitignore');
 export default [
   includeIgnoreFile(gitignorePath),
   {
-    ignores: ['eslint.config.js', 'src/engine/wasmEngine/wasm', 'src/ui/guify'],
+    ignores: [
+      'eslint.config.js',
+      'src/engine/wasmEngine/wasm',
+      'src/ui/guify',
+      'src/engine/assets/images/vivaxy-png',
+    ],
   },
   { files: ['**/*.{html,js,mjs,cjs,ts,jsx,tsx}'] },
   pluginJs.configs.recommended,

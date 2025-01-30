@@ -1,6 +1,6 @@
+// eslint-disable-next-line import/no-nodejs-modules, unicorn/prefer-node-protocol
 import assert from 'assert';
-import { BitImageRGBA, BPP_RGBA } from '../assets/images/bitImageRgba';
-import { AssetTextureRGBA } from '../assets/assetTextureRGBA';
+import { type AssetTextureRGBA } from '../assets/assetTextureRgba';
 
 // TEXTURES INDEX LAYOUT:
 
@@ -69,11 +69,10 @@ const wasmTexturesIndexFieldOffsets = {
 
 let texDescIndexSize: number; // first index level size
 
-function calcWasmTexturesIndexSize(assetTextures: AssetTextureRGBA[]) {
+function calcWasmTexturesIndexSize(assetTextures: AssetTextureRGBA[]): number {
   texDescIndexSize = assetTextures.length * TEX_DESC_SIZE;
   let size = texDescIndexSize;
-  for (let i = 0; i < assetTextures.length; ++i) {
-    const { Levels: levels } = assetTextures[i];
+  for (const { Levels: levels } of assetTextures) {
     size += levels.length * MIPMAP_DESC_SIZE;
   }
   return size;
@@ -83,8 +82,8 @@ function copyTextures2WasmMem(
   textures: AssetTextureRGBA[],
   texturesIndex: Uint8Array,
   texturesPixels: Uint8Array,
-) {
-  assert(texDescIndexSize !== undefined);
+): void {
+  assert(texDescIndexSize);
   const { length: numTextures } = textures;
   const texsIndexView = new DataView(
     texturesIndex.buffer,
@@ -94,7 +93,7 @@ function copyTextures2WasmMem(
   let curFirstMipDescOffs = texDescIndexSize; // start of second mips desc index just after first textures desc index
   let curMipTexelsOffs = 0; // start from 0, offsets to texels are relative to the start of the texels region
   for (let i = 0; i < numTextures; ++i) {
-    const texture = textures[i];
+    const texture = textures[i]!;
     const { Levels: levels } = texture;
     const numMips = levels.length;
     texsIndexView.setUint32(
@@ -114,7 +113,7 @@ function copyTextures2WasmMem(
     let curMipDescOffs = 0;
     // fill mipmaps descs index
     for (let j = 0; j < numMips; ++j) {
-      const level = levels[j];
+      const level = levels[j]!;
       const {
         Width: width,
         Height: height,
