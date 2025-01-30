@@ -62,7 +62,7 @@ export default defineConfig({
   build: {
     target: 'esnext',
     // https://github.com/vitejs/vite/discussions/9440
-    chunkSizeWarningLimit: 1600,
+    chunkSizeWarningLimit: 1600, // TODO
     // rollupOptions: {
     //   // external: ['./src/engine/wasmEngine/wasm/build/asc/engine.wasm'],
     //   external: [/^.*\.wasm$/],
