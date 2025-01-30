@@ -18,6 +18,7 @@ import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 import pluginUnusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
+import { chunkSplitPlugin } from 'vite-plugin-chunk-split';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -85,6 +86,7 @@ export default [
       brettz9,
       html,
       prettier: pluginPrettier,
+      chunkSplitPlugin: chunkSplitPlugin(),
     },
     rules: {
       'sonarjs/no-unused-vars': 'off',
