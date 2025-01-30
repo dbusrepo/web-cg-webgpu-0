@@ -1,17 +1,13 @@
 // import assert from 'assert';
-import engineWasm from './wasm/build/asc/engine.wasm';
 import type engineExport from './wasm/build/asc/engine';
+// eslint-disable-next-line import/no-unresolved
+import engineWasmInit from './wasm/build/asc/engine.wasm?init';
 import { ascImportImages } from '../../../assets/build/images';
 import { ascImportStrings } from '../../../assets/build/strings';
 import {
   wasmTexturesIndexFieldSizes,
   wasmTexturesIndexFieldOffsets,
 } from './wasmMemInitImages';
-
-// TODO
-type wasmBuilderFunc<T> = (
-  importsObject?: WebAssembly.Imports,
-) => Promise<{ instance: WebAssembly.Instance & { exports: T } }>;
 
 // ****** WASM IMPORT (wasm built from wat)
 // import clear_canvas_wasm from './wasm/build/wat/clear_canvas.wasm';
@@ -64,25 +60,10 @@ interface WasmModules {
 
 type WasmEngineModule = WasmModules['engine'];
 
-async function loadWasm<T>(
-  wasm: wasmBuilderFunc<T>,
-  wasmInput: WasmImports,
-  ...otherImports: object[]
-): Promise<T> {
-  // eslint-disable-next-line unicorn/no-array-reduce
-  const otherImpObj = otherImports.reduce(
-    (acc, obj) => ({
-      ...acc,
-      ...obj,
-    }),
-    {},
-  );
-  const instance = await wasm({
-    // for each of these obj props import their fields from asc file with the
-    // same name: importVars.ts, importImages.ts, ...
+async function loadWasmModules(wasmImports: WasmImports): Promise<WasmModules> {
+  const imports = {
     importVars: {
-      ...wasmInput,
-      ...otherImpObj,
+      ...wasmImports,
     },
     importTexturesIndexFieldSizes: {
       ...wasmTexturesIndexFieldSizes,
@@ -97,21 +78,25 @@ async function loadWasm<T>(
       ...ascImportStrings,
     },
     env: {
-      memory: wasmInput.memory,
-      abort: (/*...args: any[]*/) => {
+      memory: wasmImports.memory,
+      // abort: (..._args: any[]) => {
+      abort: (): void => {
         console.log('abort!');
       },
-      'performance.now': () => performance.now(),
+      'performance.now': (): number => performance.now(),
     },
-  });
-  return instance.instance.exports;
-}
+  };
 
-async function loadWasmModules(imports: WasmImports): Promise<WasmModules> {
-  const engine = await loadWasm<typeof engineExport>(engineWasm, imports);
-  engine.init();
+  const { exports: engineWasmExports } = (await engineWasmInit(
+    imports,
+  )) as unknown as { exports: WasmEngineModule };
+
+  if (engineWasmExports.init) {
+    engineWasmExports.init();
+  }
+
   return {
-    engine,
+    engine: engineWasmExports as WasmEngineModule,
   };
 }
 
