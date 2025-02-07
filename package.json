@@ -66,7 +66,6 @@
     "@types/pako": "^2.0.3",
     "@typescript-eslint/eslint-plugin": "^8.22.0",
     "@typescript-eslint/parser": "^8.22.0",
-    "@webgpu/types": "^0.1.53",
     "assemblyscript": "^0.27.32",
     "assemblyscript-prettier": "^3.0.1",
     "assert": "^2.1.0",
