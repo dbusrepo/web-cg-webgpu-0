@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite';
 // import react from '@vitejs/plugin-react';
 import { preact } from '@preact/preset-vite';
-import glsl from 'vite-plugin-glsl';
 // import rawPlugin from 'vite-raw-plugin';
 import wasm from 'vite-plugin-wasm';
 import topLevelAwait from 'vite-plugin-top-level-await';
@@ -20,7 +19,6 @@ export default defineConfig({
         },
       },
     }),
-    glsl(),
     wasm(),
     topLevelAwait(),
     checker({
