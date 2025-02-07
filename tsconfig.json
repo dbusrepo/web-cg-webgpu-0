@@ -57,7 +57,7 @@
       "./node_modules/@tweakpane/plugin-essentials/dist/types/"
       // "./node_modules/tweakpane/dist/types/"
     ] /* Specify multiple folders that act like `./node_modules/@types`. */,
-    // "types": ["@webgpu/types", "@tweakpane/core"],                                      /* Specify type package names to be included without being referenced in a source file. */
+    // "types": ["@tweakpane/core"],                                      /* Specify type package names to be included without being referenced in a source file. */
     "types": [] /* Specify type package names to be included without being referenced in a source file. */,
     // "allowUmdGlobalAccess": true,                     /* Allow accessing UMD globals from modules. */
     "resolveJsonModule": true /* Enable importing .json files */,
