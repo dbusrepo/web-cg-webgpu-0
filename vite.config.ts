@@ -6,6 +6,7 @@ import wasm from 'vite-plugin-wasm';
 import topLevelAwait from 'vite-plugin-top-level-await';
 import { createHtmlPlugin } from 'vite-plugin-html';
 import { checker } from 'vite-plugin-checker';
+import glsl from 'vite-plugin-glsl';
 
 export default defineConfig({
   plugins: [
@@ -19,6 +20,7 @@ export default defineConfig({
         },
       },
     }),
+    glsl(),
     wasm(),
     topLevelAwait(),
     checker({
