@@ -1,24 +1,21 @@
 import type { KeyCode } from './keyCodes';
-import { PanelId } from './appTypes';
+import { type PanelId } from './appTypes';
 
-type KeyInputEvent = {
+interface KeyInputEvent {
   code: KeyCode;
   panelId: PanelId;
-};
+}
 
-type MouseMoveEvent = {
+interface MouseMoveEvent {
   dx: number;
   dy: number;
-};
+}
 
-type CanvasDisplayResizeEvent = {
+interface CanvasDisplayResizeEvent {
   width: number;
   height: number;
-};
+}
 
-export type {
-  KeyCode,
-  KeyInputEvent,
-  MouseMoveEvent,
-  CanvasDisplayResizeEvent,
-};
+export type { KeyInputEvent, MouseMoveEvent, CanvasDisplayResizeEvent };
+
+export { type KeyCode } from './keyCodes';

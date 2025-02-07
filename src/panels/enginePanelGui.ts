@@ -1,6 +1,6 @@
-import { MonitorBindingApi } from 'tweakpane';
-import { PanelGui, PanelTweakOptions } from './panelGui';
-import { EnginePanel } from './enginePanel';
+import { type MonitorBindingApi } from 'tweakpane';
+import { PanelGui, type PanelTweakOptions } from './panelGui';
+import { type EnginePanel } from './enginePanel';
 import MaxDeque from '../ds/maxDeque';
 
 enum EnginePanelTweakOptionsKeys {
@@ -17,7 +17,7 @@ class EnginePanelGui extends PanelGui {
   private fpsMonitor: MonitorBindingApi<number>;
   private maxDeque: MaxDeque;
 
-  init(panel: EnginePanel) {
+  init(panel: EnginePanel): void {
     super.init(panel);
   }
 
@@ -29,7 +29,7 @@ class EnginePanelGui extends PanelGui {
     };
   }
 
-  protected addTweakPaneOptions() {
+  protected addTweakPaneOptions(): void {
     super.addStatsOpt();
     super.addEventLogOpt();
     const bufferSize = 64;
@@ -55,20 +55,19 @@ class EnginePanelGui extends PanelGui {
     // this.fpsMonitor.disabled = true;
   }
 
-  updateFps(fps: number) {
+  updateFps(fps: number): void {
     this.maxDeque.push(fps);
     this.tweakOptions[EnginePanelTweakOptionsKeys.FPS] = fps;
     this.fpsMonitor.label = 'FPS'; // `${fps.toFixed(0)} FPS`; // TODO: use padding
 
-    const max = this.maxDeque.max * 1.5;
+    const max = (this.maxDeque.max ?? 0) * 1.5;
 
     // https://github.com/cocopon/tweakpane/issues/371
     // recent issues about updating graph/fps monitor value:
     // https://github.com/cocopon/tweakpane/issues/360
     // https://github.com/cocopon/tweakpane/issues/582
-    // @ts-ignore
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    // @ts-expect-error props does not exist ? check TODO
     this.fpsMonitor.controller.valueController.props.valMap_.max.value_ = max;
     this.fpsMonitor.refresh();
   }

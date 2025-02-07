@@ -1,5 +1,5 @@
 import { StatsPanel } from './statsPanel';
-import { StatsEnum, StatsValues } from './stats';
+import { StatsEnum } from './stats';
 
 // TODO not used
 // const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
@@ -13,7 +13,7 @@ import { StatsEnum, StatsValues } from './stats';
 //   return Math.round(bytes*precision / Math.pow(1024, i))/precision + ' ' + sizes[i];
 // }
 
-const ONE_MB = 1048576;
+const ONE_MB = 1_048_576;
 
 class MemoryStatsPanel extends StatsPanel {
   constructor() {
@@ -26,7 +26,7 @@ class MemoryStatsPanel extends StatsPanel {
     });
   }
 
-  update(numBytes: number) {
+  update(numBytes: number): void {
     super.update(numBytes / ONE_MB);
   }
 }

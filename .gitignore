@@ -4,11 +4,30 @@ bin
 node_modules
 npm-debug.log
 .env
-.DS_Store
-.vscode
 *.wasm
 *.map
 **/wasm/src/asc/**/*.d
 **/wasm/src/asc/**/gen_*.*
 build_flags
 tsbuildinfo
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+dist-ssr
+*.local
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.eslintcache

@@ -1,17 +1,17 @@
-import { BitImageRGBA, BPP_RGBA } from './images/bitImageRGBA';
+import { BitImageRGBA, BPP_RGBA } from './images/bitImageRgba';
 
-function genNextMipLevelRGBA(curMip: BitImageRGBA) {
+function genNextMipLevelRGBA(curMip: BitImageRGBA): BitImageRGBA {
   const { Width: srcWidth, Height: srcHeight, Buf8: srcBuf8 } = curMip;
   const nextWidth = Math.max(1, srcWidth >> 1);
   const nextHeight = Math.max(1, srcHeight >> 1);
   const nextBuf8 = new Uint8Array(nextWidth * nextHeight * BPP_RGBA);
 
-  const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+  const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
 
-  const mixPixels = (a: Uint8Array, b: Uint8Array, t: number) =>
-    a.map((v, i) => lerp(v, b[i], t));
+  const mixPixels = (a: Uint8Array, b: Uint8Array, t: number): Uint8Array =>
+    a.map((v, i) => lerp(v, b[i]!, t));
 
-  const getSrcPixel = (x: number, y: number) => {
+  const getSrcPixel = (x: number, y: number): Uint8Array => {
     const offset = (x + y * srcWidth) * BPP_RGBA;
     return srcBuf8.subarray(offset, offset + BPP_RGBA);
   };
@@ -26,8 +26,8 @@ function genNextMipLevelRGBA(curMip: BitImageRGBA) {
       const au = u * srcWidth - 0.5;
       const av = v * srcHeight - 0.5;
       // src top left pixel
-      const tx = au | 0;
-      const ty = av | 0;
+      const tx = Math.trunc(au);
+      const ty = Math.trunc(av);
       // mix amounts between src pixels
       const t1 = au % 1;
       const t2 = av % 1;
@@ -53,10 +53,10 @@ function genNextMipLevelRGBA(curMip: BitImageRGBA) {
   return nextMip;
 }
 
-type AssetTextureRGBAParams = {
+interface AssetTextureRGBAParams {
   generateMipmaps: boolean;
   rotate: boolean;
-};
+}
 
 class AssetTextureRGBA {
   private levels: BitImageRGBA[];
@@ -67,12 +67,16 @@ class AssetTextureRGBA {
       this.generateMipmaps();
     }
     if (params.rotate) {
-      this.levels.forEach(AssetTextureRGBA.rotate90ccw);
+      for (const mipmap of this.levels) {
+        AssetTextureRGBA.rotate90ccw(mipmap);
+      }
     }
-    this.levels.forEach((level) => level.resizePitchToPow2());
+    for (const level of this.levels) {
+      level.resizePitchToPow2();
+    }
   }
 
-  private static rotate90ccw(mipmap: BitImageRGBA) {
+  private static rotate90ccw(mipmap: BitImageRGBA): void {
     const { Width, Height } = mipmap;
     const dstBuf = new Uint8Array(Width * Height * BPP_RGBA);
     for (let y = 0; y < Height; ++y) {
@@ -95,8 +99,11 @@ class AssetTextureRGBA {
     return this.levels;
   }
 
-  private generateMipmaps() {
+  private generateMipmaps(): void {
     let mip = this.levels[0];
+    if (!mip) {
+      throw new Error('No base level to generate mipmaps from');
+    }
     while (mip.Width > 1 || mip.Height > 1) {
       mip = genNextMipLevelRGBA(mip);
       this.levels.push(mip);
@@ -104,4 +111,5 @@ class AssetTextureRGBA {
   }
 }
 
-export { AssetTextureRGBA, AssetTextureRGBAParams };
+export { AssetTextureRGBA };
+export type { AssetTextureRGBAParams };

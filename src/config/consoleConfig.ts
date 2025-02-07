@@ -1,4 +1,4 @@
-import { OnConsoleEventHandler } from '../ui/console/console';
+import { type OnConsoleEventHandler } from '../ui/console/console';
 
 const consoleConfig = {
   // hotkey: 192, // KeyCode for '~' 192, esc 27
@@ -29,4 +29,5 @@ type ConsoleConfig = typeof consoleConfig & {
   lineHeight: number;
 };
 
-export { ConsoleConfig, consoleConfig };
+export { consoleConfig };
+export type { ConsoleConfig };

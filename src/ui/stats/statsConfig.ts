@@ -4,4 +4,5 @@ const statsConfig = {
 
 type StatsConfig = typeof statsConfig;
 
-export { StatsConfig, statsConfig };
+export { statsConfig };
+export type { StatsConfig };

@@ -1,6 +1,6 @@
 // import { Panel } from './panel';
-import { PanelGui, PanelTweakOptions } from './panelGui';
-import { ViewPanel } from './viewPanel';
+import { PanelGui, type PanelTweakOptions } from './panelGui';
+import { type ViewPanel } from './viewPanel';
 
 enum ViewPanelTweakOptionsKeys {
   VP_OPT = 'VP_OPT',
@@ -14,7 +14,7 @@ class ViewPanelGui extends PanelGui {
   protected panel: ViewPanel;
   protected tweakOptions: ViewPanelTweakOptions;
 
-  init(panel: ViewPanel) {
+  init(panel: ViewPanel): void {
     super.init(panel);
   }
 
@@ -22,7 +22,7 @@ class ViewPanelGui extends PanelGui {
   //   super.initTweakPaneOptionsObj();
   // }
 
-  protected addTweakPaneOptions() {
+  protected addTweakPaneOptions(): void {
     super.addStatsOpt();
     super.addEventLogOpt();
   }

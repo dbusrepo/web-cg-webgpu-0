@@ -1,20 +1,17 @@
+// eslint-disable-next-line import/no-nodejs-modules, unicorn/prefer-node-protocol
 import assert from 'assert';
 import screenfull from 'screenfull';
 import {
   StartViewMode,
-  PanelConfig,
-  EventLogConfig,
-  ConsoleConfig,
+  type PanelConfig,
+  type EventLogConfig,
+  type ConsoleConfig,
 } from '../config/mainConfig';
-import { Console, ConsoleHandlersObjInit } from '../ui/console/console';
-import { PanelGui } from './panelGui';
+import { Console, type ConsoleHandlersObjInit } from '../ui/console/console';
+import { type PanelGui } from './panelGui';
 import { EventLog } from '../ui/eventLog/eventLog';
-import { Stats } from '../ui/stats/stats';
-
-// TODO move?
-const resetClassName = (node: HTMLElement) => {
-  node.className = ''; // empty the list
-};
+import { type Stats } from '../ui/stats/stats';
+import { type PanelId } from '../app/appTypes';
 
 // fullscreen api can only be initiated by a user gesture
 const enum ViewMode {
@@ -35,7 +32,7 @@ abstract class Panel {
   private panelDiv: HTMLDivElement;
 
   private panelContainerWinFull: HTMLDivElement;
-  // eslint-disable-next-line max-len
+
   private panelContainerWinFullHeight: number; // cached to avoid fs -> fw errors
 
   private canvasContainer: HTMLDivElement;
@@ -74,7 +71,7 @@ abstract class Panel {
     this.parentNode = parentNode;
   }
 
-  init(panelConfig: PanelConfig, stats: Stats) {
+  init(panelConfig: PanelConfig, stats: Stats): void {
     this.cfg = structuredClone(panelConfig);
     this.stats = stats;
     this.initPanel();
@@ -90,17 +87,17 @@ abstract class Panel {
     this.panelContainer.classList.add('panel-container');
     this.panelContainerWinFull = document.createElement('div');
     this.panelContainerWinFull.classList.add('panel-container-win-full');
-    this.board.appendChild(this.panelContainerWinFull); // TODO in init
+    this.board.append(this.panelContainerWinFull); // TODO in init
     this.panelContainerWinFullHeight = this.panelContainerWinFull.offsetHeight;
     this.panelDiv = document.createElement('div');
     this.panelDiv.tabIndex = -1; // TODO call this before focus() !
     // this._panelContainer.appendChild(this._panel); // done before run
-    this.parentNode.appendChild(this.panelContainer);
+    this.parentNode.append(this.panelContainer);
     this.addListeners();
   }
 
   private setPanelWinStyle(): void {
-    resetClassName(this.panelDiv);
+    Panel.resetClassName(this.panelDiv);
     this.panelDiv.classList.add('panel', 'panel-win');
     this.panelContainer.style.marginTop = '0';
     this.panelDiv.style.marginTop = '0';
@@ -117,7 +114,7 @@ abstract class Panel {
       this.isFullScreen ||
         this.panelDiv.parentNode === this.panelContainerWinFull,
     );
-    resetClassName(this.panelDiv);
+    Panel.resetClassName(this.panelDiv);
     this.panelDiv.classList.add('panel', 'panel-full');
     const menuBarHeight = 25; // see guify guify theme.js
     this.panelDiv.style.marginTop = `${menuBarHeight}px`;
@@ -212,7 +209,7 @@ abstract class Panel {
     // if in full win go to win mode first and then to fullscreen
     if (this.viewMode === ViewMode.FULL_WIN) {
       this.setFullWin(false);
-      // eslint-disable-next-line max-len
+
       // to have preViewMode set to fullwin with setViewMode(ViewMode.FULL_SCREEN)
       this.viewMode = ViewMode.FULL_WIN;
     }
@@ -221,7 +218,7 @@ abstract class Panel {
     this.setFullStyle();
   }
 
-  private resetModeAfterFullScreen() {
+  private resetModeAfterFullScreen(): void {
     assert(
       this.viewMode === ViewMode.FULL_SCREEN &&
         (this.preViewMode === ViewMode.WIN ||
@@ -236,14 +233,14 @@ abstract class Panel {
 
   private addListeners(): void {
     this.initKeyHandlers();
-    const onPanelFocus = (event: FocusEvent) => {
+    const onPanelFocus = (/*event: FocusEvent*/): void => {
       this.canvasContainer.focus();
     };
     this.panelDiv.addEventListener('focus', onPanelFocus);
   }
 
   protected initKeyHandlers(): void {
-    const onPanelKeyDown = (e: KeyboardEvent) => {
+    const onPanelKeyDown = (/*e: KeyboardEvent*/): void => {
       // switch (e.key) {
       //   case Panel.FULL_WIN_KEY:
       //     // this.toggleFullWin(); // disable for now TODO
@@ -282,19 +279,19 @@ abstract class Panel {
     // other init elements could change canvas props (event log?) so we start
     // hidden
     // this._panelContainer.appendChild(this._canvas);
-    this.canvasContainer.appendChild(this.canvas);
+    this.canvasContainer.append(this.canvas);
     this.canvasContainer.tabIndex = -1; // make it focusable
-    this.panelDiv.appendChild(this.canvasContainer);
+    this.panelDiv.append(this.canvasContainer);
   }
 
   private setCanvasWinStyle(): void {
-    resetClassName(this.canvas);
+    Panel.resetClassName(this.canvas);
     this.canvas.classList.add('canvas', 'canvas-win');
     const displayWidthPx = `${this.cfg.canvasDisplayWidthWinMode}px`;
     const displayHeightPx = `${this.cfg.canvasDisplayHeightWinMode}px`;
     this.canvasContainer.style.width = displayWidthPx;
     this.canvasContainer.style.height = displayHeightPx;
-    resetClassName(this.canvasContainer);
+    Panel.resetClassName(this.canvasContainer);
     this.canvasContainer.classList.add(
       'canvas-container',
       'canvas-container-win',
@@ -304,12 +301,12 @@ abstract class Panel {
   private setCanvasFullStyle(): void {
     assert(!this.isWinMode);
     // update canvas
-    resetClassName(this.canvas);
+    Panel.resetClassName(this.canvas);
     this.canvas.classList.add('canvas', 'canvas-full');
     this.canvasContainer.style.width = '100%';
     this.canvasContainer.style.height = '100%';
     // update canvas container
-    resetClassName(this.canvasContainer);
+    Panel.resetClassName(this.canvasContainer);
     this.canvasContainer.classList.add(
       'canvas-container',
       'canvas-container-full',
@@ -326,14 +323,9 @@ abstract class Panel {
     this.eventLogBottomPanel = document.createElement('div');
     this.moveOutEventLogBottomPanel();
     this.moveOutEventLogMainPanel();
-    let eventContainer;
-    if (this.isEventLogBelowCanvas) {
-      // this.showEventLogOnBottomPanel(true);
-      eventContainer = this.eventLogBottomPanel;
-    } else {
-      // this.showEventLogOnMainPanel(true);
-      eventContainer = this.eventLogMainPanel;
-    }
+    const eventContainer = this.isEventLogBelowCanvas
+      ? this.eventLogBottomPanel
+      : this.eventLogMainPanel;
     const eventLogConfig: EventLogConfig = {
       ...this.cfg.eventLogConfig,
       fontSize: this.cfg.eventLogConfig.fontSize,
@@ -358,7 +350,7 @@ abstract class Panel {
         this.onConsoleClosing();
       },
       onOpened: () => {
-        this.onConsoleOpened();
+        // this.onConsoleOpened();
       },
       onClosed: () => {
         this.onConsoleHidden();
@@ -381,10 +373,10 @@ abstract class Panel {
 
   // TODO refactor ?
   protected buildConsoleHandlers(): ConsoleHandlersObjInit {
-    const clear = () => {
+    const clear = (): undefined => {
       this.console.clear();
     };
-    const defaultHandler = () => 'Unrecognized command';
+    const defaultHandler = (): string => 'Unrecognized command';
     defaultHandler.isDefault = true;
     return {
       // showMenu,
@@ -405,7 +397,7 @@ abstract class Panel {
     }
   }
 
-  protected onConsoleOpened(): void {}
+  // protected onConsoleOpened(): void {}
 
   protected onConsoleClosing(): void {
     // if (this.menuGui) {
@@ -469,8 +461,8 @@ abstract class Panel {
   }
 
   private appendPanelTo(element: HTMLDivElement): void {
-    this.panelDiv.parentNode?.removeChild(this.panelDiv);
-    element.appendChild(this.panelDiv);
+    this.panelDiv.remove();
+    element.append(this.panelDiv);
   }
 
   protected toWinStyle(): void {
@@ -510,7 +502,8 @@ abstract class Panel {
   }
 
   private isInit(): boolean {
-    return this.preViewMode === undefined;
+    // eslint-disable-next-line eqeqeq
+    return this.preViewMode == undefined;
   }
 
   protected resetGui(): void {
@@ -533,7 +526,7 @@ abstract class Panel {
   private updateStatsParent(parent: HTMLDivElement): void {
     if (
       this.isInit() &&
-      Panel.getPanelList().filter((p) => p !== this && p.isFullWin).length
+      Panel.getPanelList().some((p) => p !== this && p.isFullWin)
     ) {
       // if a prev panel while init was in fullWin mode, don't update stats parent
       // to avoid setting an incorrect parent node
@@ -555,7 +548,7 @@ abstract class Panel {
   private setEventLogBottomPanelWinStyle(): void {
     assert(this.eventLogBottomPanel);
     // assert(this.eventLog);
-    resetClassName(this.eventLogBottomPanel);
+    Panel.resetClassName(this.eventLogBottomPanel);
     this.eventLogBottomPanel.classList.add(
       'event-log-bottom-panel',
       'event-log-bottom-panel-win',
@@ -570,7 +563,7 @@ abstract class Panel {
   private setEventLogBottomPanelFullStyle(): void {
     assert(this.eventLogBottomPanel);
     // assert(this.eventLog);
-    resetClassName(this.eventLogBottomPanel);
+    Panel.resetClassName(this.eventLogBottomPanel);
     this.eventLogBottomPanel.classList.add(
       'event-log-bottom-panel',
       'event-log-bottom-panel-full',
@@ -584,18 +577,18 @@ abstract class Panel {
 
   private moveEventLogBottomPanelInsidePanel(): void {
     assert(this.eventLogBottomPanel);
-    this.eventLogBottomPanel.parentNode?.removeChild(this.eventLogBottomPanel);
+    this.eventLogBottomPanel.remove();
     // pushed as last el
-    this.panelDiv.appendChild(this.eventLogBottomPanel);
+    this.panelDiv.append(this.eventLogBottomPanel);
   }
 
   private moveEventLogBottomPanelOutOfPanel(): void {
     const eventLogBottomPanel = this.eventLogBottomPanel!;
-    eventLogBottomPanel.parentNode?.removeChild(eventLogBottomPanel);
+    eventLogBottomPanel.remove();
     // we move the log below the panel to keep the same height with main
     // container and the canvas otherwise without the event panel below the
     // canvas would be recentered...
-    this.panelContainer.appendChild(eventLogBottomPanel);
+    this.panelContainer.append(eventLogBottomPanel);
   }
 
   private moveOutEventLogBottomPanel(): void {
@@ -615,7 +608,7 @@ abstract class Panel {
     // this._eventLogMainPanel.style.visibility = 'hidden';
     this.eventLogMainPanel.style.visibility = 'hidden';
     this.canvas.style.visibility = 'visible'; // display block/none ?
-    this.eventLogMainPanel.parentNode?.removeChild(this.eventLogMainPanel);
+    this.eventLogMainPanel.remove();
   }
 
   private moveInEventLogBottomPanel(): void {
@@ -640,7 +633,7 @@ abstract class Panel {
     assert(this.isEventLogVisible);
     this.canvas.style.visibility = 'hidden';
     this.eventLogMainPanel.style.visibility = 'visible';
-    this.canvasContainer.appendChild(this.eventLogMainPanel);
+    this.canvasContainer.append(this.eventLogMainPanel);
     this.eventLog.setContainer(this.eventLogMainPanel);
     this.eventLogCheckInv();
   }
@@ -684,11 +677,11 @@ abstract class Panel {
   }
 
   toggleFullWin(): void {
-    if (!this.isFullScreen) {
-      this.setFullWin(!this.isFullWin);
-    } else {
+    if (this.isFullScreen) {
       this.preViewMode = ViewMode.FULL_WIN;
       this.setFullScreen(false);
+    } else {
+      this.setFullWin(!this.isFullWin);
     }
   }
 
@@ -764,13 +757,13 @@ abstract class Panel {
     return this.isConsoleOpen;
   }
 
-  showInit(): void {
+  public showInit(): void {
     this.initWinMode();
     this.initFullWinMode();
     this.initFocus();
   }
 
-  protected destroy() {}
+  // protected destroy(): void {}
 
   get isWinMode(): boolean {
     return this.viewMode === ViewMode.WIN;
@@ -883,9 +876,13 @@ abstract class Panel {
     return this.CanvasContainer;
   }
 
-  get Id() {
+  get Id(): PanelId {
     return this.cfg.id;
   }
+
+  private static resetClassName = (node: HTMLElement): void => {
+    node.className = ''; // empty the list
+  };
 }
 
 export { Panel, ViewMode };

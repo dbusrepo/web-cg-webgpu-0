@@ -1,14 +1,18 @@
+// eslint-disable-next-line import/no-nodejs-modules, unicorn/prefer-node-protocol
 import assert from 'assert';
 // import * as utils from './../utils';
 // import { sleep } from '../utils';
 import type { WasmMemParams, WasmMemRegionsData } from './wasmMemUtils';
 import type { WasmModules } from './wasmLoader';
-import * as wasmUtils from './wasmMemUtils';
-import * as wasmImages from './wasmMemInitImages';
-import * as wasmStrings from './wasmMemInitStrings';
-import * as wasmFontChars from './wasmMemInitFontChars';
-import { AssetManager } from '../assets/assetManager';
-import { BPP_RGBA } from '../assets/images/bitImageRGBA';
+import { MemRegionsEnum, getMemRegionsSizesAndOffsets } from './wasmMemUtils';
+import {
+  calcWasmTexturesIndexSize,
+  copyTextures2WasmMem,
+} from './wasmMemInitImages';
+import { copyStrings2WasmMem } from './wasmMemInitStrings';
+import { copyFontChars2WasmMem } from './wasmMemInitFontChars';
+import { type AssetManager } from '../assets/assetManager';
+import { BPP_RGBA } from '../assets/images/bitImageRgba';
 import type { WasmRunParams } from './wasmRun';
 import { WasmRun } from './wasmRun';
 import type { WasmViews } from './wasmViews';
@@ -23,12 +27,12 @@ import {
   PAGE_SIZE_BYTES,
 } from '../../common';
 
-type WasmEngineParams = {
+interface WasmEngineParams {
   imageWidth: number;
   imageHeight: number;
   assetManager: AssetManager;
   numWorkers: number;
-};
+}
 
 class WasmEngine {
   private params: WasmEngineParams;
@@ -40,7 +44,7 @@ class WasmEngine {
   private wasmRun: WasmRun;
   private wasmModules: WasmModules;
 
-  public async init(params: WasmEngineParams) {
+  public async init(params: WasmEngineParams): Promise<void> {
     this.params = params;
     await this.initWasm();
   }
@@ -58,9 +62,8 @@ class WasmEngine {
   }
 
   private allocWasmMem(): void {
-    const startSize = this.wasmRegionsSizes[wasmUtils.MemRegionsEnum.START_MEM];
-    const startOffset =
-      this.wasmRegionsOffsets[wasmUtils.MemRegionsEnum.START_MEM];
+    const startSize = this.wasmRegionsSizes[MemRegionsEnum.START_MEM];
+    const startOffset = this.wasmRegionsOffsets[MemRegionsEnum.START_MEM];
     const wasmMemStartTotalSize = startOffset + startSize;
     const { wasmMemStartPages: initial, wasmMemMaxPages: maximum } = mainConfig;
     assert(initial * PAGE_SIZE_BYTES >= wasmMemStartTotalSize);
@@ -78,7 +81,7 @@ class WasmEngine {
     console.log(`wasm mem config start pages: ${initial}`);
   }
 
-  private get NumTotalWorkers() {
+  private get NumTotalWorkers(): number {
     return 1 + this.params.numWorkers;
   }
 
@@ -101,7 +104,7 @@ class WasmEngine {
       fontCharsSize: fontChars.length * FONT_Y_SIZE,
       stringsSize: stringsArrayData.length,
       texturesPixelsSize: this.params.assetManager.PixelsDataSize,
-      texturesIndexSize: wasmImages.calcWasmTexturesIndexSize(
+      texturesIndexSize: calcWasmTexturesIndexSize(
         this.params.assetManager.Textures,
       ),
       // TODO use 64bit/8 byte counter for mem counters? see wasm workerHeapManager
@@ -109,42 +112,39 @@ class WasmEngine {
       hrTimerSize: BigUint64Array.BYTES_PER_ELEMENT,
     };
 
-    const [sizes, offsets] =
-      wasmUtils.getMemRegionsSizesAndOffsets(wasmMemParams);
+    const [sizes, offsets] = getMemRegionsSizesAndOffsets(wasmMemParams);
     this.wasmRegionsSizes = sizes;
     this.wasmRegionsOffsets = offsets;
 
     console.log(
-      'wasm mem regions sizes: ',
+      'wasm mem regions sizes:',
       JSON.stringify(this.wasmRegionsSizes),
     );
     console.log(
-      'wasm mem regions offsets: ',
+      'wasm mem regions offsets:',
       JSON.stringify(this.wasmRegionsOffsets),
     );
     console.log(
       `wasm mem start offset: ${
-        this.wasmRegionsOffsets[wasmUtils.MemRegionsEnum.START_MEM]
+        this.wasmRegionsOffsets[MemRegionsEnum.START_MEM]
       }`,
     );
     console.log(
-      `wasm mem start size: ${
-        this.wasmRegionsSizes[wasmUtils.MemRegionsEnum.START_MEM]
-      }`,
+      `wasm mem start size: ${this.wasmRegionsSizes[MemRegionsEnum.START_MEM]}`,
     );
   }
 
   private initWasmAssets(): void {
-    wasmFontChars.copyFontChars2WasmMem(this.wasmViews.fontChars);
-    wasmStrings.copyStrings2WasmMem(this.wasmViews.strings);
-    wasmImages.copyTextures2WasmMem(
+    copyFontChars2WasmMem(this.wasmViews.fontChars);
+    copyStrings2WasmMem(this.wasmViews.strings);
+    copyTextures2WasmMem(
       this.params.assetManager.Textures,
       this.wasmViews.texturesIndex,
       this.wasmViews.texels,
     );
   }
 
-  private async initWasmRun() {
+  private async initWasmRun(): Promise<void> {
     this.wasmRun = new WasmRun();
 
     const { imageWidth, imageHeight } = this.params;

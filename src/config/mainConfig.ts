@@ -1,11 +1,11 @@
-import { StartViewMode, panelConfig } from './panelConfig';
+import { panelConfig } from './panelConfig';
 import { enginePanelConfig } from './enginePanelConfig';
 import { viewPanelConfig } from './viewPanelConfig';
 import {
   startOffset,
   initialMemoryPages,
   maximumMemoryPages,
-  memoryBase,
+  // memoryBase,
 } from '../engine/wasmEngine/wasm/wasmConfig.mjs';
 
 const mainConfig = {
@@ -32,8 +32,10 @@ const mainConfig = {
 
 type Config = typeof mainConfig;
 
-export { Config, StartViewMode, mainConfig };
+export { mainConfig };
+export { StartViewMode } from './panelConfig';
 
+export type { Config };
 export type { PanelConfig } from './panelConfig';
 export type { EnginePanelConfig } from './enginePanelConfig';
 export type { ViewPanelConfig } from './viewPanelConfig';

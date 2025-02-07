@@ -1,4 +1,4 @@
-import { PanelConfig, panelConfig } from './panelConfig';
+import { type PanelConfig, panelConfig } from './panelConfig';
 
 const enginePanelProps = {
   title: '3D Panel',

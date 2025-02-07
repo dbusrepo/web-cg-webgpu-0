@@ -1,6 +1,6 @@
 // import assert from 'assert';
 
-type WasmMemParams = {
+interface WasmMemParams {
   // frameBufferPalSize: number;
   // paletteSize: number;
   startOffset: number;
@@ -17,7 +17,7 @@ type WasmMemParams = {
   stringsSize: number;
   workersMemCountersSize: number;
   hrTimerSize: number;
-};
+}
 
 // all regions have bounds except for the last part, the shared heap that can grow
 // enum for mem regions keys used to index their sizes/offsets
@@ -41,6 +41,7 @@ const enum MemRegionsEnum {
 
 type MemRegionKeyType = keyof typeof MemRegionsEnum;
 
+// eslint-disable-next-line @typescript-eslint/consistent-indexed-object-style
 type WasmMemRegionsData = {
   -readonly [key in MemRegionKeyType]: number;
 };

@@ -1,35 +1,32 @@
-import { h, JSX } from 'preact';
-import React, { useEffect, useLayoutEffect } from 'react';
+import { type JSX } from 'preact';
+import { useLayoutEffect } from 'preact/hooks';
 
-type Event = string;
-
-type EventLogEntry = {
-  event: Event;
+interface EventLogEntry {
+  event: string;
   message: string;
-};
+}
 
-type EventHistoryProps = {
+interface EventHistoryProps {
   logs: EventLogEntry[];
   getPanelRef: () => HTMLElement; // parent panel ref
   autoScrollNewItems: boolean;
-  scrollTopTo: number | null;
+  scrollTopTo: number | undefined;
   searchTerm: string;
-};
+}
 
-function EventLogHistoryPanel(props: EventHistoryProps): JSX.Element {
+function EventLogHistoryPanel(props: Readonly<EventHistoryProps>): JSX.Element {
   const { logs, getPanelRef, autoScrollNewItems, scrollTopTo, searchTerm } =
     props;
   const els: JSX.Element[] = [];
 
-  let lastMsgRef: HTMLElement | null = null;
-  let listRef: HTMLElement;
+  let lastMsgRef: HTMLElement | null;
+  let _listRef: HTMLElement | null;
 
   const re = new RegExp(`(${searchTerm})`, 'ig');
 
-  const genBody = (str: string) =>
-    !searchTerm
+  const genBody = (str: string): Array<string | JSX.Element> =>
+    searchTerm
       ? str
-      : str
           .split(re)
           .map((item) =>
             item.toLowerCase() === searchTerm.toLowerCase() ? (
@@ -37,28 +34,34 @@ function EventLogHistoryPanel(props: EventHistoryProps): JSX.Element {
             ) : (
               item
             ),
-          );
+          )
+      : [str];
 
-  logs.forEach((log, idx) => {
+  for (const [idx, log] of logs.entries()) {
     if (log.event) {
       els.push(<dt className="event-log-msg">{genBody(log.event)}</dt>);
     }
     if (log.message) {
-      els.push(
-        <dd
-          ref={idx === logs.length - 1 ? (e) => (lastMsgRef = e!) : undefined}
-          className="event-log-msg"
-        >
-          {genBody(log.message)}
-        </dd>,
-      );
+      const ddProps = {
+        className: 'event-log-msg',
+        // ref: idx === logs.length - 1 ? (e) => (lastMsgRef = e!) : undefined,
+        ...(idx === logs.length - 1
+          ? {
+              ref: (e: HTMLElement | null): void => {
+                lastMsgRef = e!;
+              },
+            }
+          : {}),
+      };
+
+      els.push(<dd {...ddProps}>{genBody(log.message)}</dd>);
     }
-  });
+  }
 
   useLayoutEffect(() => {
     const parent = getPanelRef();
     if (parent) {
-      if (scrollTopTo !== null) {
+      if (scrollTopTo) {
         parent.scrollTop = scrollTopTo;
       } else if (autoScrollNewItems) {
         lastMsgRef?.scrollIntoView({ behavior: 'auto', block: 'end' });
@@ -77,10 +80,11 @@ function EventLogHistoryPanel(props: EventHistoryProps): JSX.Element {
   });
 
   return (
-    <dl ref={(el) => (listRef = el!)} className="event-log-history-panel">
+    <dl ref={(el) => (_listRef = el!)} className="event-log-history-panel">
       {els}
     </dl>
   );
 }
 
-export { EventLogHistoryPanel, Event, EventLogEntry };
+export { EventLogHistoryPanel };
+export type { EventLogEntry };

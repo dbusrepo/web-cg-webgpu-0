@@ -1,8 +1,10 @@
+// eslint-disable-next-line import/no-nodejs-modules, unicorn/prefer-node-protocol
 import assert from 'assert';
-import { Pane as TweakPane, InputBindingApi } from 'tweakpane';
+import { Pane as TweakPane, type InputBindingApi } from 'tweakpane';
+// eslint-disable-next-line import/no-namespace
 import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
 import GUI from '../ui/guify/src/gui';
-import { Panel } from './panel';
+import { type Panel } from './panel';
 
 enum EventLogVis {
   BELOW_CANVAS = 'below',
@@ -10,19 +12,19 @@ enum EventLogVis {
   INVISIBLE = 'invisible',
 }
 
-type PanelGuiConfig = {
+interface PanelGuiConfig {
   isTweakPaneExpanded: boolean;
-};
+}
 
 enum PanelTweakOptionsKeys {
   STATS_ENABLED = 'stats_enabled',
   EVENTS = 'events',
 }
 
-type PanelTweakOptions = {
+interface PanelTweakOptions {
   [PanelTweakOptionsKeys.STATS_ENABLED]: boolean;
   [PanelTweakOptionsKeys.EVENTS]: EventLogVis;
-};
+}
 
 abstract class PanelGui {
   protected abstract panel: Panel;
@@ -59,15 +61,15 @@ abstract class PanelGui {
       width: 250,
       barMode: panel.menuGuiBarMode, // none, overlay, above, offset, full
       // panelMode: 'inner',
-      opacity: 1.0, // 0.95,
+      opacity: 1, // 0.95,
       open: false,
-      toggleFullScreen: () => {
+      toggleFullScreen: (): void => {
         this.panel.toggleFullscreen();
       },
-      toggleFullWin: () => {
+      toggleFullWin: (): void => {
         this.panel.toggleFullWin();
       },
-      toggleControls: () => {
+      toggleControls: (): void => {
         this.tweakPane.expanded = !this.tweakPane.expanded;
         this.cfg.isTweakPaneExpanded = this.tweakPane.expanded;
         this.panel.focus();
@@ -88,7 +90,7 @@ abstract class PanelGui {
     this.addTweakPaneOptions();
   }
 
-  private initTweakPaneStyle(container: HTMLDivElement) {
+  private initTweakPaneStyle(container: HTMLDivElement): void {
     this.tweakPane.element.style.position = 'absolute';
     this.tweakPane.element.style.borderRadius = '0px';
     this.tweakPane.element.style.top = '0px';
@@ -168,25 +170,29 @@ abstract class PanelGui {
 
     eventLogPosInput.on('change', (ev) => {
       switch (ev.value) {
-        case EventLogVis.BELOW_CANVAS:
+        case EventLogVis.BELOW_CANVAS: {
           this.panel.setEventLogBelowCanvas();
           this.panel.setEventLogVisibility(true);
           break;
-        case EventLogVis.OVER_CANVAS:
+        }
+        case EventLogVis.OVER_CANVAS: {
           this.panel.setEventLogOnCanvas();
           this.panel.setEventLogVisibility(true);
           break;
-        case EventLogVis.INVISIBLE:
+        }
+        case EventLogVis.INVISIBLE: {
           this.panel.setEventLogVisibility(false);
           break;
-        default:
+        }
+        default: {
           assert(false, 'unknown event log vis state');
+        }
       }
     });
   }
 
   public static updateStatsOptPanels(sourcePanelGui: PanelGui): void {
-    for (let panelGui of PanelGui.panelGuiList) {
+    for (const panelGui of PanelGui.panelGuiList) {
       if (panelGui !== sourcePanelGui) {
         panelGui.tweakOptions[PanelTweakOptionsKeys.STATS_ENABLED] =
           sourcePanelGui.tweakOptions[PanelTweakOptionsKeys.STATS_ENABLED];
@@ -406,10 +412,11 @@ abstract class PanelGui {
   //   return this._panel;
   // }
 
-  removefromDom() {
+  removefromDom(): void {
     this.topBar.removefromDom();
     // this._tweakPane.dispose();
   }
 }
 
-export { PanelGui, PanelTweakOptions, PanelTweakOptionsKeys };
+export { PanelGui, PanelTweakOptionsKeys };
+export type { PanelTweakOptions };

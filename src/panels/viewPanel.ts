@@ -1,20 +1,19 @@
 // import assert from 'assert';
-import { ViewPanelConfig } from '../config/mainConfig';
+import { type ViewPanelConfig } from '../config/mainConfig';
 import { Panel } from './panel';
-import { Stats } from '../ui/stats/stats';
+import { type Stats } from '../ui/stats/stats';
 import { ViewPanelGui } from './viewPanelGui';
-import type { ViewPanelInputKey } from './viewPanelTypes';
 import { ViewPanelInputKeysEnum } from './viewPanelTypes';
 
 class ViewPanel extends Panel {
   protected menuGui: ViewPanelGui;
 
-  init(config: ViewPanelConfig, stats: Stats) {
+  init(config: ViewPanelConfig, stats: Stats): void {
     super.init(config, stats);
     this.initInput();
   }
 
-  private initInput() {
+  private initInput(): void {
     this.inputKeys = new Set(Object.values(ViewPanelInputKeysEnum));
   }
 

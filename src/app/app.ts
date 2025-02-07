@@ -1,24 +1,22 @@
 // import assert from 'assert';
 import type { AppWorkerParams } from './appWorker';
-import type { KeyEvent, PanelId, EventLog } from './appTypes';
+import type { KeyEvent, EventLog } from './appTypes';
 import type {
   KeyCode,
   KeyInputEvent,
-  MouseMoveEvent,
   // CanvasDisplayResizeEvent,
 } from './events';
 import {
   StartViewMode,
-  EnginePanelConfig,
-  ViewPanelConfig,
+  type EnginePanelConfig,
   mainConfig,
 } from '../config/mainConfig';
 import { requestPointerLock } from './pointerlock';
 import { statsConfig } from '../ui/stats/statsConfig';
 import { AppWorkerCommandEnum } from './appWorker';
-import { Stats, StatsEnum, StatsValues } from '../ui/stats/stats';
+import { Stats, StatsEnum, type StatsValues } from '../ui/stats/stats';
 import { StatsPanel } from '../ui/stats/statsPanel';
-import { Panel } from '../panels/panel';
+import { type Panel } from '../panels/panel';
 import { EnginePanel } from '../panels/enginePanel';
 // import { ViewPanel } from '../panels/viewPanel';
 import { AppCommandEnum, PanelIdEnum, KeyEventsEnum } from './appTypes';
@@ -28,7 +26,7 @@ class App {
   private enginePanel: EnginePanel;
   private appWorker: Worker;
 
-  async init() {
+  async init(): Promise<void> {
     this.stats = this.initStatsPanel();
     this.initPanels();
     this.initEventListeners();
@@ -37,18 +35,18 @@ class App {
     this.enginePanel.showInit();
   }
 
-  private initEventListeners() {
+  private initEventListeners(): void {
     this.initKeyListeners(this.enginePanel);
     this.initPointerLock(this.enginePanel);
   }
 
-  private initKeyListeners(panel: Panel) {
+  private initKeyListeners(panel: Panel): void {
     const keyEventCmd = {
       [KeyEventsEnum.KEY_DOWN]: AppWorkerCommandEnum.KEY_DOWN,
       [KeyEventsEnum.KEY_UP]: AppWorkerCommandEnum.KEY_UP,
     };
 
-    const addKeyListener = (keyEvent: KeyEvent) =>
+    const addKeyListener = (keyEvent: KeyEvent): void =>
       panel.InputElement.addEventListener(keyEvent, (event) => {
         if (
           panel.InputKeys.has(event.code) &&
@@ -65,13 +63,15 @@ class App {
         }
       });
 
-    (Object.values(KeyEventsEnum) as KeyEventsEnum[]).forEach(addKeyListener);
+    for (const event of Object.values(KeyEventsEnum) as KeyEventsEnum[]) {
+      addKeyListener(event);
+    }
   }
 
-  private initPointerLock(enginePanel: EnginePanel) {
+  private initPointerLock(enginePanel: EnginePanel): void {
     const canvasEl = this.enginePanel.Canvas;
 
-    const handleClick = (event: MouseEvent) => {
+    const handleClick = (event: MouseEvent): void => {
       if (event.target !== canvasEl) {
         return;
       }
@@ -80,19 +80,24 @@ class App {
       );
       if (canRequestPointerLock) {
         canvasEl.removeEventListener('click', handleClick);
-        const addEventListener = () =>
+        const addEventListener = (): void =>
           canvasEl.addEventListener('click', handleClick);
-        requestPointerLock(canvasEl)
-          .then(addEventListener)
-          .catch(() => {
+        async function requestPointerLockAsync(): Promise<void> {
+          try {
+            await requestPointerLock(canvasEl);
+            addEventListener();
+          } catch (error) {
             console.error('pointer lock error');
-          });
+            console.error(error);
+          }
+        }
+        requestPointerLockAsync();
       }
     };
 
     canvasEl.addEventListener('click', handleClick);
 
-    const mouseMoveHandler = (event: MouseEvent) => {
+    const mouseMoveHandler = (event: MouseEvent): void => {
       this.appWorker.postMessage({
         command: AppWorkerCommandEnum.MOUSE_MOVE,
         params: {
@@ -102,7 +107,7 @@ class App {
       });
     };
 
-    const pointerLockChangeHandler = () => {
+    const pointerLockChangeHandler = (): void => {
       if (document.pointerLockElement === canvasEl) {
         // console.log('pointer lock acquired');
         // this.appWorker.postMessage({
@@ -124,7 +129,7 @@ class App {
       }
     };
 
-    const pointerLockErrorHandler = () => {
+    const pointerLockErrorHandler = (): void => {
       // console.error('Pointer lock error');
     };
 
@@ -132,30 +137,19 @@ class App {
     document.addEventListener('pointerlockerror', pointerLockErrorHandler);
   }
 
-  private buildAppWorkerParams() {
-    const params: AppWorkerParams = {
-      engineCanvas: this.enginePanel.Canvas.transferControlToOffscreen(),
-    };
-
-    return {
-      params,
-      transferables: [params.engineCanvas],
-    };
-  }
-
   private onResize(entry: ResizeObserverEntry): [number, number] {
     let width;
     let height;
     let dpr = window.devicePixelRatio;
-    let dprSupport = false;
-    if (entry.devicePixelContentBoxSize) {
+    // let dprSupport = false;
+    if (entry.devicePixelContentBoxSize?.[0]) {
       // NOTE: Only this path gives the correct answer
       // The other paths are an imperfect fallback
       // for browsers that don't provide anyway to do this
       width = entry.devicePixelContentBoxSize[0].inlineSize;
       height = entry.devicePixelContentBoxSize[0].blockSize;
       dpr = 1; // it's already in width and height
-      dprSupport = true;
+      // dprSupport = true;
     } else if (entry.contentBoxSize?.[0]) {
       width = entry.contentBoxSize[0].inlineSize;
       height = entry.contentBoxSize[0].blockSize;
@@ -169,8 +163,8 @@ class App {
     return [displayWidth, displayHeight];
   }
 
-  private initObservers() {
-    const onResize = (entries: ResizeObserverEntry[]) => {
+  private initObservers(): void {
+    const onResize = (entries: ResizeObserverEntry[]): void => {
       for (const entry of entries) {
         if (entry.target === this.enginePanel.Canvas) {
           const [width, height] = this.onResize(entry);
@@ -189,15 +183,22 @@ class App {
     resizeObserver.observe(this.enginePanel.Canvas, { box: 'content-box' });
   }
 
-  async initAppWorker() {
-    this.appWorker = new Worker(new URL('./appWorker.ts', import.meta.url));
+  async initAppWorker(): Promise<void> {
+    const workerUrl = new URL('appWorker.ts', import.meta.url);
+    this.appWorker = new Worker(workerUrl, {
+      name: 'appWorker',
+      type: 'module',
+    });
     const initPromise = this.initAppWorkerMsgHandlers();
     this.sendInitMsgToAppWorker();
     await initPromise;
   }
 
-  private sendInitMsgToAppWorker() {
-    const { params, transferables } = this.buildAppWorkerParams();
+  private sendInitMsgToAppWorker(): void {
+    const params: AppWorkerParams = {
+      engineCanvas: this.enginePanel.Canvas.transferControlToOffscreen(),
+    };
+    const transferables = [params.engineCanvas];
 
     this.appWorker.postMessage(
       {
@@ -208,8 +209,8 @@ class App {
     );
   }
 
-  private initAppWorkerMsgHandlers() {
-    let { enginePanel } = this;
+  private initAppWorkerMsgHandlers(): Promise<void> {
+    const { enginePanel } = this;
 
     let resolveInit: (value: void | PromiseLike<void>) => void;
 
@@ -218,41 +219,41 @@ class App {
     });
 
     const commands = {
-      [AppCommandEnum.INIT]: () => {
+      [AppCommandEnum.INIT]: (): void => {
         resolveInit();
       },
-      [AppCommandEnum.UPDATE_STATS]: (values: StatsValues) => {
+      [AppCommandEnum.UPDATE_STATS]: (values: StatsValues): void => {
         enginePanel.Stats.update(values);
         enginePanel.MenuGui.updateFps(values[StatsEnum.UFPS] || 0);
       },
-      [AppCommandEnum.EVENT]: (eventObj: EventLog) => {
+      [AppCommandEnum.EVENT]: (eventObj: EventLog): void => {
         enginePanel.EventLog?.log(`event ${eventObj.event}`, eventObj.msg);
       },
     };
 
-    this.appWorker.onmessage = ({ data: { command, params } }) => {
+    this.appWorker.addEventListener('message', (event) => {
+      const { command, params } = event.data;
       const commandKey = command as keyof typeof commands;
-      if (commands.hasOwnProperty(commandKey)) {
+      if (Object.prototype.hasOwnProperty.call(commands, commandKey)) {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           commands[commandKey](params);
-        } catch (ex) {
+        } catch (error) {
           console.error('error executing command in appWorker message handler');
-          console.error(ex);
+          console.error(error);
         }
       }
-    };
+    });
 
     return initPromise;
   }
 
-  run() {
+  run(): void {
     this.appWorker.postMessage({
       command: AppWorkerCommandEnum.RUN,
     });
   }
 
-  private initStatsPanel() {
+  private initStatsPanel(): Stats {
     const stats = new Stats();
     const cfg = {
       ...statsConfig,
@@ -310,12 +311,12 @@ class App {
     return stats;
   }
 
-  private initPanels() {
-    const board = <HTMLDivElement>document.querySelector('#board');
+  private initPanels(): void {
+    const board = document.querySelector('#board') as HTMLDivElement;
 
     const row0 = document.createElement('div');
     row0.classList.add('row', 'row0');
-    board.appendChild(row0);
+    board.append(row0);
 
     // const row1 = document.createElement('div');
     // row1.classList.add('row', 'row1');
@@ -326,9 +327,13 @@ class App {
     this.enginePanel = this.buildEnginePanel(board, row0);
   }
 
-  private buildEnginePanel(board: HTMLDivElement, parentNode: HTMLDivElement) {
+  private buildEnginePanel(
+    board: HTMLDivElement,
+    parentNode: HTMLDivElement,
+  ): EnginePanel {
     const { enginePanelConfig } = mainConfig;
     // parentNode.style.zIndex = '1'; // TODO:
+
     const panelConfig: EnginePanelConfig = {
       ...enginePanelConfig,
       // startViewMode: StartViewMode.FULL_WIN,
@@ -342,6 +347,7 @@ class App {
         isBelowCanvas: true,
       },
     };
+
     const enginePanel = new EnginePanel(board, parentNode);
     enginePanel.init(panelConfig, this.stats);
     return enginePanel;

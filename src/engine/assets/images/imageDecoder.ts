@@ -1,15 +1,15 @@
-import { BitImage } from './bitImage';
+import { type BitImage } from './bitImage';
 
-type ImageInfo = {
+interface ImageInfo {
   width: number;
   height: number;
   depth: number;
   bpp: number; // byte per pixel
-};
+}
 
 interface ImageDecoder {
   readInfo(input: ArrayBuffer): ImageInfo;
   read(input: ArrayBuffer, outImage: BitImage): void;
 }
 
-export { ImageDecoder, ImageInfo };
+export type { ImageDecoder, ImageInfo };

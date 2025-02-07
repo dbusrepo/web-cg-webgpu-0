@@ -1,26 +1,28 @@
-import { h, JSX } from 'preact';
-import React, { useEffect } from 'react';
+import { type JSX } from 'preact';
+import { useEffect } from 'preact/hooks';
 
-type ConsoleEntry = {
+interface ConsoleEntry {
   stmt: string;
   msg: string;
-};
+}
 
-type ConsoleHistoryProps = {
+interface ConsoleHistoryProps {
   stmts: ConsoleEntry[];
   getPanelRef: () => HTMLElement; // parent panel ref
   autoScrollNewItems: boolean;
-  scrollTopTo: number | null;
-};
+  scrollTopTo: number | undefined;
+}
 
-function ConsoleHistoryPanel(props: ConsoleHistoryProps): JSX.Element {
+function ConsoleHistoryPanel(
+  props: Readonly<ConsoleHistoryProps>,
+): JSX.Element {
   const { stmts, getPanelRef, autoScrollNewItems, scrollTopTo } = props;
   const els: JSX.Element[] = [];
 
-  let lastStmtRef: HTMLElement | null = null;
-  let listRef: HTMLElement;
+  let lastStmtRef: HTMLElement | null;
+  let _listRef: HTMLElement | null;
 
-  stmts.forEach((entry, idx) => {
+  for (const entry of stmts.values()) {
     entry.stmt && els.push(<dt className="console-stmt">{entry.stmt}</dt>);
     entry.msg &&
       els.push(
@@ -28,24 +30,22 @@ function ConsoleHistoryPanel(props: ConsoleHistoryProps): JSX.Element {
           {entry.msg}
         </dd>,
       );
-  });
+  }
 
   useEffect(() => {
     const parent = getPanelRef();
     if (parent) {
-      if (scrollTopTo !== null) {
+      if (scrollTopTo) {
         // console.log('FORCE SCROLL TO ' + scrollTopTo);
         parent.scrollTop = scrollTopTo;
       } else if (autoScrollNewItems) {
-        if (lastStmtRef) {
-          lastStmtRef!.scrollIntoView({ behavior: 'auto', block: 'end' });
-        }
+        lastStmtRef?.scrollIntoView({ behavior: 'auto', block: 'end' });
       }
     }
   });
 
   return (
-    <dl ref={(el) => (listRef = el!)} className="console-history-panel">
+    <dl ref={(el) => (_listRef = el!)} className="console-history-panel">
       {els}
     </dl>
   );
@@ -53,4 +53,5 @@ function ConsoleHistoryPanel(props: ConsoleHistoryProps): JSX.Element {
   // return <>{els}</>;
 }
 
-export { ConsoleHistoryPanel, ConsoleEntry };
+export { ConsoleHistoryPanel };
+export type { ConsoleEntry };

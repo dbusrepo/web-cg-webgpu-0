@@ -1,6 +1,6 @@
 import assert from 'assert';
 import { decodeImageInfo, decode } from './decode';
-import { BitImageRGBA, BPP_RGBA } from '../bitImageRGBA';
+import { BitImageRGBA, BPP_RGBA } from '../bitImageRgba';
 import { COLOR_TYPES } from './helpers/color-types';
 import { PngDecoder } from '../pngDecoder';
 import { ImageInfo } from '../imageDecoder';

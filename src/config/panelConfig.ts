@@ -61,4 +61,5 @@ type PanelConfig = typeof panelConfig & {
   id: PanelId;
 };
 
-export { StartViewMode, PanelConfig, panelConfig };
+export { StartViewMode, panelConfig };
+export type { PanelConfig };

@@ -196,20 +196,12 @@ https://stackoverflow.com/questions/1424981/how-can-i-remove-all-css-classes-usi
 * html
 https://stackoverflow.com/questions/7130397/how-do-i-make-a-div-full-screen
 
-* webpack
-https://webpack.js.org/configuration/resolve/#resolvealias
-https://dev.to/typescripttv/6-ways-to-configure-webpack-5a33
-https://github.com/webpack/webpack-cli/issues/2458
-[...]
-
 * resources (images etc)
 https://stackoverflow.com/questions/45365571/convert-an-image-to-imagedata-uint8clampedarray
 
 * wasm, assemblyscript
-https://erikonarheim.com/posts/webpack-assemblyscript-and-wasm-loader/
 
 * assert
-https://stackoverflow.com/questions/68542553/webpack-5process-is-not-defined-triggered-by-stream-browserify
 https://www.npmjs.com/package/assert
 
 window.devicePixelRatio
@@ -335,11 +327,6 @@ A backslash ( \ ) followed by a newline character is interpreted as a space in t
 
 @rm -f $@; \
 node ./genDepList.mjs $< > $@
-
-circular dependency webpack:
-https://stackoverflow.com/questions/73157442/webpack-warning-using-webworker-circular-dependency-between-chunks-with-runtime
-
-https://stackoverflow.com/questions/73499449/webpack-dev-server-not-reloading
 
 private syncWorkers() {
   for (let i = 0; i < this.auxWorkers.length; ++i) {

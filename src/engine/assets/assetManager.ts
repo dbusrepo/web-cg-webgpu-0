@@ -1,47 +1,51 @@
 // import assert from 'assert';
-import * as loadUtils from './loadUtils';
+import { loadResAsArrayBuffer } from './loadUtils';
 // import map0 from '../../../assets/maps/map0.txt'
 import {
   // images as sourceImages,
   getImagesUrls,
 } from '../../../assets/build/images';
 import { decodePNGs } from './images/utils';
-import { BitImageRGBA, BPP_RGBA } from './images/bitImageRGBA';
-import { AssetTextureRGBA, AssetTextureRGBAParams } from './assetTextureRGBA';
+import { type BitImageRGBA } from './images/bitImageRgba';
+import { AssetTextureRGBA } from './assetTextureRgba';
 
-type AssetManagerParams = {
+interface AssetManagerParams {
   generateMipmaps: boolean;
   rotateTextures: boolean;
-};
+}
 
 class AssetManager {
   private params: AssetManagerParams;
   private textures: AssetTextureRGBA[];
 
-  public async init(params: AssetManagerParams) {
+  public async init(params: AssetManagerParams): Promise<void> {
     this.params = params;
     await this.loadTextures();
   }
 
-  private async loadTextures() {
+  private async loadTextures(): Promise<void> {
     const imageBuffers = await this.loadImagesBuffers();
     const bitImagesRGBA = await decodePNGs(imageBuffers);
-    const bitImageRGBA2TextureAssetRGBA = (image: BitImageRGBA) =>
+    const bitImageRGBA2TextureAssetRGBA = (
+      image: BitImageRGBA,
+    ): AssetTextureRGBA =>
       new AssetTextureRGBA(image, {
         generateMipmaps: this.params.generateMipmaps,
         rotate: this.params.rotateTextures,
       });
-    this.textures = bitImagesRGBA.map(bitImageRGBA2TextureAssetRGBA);
+    this.textures = bitImagesRGBA.map((image) =>
+      bitImageRGBA2TextureAssetRGBA(image),
+    );
   }
 
   private static loadUrlAsArrayBuffer(url: string): Promise<ArrayBuffer> {
-    return loadUtils.loadResAsArrayBuffer(url);
+    return loadResAsArrayBuffer(url);
   }
 
   private async loadImagesBuffers(): Promise<ArrayBuffer[]> {
     const imagesUrls = await getImagesUrls();
     const imageBuffers = await Promise.all(
-      imagesUrls.map(AssetManager.loadUrlAsArrayBuffer),
+      imagesUrls.map((imageUrl) => AssetManager.loadUrlAsArrayBuffer(imageUrl)),
     );
     return imageBuffers;
   }

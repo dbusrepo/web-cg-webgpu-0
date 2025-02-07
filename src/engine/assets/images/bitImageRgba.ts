@@ -1,13 +1,13 @@
-import assert from 'assert';
+// import assert from 'assert';
 import { BitImage } from './bitImage';
-import { BPP_RGBA, FrameColorRGBA } from '../../frameColorRGBA';
-import * as utils from '../../utils';
+import { BPP_RGBA, FrameColorRGBA } from '../../frameColorRgba';
+import { isPowerOf2, nextPowerOf2 } from '../../utils';
 
 class BitImageRGBA extends BitImage {
   private buf32: Uint32Array;
   private lg2Pitch: number; // lg2 of pitch pixels u32
 
-  init(width: number, height: number, buf8: Uint8Array) {
+  init(width: number, height: number, buf8: Uint8Array): void {
     this.width = width;
     this.height = height;
     this.Buf8 = buf8;
@@ -19,18 +19,18 @@ class BitImageRGBA extends BitImage {
     height: number,
     lg2Pitch: number,
     buf8: Uint8Array,
-  ) {
+  ): void {
     this.width = width;
     this.height = height;
     this.lg2Pitch = lg2Pitch;
     this.Buf8 = buf8;
-    assert(this.width <= 1 << this.lg2Pitch);
+    // assert(this.width <= 1 << this.lg2Pitch);
   }
 
-  public resizePitchToPow2() {
+  public resizePitchToPow2(): void {
     let pitch = this.width;
-    if (!utils.isPowerOf2(pitch)) {
-      pitch = utils.nextPowerOf2(pitch);
+    if (!isPowerOf2(pitch)) {
+      pitch = nextPowerOf2(pitch);
       const dstBuf8 = new Uint8Array(this.height * pitch * BPP_RGBA);
       let srcOffset = 0;
       let dstOffset = 0;
@@ -45,15 +45,15 @@ class BitImageRGBA extends BitImage {
       this.Buf8 = dstBuf8;
     }
     this.lg2Pitch = Math.log2(pitch);
-    assert(this.width <= 1 << this.lg2Pitch);
+    // assert(this.width <= 1 << this.lg2Pitch);
   }
 
-  get Lg2Pitch() {
+  get Lg2Pitch(): number {
     return this.lg2Pitch;
   }
 
   // required
-  get Buf8() {
+  get Buf8(): Uint8Array {
     return this.buf8;
   }
 
@@ -66,15 +66,15 @@ class BitImageRGBA extends BitImage {
     );
   }
 
-  get Buf32() {
+  get Buf32(): Uint32Array {
     return this.buf32;
   }
 
-  makeDarker() {
+  makeDarker(): void {
     const buf32 = this.Buf32;
     for (let i = 0; i < buf32.length; ++i) {
       // png texels are stored in rgba, read as abgr due to little endian
-      const c = buf32[i]; // abgr
+      const c = buf32[i]!; // abgr
       const a = (c >> 24) & 0xff;
       const b = (c >> 16) & 0xff;
       const g = (c >> 8) & 0xff;
@@ -89,4 +89,5 @@ class BitImageRGBA extends BitImage {
   }
 }
 
-export { BitImageRGBA, BPP_RGBA };
+export { BPP_RGBA } from '../../frameColorRgba';
+export { BitImageRGBA };

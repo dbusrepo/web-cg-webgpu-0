@@ -1,5 +1,6 @@
-import { ImageDecoder } from './imageDecoder';
+import { type ImageDecoder } from './imageDecoder';
 
-interface PngDecoder extends ImageDecoder {}
+// interface PngDecoder extends ImageDecoder {}
+type PngDecoder = ImageDecoder;
 
-export { PngDecoder };
+export type { PngDecoder };

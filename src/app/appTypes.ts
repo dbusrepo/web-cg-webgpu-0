@@ -18,10 +18,10 @@ enum KeyEventsEnum {
 
 type KeyEvent = `${KeyEventsEnum}`;
 
-type EventLog = {
+interface EventLog {
   event: string;
   msg: string;
-};
+}
 
 export type { KeyEvent, PanelId, EventLog };
 export { AppCommandEnum, PanelIdEnum, KeyEventsEnum };

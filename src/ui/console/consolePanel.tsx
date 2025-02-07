@@ -1,11 +1,13 @@
+// eslint-disable-next-line import/no-nodejs-modules, unicorn/prefer-node-protocol
 import assert from 'assert';
-import { h, JSX } from 'preact';
+import 'preact/debug';
 import React from 'react';
-import { ConsoleHistoryPanel, ConsoleEntry } from './consoleHistoryPanel';
+import { Component, type JSX } from 'preact';
+import { ConsoleHistoryPanel, type ConsoleEntry } from './consoleHistoryPanel';
 
 type OnConsoleEventHandler = () => void;
 
-type ConsolePanelProps = {
+interface ConsolePanelProps {
   isOpen: boolean;
   hotkey: string;
   onOpening: OnConsoleEventHandler;
@@ -22,21 +24,18 @@ type ConsolePanelProps = {
   autoCompleteFn: (prefix: string) => string;
   lineHeight: number;
   fontSize: number;
-};
+}
 
 interface ConsolePanelState {
   open: boolean;
   // consoleStyle: ConsoleStyle;
   autoScrollNewItems: boolean;
-  forceScrollTo: number | null;
   isGrabbing: boolean;
   grabPos: { top: number; y: number };
+  forceScrollTo?: number;
 }
 
-class ConsolePanel extends React.Component<
-  ConsolePanelProps,
-  ConsolePanelState
-> {
+class ConsolePanel extends Component<ConsolePanelProps, ConsolePanelState> {
   private static readonly INPUT_PADDING_TOP = 2;
   private static readonly INPUT_PADDING_BOTTOM = 2;
 
@@ -66,17 +65,17 @@ class ConsolePanel extends React.Component<
       open: props.isOpen,
       // consoleStyle: {},
       autoScrollNewItems: true,
-      forceScrollTo: null,
       isGrabbing: false,
       grabPos: { top: 0, y: 0 },
+      // forceScrollTo: undefined,
     };
     this.isClosed = !props.isOpen;
+    // eslint-disable-next-line unicorn/no-null
     this.mainEl = null;
   }
 
-  componentDidMount() {
-
-    this.onKeyDown = (event: KeyboardEvent) => {
+  componentDidMount(): void {
+    this.onKeyDown = (event: KeyboardEvent): void => {
       const { key } = event;
       if (key === this.props.hotkey) {
         event.preventDefault();
@@ -86,7 +85,7 @@ class ConsolePanel extends React.Component<
 
     this.container.addEventListener('keydown', this.onKeyDown);
 
-    this.onFocus = (event: FocusEvent) => {
+    this.onFocus = (/*event: FocusEvent*/): void => {
       // when closing gui menu (see panels) focus goes back to the main
       // container so we give focus to console container to handle the
       // open/close
@@ -97,7 +96,7 @@ class ConsolePanel extends React.Component<
 
     this.container.addEventListener('focus', this.onFocus);
 
-    this.onMouseDown = (e: MouseEvent) => {
+    this.onMouseDown = (e: MouseEvent): void => {
       // console.log('mouseDownHandler');
       const el = this.listContRef;
       // Change the cursor and prevent user from selecting the text
@@ -122,15 +121,13 @@ class ConsolePanel extends React.Component<
   }
 
   componentDidUpdate(
-    prevProps: ConsolePanelProps,
-    prevState: ConsolePanelState,
-  ) {
-    // console.log('update');
-
+    _prevProps: ConsolePanelProps,
+    _prevState: ConsolePanelState,
+  ): void {
     this.histLines = this.props.history
       .map((e) => e.stmt)
-      .filter((line, index, array) =>
-        line.substring(this.props.prompt.length).trim(),
+      .filter((line /*, index, array */) =>
+        line.slice(this.props.prompt.length).trim(),
       )
       .filter((line, index, array) => array[index - 1] !== line);
 
@@ -145,7 +142,7 @@ class ConsolePanel extends React.Component<
     if (this.state.isGrabbing) {
       const mouseMoveHandler =
         this.onMouseMove ??
-        ((e: MouseEvent) => {
+        ((e: MouseEvent): void => {
           // console.log('mouseMoveHandler');
           // const dy = e.clientY - pos.y;
           const grabPos = {
@@ -154,7 +151,7 @@ class ConsolePanel extends React.Component<
             // Get the current mouse position
             y: e.clientY,
           };
-          this.setState((pState: ConsolePanelState) => ({
+          this.setState((_pState: ConsolePanelState) => ({
             grabPos,
             forceScrollTo: grabPos.top,
           }));
@@ -168,7 +165,7 @@ class ConsolePanel extends React.Component<
 
       const mouseUpHandler =
         this.onMouseUp ??
-        (() => {
+        ((): void => {
           // console.log('mouseUpHandler');
 
           const el = this.listContRef;
@@ -180,8 +177,8 @@ class ConsolePanel extends React.Component<
 
           this.setState({
             isGrabbing: false,
-            forceScrollTo: null,
             autoScrollNewItems: false, // TODO
+            // forceScrollTo: undefined,
           });
         });
 
@@ -193,7 +190,7 @@ class ConsolePanel extends React.Component<
     }
   }
 
-  releaseHandlers() {
+  releaseHandlers(): void {
     // console.log('remove handlers');
     this.container.addEventListener('keydown', this.onKeyDown);
     this.container.addEventListener('focus', this.onFocus);
@@ -202,16 +199,16 @@ class ConsolePanel extends React.Component<
     this.listContRef.removeEventListener('mouseup', this.onMouseUp);
   }
 
-  componentWillUnmount() {
+  componentWillUnmount(): void {
     // console.log('unmount');
     this.releaseHandlers();
   }
 
-  private clearInput() {
+  private clearInput(): void {
     this.inputRef.value = this.props.prompt;
   }
 
-  private onInputFocus() {
+  private onInputFocus(): void {
     // this.inputRef.value = this.props.prompt;
   }
 
@@ -221,10 +218,12 @@ class ConsolePanel extends React.Component<
     }
 
     this.setState({ open }, () => {
+      // eslint-disable-next-line sonarjs/no-selector-parameter
       if (open) {
         // this.inputRef.focus(); // done later when opened
         this.props.onOpening();
       } else {
+        // eslint-disable-next-line github/no-blur
         this.inputRef.blur();
         this.props.onClosing(); // != onHide
       }
@@ -235,21 +234,23 @@ class ConsolePanel extends React.Component<
   //   this.setState({ consoleStyle: style });
   // }
 
-  private isCursorOnPrompt(pos: number | null) {
-    // TODO common?
-    return pos === 0 || (pos && pos <= this.props.prompt.length);
+  private isCursorOnPrompt(pos: number | null): boolean {
+    return pos !== null && pos <= prompt.length;
   }
 
-  private onInputKeyDown(event: JSX.TargetedKeyboardEvent<HTMLInputElement>) {
+  private onInputKeyDown(
+    event: JSX.TargetedKeyboardEvent<HTMLInputElement>,
+  ): void {
     assert(this.inputRef);
     // see note here about the use of preventDefault in onKeydown
     // vs onKeyChange with a react input element
     // stackoverflow.com/q/57807522
     switch (event.key) {
-      case this.props.hotkey:
+      case this.props.hotkey: {
         event.preventDefault(); // TODO
         break;
-      case 'Enter':
+      }
+      case 'Enter': {
         event.preventDefault(); // TODO
         // const target = event.target as HTMLInputElement;
         this.props.dispatch(this.inputRef.value); // eval the stmt
@@ -260,22 +261,32 @@ class ConsolePanel extends React.Component<
         }
         this.clearInput();
         break;
-      case 'Tab': // TODO
+      }
+      case 'Tab': {
+        // TODO
         {
           const prefix = this.inputRef.value;
           this.inputRef.value = this.props.autoCompleteFn(prefix);
           event.preventDefault(); // TODO
         }
         break;
-      case 'ArrowUp': // TODO
+      }
+      case 'ArrowUp': {
+        // TODO
         event.preventDefault();
         this.historySearchUp();
         break;
-      case 'ArrowDown': // TODO
+      }
+      case 'ArrowDown': {
+        // TODO
         event.preventDefault();
         this.historySearchDown();
         break;
-      case 'ArrowLeft': // block cursor when moving left in the prompt prefix
+      }
+      // avoid backspace when just after the prompt the user press bs
+      case 'ArrowLeft':
+      case 'Backspace': {
+        // block cursor when moving left in the prompt prefix
         {
           // const inputEl = event.target as HTMLInputElement;
           // inputEl.focus();
@@ -285,19 +296,23 @@ class ConsolePanel extends React.Component<
           }
         }
         break;
-      // avoid backspace when just after the prompt the user press bs
-      case 'Backspace':
-        {
-          const { selectionStart } = this.inputRef;
-          if (this.isCursorOnPrompt(selectionStart)) {
-            event.preventDefault();
-          }
-        }
-        break;
-      case 'Control':
+      }
+      // // avoid backspace when just after the prompt the user press bs
+      // case 'Backspace': {
+      //   {
+      //     const { selectionStart } = this.inputRef;
+      //     if (this.isCursorOnPrompt(selectionStart)) {
+      //       event.preventDefault();
+      //     }
+      //   }
+      //   break;
+      // }
+      case 'Control': {
         this.ctrlDown = true;
         break;
-      case 'a': // C-a should go after the prompt prefix...
+      }
+      case 'a': {
+        // C-a should go after the prompt prefix...
         if (this.ctrlDown) {
           event.preventDefault();
           const inputEl = this.inputRef;
@@ -305,7 +320,9 @@ class ConsolePanel extends React.Component<
           inputEl.setSelectionRange(prompt.length, prompt.length);
         }
         break;
-      case 'u': // C-u delete text before the cursor (prompt excluded)
+      }
+      case 'u': {
+        // C-u delete text before the cursor (prompt excluded)
         if (this.ctrlDown) {
           event.preventDefault();
           const inputEl = this.inputRef;
@@ -313,34 +330,41 @@ class ConsolePanel extends React.Component<
           const { prompt } = this.props;
           inputEl.value =
             prompt +
-            (selectionStart !== null
-              ? inputEl.value.substring(selectionStart)
-              : '');
+            (selectionStart === null
+              ? ''
+              : inputEl.value.slice(Math.max(0, selectionStart)));
           // force cursor position after the prompt
           inputEl.setSelectionRange(prompt.length, prompt.length);
         }
         break;
-      default:
+      }
+      default: {
         break;
+      }
     }
   }
 
-  private onInputKeyUp(event: JSX.TargetedKeyboardEvent<HTMLInputElement>) {
+  private onInputKeyUp(
+    event: JSX.TargetedKeyboardEvent<HTMLInputElement>,
+  ): void {
+    // eslint-disable-next-line sonarjs/no-small-switch
     switch (event.key) {
-      case 'Control':
+      case 'Control': {
         this.ctrlDown = false;
         break;
-      default:
+      }
+      default: {
         break;
+      }
     }
   }
 
-  private onInputKeyChange(event: React.ChangeEvent<HTMLInputElement>) {
+  private onInputKeyChange(event: React.ChangeEvent<HTMLInputElement>): void {
     event.preventDefault();
     const inputEl = this.inputRef; // event.target as HTMLInputElement;
     const { prompt } = this.props;
     const input = inputEl.value;
-    const line = this.props.prompt + input.substring(prompt.length);
+    const line = this.props.prompt + input.slice(prompt.length);
     assert(
       this.histSearchIdx >= 0 && this.histSearchIdx < this.histLines.length,
     );
@@ -348,7 +372,7 @@ class ConsolePanel extends React.Component<
     inputEl.value = line;
   }
 
-  private onInputClick(event: React.ChangeEvent<HTMLInputElement>) {
+  private onInputClick(event: React.ChangeEvent<HTMLInputElement>): void {
     // if the user clicks on prompt string reset cursor pos...
     event.preventDefault();
     const inputEl = this.inputRef; // event.target as HTMLInputElement;
@@ -361,11 +385,11 @@ class ConsolePanel extends React.Component<
   }
 
   // TODO
-  private historySearchUp() {
+  private historySearchUp(): void {
     this.historySearch(-1);
   }
 
-  private historySearchDown() {
+  private historySearchDown(): void {
     this.historySearch(1);
   }
 
@@ -377,13 +401,13 @@ class ConsolePanel extends React.Component<
       assert(this.histSearchIdx >= 0 && this.histSearchIdx < numLines);
       this.histSearchIdx =
         (this.histSearchIdx + direction + numLines) % numLines;
-      this.inputRef.value = this.histLines[this.histSearchIdx];
+      this.inputRef.value = this.histLines[this.histSearchIdx]!;
     }
   }
 
   // called when the label is opening/closing.
   // This executes after the transition, to start see setOpen
-  private onTransitionEnd() {
+  private onTransitionEnd(): void {
     if (this.state.open) {
       this.inputRef.focus();
       this.props.onOpened();
@@ -395,7 +419,7 @@ class ConsolePanel extends React.Component<
   }
 
   // render(props: ConsolePanelProps, state: ConsolePanelState) {
-  render() {
+  render(): JSX.Element {
     const lineHeightStyle = `${this.props.lineHeight}px`;
     const fontSizeStyle = `${this.props.fontSize}px`;
 
@@ -414,7 +438,7 @@ class ConsolePanel extends React.Component<
     const inputStyle = ConsolePanel.buildInputStyle(
       lineHeightStyle,
       fontSizeStyle,
-    );
+    ) as React.CSSProperties;
 
     const historyStyle = ConsolePanel.buildHistoryStyle(
       labelHeight,
@@ -422,7 +446,6 @@ class ConsolePanel extends React.Component<
     );
 
     return (
-      /* eslint-disable-next-line jsx-a11y/label-has-associated-control */
       <label
         className="console-label"
         style={labelStyle}
@@ -447,7 +470,7 @@ class ConsolePanel extends React.Component<
         </div>
 
         <input
-          spellCheck={false}
+          spellcheck={false}
           className="console-input"
           style={inputStyle}
           ref={(el) => {
@@ -466,17 +489,17 @@ class ConsolePanel extends React.Component<
 
   private static buildLabelStyleObj(
     isClosed: boolean,
-    props: ConsolePanelProps,
+    _props: ConsolePanelProps,
     state: ConsolePanelState,
     height: string,
     lineHeight: string,
     fontSize: string,
-  ) {
+  ): React.CSSProperties {
     // update the transition property
-    const marginTop = state.open ? '0' : '-' + height;
+    const marginTop = state.open ? '0' : `-${height}`;
     const visibility = isClosed ? 'hidden' : 'visible';
 
-    let labelStyle = {
+    const labelStyle = {
       visibility,
       height,
       fontSize,
@@ -493,7 +516,10 @@ class ConsolePanel extends React.Component<
     return labelStyle;
   }
 
-  private static buildHistoryStyle(labelHeight: number, lineHeight: number) {
+  private static buildHistoryStyle(
+    labelHeight: number,
+    lineHeight: number,
+  ): React.CSSProperties {
     const inputVertPadding =
       ConsolePanel.INPUT_PADDING_TOP + ConsolePanel.INPUT_PADDING_BOTTOM;
     const inputHeightDec = (lineHeight + inputVertPadding) / labelHeight;
@@ -506,7 +532,10 @@ class ConsolePanel extends React.Component<
     return historyStyle;
   }
 
-  private static buildInputStyle(lineHeight: string, fontSize: string) {
+  private static buildInputStyle(
+    lineHeight: string,
+    fontSize: string,
+  ): React.CSSProperties {
     const inputStyle = {
       fontSize,
       lineHeight,
@@ -519,4 +548,5 @@ class ConsolePanel extends React.Component<
   }
 }
 
-export { ConsolePanel, ConsolePanelProps, OnConsoleEventHandler };
+export { ConsolePanel };
+export type { ConsolePanelProps, OnConsoleEventHandler };

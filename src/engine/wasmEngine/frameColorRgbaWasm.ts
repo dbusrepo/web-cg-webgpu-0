@@ -1,17 +1,17 @@
-import type { WasmModules, WasmEngineModule } from './wasmLoader';
+import type { WasmEngineModule } from './wasmLoader';
 import { gWasmRun } from './wasmRun';
-import { 
+import {
   FrameColorRGBA,
-  RGBA_RED_SHIFT,
-  RGBA_GREEN_SHIFT,
-  RGBA_BLUE_SHIFT,
-  RGBA_ALPHA_SHIFT,
+  // RGBA_RED_SHIFT,
+  // RGBA_GREEN_SHIFT,
+  // RGBA_BLUE_SHIFT,
+  // RGBA_ALPHA_SHIFT,
   ABGR_ALPHA_SHIFT,
   ABGR_BLUE_SHIFT,
   ABGR_GREEN_SHIFT,
   ABGR_RED_SHIFT,
-  BPP_RGBA,
-} from '../frameColorRGBA';
+  // BPP_RGBA,
+} from '../frameColorRgba';
 
 const MAX_LIGHT_LEVELS = 255;
 const NUM_LIGHT_LEVELS = MAX_LIGHT_LEVELS + 1;
@@ -20,7 +20,7 @@ const RED_MAX = 255;
 const GREEN_MAX = 255;
 const BLUE_MAX = 255;
 
-class FrameColorRGBAWasm extends FrameColorRGBA {
+class FrameColorRgbaWasm extends FrameColorRGBA {
   private redLightTable: Uint8Array;
   private greenLightTable: Uint8Array;
   private blueLightTable: Uint8Array;
@@ -29,7 +29,10 @@ class FrameColorRGBAWasm extends FrameColorRGBA {
   private greenFogTable: Uint8Array;
   private blueFogTable: Uint8Array;
 
-  private static buildLightTable(tablePtr: number, colorMax: number) {
+  private static buildLightTable(
+    tablePtr: number,
+    colorMax: number,
+  ): Uint8Array {
     return new Uint8Array(
       gWasmRun.WasmMem.buffer,
       tablePtr,
@@ -46,27 +49,27 @@ class FrameColorRGBAWasm extends FrameColorRGBA {
     blueFogTablePtr: number,
   ) {
     super();
-    this.redLightTable = FrameColorRGBAWasm.buildLightTable(
+    this.redLightTable = FrameColorRgbaWasm.buildLightTable(
       redLightTablePtr,
       RED_MAX,
     );
-    this.greenLightTable = FrameColorRGBAWasm.buildLightTable(
+    this.greenLightTable = FrameColorRgbaWasm.buildLightTable(
       greenLightTablePtr,
       GREEN_MAX,
     );
-    this.blueLightTable = FrameColorRGBAWasm.buildLightTable(
+    this.blueLightTable = FrameColorRgbaWasm.buildLightTable(
       blueLightTablePtr,
       BLUE_MAX,
     );
-    this.redFogTable = FrameColorRGBAWasm.buildLightTable(
+    this.redFogTable = FrameColorRgbaWasm.buildLightTable(
       redFogTablePtr,
       RED_MAX,
     );
-    this.greenFogTable = FrameColorRGBAWasm.buildLightTable(
+    this.greenFogTable = FrameColorRgbaWasm.buildLightTable(
       greenFogTablePtr,
       GREEN_MAX,
     );
-    this.blueFogTable = FrameColorRGBAWasm.buildLightTable(
+    this.blueFogTable = FrameColorRgbaWasm.buildLightTable(
       blueFogTablePtr,
       BLUE_MAX,
     );
@@ -78,9 +81,9 @@ class FrameColorRGBAWasm extends FrameColorRGBA {
     const g = (colorABGR >> ABGR_GREEN_SHIFT) & 0xff;
     const r = (colorABGR >> ABGR_RED_SHIFT) & 0xff;
     const at = a;
-    const bt = this.blueLightTable[b * NUM_LIGHT_LEVELS + intensity];
-    const gt = this.greenLightTable[g * NUM_LIGHT_LEVELS + intensity];
-    const rt = this.redLightTable[r * NUM_LIGHT_LEVELS + intensity];
+    const bt = this.blueLightTable[b * NUM_LIGHT_LEVELS + intensity]!;
+    const gt = this.greenLightTable[g * NUM_LIGHT_LEVELS + intensity]!;
+    const rt = this.redLightTable[r * NUM_LIGHT_LEVELS + intensity]!;
     const colorABGRtarget = FrameColorRGBA.colorABGR(at, bt, gt, rt);
     return colorABGRtarget;
   }
@@ -91,9 +94,9 @@ class FrameColorRGBAWasm extends FrameColorRGBA {
     const g = (colorABGR >> ABGR_GREEN_SHIFT) & 0xff;
     const r = (colorABGR >> ABGR_RED_SHIFT) & 0xff;
     const at = a;
-    const bt = this.blueFogTable[b * NUM_LIGHT_LEVELS + intensity];
-    const gt = this.greenFogTable[g * NUM_LIGHT_LEVELS + intensity];
-    const rt = this.redFogTable[r * NUM_LIGHT_LEVELS + intensity];
+    const bt = this.blueFogTable[b * NUM_LIGHT_LEVELS + intensity]!;
+    const gt = this.greenFogTable[g * NUM_LIGHT_LEVELS + intensity]!;
+    const rt = this.redFogTable[r * NUM_LIGHT_LEVELS + intensity]!;
     const colorABGRtarget = FrameColorRGBA.colorABGR(at, bt, gt, rt);
     return colorABGRtarget;
   }
@@ -103,13 +106,13 @@ class FrameColorRGBAWasm extends FrameColorRGBA {
     pColor: number,
     intensity: number,
   ): void {
-    const colorABGR = frameBuffer[pColor];
+    const colorABGR = frameBuffer[pColor]!;
     const colorABGRtarget = this.lightColorABGR(colorABGR, intensity);
     frameBuffer[pColor] = colorABGRtarget;
   }
 
   fogPixel(frameBuffer: Uint32Array, pColor: number, intensity: number): void {
-    const colorABGR = frameBuffer[pColor];
+    const colorABGR = frameBuffer[pColor]!;
     const colorABGRtarget = this.fogColorABGR(colorABGR, intensity);
     frameBuffer[pColor] = colorABGRtarget;
   }
@@ -117,9 +120,9 @@ class FrameColorRGBAWasm extends FrameColorRGBA {
 
 function getFrameColorRGBAWasmView(
   wasmEngineModule: WasmEngineModule,
-): FrameColorRGBAWasm {
+): FrameColorRgbaWasm {
   const frameColorRGBAPtr = wasmEngineModule.getFrameColorRGBAPtr();
-  const frameColorRGBAWasm = new FrameColorRGBAWasm(
+  const frameColorRGBAWasm = new FrameColorRgbaWasm(
     wasmEngineModule.getRedLightTablePtr(frameColorRGBAPtr),
     wasmEngineModule.getGreenLightTablePtr(frameColorRGBAPtr),
     wasmEngineModule.getBlueLightTablePtr(frameColorRGBAPtr),
@@ -130,4 +133,4 @@ function getFrameColorRGBAWasmView(
   return frameColorRGBAWasm;
 }
 
-export { FrameColorRGBAWasm, getFrameColorRGBAWasmView };
+export { FrameColorRgbaWasm, getFrameColorRGBAWasmView };

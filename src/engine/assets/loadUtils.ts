@@ -1,8 +1,9 @@
+// eslint-disable-next-line import/no-nodejs-modules, unicorn/prefer-node-protocol
 import assert from 'assert';
 
 function loadFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
   return new Promise((resolve) => {
-    let fileReader = new FileReader();
+    const fileReader = new FileReader();
     fileReader.addEventListener(
       'load',
       (e) => {
@@ -12,6 +13,7 @@ function loadFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
       },
       false,
     );
+    // eslint-disable-next-line unicorn/prefer-blob-reading-methods
     fileReader.readAsArrayBuffer(file);
   });
 }

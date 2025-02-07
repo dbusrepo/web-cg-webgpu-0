@@ -31,9 +31,12 @@ abstract class FrameColorRGBA {
 
   static randColorABGR(): number {
     const a = 0xff;
-    const b = (Math.random() * 255) | 0;
-    const g = (Math.random() * 255) | 0;
-    const r = (Math.random() * 255) | 0;
+    // eslint-disable-next-line sonarjs/pseudo-random
+    const b = Math.trunc(Math.random() * 255);
+    // eslint-disable-next-line sonarjs/pseudo-random
+    const g = Math.trunc(Math.random() * 255);
+    // eslint-disable-next-line sonarjs/pseudo-random
+    const r = Math.trunc(Math.random() * 255);
     return FrameColorRGBA.colorABGR(a, b, g, r);
   }
 
