@@ -89,6 +89,7 @@ export default [
       chunkSplitPlugin: chunkSplitPlugin(),
     },
     rules: {
+      // 'eslintComments/no-use': ['error', { allow: [] }],
       'sonarjs/no-unused-vars': 'off',
       'sonarjs/unused-import': 'warn',
       'sonarjs/todo-tag': 'off',
