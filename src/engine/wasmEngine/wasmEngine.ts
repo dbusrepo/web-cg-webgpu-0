@@ -12,7 +12,7 @@ import {
 import { copyStrings2WasmMem } from './wasmMemInitStrings';
 import { copyFontChars2WasmMem } from './wasmMemInitFontChars';
 import { type AssetManager } from '../assets/assetManager';
-import { BPP_RGBA } from '../assets/images/bitImageRgba';
+// import { BPP_RGBA } from '../assets/images/bitImageRgba';
 import type { WasmRunParams } from './wasmRun';
 import { WasmRun } from './wasmRun';
 import type { WasmViews } from './wasmViews';
@@ -28,8 +28,6 @@ import {
 } from '../../common';
 
 interface WasmEngineParams {
-  imageWidth: number;
-  imageHeight: number;
   assetManager: AssetManager;
   numWorkers: number;
 }
@@ -86,7 +84,6 @@ class WasmEngine {
   }
 
   private initWasmMemRegions(): void {
-    const { imageWidth, imageHeight } = this.params;
     const numTotalWorkers = this.NumTotalWorkers;
 
     // set wasm mem regions sizes
@@ -94,7 +91,8 @@ class WasmEngine {
       // frameBufferPalSize: 0, // this._cfg.usePalette ? numPixels : 0,
       // paletteSize: 0, // this._cfg.usePalette ? PALETTE_SIZE * PAL_ENTRY_SIZE : 0,
       startOffset: mainConfig.wasmMemStartOffset,
-      rgbaSurface0size: imageWidth * imageHeight * BPP_RGBA,
+      // rgbaSurface0size: imageWidth * imageHeight * BPP_RGBA,
+      rgbaSurface0size: 0, // not used
       rgbaSurface1size: 0,
       syncArraySize: numTotalWorkers * Int32Array.BYTES_PER_ELEMENT,
       sleepArraySize: numTotalWorkers * Int32Array.BYTES_PER_ELEMENT,
@@ -147,8 +145,6 @@ class WasmEngine {
   private async initWasmRun(): Promise<void> {
     this.wasmRun = new WasmRun();
 
-    const { imageWidth, imageHeight } = this.params;
-
     const MAIN_WORKER_IDX = 0;
 
     this.wasmRunParams = {
@@ -160,7 +156,8 @@ class WasmEngine {
       workerIdx: 0,
       numWorkers: this.NumTotalWorkers,
       numTextures: this.params.assetManager.NumTextures, // TODO: rename
-      surface0sizes: [imageWidth, imageHeight],
+      // surface0sizes: [imageWidth, imageHeight],
+      surface0sizes: [0, 0], // not used
       surface1sizes: [0, 0], // not used
       // main thread init these fields in wasm engine
       frameColorRGBAPtr: 0,

@@ -22,16 +22,12 @@ import { InputAction, InputActionBehavior } from '../input/inputAction';
 import { AuxAppWorkerCommandEnum } from './auxAppWorker';
 import { WasmEngine } from '../engine/wasmEngine/wasmEngine';
 import { type WasmRun } from '../engine/wasmEngine/wasmRun';
-import {
-  type Texture,
-  initTextureWasmView,
-} from '../engine/wasmEngine/texture';
-import { ascImportImages } from '../../assets/build/images';
+import { type Texture } from '../engine/wasmEngine/texture';
 import { arrAvg } from '../engine/utils';
 import {
-  type FrameColorRgbaWasm,
-  getFrameColorRGBAWasmView,
-} from '../engine/wasmEngine/frameColorRgbaWasm';
+  TriangleVertexColorRenderer,
+  type WebGPUInitInput,
+} from '../engine/render/triangleVertexColorRenderer';
 
 interface AppWorkerParams {
   engineCanvas: OffscreenCanvas;
@@ -49,9 +45,6 @@ class AppWorker {
 
   private static readonly STATS_PERIOD_MS = 100; // MILLI_IN_SEC;
 
-  private ctx2d: OffscreenCanvasRenderingContext2D;
-  private imageData: ImageData;
-
   private params: AppWorkerParams;
   private assetManager: AssetManager;
   private inputManager: InputManager;
@@ -63,7 +56,6 @@ class AppWorker {
   private wasmRun: WasmRun;
   private wasmEngineModule: WasmEngineModule;
   private wasmViews: WasmViews;
-  private frameColorRGBAWasm: FrameColorRgbaWasm;
 
   private frameBuf32: Uint32Array;
   private frameStrideBytes: number;
@@ -78,33 +70,27 @@ class AppWorker {
   private mouseMoveUp: InputAction;
   private mouseMoveDown: InputAction;
 
+  private triangleVertexColorRend: TriangleVertexColorRenderer;
+
   public async init(params: AppWorkerParams): Promise<void> {
     this.params = params;
-    this.initGfx();
+    await this.initGfx();
     await this.initAssetManager();
-    this.initInput();
     await this.initWasmEngine();
     await this.initAuxWorkers();
-    this.initTextures();
-    this.initFrameBuf();
-    // this.wasmEngineModule.render();
+    this.initInput();
   }
 
-  private initFrameBuf(): void {
-    const { rgbaSurface0: frameBuf8 } = this.wasmViews;
-    this.frameBuf32 = new Uint32Array(
-      frameBuf8.buffer,
-      0,
-      frameBuf8.byteLength / Uint32Array.BYTES_PER_ELEMENT,
-    );
-    this.frameStrideBytes = this.wasmRun.FrameStrideBytes;
-  }
-
-  private initGfx(): void {
-    const { engineCanvas } = this.params;
-    this.ctx2d = this.get2dCtxFromCanvas(engineCanvas);
-    const { width, height } = engineCanvas;
-    this.imageData = this.ctx2d.createImageData(width, height);
+  private async initGfx(): Promise<void> {
+    // const { engineCanvas } = this.params;
+    const renderInitInput: WebGPUInitInput = {
+      canvas: this.params.engineCanvas,
+      background: { r: 0.1, g: 0.1, b: 0.1, a: 1 },
+      // format: 'bgra8unorm',
+      // msaaCount: 1,
+    };
+    this.triangleVertexColorRend = new TriangleVertexColorRenderer();
+    await this.triangleVertexColorRend.init(renderInitInput);
   }
 
   private get2dCtxFromCanvas(
@@ -166,16 +152,7 @@ class AppWorker {
     });
   }
 
-  private initTextures(): void {
-    const wasmTexturesImport = Object.entries(ascImportImages);
-    let mipMapBaseIdx = 0;
-    this.textures = [];
-    for (const [texName, texIdx] of wasmTexturesImport) {
-      const texture = initTextureWasmView(texName, texIdx, mipMapBaseIdx);
-      this.textures.push(texture);
-      mipMapBaseIdx += texture.NumMipmaps;
-    }
-  }
+  // private initTextures(): void {}
 
   private async initAuxWorkers(): Promise<void> {
     try {
@@ -254,8 +231,6 @@ class AppWorker {
   private async initWasmEngine(): Promise<void> {
     this.wasmEngine = new WasmEngine();
     const wasmEngineParams: WasmEngineParams = {
-      imageWidth: this.imageData.width,
-      imageHeight: this.imageData.height,
       assetManager: this.assetManager,
       numWorkers: mainConfig.numAuxWorkers,
     };
@@ -263,7 +238,6 @@ class AppWorker {
     this.wasmRun = this.wasmEngine.WasmRun;
     this.wasmEngineModule = this.wasmRun.WasmModules.engine;
     this.wasmViews = this.wasmRun.WasmViews;
-    this.frameColorRGBAWasm = getFrameColorRGBAWasmView(this.wasmEngineModule);
   }
 
   private runAuxWorkers(): void {
@@ -497,8 +471,7 @@ class AppWorker {
   // }
 
   public drawFrame(): void {
-    this.imageData.data.set(this.wasmViews.rgbaSurface0);
-    this.ctx2d.putImageData(this.imageData, 0, 0);
+    this.triangleVertexColorRend.render();
   }
 
   public onKeyDown(event: KeyInputEvent): void {
