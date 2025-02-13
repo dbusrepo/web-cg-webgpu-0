@@ -391,7 +391,6 @@ class AppWorker {
     const render = (): void => {
       this.syncWorkers();
       // this.clearBg();
-      this.wasmEngineModule.render();
       this.waitWorkers();
       this.drawFrame();
       saveFrameTime();
