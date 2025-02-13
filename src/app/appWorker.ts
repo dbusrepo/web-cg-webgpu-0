@@ -367,7 +367,6 @@ class AppWorker {
 
     const render = (): void => {
       this.syncWorkers();
-      // this.clearBg();
       this.waitWorkers();
       this.drawFrame();
       saveFrameTime();
@@ -438,13 +437,6 @@ class AppWorker {
       Atomics.wait(this.wasmViews.syncArr, workerIdx, 1);
     }
   }
-
-  // private clearBg() {
-  //   this.frameBuf32.fill(0xff_00_00_00);
-  //   // for (let i = 0; i < this.frameBuf32.length; ++i) {
-  //   //   this.frameBuf32[i] = 0xff_00_00_00;
-  //   // }
-  // }
 
   public drawFrame(): void {
     this.triangleVertexColorRend.render();
