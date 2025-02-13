@@ -5,30 +5,14 @@ import assert from 'assert';
 import type { WasmMemParams, WasmMemRegionsData } from './wasmMemUtils';
 import type { WasmModules } from './wasmLoader';
 import { MemRegionsEnum, getMemRegionsSizesAndOffsets } from './wasmMemUtils';
-import {
-  calcWasmTexturesIndexSize,
-  copyTextures2WasmMem,
-} from './wasmMemInitImages';
-import { copyStrings2WasmMem } from './wasmMemInitStrings';
-import { copyFontChars2WasmMem } from './wasmMemInitFontChars';
-import { type AssetManager } from '../assets/assetManager';
-// import { BPP_RGBA } from '../assets/images/bitImageRgba';
 import type { WasmRunParams } from './wasmRun';
 import { WasmRun } from './wasmRun';
 import type { WasmViews } from './wasmViews';
 import { buildWasmMemViews } from './wasmViews';
-import { FONT_Y_SIZE, fontChars } from '../../../assets/fonts/font';
-import { stringsArrayData } from '../../../assets/build/strings';
 import { mainConfig } from '../../config/mainConfig';
-import {
-  // BPP_PAL,
-  // PAL_ENTRY_SIZE,
-  // PALETTE_SIZE,
-  PAGE_SIZE_BYTES,
-} from '../../common';
+import { PAGE_SIZE_BYTES } from '../../common';
 
 interface WasmEngineParams {
-  assetManager: AssetManager;
   numWorkers: number;
 }
 
@@ -55,7 +39,6 @@ class WasmEngine {
       this.wasmRegionsOffsets,
       this.wasmRegionsSizes,
     );
-    this.initWasmAssets();
     await this.initWasmRun();
   }
 
@@ -88,23 +71,12 @@ class WasmEngine {
 
     // set wasm mem regions sizes
     const wasmMemParams: WasmMemParams = {
-      // frameBufferPalSize: 0, // this._cfg.usePalette ? numPixels : 0,
-      // paletteSize: 0, // this._cfg.usePalette ? PALETTE_SIZE * PAL_ENTRY_SIZE : 0,
       startOffset: mainConfig.wasmMemStartOffset,
-      // rgbaSurface0size: imageWidth * imageHeight * BPP_RGBA,
-      rgbaSurface0size: 0, // not used
-      rgbaSurface1size: 0,
       syncArraySize: numTotalWorkers * Int32Array.BYTES_PER_ELEMENT,
       sleepArraySize: numTotalWorkers * Int32Array.BYTES_PER_ELEMENT,
       numWorkers: numTotalWorkers,
       workerHeapSize: PAGE_SIZE_BYTES * mainConfig.wasmWorkerHeapPages,
       sharedHeapSize: mainConfig.wasmSharedHeapSize,
-      fontCharsSize: fontChars.length * FONT_Y_SIZE,
-      stringsSize: stringsArrayData.length,
-      texturesPixelsSize: this.params.assetManager.PixelsDataSize,
-      texturesIndexSize: calcWasmTexturesIndexSize(
-        this.params.assetManager.Textures,
-      ),
       // TODO use 64bit/8 byte counter for mem counters? see wasm workerHeapManager
       workersMemCountersSize: numTotalWorkers * Uint32Array.BYTES_PER_ELEMENT,
       hrTimerSize: BigUint64Array.BYTES_PER_ELEMENT,
@@ -132,16 +104,6 @@ class WasmEngine {
     );
   }
 
-  private initWasmAssets(): void {
-    copyFontChars2WasmMem(this.wasmViews.fontChars);
-    copyStrings2WasmMem(this.wasmViews.strings);
-    copyTextures2WasmMem(
-      this.params.assetManager.Textures,
-      this.wasmViews.texturesIndex,
-      this.wasmViews.texels,
-    );
-  }
-
   private async initWasmRun(): Promise<void> {
     this.wasmRun = new WasmRun();
 
@@ -155,14 +117,8 @@ class WasmEngine {
       mainWorkerIdx: MAIN_WORKER_IDX,
       workerIdx: 0,
       numWorkers: this.NumTotalWorkers,
-      numTextures: this.params.assetManager.NumTextures, // TODO: rename
       // surface0sizes: [imageWidth, imageHeight],
-      surface0sizes: [0, 0], // not used
-      surface1sizes: [0, 0], // not used
       // main thread init these fields in wasm engine
-      frameColorRGBAPtr: 0,
-      texturesPtr: 0,
-      mipmapsPtr: 0,
     };
 
     await this.wasmRun.init(this.wasmRunParams, this.wasmViews);

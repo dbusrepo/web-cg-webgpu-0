@@ -1,20 +1,12 @@
 // import assert from 'assert';
 
 interface WasmMemParams {
-  // frameBufferPalSize: number;
-  // paletteSize: number;
   startOffset: number;
-  rgbaSurface0size: number;
-  rgbaSurface1size: number;
   numWorkers: number;
   syncArraySize: number;
   sleepArraySize: number;
   workerHeapSize: number;
-  texturesIndexSize: number;
-  texturesPixelsSize: number;
   sharedHeapSize: number;
-  fontCharsSize: number;
-  stringsSize: number;
   workersMemCountersSize: number;
   hrTimerSize: number;
 }
@@ -22,16 +14,8 @@ interface WasmMemParams {
 // all regions have bounds except for the last part, the shared heap that can grow
 // enum for mem regions keys used to index their sizes/offsets
 const enum MemRegionsEnum {
-  // FRAMEBUFFER_PAL = 'FRAMEBUFFER_PAL',
-  // PALETTE = 'PALETTE',
-  RGBA_SURFACE_0 = 'RGBA_SURFACE_0',
-  RGBA_SURFACE_1 = 'RGBA_SURFACE_1',
   SYNC_ARRAY = 'SYNC_ARRAY',
   SLEEP_ARRAY = 'SLEEP_ARRAY',
-  FONT_CHARS = 'FONT_CHARS',
-  STRINGS = 'STRINGS',
-  TEXTURES_INDEX = 'TEXTURES_INDEX',
-  TEXTURES = 'TEXTURES',
   WORKERS_HEAPS = 'WORKERS_HEAPS',
   HEAP = 'HEAP',
   MEM_COUNTERS = 'MEM_COUNTERS',
@@ -50,17 +34,11 @@ function getMemRegionsSizes(params: WasmMemParams): WasmMemRegionsData {
   const {
     // frameBufferPalSize,
     // paletteSize,
-    rgbaSurface0size,
-    rgbaSurface1size,
     numWorkers,
-    texturesIndexSize,
-    texturesPixelsSize,
     workerHeapSize,
     syncArraySize,
     sleepArraySize,
     sharedHeapSize,
-    fontCharsSize,
-    stringsSize,
     workersMemCountersSize,
     hrTimerSize,
   } = params;
@@ -68,14 +46,8 @@ function getMemRegionsSizes(params: WasmMemParams): WasmMemRegionsData {
   const sizes: WasmMemRegionsData = {
     // [MemRegionsEnum.FRAMEBUFFER_PAL]: frameBufferPalSize,
     // [MemRegionsEnum.PALETTE]: paletteSize,
-    [MemRegionsEnum.RGBA_SURFACE_0]: rgbaSurface0size,
-    [MemRegionsEnum.RGBA_SURFACE_1]: rgbaSurface1size,
     [MemRegionsEnum.SYNC_ARRAY]: syncArraySize,
     [MemRegionsEnum.SLEEP_ARRAY]: sleepArraySize,
-    [MemRegionsEnum.FONT_CHARS]: fontCharsSize,
-    [MemRegionsEnum.STRINGS]: stringsSize,
-    [MemRegionsEnum.TEXTURES_INDEX]: texturesIndexSize,
-    [MemRegionsEnum.TEXTURES]: texturesPixelsSize,
     [MemRegionsEnum.WORKERS_HEAPS]: numWorkers * workerHeapSize,
     [MemRegionsEnum.HEAP]: sharedHeapSize,
     [MemRegionsEnum.MEM_COUNTERS]: workersMemCountersSize,
@@ -97,14 +69,8 @@ function getMemRegionsOffsets(
   const memRegLgAlign: WasmMemRegionsData = {
     // [MemRegionsEnum.FRAMEBUFFER_PAL]: 2,
     // [MemRegionsEnum.PALETTE]: 2,
-    [MemRegionsEnum.RGBA_SURFACE_0]: 2,
-    [MemRegionsEnum.RGBA_SURFACE_1]: 2,
     [MemRegionsEnum.SYNC_ARRAY]: 2,
     [MemRegionsEnum.SLEEP_ARRAY]: 2,
-    [MemRegionsEnum.FONT_CHARS]: 2,
-    [MemRegionsEnum.STRINGS]: 2,
-    [MemRegionsEnum.TEXTURES_INDEX]: 2,
-    [MemRegionsEnum.TEXTURES]: 2,
     [MemRegionsEnum.WORKERS_HEAPS]: 2,
     [MemRegionsEnum.HEAP]: 6,
     [MemRegionsEnum.MEM_COUNTERS]: 2,
@@ -116,16 +82,10 @@ function getMemRegionsOffsets(
   const memRegionsAllocSeq: MemRegionKeyType[] = [
     // MemRegionsEnum.FRAMEBUFFER_PAL,
     // MemRegionsEnum.PALETTE,
-    MemRegionsEnum.RGBA_SURFACE_0,
-    MemRegionsEnum.RGBA_SURFACE_1,
     MemRegionsEnum.HR_TIMER,
     MemRegionsEnum.SYNC_ARRAY,
     MemRegionsEnum.SLEEP_ARRAY,
     MemRegionsEnum.MEM_COUNTERS,
-    MemRegionsEnum.FONT_CHARS,
-    MemRegionsEnum.STRINGS,
-    MemRegionsEnum.TEXTURES_INDEX,
-    MemRegionsEnum.TEXTURES,
     MemRegionsEnum.WORKERS_HEAPS,
     MemRegionsEnum.HEAP,
   ];

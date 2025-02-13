@@ -11,7 +11,6 @@ import type { WasmEngineModule } from '../engine/wasmEngine/wasmLoader';
 import { mainConfig } from '../config/mainConfig';
 import { MILLI_IN_SEC } from '../common';
 import { StatsEnum } from '../ui/stats/stats';
-import { AssetManager } from '../engine/assets/assetManager';
 import { AppCommandEnum } from './appTypes';
 import {
   InputManager,
@@ -22,7 +21,6 @@ import { InputAction, InputActionBehavior } from '../input/inputAction';
 import { AuxAppWorkerCommandEnum } from './auxAppWorker';
 import { WasmEngine } from '../engine/wasmEngine/wasmEngine';
 import { type WasmRun } from '../engine/wasmEngine/wasmRun';
-import { type Texture } from '../engine/wasmEngine/texture';
 import { arrAvg } from '../engine/utils';
 import {
   TriangleVertexColorRenderer,
@@ -46,7 +44,6 @@ class AppWorker {
   private static readonly STATS_PERIOD_MS = 100; // MILLI_IN_SEC;
 
   private params: AppWorkerParams;
-  private assetManager: AssetManager;
   private inputManager: InputManager;
 
   private numWorkers: number; // 1 main + N aux
@@ -56,11 +53,6 @@ class AppWorker {
   private wasmRun: WasmRun;
   private wasmEngineModule: WasmEngineModule;
   private wasmViews: WasmViews;
-
-  private frameBuf32: Uint32Array;
-  private frameStrideBytes: number;
-
-  private textures: Texture[];
 
   private pressA: InputAction;
   private pressB: InputAction;
@@ -75,7 +67,6 @@ class AppWorker {
   public async init(params: AppWorkerParams): Promise<void> {
     this.params = params;
     await this.initGfx();
-    await this.initAssetManager();
     await this.initWasmEngine();
     await this.initAuxWorkers();
     this.initInput();
@@ -144,16 +135,6 @@ class AppWorker {
     this.inputManager.mapToMouse(MouseCodeEnum.MOVE_DOWN, this.mouseMoveDown);
   }
 
-  private async initAssetManager(): Promise<void> {
-    this.assetManager = new AssetManager();
-    await this.assetManager.init({
-      generateMipmaps: true,
-      rotateTextures: true,
-    });
-  }
-
-  // private initTextures(): void {}
-
   private async initAuxWorkers(): Promise<void> {
     try {
       const numAuxAppWorkers = mainConfig.numAuxWorkers;
@@ -188,9 +169,6 @@ class AppWorker {
             wasmRunParams: {
               ...this.wasmEngine.WasmRunParams,
               workerIdx,
-              frameColorRGBAPtr: this.wasmEngineModule.getFrameColorRGBAPtr(),
-              texturesPtr: this.wasmEngineModule.getTexturesPtr(),
-              mipmapsPtr: this.wasmEngineModule.getMipMapsPtr(),
             },
           };
           engineWorker.worker.postMessage({
@@ -231,7 +209,6 @@ class AppWorker {
   private async initWasmEngine(): Promise<void> {
     this.wasmEngine = new WasmEngine();
     const wasmEngineParams: WasmEngineParams = {
-      assetManager: this.assetManager,
       numWorkers: mainConfig.numAuxWorkers,
     };
     await this.wasmEngine.init(wasmEngineParams);

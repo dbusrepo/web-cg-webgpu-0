@@ -3,10 +3,6 @@ import type { WasmEngineModule } from '../engine/wasmEngine/wasmLoader';
 import { buildWasmMemViews } from '../engine/wasmEngine/wasmViews';
 import type { WasmRunParams } from '../engine/wasmEngine/wasmRun';
 import { WasmRun } from '../engine/wasmEngine/wasmRun';
-import {
-  type FrameColorRgbaWasm,
-  getFrameColorRGBAWasmView,
-} from '../engine/wasmEngine/frameColorRgbaWasm';
 
 const enum AuxAppWorkerCommandEnum {
   INIT = 'aux_app_worker_init',
@@ -24,17 +20,13 @@ class AuxAppWorker {
   private wasmRun: WasmRun;
   private wasmViews: WasmViews;
   private wasmEngineModule: WasmEngineModule;
-  private frameColorRGBAWasm: FrameColorRgbaWasm;
   private frameBuf32: Uint32Array;
-  private frameStrideBytes: number;
 
   async init(params: AuxAppWorkerParams): Promise<void> {
     const { workerIdx } = params;
     console.log(`Aux app worker ${workerIdx} initializing...`);
     this.params = params;
     await this.initWasmRun();
-    this.frameColorRGBAWasm = getFrameColorRGBAWasmView(this.wasmEngineModule);
-    this.initFrameBuf();
   }
 
   private async initWasmRun(): Promise<void> {
@@ -47,16 +39,6 @@ class AuxAppWorker {
     );
     await this.wasmRun.init(wasmRunParams, this.wasmViews);
     this.wasmEngineModule = this.wasmRun.WasmModules.engine;
-  }
-
-  private initFrameBuf(): void {
-    const { rgbaSurface0: frameBuf8 } = this.wasmViews;
-    this.frameBuf32 = new Uint32Array(
-      frameBuf8.buffer,
-      0,
-      frameBuf8.byteLength / Uint32Array.BYTES_PER_ELEMENT,
-    );
-    this.frameStrideBytes = this.wasmRun.FrameStrideBytes;
   }
 
   run(): void {

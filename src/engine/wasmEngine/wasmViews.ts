@@ -13,14 +13,8 @@ interface WasmViews {
   memF64: Float64Array;
   memBUI64: BigUint64Array;
   memBI64: BigInt64Array;
-  rgbaSurface0: Uint8ClampedArray;
-  rgbaSurface1: Uint8ClampedArray;
   syncArr: Int32Array;
   sleepArr: Int32Array;
-  fontChars: Uint8Array;
-  strings: Uint8Array;
-  texturesIndex: Uint8Array;
-  texels: Uint8Array;
   workersMemCounters: Uint32Array;
   hrTimer: BigUint64Array;
 }
@@ -47,18 +41,6 @@ function buildWasmMemViews(
   const memBUI64 = new BigUint64Array(wasmMem.buffer);
   const memBI64 = new BigInt64Array(wasmMem.buffer);
 
-  const rgbaSurface0 = new Uint8ClampedArray(
-    wasmMem.buffer,
-    memOffsets[MemRegionsEnum.RGBA_SURFACE_0],
-    memSizes[MemRegionsEnum.RGBA_SURFACE_0],
-  );
-
-  const rgbaSurface1 = new Uint8ClampedArray(
-    wasmMem.buffer,
-    memOffsets[MemRegionsEnum.RGBA_SURFACE_1],
-    memSizes[MemRegionsEnum.RGBA_SURFACE_1],
-  );
-
   const syncArr = new Int32Array(
     wasmMem.buffer,
     memOffsets[MemRegionsEnum.SYNC_ARRAY],
@@ -69,30 +51,6 @@ function buildWasmMemViews(
     wasmMem.buffer,
     memOffsets[MemRegionsEnum.SLEEP_ARRAY],
     memSizes[MemRegionsEnum.SLEEP_ARRAY] / Int32Array.BYTES_PER_ELEMENT,
-  );
-
-  const fontChars = new Uint8Array(
-    wasmMem.buffer,
-    memOffsets[MemRegionsEnum.FONT_CHARS],
-    memSizes[MemRegionsEnum.FONT_CHARS],
-  );
-
-  const strings = new Uint8Array(
-    wasmMem.buffer,
-    memOffsets[MemRegionsEnum.STRINGS],
-    memSizes[MemRegionsEnum.STRINGS],
-  );
-
-  const texturesIndex = new Uint8Array(
-    wasmMem.buffer,
-    memOffsets[MemRegionsEnum.TEXTURES_INDEX],
-    memSizes[MemRegionsEnum.TEXTURES_INDEX],
-  );
-
-  const texels = new Uint8Array(
-    wasmMem.buffer,
-    memOffsets[MemRegionsEnum.TEXTURES],
-    memSizes[MemRegionsEnum.TEXTURES],
   );
 
   const workersMemCounters = new Uint32Array(
@@ -120,14 +78,8 @@ function buildWasmMemViews(
     memF64,
     memBUI64,
     memBI64,
-    rgbaSurface0,
-    rgbaSurface1,
     syncArr,
     sleepArr,
-    texturesIndex,
-    texels,
-    fontChars,
-    strings,
     workersMemCounters,
     hrTimer,
   };
