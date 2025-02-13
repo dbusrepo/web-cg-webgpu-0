@@ -62,7 +62,7 @@
       "@webgpu/types",
       "vite-plugin-glsl/ext"
       // "@tweakpane/core"
-    ], /* Specify type package names to be included without being referenced in a source file. */
+    ] /* Specify type package names to be included without being referenced in a source file. */,
     // "allowUmdGlobalAccess": true,                     /* Allow accessing UMD globals from modules. */
     "resolveJsonModule": true /* Enable importing .json files */,
     // "noResolve": true,                                /* Disallow `import`s, `require`s or `<reference>`s from expanding the number of files TypeScript should add to a project. */
@@ -133,7 +133,12 @@
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true /* Skip type checking all .d.ts files. */
   },
-  "include": ["./src/**/*.ts", "./src/**/*.js", "./eslint.config.js", "vite.config.ts"],
+  "include": [
+    "./src/**/*.ts",
+    "./src/**/*.js",
+    "./eslint.config.js",
+    "vite.config.ts"
+  ],
   "exclude": [
     "src/engine/wasmEngine/wasm",
     "node_modules"
