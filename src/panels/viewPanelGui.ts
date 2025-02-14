@@ -2,12 +2,12 @@
 import { PanelGui, type PanelTweakOptions } from './panelGui';
 import { type ViewPanel } from './viewPanel';
 
-enum ViewPanelTweakOptionsKeys {
+enum ViewPanelTweakOptionsEnum {
   VP_OPT = 'VP_OPT',
 }
 
 type ViewPanelTweakOptions = PanelTweakOptions & {
-  [ViewPanelTweakOptionsKeys.VP_OPT]: boolean;
+  [ViewPanelTweakOptionsEnum.VP_OPT]: boolean;
 };
 
 class ViewPanelGui extends PanelGui {

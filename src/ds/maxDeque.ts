@@ -6,6 +6,7 @@ class MaxDeque {
   private bufferSize: number;
 
   constructor(bufferSize: number) {
+    // assert(bufferSize > 0);
     this.bufferSize = bufferSize;
   }
 
@@ -13,8 +14,7 @@ class MaxDeque {
     // assert(this.counters.length === this.values.length);
     // assert(this.counters.length <= this.bufferSize);
 
-    // eslint-disable-next-line @typescript-eslint/prefer-for-of
-    for (let i = 0; i < this.counters.length; i++) {
+    for (let i = 0, { length } = this.counters; i < length; i++) {
       // assert(this.counters[i] < this.bufferSize);
       this.counters[i]!++;
     }

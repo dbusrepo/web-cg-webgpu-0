@@ -1,6 +1,6 @@
 // eslint-disable-next-line import/no-nodejs-modules, unicorn/prefer-node-protocol
 import assert from 'assert';
-import { type StatsEnum } from './stats';
+import { type StatKey } from './stats';
 
 const PR = Math.round(window.devicePixelRatio || 1); // #pixels per col
 
@@ -24,7 +24,7 @@ const GRAPH_HEIGHT = CSS_GRAPH_HEIGHT * PR;
 const BG_ALPHA = 0.9;
 
 interface StatsPanelConfig {
-  id: StatsEnum;
+  id: StatKey;
   title: string;
   fg: string;
   bg: string;
@@ -82,7 +82,8 @@ class StatsPanel {
     return this.cfg.title;
   }
 
-  get Id(): StatsEnum {
+  // eslint-disable-next-line sonarjs/function-return-type
+  get Id(): StatKey {
     return this.cfg.id;
   }
 
@@ -129,7 +130,7 @@ class StatsPanel {
   //   console.log(this._heightScaleFactor, this.heightRescaleThreshold);
   // }
 
-  update(value = 0): void {
+  update(value: number): void {
     value = Math.max(value, 0);
 
     this.min = Math.min(this.min, value);

@@ -12,18 +12,18 @@ enum EventLogVis {
   INVISIBLE = 'invisible',
 }
 
-interface PanelGuiConfig {
-  isTweakPaneExpanded: boolean;
-}
-
-enum PanelTweakOptionsKeys {
+enum PanelTweakOptionsEnum {
   STATS_ENABLED = 'stats_enabled',
   EVENTS = 'events',
 }
 
 interface PanelTweakOptions {
-  [PanelTweakOptionsKeys.STATS_ENABLED]: boolean;
-  [PanelTweakOptionsKeys.EVENTS]: EventLogVis;
+  [PanelTweakOptionsEnum.STATS_ENABLED]: boolean;
+  [PanelTweakOptionsEnum.EVENTS]: EventLogVis;
+}
+
+interface PanelGuiConfig {
+  isTweakPaneExpanded: boolean;
 }
 
 abstract class PanelGui {
@@ -117,8 +117,8 @@ abstract class PanelGui {
 
   protected initTweakPaneOptionsObj(): void {
     this.tweakOptions = {
-      [PanelTweakOptionsKeys.STATS_ENABLED]: this.panel.isStatsVisible,
-      [PanelTweakOptionsKeys.EVENTS]: this.getEventLogVisState(),
+      [PanelTweakOptionsEnum.STATS_ENABLED]: this.panel.isStatsVisible,
+      [PanelTweakOptionsEnum.EVENTS]: this.getEventLogVisState(),
     };
   }
 
@@ -132,7 +132,7 @@ abstract class PanelGui {
 
     this.statsInput = statsFolder.addBinding(
       this.tweakOptions,
-      PanelTweakOptionsKeys.STATS_ENABLED,
+      PanelTweakOptionsEnum.STATS_ENABLED,
     ) as InputBindingApi<unknown, boolean>;
 
     this.statsInput.on('change', (ev) => {
@@ -158,7 +158,7 @@ abstract class PanelGui {
 
     const eventLogPosInput = eventsFolder.addBinding(
       this.tweakOptions,
-      PanelTweakOptionsKeys.EVENTS,
+      PanelTweakOptionsEnum.EVENTS,
       {
         options: {
           below: EventLogVis.BELOW_CANVAS,
@@ -194,8 +194,8 @@ abstract class PanelGui {
   public static updateStatsOptPanels(sourcePanelGui: PanelGui): void {
     for (const panelGui of PanelGui.panelGuiList) {
       if (panelGui !== sourcePanelGui) {
-        panelGui.tweakOptions[PanelTweakOptionsKeys.STATS_ENABLED] =
-          sourcePanelGui.tweakOptions[PanelTweakOptionsKeys.STATS_ENABLED];
+        panelGui.tweakOptions[PanelTweakOptionsEnum.STATS_ENABLED] =
+          sourcePanelGui.tweakOptions[PanelTweakOptionsEnum.STATS_ENABLED];
         // panelGui._tweakPane.refresh();
         panelGui.statsInput.refresh();
       }
@@ -418,5 +418,5 @@ abstract class PanelGui {
   }
 }
 
-export { PanelGui, PanelTweakOptionsKeys };
+export { PanelGui };
 export type { PanelTweakOptions };

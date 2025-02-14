@@ -14,7 +14,8 @@ import {
 import { requestPointerLock } from './pointerlock';
 import { statsConfig } from '../ui/stats/statsConfig';
 import { AppWorkerCommandEnum } from './appWorker';
-import { Stats, StatsEnum, type StatsValues } from '../ui/stats/stats';
+import type { WorkerStatsUpdate } from '../ui/stats/stats';
+import { Stats, FrameStatsEnum } from '../ui/stats/stats';
 import { StatsPanel } from '../ui/stats/statsPanel';
 import { type Panel } from '../panels/panel';
 import { EnginePanel } from '../panels/enginePanel';
@@ -222,9 +223,9 @@ class App {
       [AppCommandEnum.INIT]: (): void => {
         resolveInit();
       },
-      [AppCommandEnum.UPDATE_STATS]: (values: StatsValues): void => {
+      [AppCommandEnum.UPDATE_STATS]: (values: WorkerStatsUpdate): void => {
         enginePanel.Stats.update(values);
-        enginePanel.MenuGui.updateFps(values[StatsEnum.UFPS] || 0);
+        enginePanel.MenuGui.updateFpsGraph(values[FrameStatsEnum.UFPS]);
       },
       [AppCommandEnum.EVENT]: (eventObj: EventLog): void => {
         enginePanel.EventLog?.log(`event ${eventObj.event}`, eventObj.msg);
@@ -263,7 +264,7 @@ class App {
     };
     stats.init(cfg);
     const fpsPanel = new StatsPanel({
-      id: StatsEnum.FPS,
+      id: FrameStatsEnum.FPS,
       title: 'FPS',
       fg: '#0ff',
       bg: '#022',
@@ -276,7 +277,7 @@ class App {
     //   graphHeight: 200,
     // });
     const upsPanel = new StatsPanel({
-      id: StatsEnum.UPS,
+      id: FrameStatsEnum.UPS,
       title: 'UPS',
       // yellow
       fg: '#ff0',
@@ -284,14 +285,14 @@ class App {
       graphHeight: 200,
     });
     const ufpsPanel = new StatsPanel({
-      id: StatsEnum.UFPS,
+      id: FrameStatsEnum.UFPS,
       title: 'UFPS',
       fg: '#f50',
       bg: '#110',
       graphHeight: 1000,
     });
     const frameTimeMsPanel = new StatsPanel({
-      id: StatsEnum.FRAME_TIME_MS,
+      id: FrameStatsEnum.FRAME_TIME_MS,
       title: 'MS',
       fg: '#0f0',
       bg: '#020',

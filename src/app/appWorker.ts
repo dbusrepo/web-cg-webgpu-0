@@ -1,4 +1,4 @@
-import type { StatsValues } from '../ui/stats/stats';
+import type { WorkerStatsUpdate } from '../ui/stats/stats';
 import type {
   KeyInputEvent,
   MouseMoveEvent,
@@ -10,7 +10,7 @@ import type { WasmViews } from '../engine/wasmEngine/wasmViews';
 import type { WasmEngineModule } from '../engine/wasmEngine/wasmLoader';
 import { mainConfig } from '../config/mainConfig';
 import { MILLI_IN_SEC } from '../common';
-import { StatsEnum } from '../ui/stats/stats';
+import { FrameStatsEnum } from '../ui/stats/stats';
 import { AppCommandEnum } from './appTypes';
 import {
   InputManager,
@@ -399,15 +399,15 @@ class AppWorker {
         const avgFrameTimeMs = arrAvg(frameTimeMsArr, frameTimeCnt);
         const avgUfps = MILLI_IN_SEC / avgFrameTimeMs;
         // console.log(`avgUfps = ${avgUfps}, avgFrameTime = ${avgFrameTime}`);
-        const statsValues: StatsValues = {
-          [StatsEnum.FPS]: avgFps,
-          [StatsEnum.UPS]: avgUps,
-          [StatsEnum.UFPS]: avgUfps,
-          [StatsEnum.FRAME_TIME_MS]: avgFrameTimeMs,
+        const frameStatsUpdate: WorkerStatsUpdate = {
+          [FrameStatsEnum.FPS]: avgFps,
+          [FrameStatsEnum.UPS]: avgUps,
+          [FrameStatsEnum.UFPS]: avgUfps,
+          [FrameStatsEnum.FRAME_TIME_MS]: avgFrameTimeMs,
         };
         postMessage({
           command: AppCommandEnum.UPDATE_STATS,
-          params: statsValues,
+          params: frameStatsUpdate,
         });
       }
     };
