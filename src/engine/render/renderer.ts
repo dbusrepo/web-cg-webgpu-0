@@ -81,18 +81,21 @@ abstract class WebGPURenderer {
     }
     const device = await adapter.requestDevice();
 
-    // device.lost
-    //   .then((info) => {
-    //     console.error(`WebGPU device was lost: ${info.message}`);
-    //     // 'reason' will be 'destroyed' if we intentionally destroy the device.
-    //     if (info.reason !== 'destroyed') {
-    //       console.error('Attempting to recover the GPU device...');
-    //       // TODO:
-    //     }
-    //   })
-    //   .catch((e) => {
-    //     console.error('WebGPU device lost promise rejected:', e);
-    //   });
+    async function handleDeviceLost(): Promise<void> {
+      try {
+        const info = await device.lost;
+        console.error(`WebGPU device was lost: ${info.message}`);
+
+        if (info.reason !== 'destroyed') {
+          console.error('Attempting to recover the GPU device...');
+          // TODO: Implement device recovery logic
+        }
+      } catch (error) {
+        console.error('WebGPU device lost promise rejected:', error);
+      }
+    }
+
+    handleDeviceLost();
 
     const context = this.params.canvas.getContext('webgpu') as GPUCanvasContext;
 
