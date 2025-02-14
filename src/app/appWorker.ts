@@ -567,7 +567,7 @@ globalThis.addEventListener('message', (event): void => {
   const {
     data: { command, params },
   } = event;
-  const commandKey = command as keyof typeof commands;
+  const commandKey: AppWorkerCommandEnum = command;
   if (Object.prototype.hasOwnProperty.call(commands, commandKey)) {
     try {
       commands[commandKey](params);
@@ -575,6 +575,8 @@ globalThis.addEventListener('message', (event): void => {
       console.error('error executing command in app worker message handler');
       console.error(error);
     }
+  } else {
+    console.error(`Unknown command: ${command}`);
   }
 });
 
